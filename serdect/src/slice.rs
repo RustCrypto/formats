@@ -52,8 +52,7 @@ impl LengthCheck for UpperBound {
     ) -> fmt::Result {
         write!(
             formatter,
-            "{} with a maximum length of {}",
-            data_type, data_length
+            "{data_type} with a maximum length of {data_length}"
         )
     }
 }

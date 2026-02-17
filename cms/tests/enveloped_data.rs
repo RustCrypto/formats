@@ -499,3 +499,29 @@ fn reencode_enveloped_data_multi_test() {
     // should match the original
     assert_eq!(reencoded_data_in_ci, der_ci)
 }
+
+#[test]
+fn aws_kms_ciphertext_for_recipient() {
+    let table = &[
+        (include_bytes!("examples/kms_ciphertext_for_recipient_1.ber").as_slice(), 16, Some(hex!("CC74ADF65D973C8B72CD51E1B927F0F0").as_slice())),
+        (include_bytes!("examples/kms_ciphertext_for_recipient_2.ber").as_slice(), 48, Some(hex!("70E5CAAFFD49AD24EFE15BF903BE9D19895B777D269B57B025F6F67E7EF93F94464515F2EBE034EA0B7621A1FF19292E").as_slice())),
+        (include_bytes!("examples/kms_ciphertext_for_recipient_3.ber").as_slice(), 16, Some(hex!("1F943EB0105C1B0644DF4F7130448A28").as_slice())),
+        (include_bytes!("examples/kms_ciphertext_for_recipient_4.ber").as_slice(), 4112, None), // (5 elem) (1000, 1000, 1000, 1000, 112)
+    ];
+
+    for &(row, encrypted_content_len, expected_encrypted_content) in table {
+        let ci = ContentInfo::from_ber(row).unwrap();
+        assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_ENVELOPED_DATA);
+
+        let bytes = ci.content.to_der().unwrap();
+        let data = EnvelopedData::from_ber(bytes.as_slice()).unwrap();
+        assert_eq!(CmsVersion::V2, data.version);
+
+        let encrypted_content = data.encrypted_content.encrypted_content.unwrap();
+        assert_eq!(encrypted_content_len, encrypted_content.as_bytes().len());
+
+        if let Some(expected_encrypted_content) = expected_encrypted_content {
+            assert_eq!(expected_encrypted_content, encrypted_content.as_bytes());
+        }
+    }
+}

@@ -3,9 +3,9 @@
 use crate::{Error, Result};
 use core::cmp::Ordering;
 use der::{
-    asn1::{AnyRef, Choice, ObjectIdentifier},
     Decode, DecodeValue, DerOrd, Encode, EncodeValue, Header, Length, Reader, Sequence, ValueOrd,
     Writer,
+    asn1::{AnyRef, Choice, ObjectIdentifier},
 };
 
 #[cfg(feature = "alloc")]
@@ -37,12 +37,10 @@ where
 {
     type Error = der::Error;
 
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
-        reader.read_nested(header.length, |reader| {
-            Ok(Self {
-                oid: reader.decode()?,
-                parameters: reader.decode()?,
-            })
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> der::Result<Self> {
+        Ok(Self {
+            oid: reader.decode()?,
+            parameters: reader.decode()?,
         })
     }
 }
@@ -163,10 +161,13 @@ impl<'a> AlgorithmIdentifierRef<'a> {
             self.oid,
             match self.parameters {
                 None => None,
-                Some(p) => match p {
-                    AnyRef::NULL => None,
-                    _ => Some(p.decode_as::<ObjectIdentifier>()?),
-                },
+                Some(p) => {
+                    if p.is_null() {
+                        None
+                    } else {
+                        Some(p.decode_as::<ObjectIdentifier>()?)
+                    }
+                }
             },
         ))
     }

@@ -34,6 +34,9 @@ pub(crate) enum Asn1Type {
 
     /// ASN.1 `UTF8String`.
     Utf8String,
+
+    /// ASN.1 `BMPString`.
+    BmpString,
 }
 
 impl Asn1Type {
@@ -49,37 +52,38 @@ impl Asn1Type {
             Asn1Type::VideotexString => quote!(::der::Tag::VideotexString),
             Asn1Type::UtcTime => quote!(::der::Tag::UtcTime),
             Asn1Type::Utf8String => quote!(::der::Tag::Utf8String),
+            Asn1Type::BmpString => quote!(::der::Tag::BmpString),
         }
     }
 
     /// Get a `der::Decoder` object for a particular ASN.1 type
     pub fn decoder(self) -> TokenStream {
-        match self {
-            Asn1Type::BitString => quote!(::der::asn1::BitStringRef::decode(reader)?),
-            Asn1Type::Ia5String => quote!(::der::asn1::Ia5StringRef::decode(reader)?),
-            Asn1Type::GeneralizedTime => quote!(::der::asn1::GeneralizedTime::decode(reader)?),
-            Asn1Type::OctetString => quote!(::der::asn1::OctetStringRef::decode(reader)?),
-            Asn1Type::PrintableString => quote!(::der::asn1::PrintableStringRef::decode(reader)?),
-            Asn1Type::TeletexString => quote!(::der::asn1::TeletexStringRef::decode(reader)?),
-            Asn1Type::VideotexString => quote!(::der::asn1::VideotexStringRef::decode(reader)?),
-            Asn1Type::UtcTime => quote!(::der::asn1::UtcTime::decode(reader)?),
-            Asn1Type::Utf8String => quote!(::der::asn1::Utf8StringRef::decode(reader)?),
-        }
+        let type_path = self.type_path();
+        quote!(<#type_path>::decode(reader)?)
+    }
+
+    /// Get a `der::Decoder` optional object for a particular ASN.1 type
+    pub fn decoder_optional(self) -> TokenStream {
+        let type_path = self.type_path();
+        quote!(Option::<#type_path>::decode(reader)?)
+    }
+
+    /// Get a `der::DecodeValue` member object for a particular ASN.1 type
+    pub fn value_decoder(self) -> TokenStream {
+        let type_path = self.type_path();
+        quote!(<#type_path>::decode_value(reader, header)?)
+    }
+
+    /// Get a `der::DecodeValue` member object for a particular ASN.1 type
+    pub fn value_decoder_optional(self) -> TokenStream {
+        let type_path = self.type_path();
+        quote!(Option::<#type_path>::decode_value(reader, header)?)
     }
 
     /// Get a `der::Encoder` object for a particular ASN.1 type
     pub fn encoder(self, binding: &TokenStream) -> TokenStream {
         let type_path = self.type_path();
-
-        match self {
-            Asn1Type::Ia5String
-            | Asn1Type::OctetString
-            | Asn1Type::PrintableString
-            | Asn1Type::TeletexString
-            | Asn1Type::VideotexString
-            | Asn1Type::Utf8String => quote!(#type_path::try_from(#binding)?),
-            _ => quote!(#type_path::try_from(#binding)?),
-        }
+        quote!(<#type_path>::try_from(#binding)?)
     }
 
     /// Get the Rust type path for a particular ASN.1 type.
@@ -89,12 +93,13 @@ impl Asn1Type {
             Asn1Type::BitString => quote!(::der::asn1::BitStringRef),
             Asn1Type::Ia5String => quote!(::der::asn1::Ia5StringRef),
             Asn1Type::GeneralizedTime => quote!(::der::asn1::GeneralizedTime),
-            Asn1Type::OctetString => quote!(::der::asn1::OctetStringRef),
+            Asn1Type::OctetString => quote!(&::der::asn1::OctetStringRef),
             Asn1Type::PrintableString => quote!(::der::asn1::PrintableStringRef),
             Asn1Type::TeletexString => quote!(::der::asn1::TeletexStringRef),
             Asn1Type::VideotexString => quote!(::der::asn1::VideotexStringRef),
             Asn1Type::UtcTime => quote!(::der::asn1::UtcTime),
             Asn1Type::Utf8String => quote!(::der::asn1::Utf8StringRef),
+            Asn1Type::BmpString => quote!(::der::asn1::BmpString),
         }
     }
 }
@@ -113,6 +118,7 @@ impl FromStr for Asn1Type {
             "VideotexString" => Ok(Self::VideotexString),
             "UTCTime" => Ok(Self::UtcTime),
             "UTF8String" => Ok(Self::Utf8String),
+            "BMPString" => Ok(Self::BmpString),
             _ => Err(ParseError),
         }
     }
@@ -130,6 +136,7 @@ impl fmt::Display for Asn1Type {
             Asn1Type::VideotexString => "VideotexString",
             Asn1Type::UtcTime => "UTCTime",
             Asn1Type::Utf8String => "UTF8String",
+            Asn1Type::BmpString => "BMPString",
         })
     }
 }

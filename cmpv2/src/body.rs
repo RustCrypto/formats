@@ -1,16 +1,16 @@
 //! PKIBody type
 
-use der::asn1::Null;
 use der::Choice;
+use der::asn1::Null;
 
 use crmf::request::CertReqMessages;
 use x509_cert::request::CertReq;
 
 use crate::ann::{CaKeyUpdAnnContent, CertAnnContent, CrlAnnContent, RevAnnContent};
 use crate::certified_key_pair::KeyRecRepContent;
-use crate::gen::{GenMsgContent, GenRepContent};
+use crate::gp::{GenMsgContent, GenRepContent};
 use crate::message::PkiMessages;
-use crate::poll::PollRepContent;
+use crate::poll::{PollRepContent, PollReqContent};
 use crate::pop::{PopoDecKeyChallContent, PopoDecKeyRespContent};
 use crate::response::CertRepMessage;
 use crate::rev::{RevRepContent, RevReqContent};
@@ -107,7 +107,7 @@ pub enum PkiBody<'a> {
     #[asn1(context_specific = "24", tag_mode = "EXPLICIT", constructed = "true")]
     CertConf(CertConfirmContent<'a>),
     #[asn1(context_specific = "25", tag_mode = "EXPLICIT", constructed = "true")]
-    PollReq(PollRepContent<'a>),
+    PollReq(PollReqContent),
     #[asn1(context_specific = "26", tag_mode = "EXPLICIT", constructed = "true")]
     PollRep(PollRepContent<'a>),
 }

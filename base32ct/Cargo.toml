@@ -1,6 +1,6 @@
 [package]
 name = "base32ct"
-version = "0.3.0-pre"
+version = "0.3.0"
 description = """
 Pure Rust implementation of Base32 (RFC 4648) which avoids any usages of
 data-dependent branches/LUTs and thereby provides portable "best effort"
@@ -14,8 +14,8 @@ repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto"]
 readme = "README.md"
-edition = "2021"
-rust-version = "1.65"
+edition = "2024"
+rust-version = "1.85"
 
 [dev-dependencies]
 base32 = "0.5"
@@ -23,7 +23,6 @@ proptest = { version = "1.6", default-features = false, features = ["std"] }
 
 [features]
 alloc = []
-std = ["alloc"]
 
 [package.metadata.docs.rs]
 all-features = true

@@ -1,7 +1,7 @@
 //! PKCS#1 OtherPrimeInfo support.
 
 use der::{
-    asn1::UintRef, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Writer,
+    DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Writer, asn1::UintRef,
 };
 
 /// PKCS#1 OtherPrimeInfo as defined in [RFC 8017 Appendix 1.2].
@@ -32,13 +32,11 @@ pub struct OtherPrimeInfo<'a> {
 impl<'a> DecodeValue<'a> for OtherPrimeInfo<'a> {
     type Error = der::Error;
 
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
-        reader.read_nested(header.length, |reader| {
-            Ok(Self {
-                prime: reader.decode()?,
-                exponent: reader.decode()?,
-                coefficient: reader.decode()?,
-            })
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> der::Result<Self> {
+        Ok(Self {
+            prime: reader.decode()?,
+            exponent: reader.decode()?,
+            coefficient: reader.decode()?,
         })
     }
 }

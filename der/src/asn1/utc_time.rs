@@ -1,10 +1,10 @@
 //! ASN.1 `UTCTime` support.
 
 use crate::{
-    datetime::{self, DateTime},
-    ord::OrdIsValueOrd,
     DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag,
     Writer,
+    datetime::{self, DateTime},
+    ord::OrdIsValueOrd,
 };
 use core::time::Duration;
 
@@ -40,31 +40,42 @@ impl UtcTime {
     pub const MAX_YEAR: u16 = 2049;
 
     /// Create a [`UtcTime`] from a [`DateTime`].
+    ///
+    /// # Errors
+    /// Returns [`Error`] in the event `datetime` has a year that exceeds [`UtcTime::MAX_YEAR`].
     pub fn from_date_time(datetime: DateTime) -> Result<Self> {
         if datetime.year() <= UtcTime::MAX_YEAR {
             Ok(Self(datetime))
         } else {
-            Err(Self::TAG.value_error())
+            Err(Self::TAG.value_error().into())
         }
     }
 
     /// Convert this [`UtcTime`] into a [`DateTime`].
+    #[must_use]
     pub fn to_date_time(&self) -> DateTime {
         self.0
     }
 
     /// Create a new [`UtcTime`] given a [`Duration`] since `UNIX_EPOCH`
     /// (a.k.a. "Unix time")
+    ///
+    /// # Errors
+    /// If [`DateTime`] couldn't be created from `unix_duration` successfully.
     pub fn from_unix_duration(unix_duration: Duration) -> Result<Self> {
         DateTime::from_unix_duration(unix_duration)?.try_into()
     }
 
     /// Get the duration of this timestamp since `UNIX_EPOCH`.
+    #[must_use]
     pub fn to_unix_duration(&self) -> Duration {
         self.0.unix_duration()
     }
 
     /// Instantiate from [`SystemTime`].
+    ///
+    /// # Errors
+    /// If a time conversion error occurred.
     #[cfg(feature = "std")]
     pub fn from_system_time(time: SystemTime) -> Result<Self> {
         DateTime::try_from(time)
@@ -74,6 +85,7 @@ impl UtcTime {
 
     /// Convert to [`SystemTime`].
     #[cfg(feature = "std")]
+    #[must_use]
     pub fn to_system_time(&self) -> SystemTime {
         self.0.to_system_time()
     }
@@ -85,8 +97,8 @@ impl<'a> DecodeValue<'a> for UtcTime {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        if Self::LENGTH != usize::try_from(header.length)? {
-            return Err(Self::TAG.value_error());
+        if Self::LENGTH != usize::try_from(header.length())? {
+            return Err(reader.error(Self::TAG.value_error()));
         }
 
         let mut bytes = [0u8; Self::LENGTH];
@@ -94,7 +106,21 @@ impl<'a> DecodeValue<'a> for UtcTime {
 
         match bytes {
             // RFC 5280 requires mandatory seconds and Z-normalized time zone
-            [year1, year2, mon1, mon2, day1, day2, hour1, hour2, min1, min2, sec1, sec2, b'Z'] => {
+            [
+                year1,
+                year2,
+                mon1,
+                mon2,
+                day1,
+                day2,
+                hour1,
+                hour2,
+                min1,
+                min2,
+                sec1,
+                sec2,
+                b'Z',
+            ] => {
                 let year = u16::from(datetime::decode_decimal(Self::TAG, year1, year2)?);
                 let month = datetime::decode_decimal(Self::TAG, mon1, mon2)?;
                 let day = datetime::decode_decimal(Self::TAG, day1, day2)?;
@@ -111,10 +137,10 @@ impl<'a> DecodeValue<'a> for UtcTime {
                 .ok_or(ErrorKind::DateTime)?;
 
                 DateTime::new(year, month, day, hour, minute, second)
-                    .map_err(|_| Self::TAG.value_error())
+                    .map_err(|_| reader.error(Self::TAG.value_error()))
                     .and_then(|dt| Self::from_unix_duration(dt.unix_duration()))
             }
-            _ => Err(Self::TAG.value_error()),
+            _ => Err(reader.error(Self::TAG.value_error())),
         }
     }
 }
@@ -128,7 +154,7 @@ impl EncodeValue for UtcTime {
         let year = match self.0.year() {
             y @ 1950..=1999 => y.checked_sub(1900),
             y @ 2000..=2049 => y.checked_sub(2000),
-            _ => return Err(Self::TAG.value_error()),
+            _ => return Err(Self::TAG.value_error().into()),
         }
         .and_then(|y| u8::try_from(y).ok())
         .ok_or(ErrorKind::DateTime)?;
@@ -195,6 +221,7 @@ impl From<UtcTime> for SystemTime {
 // The DateTime type has a way bigger range of valid years than UtcTime,
 // so the DateTime year is mapped into a valid range to throw away less inputs.
 #[cfg(feature = "arbitrary")]
+#[allow(clippy::unwrap_in_result)]
 impl<'a> arbitrary::Arbitrary<'a> for UtcTime {
     fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
         const MIN_YEAR: u16 = 1970;
@@ -238,8 +265,8 @@ mod tests {
         assert_eq!(utc_time.to_unix_duration().as_secs(), 673573540);
 
         let mut buf = [0u8; 128];
-        let mut encoder = SliceWriter::new(&mut buf);
-        utc_time.encode(&mut encoder).unwrap();
-        assert_eq!(example_bytes, encoder.finish().unwrap());
+        let mut writer = SliceWriter::new(&mut buf);
+        utc_time.encode(&mut writer).unwrap();
+        assert_eq!(example_bytes, writer.finish().unwrap());
     }
 }

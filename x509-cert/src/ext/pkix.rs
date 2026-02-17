@@ -78,8 +78,8 @@ impl AssociatedOid for SubjectAltName {
 
 impl_newtype!(SubjectAltName, name::GeneralNames);
 
-impl crate::ext::AsExtension for SubjectAltName {
-    fn critical(&self, subject: &crate::name::Name, _extensions: &[super::Extension]) -> bool {
+impl crate::ext::Criticality for SubjectAltName {
+    fn criticality(&self, subject: &crate::name::Name, _extensions: &[super::Extension]) -> bool {
         // https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
         //   Further, if the only subject identity included in the certificate is
         //   an alternative name form (e.g., an electronic mail address), then the

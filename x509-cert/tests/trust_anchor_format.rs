@@ -1,6 +1,6 @@
 use der::{
-    asn1::{Ia5StringRef, PrintableStringRef},
     Decode, Encode, SliceReader,
+    asn1::{Ia5StringRef, PrintableStringRef},
 };
 use hex_literal::hex;
 use x509_cert::{
@@ -19,8 +19,8 @@ fn decode_ta1() {
     let mut decoder = SliceReader::new(der_encoded_tac).unwrap();
     let tac = TrustAnchorChoice::<Rfc5280>::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_der().unwrap();
-    println!("Original : {:02X?}", der_encoded_cert);
-    println!("Reencoded: {:02X?}", reencoded_tac);
+    println!("Original : {der_encoded_cert:02X?}");
+    println!("Reencoded: {reencoded_tac:02X?}");
     assert_eq!(der_encoded_tac, reencoded_tac.as_slice());
 
     match tac {
@@ -139,8 +139,8 @@ fn decode_ta2() {
     let mut decoder = SliceReader::new(der_encoded_tac).unwrap();
     let tac = TrustAnchorChoice::<Rfc5280>::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_der().unwrap();
-    println!("Original : {:02X?}", der_encoded_cert);
-    println!("Reencoded: {:02X?}", reencoded_tac);
+    println!("Original : {der_encoded_cert:02X?}");
+    println!("Reencoded: {reencoded_tac:02X?}");
     assert_eq!(der_encoded_tac, reencoded_tac.as_slice());
 
     match tac {
@@ -247,8 +247,8 @@ fn decode_ta3() {
     let mut decoder = SliceReader::new(der_encoded_tac).unwrap();
     let tac = TrustAnchorChoice::<Rfc5280>::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_der().unwrap();
-    println!("Original : {:02X?}", der_encoded_cert);
-    println!("Reencoded: {:02X?}", reencoded_tac);
+    println!("Original : {der_encoded_cert:02X?}");
+    println!("Reencoded: {reencoded_tac:02X?}");
     assert_eq!(der_encoded_tac, reencoded_tac.as_slice());
 
     match tac {
@@ -362,8 +362,8 @@ fn decode_ta4() {
     let mut decoder = SliceReader::new(der_encoded_tac).unwrap();
     let tac = TrustAnchorChoice::<Rfc5280>::decode(&mut decoder).unwrap();
     let reencoded_tac = tac.to_der().unwrap();
-    println!("Original : {:02X?}", der_encoded_cert);
-    println!("Reencoded: {:02X?}", reencoded_tac);
+    println!("Original : {der_encoded_cert:02X?}");
+    println!("Reencoded: {reencoded_tac:02X?}");
     assert_eq!(der_encoded_tac, reencoded_tac.as_slice());
 
     match tac {

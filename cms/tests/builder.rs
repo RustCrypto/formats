@@ -4,9 +4,9 @@ use aes::Aes128;
 use cipher::block_padding::Pkcs7;
 use cipher::{BlockModeDecrypt, BlockModeEncrypt, BlockSizeUser, Iv, IvSizeUser, KeyIvInit};
 use cms::builder::{
-    create_signing_time_attribute, ContentEncryptionAlgorithm, EnvelopedDataBuilder,
-    KeyEncryptionInfo, KeyTransRecipientInfoBuilder, PasswordRecipientInfoBuilder, PwriEncryptor,
-    SignedDataBuilder, SignerInfoBuilder,
+    ContentEncryptionAlgorithm, EnvelopedDataBuilder, KeyEncryptionInfo,
+    KeyTransRecipientInfoBuilder, PasswordRecipientInfoBuilder, PwriEncryptor, SignedDataBuilder,
+    SignerInfoBuilder, create_signing_time_attribute,
 };
 use cms::cert::{CertificateChoices, IssuerAndSerialNumber};
 use cms::content_info::ContentInfo;
@@ -18,19 +18,22 @@ use cms::signed_data::{EncapsulatedContentInfo, SignedData, SignerIdentifier};
 use const_oid::ObjectIdentifier;
 use der::asn1::{OctetString, OctetStringRef, PrintableString, SetOfVec};
 use der::{Any, AnyRef, Decode, DecodePem, Encode, Tag, Tagged};
-use p256::{pkcs8::DecodePrivateKey, NistP256};
+use p256::{NistP256, pkcs8::DecodePrivateKey};
 use pem_rfc7468::LineEnding;
 use pkcs5::pbes2::Pbkdf2Params;
-use rand::rngs::OsRng;
 use rsa::pkcs1::DecodeRsaPrivateKey;
-use rsa::rand_core::CryptoRngCore;
-use rsa::{pkcs1v15, pss};
+use rsa::rand_core::CryptoRng;
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey};
+use rsa::{pkcs1v15, pss};
 use sha2::Sha256;
 use signature::Verifier;
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::{Attribute, AttributeValue};
 use x509_cert::serial_number::SerialNumber;
+
+// Modules
+#[path = "builder/kari.rs"]
+mod kari;
 
 // TODO bk replace this by const_oid definitions as soon as released
 const RFC8894_ID_MESSAGE_TYPE: ObjectIdentifier =
@@ -152,10 +155,10 @@ fn test_build_signed_data() {
             &signer_2,
         )
         .expect("error adding P256 signer info")
-        .add_signer_info_with_rng::<pss::SigningKey<Sha256>, pss::Signature>(
+        .add_signer_info_with_rng::<pss::SigningKey<Sha256>, pss::Signature, _>(
             signer_info_builder_3,
             &signer_3,
-            &mut OsRng,
+            &mut rand::rng(),
         )
         .expect("error adding PKCS1v15 RSA signer info")
         .build()
@@ -179,7 +182,7 @@ fn test_build_signed_data() {
 #[test]
 fn test_build_enveloped_data() {
     let recipient_identifier = recipient_identifier(1);
-    let mut rng = OsRng;
+    let mut rng = rand::rng();
     let bits = 2048;
     let recipient_private_key =
         RsaPrivateKey::new(&mut rng, bits).expect("failed to generate a key");
@@ -191,7 +194,7 @@ fn test_build_enveloped_data() {
     )
     .expect("Could not create a KeyTransRecipientInfoBuilder");
 
-    let mut rng = OsRng;
+    let mut rng = rand::rng();
     let mut builder = EnvelopedDataBuilder::new(
         None,
         "Arbitrary unencrypted content".as_bytes(),
@@ -297,7 +300,7 @@ fn test_build_pkcs7_scep_pkcsreq() {
     )
     .unwrap();
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Add recipient info. Multiple recipients are possible, but not used here.
     let enveloped_data = enveloped_data_builder
@@ -426,9 +429,11 @@ fn test_build_pkcs7_scep_pkcsreq() {
             let verifier_rsa_key = RsaPrivateKey::from_pkcs8_pem(verifier_rsa_key_pem).unwrap();
             pkcs1v15::VerifyingKey::<Sha256>::new(RsaPublicKey::from(verifier_rsa_key))
         };
-        assert!(verifier
-            .verify(signed_attributes_der.as_slice(), &signature)
-            .is_ok());
+        assert!(
+            verifier
+                .verify(signed_attributes_der.as_slice(), &signature)
+                .is_ok()
+        );
     }
 
     // Decode contained enveloped data
@@ -648,10 +653,10 @@ async fn async_builder() {
         )
         .await
         .expect("error adding PKCS1v15 RSA signer info")
-        .add_signer_info_with_rng_async::<pss::SigningKey<Sha256>, pss::Signature>(
+        .add_signer_info_with_rng_async::<pss::SigningKey<Sha256>, pss::Signature, _>(
             signer_info_builder_3,
             &signer_3,
-            &mut OsRng,
+            &mut rand::rng(),
         )
         .await
         .expect("error adding PKCS1v15 RSA signer info")
@@ -684,7 +689,7 @@ fn test_create_password_recipient_info() {
         key_derivation_params: pkcs5::pbes2::Pbkdf2Params,
     }
     impl<'a> Aes128CbcPwriEncryptor<'a> {
-        pub fn new(challenge_password: &'a [u8], rng: &mut impl CryptoRngCore) -> Self {
+        pub fn new<R: CryptoRng + ?Sized>(challenge_password: &'a [u8], rng: &mut R) -> Self {
             let mut key_encryption_iv = [0u8; 16];
             rng.fill_bytes(key_encryption_iv.as_mut_slice());
             let key_encryption_iv = key_encryption_iv.into();
@@ -702,10 +707,10 @@ fn test_create_password_recipient_info() {
     }
     impl PwriEncryptor for Aes128CbcPwriEncryptor<'_> {
         const BLOCK_LENGTH_BITS: usize = 128; // AES block length
-        fn encrypt_rfc3211(
+        fn encrypt_rfc3211<R: CryptoRng + ?Sized>(
             &mut self,
             padded_content_encryption_key: &[u8],
-            _rng: &mut impl CryptoRngCore,
+            _rng: &mut R,
         ) -> Result<Vec<u8>, cms::builder::Error> {
             if padded_content_encryption_key.len() < 2 * Self::BLOCK_LENGTH_BITS / 8 {
                 return Err(cms::builder::Error::Builder(
@@ -854,9 +859,8 @@ fn test_create_password_recipient_info() {
     ) -> OctetString {
         let encryption_params = &encryption_algorithm_identifier.parameters.clone().unwrap();
         let iv_der = encryption_params.to_der().unwrap();
-        let iv_octet_string = OctetString::from_der(iv_der.as_slice()).unwrap();
 
-        iv_octet_string
+        OctetString::from_der(iv_der.as_slice()).unwrap()
     }
 
     /// Unpad a content-encryption key (CEK) according RFC 3211, §2.3.1
@@ -892,7 +896,7 @@ fn test_create_password_recipient_info() {
         content_encryption_key
     }
 
-    let mut the_one_and_only_rng = OsRng;
+    let mut the_one_and_only_rng = rand::rng();
 
     // Encrypt the content-encryption key (CEK) using custom encryptor
     // of type `Aes128CbcPwriEncryptor`:
@@ -941,7 +945,7 @@ fn test_create_password_recipient_info() {
             .to_der()
             .unwrap();
         let iv = Iv::<cbc::Decryptor<Aes128>>::try_from(
-            OctetStringRef::from_der(algorithm_params_der.as_slice())
+            <&OctetStringRef>::from_der(algorithm_params_der.as_slice())
                 .unwrap()
                 .as_bytes(),
         )

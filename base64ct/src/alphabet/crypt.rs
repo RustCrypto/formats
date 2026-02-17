@@ -1,13 +1,24 @@
 //! `crypt(3)` Base64 encoding.
 
+#![allow(deprecated)]
+
 use super::{Alphabet, DecodeStep, EncodeStep};
 
-/// `crypt(3)` Base64 encoding.
+/// DEPRECATED: non-standard big endian variant of the `crypt(3)` Base64 encoding.
 ///
 /// ```text
 /// [.-9]      [A-Z]      [a-z]
 /// 0x2e-0x39, 0x41-0x5a, 0x61-0x7a
 /// ```
+///
+/// <div class="warning">
+/// This encodes using a big endian variant of Base64. Most modern algorithms which can be
+/// used via `crypt(3)` use the [`Base64ShaCrypt`][`crate::Base64ShaCrypt`] encoding.
+/// </div>
+#[deprecated(
+    since = "1.8.2",
+    note = "non-standard encoding. Use Base64ShaCrypt for all crypt(3) algorithms"
+)]
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Base64Crypt;
 

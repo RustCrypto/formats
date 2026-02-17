@@ -1,7 +1,7 @@
 #![cfg(feature = "std")]
 use tls_codec::{
-    Deserialize, DeserializeBytes, Error, Serialize, Size, TlsSliceU16, TlsVecU16, TlsVecU32,
-    TlsVecU8, VLBytes,
+    Deserialize, DeserializeBytes, Error, Serialize, Size, TlsSliceU16, TlsVecU8, TlsVecU16,
+    TlsVecU32, VLBytes,
 };
 use tls_codec_derive::{TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSize};
 
@@ -9,7 +9,9 @@ use tls_codec_derive::{TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSiz
     TlsDeserialize, TlsDeserializeBytes, Debug, PartialEq, Clone, Copy, TlsSize, TlsSerialize,
 )]
 #[repr(u16)]
+#[derive(Default)]
 pub enum ExtensionType {
+    #[default]
     Reserved = 0,
     Capabilities = 1,
     Lifetime = 2,
@@ -17,12 +19,6 @@ pub enum ExtensionType {
     ParentHash = 4,
     RatchetTree = 5,
     SomethingElse = 500,
-}
-
-impl Default for ExtensionType {
-    fn default() -> Self {
-        Self::Reserved
-    }
 }
 
 #[derive(
@@ -531,7 +527,7 @@ fn type_with_unknowns() {
 #[cfg(feature = "conditional_deserialization")]
 mod conditional_deserialization {
     use tls_codec::{Deserialize, DeserializeBytes, Serialize, Size};
-    use tls_codec_derive::{conditionally_deserializable, TlsSerialize, TlsSize};
+    use tls_codec_derive::{TlsSerialize, TlsSize, conditionally_deserializable};
 
     #[test]
     fn conditionally_deserializable_struct() {

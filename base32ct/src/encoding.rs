@@ -1,6 +1,6 @@
 //! Base32 encoding trait.
 
-use crate::{alphabet::Alphabet, Error, Result};
+use crate::{Error, Result, alphabet::Alphabet};
 use core::str;
 
 #[cfg(feature = "alloc")]
@@ -101,11 +101,15 @@ impl<T: Alphabet> Encoding for T {
             c[6] = Self::decode_5bits(src_rem[6]);
         };
 
-        if !src_rem.is_empty() {
+        err |= (src_rem.len() == 1) as u8;
+        err |= (src_rem.len() == 3) as u8;
+        err |= (src_rem.len() == 6) as u8;
+
+        if src_rem.len() >= 2 {
             dst_rem[0] = (((c[0] << 3) | (c[1] >> 2)) & 0xff) as u8;
         }
 
-        if src_rem.len() >= 3 {
+        if src_rem.len() >= 4 {
             dst_rem[1] = (((c[1] << 6) | (c[2] << 1) | (c[3] >> 4)) & 0xff) as u8;
         }
 
@@ -113,7 +117,7 @@ impl<T: Alphabet> Encoding for T {
             dst_rem[2] = (((c[3] << 4) | (c[4] >> 1)) & 0xff) as u8;
         }
 
-        if src_rem.len() >= 6 {
+        if src_rem.len() >= 7 {
             dst_rem[3] = (((c[4] << 7) | (c[5] << 2) | (c[6] >> 3)) & 0xff) as u8;
         }
 
@@ -261,7 +265,7 @@ pub const fn encoded_len<T: Encoding>(length: usize) -> usize {
     } else if T::PADDED {
         ((length - 1) / 5 + 1) * 8
     } else {
-        (length * 8 + 4) / 5
+        (length * 8).div_ceil(5)
     }
 }
 
@@ -270,7 +274,7 @@ mod tests {
     use crate::{Base32, Base32Unpadded, Encoding};
 
     struct LenData {
-        fourty_bit_groups_len: usize,
+        forty_bit_groups_len: usize,
         last_group_len: usize,
         padding_len: usize,
     }
@@ -278,7 +282,7 @@ mod tests {
     fn get_len_data(data_len: usize) -> LenData {
         // More information about the calculation can be found at
         // https://www.rfc-editor.org/rfc/rfc4648#section-6
-        let fourty_bit_groups_len = data_len / 5 * 8;
+        let forty_bit_groups_len = data_len / 5 * 8;
         let (last_group_len, padding_len) = match data_len % 5 {
             0 => (0, 0),
             1 => (2, 6),
@@ -289,7 +293,7 @@ mod tests {
         };
 
         LenData {
-            fourty_bit_groups_len,
+            forty_bit_groups_len,
             last_group_len,
             padding_len,
         }
@@ -303,14 +307,14 @@ mod tests {
         for _ in 0..10 {
             buf.push(b'a');
             let LenData {
-                fourty_bit_groups_len,
+                forty_bit_groups_len,
                 last_group_len,
                 padding_len: _,
             } = get_len_data(buf.len());
 
             assert_eq!(
                 Base32Unpadded::encoded_len(&buf),
-                fourty_bit_groups_len + last_group_len
+                forty_bit_groups_len + last_group_len
             );
         }
     }
@@ -323,14 +327,14 @@ mod tests {
         for _ in 0..10 {
             buf.push(b'a');
             let LenData {
-                fourty_bit_groups_len,
+                forty_bit_groups_len,
                 last_group_len,
                 padding_len,
             } = get_len_data(buf.len());
 
             assert_eq!(
                 Base32::encoded_len(&buf),
-                fourty_bit_groups_len + last_group_len + padding_len,
+                forty_bit_groups_len + last_group_len + padding_len,
             );
         }
     }

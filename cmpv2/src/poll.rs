@@ -3,7 +3,8 @@
 use alloc::vec::Vec;
 use der::asn1::Int;
 
-use der::Sequence;
+use der::{Sequence, ValueOrd};
+use x509_cert::impl_newtype;
 
 use crate::header::PkiFreeText;
 
@@ -38,9 +39,23 @@ pub type PollReqContentId = Int;
 /// ```
 ///
 /// [RFC 4210 Section 5.3.22]: https://www.rfc-editor.org/rfc/rfc4210#section-5.3.22
-#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct PollRepContent<'a>(pub Vec<PollRepContentInner<'a>>);
+
+impl_newtype!(PollRepContent<'a>, Vec<PollRepContentInner<'a>>);
+
+impl<'a> core::ops::Index<usize> for PollRepContent<'a> {
+    type Output = PollRepContentInner<'a>;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
+    }
+}
+
+/// The `PollRepContentInner` type represents an element of the `PollRepContent` type.
+#[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
-pub struct PollRepContent<'a> {
+pub struct PollRepContentInner<'a> {
     pub cert_req_id: PollReqContentId,
     pub check_after: u64,
     pub reason: Option<PkiFreeText<'a>>,

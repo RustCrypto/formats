@@ -4,16 +4,16 @@ use const_oid::db::{
     rfc5912::ID_SHA_256,
 };
 use der::{
-    asn1::{ContextSpecific, OctetString},
     Decode, Encode,
+    asn1::{ContextSpecific, OctetString},
 };
 use hex_literal::hex;
 use pkcs8::{
+    EncryptedPrivateKeyInfoRef,
     pkcs5::{
         self,
         pbes2::{AES_256_CBC_OID, HMAC_WITH_SHA256_OID, PBES2_OID, PBKDF2_OID},
     },
-    EncryptedPrivateKeyInfoRef,
 };
 use spki::AlgorithmIdentifierOwned;
 
@@ -166,7 +166,7 @@ fn decode_sample_pfx() {
     let pfx = Pfx::from_der(bytes).expect("expected valid data");
     let reenc_content = pfx.to_der().unwrap();
     assert_eq!(bytes, reenc_content.as_slice());
-    println!("{:?}", pfx);
+    println!("{pfx:?}");
 
     assert_eq!(Version::V3, pfx.version);
     assert_eq!(ID_DATA, pfx.auth_safe.content_type);
@@ -261,7 +261,12 @@ fn decode_sample_pfx() {
     // process mac data
     let mac_data = pfx.mac_data.unwrap();
     assert_eq!(ID_SHA_256, mac_data.mac.algorithm.oid);
-    assert_eq!(hex!("10 06 A1 92 F8 EE F8 A4 A2 46 6F EB 87 16 69 57 B9 63 CD CB C9 DC D7 73 6F 47 3C BB 11 EC 00 D7"), mac_data.mac.digest.as_bytes());
+    assert_eq!(
+        hex!(
+            "10 06 A1 92 F8 EE F8 A4 A2 46 6F EB 87 16 69 57 B9 63 CD CB C9 DC D7 73 6F 47 3C BB 11 EC 00 D7"
+        ),
+        mac_data.mac.digest.as_bytes()
+    );
     assert_eq!(
         hex!("FF 08 ED 21 81 C8 A8 E3"),
         mac_data.mac_salt.as_bytes()
@@ -589,7 +594,7 @@ fn decode_sample_pfx2() {
     let pfx = Pfx::from_der(bytes).expect("expected valid data");
     let reenc_content = pfx.to_der().unwrap();
     assert_eq!(bytes, reenc_content.as_slice());
-    println!("{:?}", pfx);
+    println!("{pfx:?}");
 
     assert_eq!(Version::V3, pfx.version);
     assert_eq!(ID_DATA, pfx.auth_safe.content_type);
@@ -648,7 +653,12 @@ fn decode_sample_pfx2() {
     // process mac data
     let mac_data = pfx.mac_data.unwrap();
     assert_eq!(ID_SHA_256, mac_data.mac.algorithm.oid);
-    assert_eq!(hex!("BC 79 0E 04 37 14 F1 8F 9C 07 66 1D FE 53 82 E3 E7 F4 31 13 27 E4 C8 E7 61 D0 BA 7A EA 54 A8 A8"), mac_data.mac.digest.as_bytes());
+    assert_eq!(
+        hex!(
+            "BC 79 0E 04 37 14 F1 8F 9C 07 66 1D FE 53 82 E3 E7 F4 31 13 27 E4 C8 E7 61 D0 BA 7A EA 54 A8 A8"
+        ),
+        mac_data.mac.digest.as_bytes()
+    );
     assert_eq!(
         hex!("E1 14 4F 8C B4 AF B2 FE"),
         mac_data.mac_salt.as_bytes()

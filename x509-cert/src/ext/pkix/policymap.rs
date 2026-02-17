@@ -1,7 +1,7 @@
 use alloc::vec::Vec;
 
-use const_oid::db::rfc5280::ID_CE_POLICY_MAPPINGS;
 use const_oid::AssociatedOid;
+use const_oid::db::rfc5280::ID_CE_POLICY_MAPPINGS;
 use der::asn1::ObjectIdentifier;
 use der::{Sequence, ValueOrd};
 

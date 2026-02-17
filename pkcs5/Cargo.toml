@@ -1,6 +1,6 @@
 [package]
 name = "pkcs5"
-version = "0.8.0-rc.2"
+version = "0.8.0-rc.13"
 description = """
 Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #5:
 Password-Based Cryptography Specification Version 2.1 (RFC 8018)
@@ -12,26 +12,26 @@ repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std"]
 keywords = ["crypto", "key", "pkcs", "password"]
 readme = "README.md"
-edition = "2021"
-rust-version = "1.81"
+edition = "2024"
+rust-version = "1.85"
 
 [dependencies]
-der = { version = "0.8.0-rc.0", features = ["oid"] }
-spki = { version = "0.8.0-rc.0" }
+der = { version = "0.8", features = ["oid"] }
+spki = "0.8.0-rc.4"
 
 # optional dependencies
-cbc = { version = "=0.2.0-pre.2", optional = true }
-aes = { version = "=0.9.0-pre.2", optional = true, default-features = false }
-aes-gcm = { version = "=0.11.0-pre.2", optional = true, default-features = false, features = ["aes"] }
-des = { version = "=0.9.0-pre.2", optional = true, default-features = false }
-pbkdf2 = { version = "=0.13.0-pre.1", optional = true, default-features = false, features = ["hmac"] }
-rand_core = { version = "0.6.4", optional = true, default-features = false }
-scrypt = { version = "=0.12.0-pre.2", optional = true, default-features = false }
-sha1 = { version = "=0.11.0-pre.4", optional = true, default-features = false }
-sha2 = { version = "=0.11.0-pre.4", optional = true, default-features = false }
+cbc = { version = "0.2.0-rc.3", optional = true }
+aes = { version = "0.9.0-rc.4", optional = true, default-features = false }
+aes-gcm = { version = "0.11.0-rc.3", optional = true, default-features = false, features = ["aes"] }
+des = { version = "0.9.0-rc.3", optional = true, default-features = false }
+pbkdf2 = { version = "0.13.0-rc.9", optional = true, default-features = false, features = ["hmac"] }
+rand_core = { version = "0.10", optional = true, default-features = false }
+scrypt = { version = "0.12.0-rc.10", optional = true, default-features = false }
+sha1 = { version = "0.11.0-rc.5", optional = true, default-features = false }
+sha2 = { version = "0.11.0-rc.5", optional = true, default-features = false }
 
 [dev-dependencies]
-hex-literal = "0.4"
+hex-literal = "1"
 
 [features]
 alloc = []
@@ -39,7 +39,6 @@ std = []
 
 3des = ["dep:des", "pbes2"]
 des-insecure = ["dep:des", "pbes2"]
-getrandom = ["rand_core/getrandom"]
 pbes2 = ["dep:aes", "dep:cbc", "dep:pbkdf2", "dep:scrypt", "dep:sha2", "dep:aes-gcm"]
 sha1-insecure = ["dep:sha1", "pbes2"]
 

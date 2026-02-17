@@ -1,4 +1,4 @@
-use tls_codec::{SerializeBytes, TlsByteVecU16, TlsByteVecU24, TlsByteVecU32, TlsByteVecU8, U24};
+use tls_codec::{SerializeBytes, TlsByteVecU8, TlsByteVecU16, TlsByteVecU24, TlsByteVecU32, U24};
 
 #[test]
 fn serialize_primitives() {

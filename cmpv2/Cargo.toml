@@ -12,24 +12,28 @@ repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std"]
 keywords = ["crypto"]
 readme = "README.md"
-edition = "2021"
-rust-version = "1.81"
+edition = "2024"
+rust-version = "1.85"
 
 [dependencies]
 crmf = "=0.3.0-pre.0"
-der = { version = "0.8.0-rc.0", features = ["alloc", "derive", "flagset", "oid"] }
-spki = { version = "0.8.0-rc.0" }
-x509-cert = { version = "=0.3.0-pre.0", default-features = false }
+der = { version = "0.8", features = ["alloc", "derive", "flagset", "oid"] }
+spki = "0.8.0-rc.4"
+x509-cert = { version = "0.3.0-rc.4", default-features = false }
+
+# optional features
+digest = { version = "0.11", optional = true, default-features = false }
 
 [dev-dependencies]
-const-oid = { version = "0.10.0-rc.0", features = ["db"] }
-hex-literal = "0.4"
+const-oid = { version = "0.10", features = ["db"] }
+hex-literal = "1"
 
 [features]
 alloc = ["der/alloc"]
 std = ["der/std", "spki/std"]
 
 pem = ["alloc", "der/pem"]
+digest = ["dep:digest", "x509-cert/digest"]
 
 [package.metadata.docs.rs]
 all-features = true

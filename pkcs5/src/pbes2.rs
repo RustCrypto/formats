@@ -8,18 +8,18 @@ mod kdf;
 mod encryption;
 
 pub use self::kdf::{
-    Kdf, Pbkdf2Params, Pbkdf2Prf, Salt, ScryptParams, HMAC_WITH_SHA1_OID, HMAC_WITH_SHA256_OID,
-    PBKDF2_OID, SCRYPT_OID,
+    HMAC_WITH_SHA1_OID, HMAC_WITH_SHA256_OID, Kdf, PBKDF2_OID, Pbkdf2Params, Pbkdf2Prf, SCRYPT_OID,
+    Salt, ScryptParams,
 };
 
 use crate::{AlgorithmIdentifierRef, Error, Result};
 use der::{
-    asn1::{AnyRef, ObjectIdentifier, OctetStringRef},
     Decode, DecodeValue, Encode, EncodeValue, ErrorKind, Length, Reader, Sequence, Tag, Writer,
+    asn1::{AnyRef, ObjectIdentifier, OctetStringRef},
 };
 
 #[cfg(feature = "rand_core")]
-use rand_core::CryptoRngCore;
+use rand_core::CryptoRng;
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
 use alloc::vec::Vec;
@@ -106,7 +106,7 @@ impl Parameters {
     /// This is currently an alias for [`Parameters::scrypt`]. See that method
     /// for more information.
     #[cfg(all(feature = "pbes2", feature = "rand_core"))]
-    pub fn recommended(rng: &mut impl CryptoRngCore) -> Self {
+    pub fn recommended<R: CryptoRng>(rng: &mut R) -> Self {
         Self::scrypt(rng)
     }
 
@@ -118,7 +118,7 @@ impl Parameters {
     /// This will use AES-256-CBC as the encryption algorithm and SHA-256 as
     /// the hash function for PBKDF2.
     #[cfg(feature = "rand_core")]
-    pub fn pbkdf2(rng: &mut impl CryptoRngCore) -> Self {
+    pub fn pbkdf2<R: CryptoRng>(rng: &mut R) -> Self {
         let mut iv = [0u8; Self::DEFAULT_IV_LEN];
         rng.fill_bytes(&mut iv);
 
@@ -169,14 +169,14 @@ impl Parameters {
     ///
     /// [RustCrypto/formats#1205]: https://github.com/RustCrypto/formats/issues/1205
     #[cfg(all(feature = "pbes2", feature = "rand_core"))]
-    pub fn scrypt(rng: &mut impl CryptoRngCore) -> Self {
+    pub fn scrypt<R: CryptoRng>(rng: &mut R) -> Self {
         let mut iv = [0u8; Self::DEFAULT_IV_LEN];
         rng.fill_bytes(&mut iv);
 
         let mut salt = [0u8; Self::DEFAULT_SALT_LEN];
         rng.fill_bytes(&mut salt);
 
-        scrypt::Params::new(14, 8, 1, 32)
+        scrypt::Params::new(14, 8, 1)
             .ok()
             .and_then(|params| Self::scrypt_aes256cbc(params, &salt, iv).ok())
             .expect("invalid scrypt parameters")
@@ -449,8 +449,8 @@ impl TryFrom<AlgorithmIdentifierRef<'_>> for EncryptionScheme {
     fn try_from(alg: AlgorithmIdentifierRef<'_>) -> der::Result<Self> {
         // TODO(tarcieri): support for non-AES algorithms?
         let iv = match alg.parameters {
-            Some(params) => params.decode_as::<OctetStringRef<'_>>()?.as_bytes(),
-            None => return Err(Tag::OctetString.value_error()),
+            Some(params) => params.decode_as::<&OctetStringRef>()?.as_bytes(),
+            None => return Err(Tag::OctetString.value_error().into()),
         };
 
         match alg.oid {

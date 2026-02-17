@@ -1,20 +1,25 @@
 //! X509 Certificate builder
 
 use alloc::vec;
-use async_signature::{AsyncRandomizedSigner, AsyncSigner};
 use core::fmt;
-use der::{asn1::BitString, referenced::OwnedToRef, Encode};
-use signature::{rand_core::CryptoRngCore, Keypair, RandomizedSigner, Signer};
+use der::{Encode, asn1::BitString, referenced::OwnedToRef};
+use signature::{
+    AsyncRandomizedSigner, AsyncSigner, Keypair, RandomizedSigner, Signer, rand_core::CryptoRng,
+};
 use spki::{
     DynSignatureAlgorithmIdentifier, EncodePublicKey, ObjectIdentifier, SignatureBitStringEncoding,
 };
 
 use crate::{
-    certificate::{Certificate, TbsCertificate, Version},
-    ext::{AsExtension, Extensions},
-    serial_number::SerialNumber,
-    time::Validity,
     AlgorithmIdentifier, SubjectPublicKeyInfo,
+    certificate::{self, Certificate, TbsCertificate, Version},
+    crl::{CertificateList, RevokedCert, TbsCertList},
+    ext::{
+        Extensions, ToExtension,
+        pkix::{AuthorityKeyIdentifier, CrlNumber, SubjectKeyIdentifier},
+    },
+    serial_number::SerialNumber,
+    time::{Time, Validity},
 };
 
 pub mod profile;
@@ -71,15 +76,21 @@ impl core::error::Error for Error {}
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::Asn1(err) => write!(f, "ASN.1 error: {}", err),
-            Error::PublicKey(err) => write!(f, "public key error: {}", err),
-            Error::Signature(err) => write!(f, "signature error: {}", err),
+            Error::Asn1(err) => write!(f, "ASN.1 error: {err}"),
+            Error::PublicKey(err) => write!(f, "public key error: {err}"),
+            Error::Signature(err) => write!(f, "signature error: {err}"),
             Error::NonUniqueRdn => write!(
                 f,
                 "Each RelativeDistinguishedName MUST contain exactly one AttributeTypeAndValue."
             ),
-            Error::NonUniqueATV => write!(f, "Each Name MUST NOT contain more than one instance of a given AttributeTypeAndValue"),
-            Error::InvalidAttribute{oid} => write!(f, "Non-ordered attribute or invalid attribute found (oid={oid})"),
+            Error::NonUniqueATV => write!(
+                f,
+                "Each Name MUST NOT contain more than one instance of a given AttributeTypeAndValue"
+            ),
+            Error::InvalidAttribute { oid } => write!(
+                f,
+                "Non-ordered attribute or invalid attribute found (oid={oid})"
+            ),
             Error::MissingAttributes => write!(f, "Not all required elements were specified"),
         }
     }
@@ -108,7 +119,8 @@ pub type Result<T> = core::result::Result<T, Error>;
 
 /// X509 Certificate builder
 ///
-/// ```
+#[cfg_attr(feature = "std", doc = "```")]
+#[cfg_attr(not(feature = "std"), doc = "```ignore")]
 /// use der::Decode;
 /// use x509_cert::spki::SubjectPublicKeyInfo;
 /// use x509_cert::builder::{CertificateBuilder, Builder, profile};
@@ -204,13 +216,15 @@ where
 
     /// Add an extension to this certificate
     ///
-    /// Extensions need to implement [`AsExtension`], examples may be found in
-    /// in [`AsExtension` documentation](../ext/trait.AsExtension.html#examples) or
-    /// [the implementors](../ext/trait.AsExtension.html#implementors).
-    pub fn add_extension<E: AsExtension>(&mut self, extension: &E) -> Result<()> {
+    /// Extensions need to implement [`ToExtension`], examples may be found in
+    /// in [`ToExtension` documentation](../ext/trait.ToExtension.html#examples) or
+    /// [the implementors](../ext/trait.ToExtension.html#implementors).
+    pub fn add_extension<E: ToExtension>(
+        &mut self,
+        extension: E,
+    ) -> core::result::Result<(), E::Error> {
         let ext = extension.to_extension(&self.tbs.subject, &self.extensions)?;
         self.extensions.push(ext);
-
         Ok(())
     }
 }
@@ -235,6 +249,43 @@ pub trait Builder: Sized {
         S::VerifyingKey: EncodePublicKey;
 
     /// Run the object through the signer and build it.
+    ///
+    /// # Notes
+    ///
+    /// When using ECDSA signers, the `Signature` parameter will need to be explicit
+    /// as multiple implementation of [`signature::Signer`] with various signature
+    /// are available.
+    ///
+    /// This would look like:
+    #[cfg_attr(feature = "std", doc = "```no_run")]
+    #[cfg_attr(not(feature = "std"), doc = "```ignore")]
+    /// # use p256::elliptic_curve::Generate;
+    /// # use rand::rng;
+    /// # use std::{
+    /// #     str::FromStr,
+    /// #     time::Duration
+    /// # };
+    /// # use x509_cert::{
+    /// #     builder::{self, CertificateBuilder, Builder},
+    /// #     name::Name,
+    /// #     serial_number::SerialNumber,
+    /// #     spki::SubjectPublicKeyInfo,
+    /// #     time::Validity
+    /// # };
+    /// #
+    /// # let mut rng = rng();
+    /// # let signer = p256::ecdsa::SigningKey::generate_from_rng(&mut rng);
+    /// # let builder = CertificateBuilder::new(
+    /// #     builder::profile::cabf::Root::new(
+    /// #         false,
+    /// #         Name::from_str("CN=World domination corporation").unwrap()
+    /// #     ).unwrap(),
+    /// #     SerialNumber::from(42u32),
+    /// #     Validity::from_now(Duration::new(5, 0)).unwrap(),
+    /// #     SubjectPublicKeyInfo::from_key(signer.verifying_key()).unwrap()
+    /// # ).unwrap();
+    /// let certificate = builder.build::<_, ecdsa::der::Signature<_>>(&signer).unwrap();
+    /// ```
     fn build<S, Signature>(mut self, signer: &S) -> Result<Self::Output>
     where
         S: Signer<Signature>,
@@ -250,16 +301,53 @@ pub trait Builder: Sized {
     }
 
     /// Run the object through the signer and build it.
-    fn build_with_rng<S, Signature>(
-        mut self,
-        signer: &S,
-        rng: &mut impl CryptoRngCore,
-    ) -> Result<Self::Output>
+    ///
+    /// # Notes
+    ///
+    /// When using ECDSA signers, the `Signature` parameter will need to be explicit
+    /// as multiple implementation of [`signature::Signer`] with various signature
+    /// are available.
+    ///
+    /// This would look like:
+    #[cfg_attr(feature = "std", doc = "```no_run")]
+    #[cfg_attr(not(feature = "std"), doc = "```ignore")]
+    /// # use p256::elliptic_curve::Generate;
+    /// # use rand::rng;
+    /// # use std::{
+    /// #     str::FromStr,
+    /// #     time::Duration
+    /// # };
+    /// # use x509_cert::{
+    /// #     builder::{self, CertificateBuilder, Builder},
+    /// #     name::Name,
+    /// #     serial_number::SerialNumber,
+    /// #     spki::SubjectPublicKeyInfo,
+    /// #     time::Validity
+    /// # };
+    /// #
+    /// # let mut rng = rng();
+    /// # let signer = p256::ecdsa::SigningKey::generate_from_rng(&mut rng);
+    /// # let builder = CertificateBuilder::new(
+    /// #     builder::profile::cabf::Root::new(
+    /// #         false,
+    /// #         Name::from_str("CN=World domination corporation").unwrap()
+    /// #     ).unwrap(),
+    /// #     SerialNumber::from(42u32),
+    /// #     Validity::from_now(Duration::new(5, 0)).unwrap(),
+    /// #     SubjectPublicKeyInfo::from_key(signer.verifying_key()).unwrap()
+    /// # ).unwrap();
+    /// let certificate = builder.build_with_rng::<_, ecdsa::der::Signature<_>, _>(
+    ///     &signer,
+    ///     &mut rng
+    /// ).unwrap();
+    /// ```
+    fn build_with_rng<S, Signature, R>(mut self, signer: &S, rng: &mut R) -> Result<Self::Output>
     where
         S: RandomizedSigner<Signature>,
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
+        R: CryptoRng + ?Sized,
     {
         let blob = self.finalize(signer)?;
 
@@ -346,6 +434,46 @@ pub trait AsyncBuilder: Sized {
         S::VerifyingKey: EncodePublicKey;
 
     /// Run the object through the signer and build it.
+    ///
+    /// # Notes
+    ///
+    /// When using ECDSA signers, the `Signature` parameter will need to be explicit
+    /// as multiple implementation of [`signature::AsyncSigner`] with various signature
+    /// are available.
+    ///
+    /// This would look like:
+    #[cfg_attr(feature = "std", doc = "```no_run")]
+    #[cfg_attr(not(feature = "std"), doc = "```ignore")]
+    /// # use p256::elliptic_curve::Generate;
+    /// # use rand::rng;
+    /// # use std::{
+    /// #     str::FromStr,
+    /// #     time::Duration
+    /// # };
+    /// # use x509_cert::{
+    /// #     builder::{self, CertificateBuilder, AsyncBuilder},
+    /// #     name::Name,
+    /// #     serial_number::SerialNumber,
+    /// #     spki::SubjectPublicKeyInfo,
+    /// #     time::Validity
+    /// # };
+    /// #
+    /// # async fn build() -> builder::Result<()> {
+    /// # let mut rng = rng();
+    /// # let signer = p256::ecdsa::SigningKey::generate_from_rng(&mut rng);
+    /// # let builder = CertificateBuilder::new(
+    /// #     builder::profile::cabf::Root::new(
+    /// #         false,
+    /// #         Name::from_str("CN=World domination corporation").unwrap()
+    /// #     ).unwrap(),
+    /// #     SerialNumber::from(42u32),
+    /// #     Validity::from_now(Duration::new(5, 0)).unwrap(),
+    /// #     SubjectPublicKeyInfo::from_key(signer.verifying_key()).unwrap()
+    /// # ).unwrap();
+    /// let certificate = builder.build_async::<_, ecdsa::der::Signature<_>>(&signer).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
     async fn build_async<S, Signature>(mut self, signer: &S) -> Result<Self::Output>
     where
         S: AsyncSigner<Signature>,
@@ -361,16 +489,57 @@ pub trait AsyncBuilder: Sized {
     }
 
     /// Run the object through the signer and build it.
-    async fn build_with_rng_async<S, Signature>(
+    ///
+    /// # Notes
+    ///
+    /// When using ECDSA signers, the `Signature` parameter will need to be explicit
+    /// as multiple implementation of [`signature::AsyncSigner`] with various signature
+    /// are available.
+    ///
+    /// This would look like:
+    #[cfg_attr(feature = "std", doc = "```no_run")]
+    #[cfg_attr(not(feature = "std"), doc = "```ignore")]
+    /// # use p256::elliptic_curve::Generate;
+    /// # use rand::rng;
+    /// # use std::{
+    /// #     str::FromStr,
+    /// #     time::Duration
+    /// # };
+    /// # use x509_cert::{
+    /// #     builder::{self, CertificateBuilder, AsyncBuilder},
+    /// #     name::Name,
+    /// #     serial_number::SerialNumber,
+    /// #     spki::SubjectPublicKeyInfo,
+    /// #     time::Validity
+    /// # };
+    /// #
+    /// # async fn build() -> builder::Result<()> {
+    /// # let mut rng = rng();
+    /// # let signer = p256::ecdsa::SigningKey::generate_from_rng(&mut rng);
+    /// # let builder = CertificateBuilder::new(
+    /// #     builder::profile::cabf::Root::new(
+    /// #         false,
+    /// #         Name::from_str("CN=World domination corporation").unwrap()
+    /// #     ).unwrap(),
+    /// #     SerialNumber::from(42u32),
+    /// #     Validity::from_now(Duration::new(5, 0)).unwrap(),
+    /// #     SubjectPublicKeyInfo::from_key(signer.verifying_key()).unwrap()
+    /// # ).unwrap();
+    /// let certificate = builder.build_with_rng_async::<_, ecdsa::der::Signature<_>, _>(&signer, &mut rng).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    async fn build_with_rng_async<S, Signature, R>(
         mut self,
         signer: &S,
-        rng: &mut impl CryptoRngCore,
+        rng: &mut R,
     ) -> Result<Self::Output>
     where
         S: AsyncRandomizedSigner<Signature>,
         S: Keypair + DynSignatureAlgorithmIdentifier,
         S::VerifyingKey: EncodePublicKey,
         Signature: SignatureBitStringEncoding,
+        R: CryptoRng + ?Sized,
     {
         let blob = self.finalize(signer)?;
 
@@ -403,5 +572,130 @@ where
         S::VerifyingKey: EncodePublicKey,
     {
         <T as Builder>::finalize(self, signer)
+    }
+}
+
+/// X.509 CRL builder
+pub struct CrlBuilder<P = certificate::Rfc5280>
+where
+    P: certificate::Profile,
+{
+    tbs: TbsCertList<P>,
+}
+
+impl<P> CrlBuilder<P>
+where
+    P: certificate::Profile,
+{
+    /// Create a `CrlBuilder` with the given issuer and the given monotonic [`CrlNumber`]
+    #[cfg(feature = "std")]
+    pub fn new(issuer: &Certificate, crl_number: CrlNumber) -> der::Result<Self> {
+        let this_update = Time::now()?;
+        Self::new_with_this_update(issuer, crl_number, this_update)
+    }
+
+    /// Create a `CrlBuilder` with the given issuer, a given monotonic [`CrlNumber`], and valid
+    /// from the given `this_update` start validity date.
+    pub fn new_with_this_update(
+        issuer: &Certificate,
+        crl_number: CrlNumber,
+        this_update: Time,
+    ) -> der::Result<Self> {
+        // Replaced later when the finalize is called
+        let signature_alg = AlgorithmIdentifier {
+            oid: NULL_OID,
+            parameters: None,
+        };
+
+        let issuer_name = issuer.tbs_certificate.subject().clone();
+
+        let mut crl_extensions = Extensions::new();
+        crl_extensions.push(crl_number.to_extension(&issuer_name, &crl_extensions)?);
+        let aki = match issuer
+            .tbs_certificate
+            .get_extension::<AuthorityKeyIdentifier>()?
+        {
+            Some((_, aki)) => aki,
+            None => {
+                let ski = SubjectKeyIdentifier::try_from(
+                    issuer
+                        .tbs_certificate
+                        .subject_public_key_info()
+                        .owned_to_ref(),
+                )?;
+                AuthorityKeyIdentifier {
+                    // KeyIdentifier must be the same as subjectKeyIdentifier
+                    key_identifier: Some(ski.0.clone()),
+                    // other fields must not be present.
+                    ..Default::default()
+                }
+            }
+        };
+        crl_extensions.push(aki.to_extension(&issuer_name, &crl_extensions)?);
+
+        let tbs = TbsCertList {
+            version: Version::V2,
+            signature: signature_alg,
+            issuer: issuer_name,
+            this_update,
+            next_update: None,
+            revoked_certificates: None,
+            crl_extensions: Some(crl_extensions),
+        };
+
+        Ok(Self { tbs })
+    }
+
+    /// Make the CRL valid until the given `next_update`
+    pub fn with_next_update(mut self, next_update: Option<Time>) -> Self {
+        self.tbs.next_update = next_update;
+        self
+    }
+
+    /// Add certificates to the revocation list
+    pub fn with_certificates<I>(mut self, revoked: I) -> Self
+    where
+        I: Iterator<Item = RevokedCert<P>>,
+    {
+        let certificates = self
+            .tbs
+            .revoked_certificates
+            .get_or_insert_with(vec::Vec::new);
+
+        let mut revoked: vec::Vec<RevokedCert<P>> = revoked.collect();
+        certificates.append(&mut revoked);
+
+        self
+    }
+}
+
+impl<P> Builder for CrlBuilder<P>
+where
+    P: certificate::Profile,
+{
+    type Output = CertificateList<P>;
+
+    fn finalize<S>(&mut self, cert_signer: &S) -> Result<vec::Vec<u8>>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+    {
+        self.tbs.signature = cert_signer.signature_algorithm_identifier()?;
+
+        self.tbs.to_der().map_err(Error::from)
+    }
+
+    fn assemble<S>(self, signature: BitString, _signer: &S) -> Result<Self::Output>
+    where
+        S: Keypair + DynSignatureAlgorithmIdentifier,
+        S::VerifyingKey: EncodePublicKey,
+    {
+        let signature_algorithm = self.tbs.signature.clone();
+
+        Ok(CertificateList {
+            tbs_cert_list: self.tbs,
+            signature_algorithm,
+            signature,
+        })
     }
 }

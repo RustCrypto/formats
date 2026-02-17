@@ -3,12 +3,12 @@
 use core::{fmt::Display, marker::PhantomData};
 
 use der::{
-    asn1::{self, Int},
     DecodeValue, EncodeValue, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag, ValueOrd,
     Writer,
+    asn1::{self, Int},
 };
 #[cfg(feature = "builder")]
-use {alloc::vec, signature::rand_core::CryptoRngCore};
+use {alloc::vec, signature::rand_core::CryptoRng};
 
 use crate::certificate::{Profile, Rfc5280};
 
@@ -77,8 +77,9 @@ impl<P: Profile> SerialNumber<P> {
     /// of output from the CSPRNG. This currently defaults to a 17-bytes long serial number.
     ///
     /// [ballot 164]: https://cabforum.org/2016/03/31/ballot-164/
-    pub fn generate(rng: &mut impl CryptoRngCore) -> Result<Self> {
+    pub fn generate<R: CryptoRng + ?Sized>(rng: &mut R) -> Self {
         Self::generate_with_prefix(&[], 17, rng)
+            .expect("a random of 17 is acceptable, and rng may not fail")
     }
 
     /// Generates a random serial number from RNG. Include a prefix value.
@@ -90,10 +91,10 @@ impl<P: Profile> SerialNumber<P> {
     /// equal or below 19 (to account for leading sign disambiguation, and the maximum length of 20).
     ///
     /// [ballot 164]: https://cabforum.org/2016/03/31/ballot-164/
-    pub fn generate_with_prefix(
+    pub fn generate_with_prefix<R: CryptoRng + ?Sized>(
         prefix: &[u8],
         rand_len: usize,
-        rng: &mut impl CryptoRngCore,
+        rng: &mut R,
     ) -> Result<Self> {
         // CABF requires a minimum of 64 bits of random
         if rand_len < 8 {
@@ -155,8 +156,8 @@ impl Display for SerialNumber {
 
         while let Some(byte) = iter.next() {
             match iter.peek() {
-                Some(_) => write!(f, "{:02X}:", byte)?,
-                None => write!(f, "{:02X}", byte)?,
+                Some(_) => write!(f, "{byte:02X}:")?,
+                None => write!(f, "{byte:02X}")?,
             }
         }
 
@@ -251,33 +252,31 @@ mod tests {
     #[cfg(feature = "builder")]
     #[test]
     fn serial_number_generate() {
-        let sn = SerialNumber::<Rfc5280>::generate(&mut rand::thread_rng()).unwrap();
+        let sn = SerialNumber::<Rfc5280>::generate(&mut rand::rng());
 
         // Underlying storage uses signed int for compatibility reasons,
         // we may need to prefix the value with 0x00 to make it an unsigned.
         // in which case the length is going to be 18.
         assert!(matches!(sn.as_bytes().len(), 17..=18));
 
-        let sn =
-            SerialNumber::<Rfc5280>::generate_with_prefix(&[], 8, &mut rand::thread_rng()).unwrap();
+        let sn = SerialNumber::<Rfc5280>::generate_with_prefix(&[], 8, &mut rand::rng()).unwrap();
         assert!(matches!(sn.as_bytes().len(), 8..=9));
 
         let sn =
-            SerialNumber::<Rfc5280>::generate_with_prefix(&[1, 2, 3], 8, &mut rand::thread_rng())
-                .unwrap();
+            SerialNumber::<Rfc5280>::generate_with_prefix(&[1, 2, 3], 8, &mut rand::rng()).unwrap();
         assert!(matches!(sn.as_bytes().len(), 11..=12));
         assert_eq!(&sn.as_bytes()[..3], &[1, 2, 3]);
 
-        let sn = SerialNumber::<Rfc5280>::generate_with_prefix(&[], 7, &mut rand::thread_rng());
+        let sn = SerialNumber::<Rfc5280>::generate_with_prefix(&[], 7, &mut rand::rng());
         assert!(sn.is_err());
 
-        let sn = SerialNumber::<Rfc5280>::generate_with_prefix(&[], 20, &mut rand::thread_rng());
+        let sn = SerialNumber::<Rfc5280>::generate_with_prefix(&[], 20, &mut rand::rng());
         assert!(sn.is_err());
 
-        let sn = SerialNumber::<Rfc5280>::generate_with_prefix(&[], 19, &mut rand::thread_rng());
+        let sn = SerialNumber::<Rfc5280>::generate_with_prefix(&[], 19, &mut rand::rng());
         assert!(sn.is_ok());
 
-        let sn = SerialNumber::<Rfc5280>::generate_with_prefix(&[1], 19, &mut rand::thread_rng());
+        let sn = SerialNumber::<Rfc5280>::generate_with_prefix(&[1], 19, &mut rand::rng());
         assert!(sn.is_err());
     }
 }

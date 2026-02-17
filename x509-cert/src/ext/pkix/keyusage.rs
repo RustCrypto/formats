@@ -1,12 +1,12 @@
 use alloc::vec::Vec;
 
+use const_oid::AssociatedOid;
 use const_oid::db::rfc5280::{
     ID_CE_EXT_KEY_USAGE, ID_CE_KEY_USAGE, ID_CE_PRIVATE_KEY_USAGE_PERIOD,
 };
-use const_oid::AssociatedOid;
-use der::asn1::{GeneralizedTime, ObjectIdentifier};
-use der::flagset::{flags, FlagSet};
 use der::Sequence;
+use der::asn1::{GeneralizedTime, ObjectIdentifier};
+use der::flagset::{FlagSet, flags};
 
 flags! {
     /// Key usage flags as defined in [RFC 5280 Section 4.2.1.3].

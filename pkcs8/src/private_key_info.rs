@@ -3,22 +3,21 @@
 use crate::{Error, Result, Version};
 use core::fmt;
 use der::{
-    asn1::{AnyRef, BitStringRef, ContextSpecific, OctetStringRef},
     Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Sequence, TagMode,
     TagNumber, Writer,
+    asn1::{AnyRef, BitStringRef, ContextSpecific, OctetStringRef, SequenceRef},
 };
 use spki::AlgorithmIdentifier;
 
 #[cfg(feature = "alloc")]
 use der::{
-    asn1::{Any, BitString, OctetString},
     SecretDocument,
+    asn1::{Any, BitString, OctetString},
 };
 
 #[cfg(feature = "encryption")]
 use {
-    crate::EncryptedPrivateKeyInfoRef, der::zeroize::Zeroizing, pkcs5::pbes2,
-    rand_core::CryptoRngCore,
+    crate::EncryptedPrivateKeyInfoRef, der::zeroize::Zeroizing, pkcs5::pbes2, rand_core::CryptoRng,
 };
 
 #[cfg(feature = "pem")]
@@ -27,8 +26,11 @@ use der::pem::PemLabel;
 #[cfg(feature = "subtle")]
 use subtle::{Choice, ConstantTimeEq};
 
+/// Context-specific tag number for attributes.
+const ATTRIBUTES_TAG: TagNumber = TagNumber(0);
+
 /// Context-specific tag number for the public key.
-const PUBLIC_KEY_TAG: TagNumber = TagNumber::N1;
+const PUBLIC_KEY_TAG: TagNumber = TagNumber(1);
 
 /// PKCS#8 `PrivateKeyInfo`.
 ///
@@ -96,7 +98,7 @@ pub struct PrivateKeyInfo<Params, Key, PubKey> {
     /// X.509 `AlgorithmIdentifier` for the private key type.
     pub algorithm: AlgorithmIdentifier<Params>,
 
-    /// Private key data.
+    /// Private key data. Exact content format is different between algorithms.
     pub private_key: Key,
 
     /// Public key data, optionally available if version is V2.
@@ -146,9 +148,9 @@ where
     ///   - p: 1
     /// - Cipher: AES-256-CBC (best available option for PKCS#5 encryption)
     #[cfg(feature = "encryption")]
-    pub fn encrypt(
+    pub fn encrypt<R: CryptoRng>(
         &self,
-        rng: &mut impl CryptoRngCore,
+        rng: &mut R,
         password: impl AsRef<[u8]>,
     ) -> Result<SecretDocument> {
         let der = Zeroizing::new(self.to_der()?);
@@ -194,36 +196,36 @@ where
 {
     type Error = der::Error;
 
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
-        reader.read_nested(header.length, |reader| {
-            // Parse and validate `version` INTEGER.
-            let version = Version::decode(reader)?;
-            let algorithm = reader.decode()?;
-            let private_key = Key::decode(reader)?;
-            let public_key =
-                reader.context_specific::<PubKey>(PUBLIC_KEY_TAG, TagMode::Implicit)?;
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> der::Result<Self> {
+        // Parse and validate `version` INTEGER.
+        let version = Version::decode(reader)?;
+        let algorithm = reader.decode()?;
+        let private_key = Key::decode(reader)?;
 
-            if version.has_public_key() != public_key.is_some() {
-                return Err(reader.error(
-                    der::Tag::ContextSpecific {
-                        constructed: true,
-                        number: PUBLIC_KEY_TAG,
-                    }
-                    .value_error()
-                    .kind(),
-                ));
-            }
+        let _attributes =
+            reader.context_specific::<&SequenceRef>(ATTRIBUTES_TAG, TagMode::Implicit)?;
 
-            // Ignore any remaining extension fields
-            while !reader.is_finished() {
-                reader.decode::<ContextSpecific<AnyRef<'_>>>()?;
-            }
+        let public_key = reader.context_specific::<PubKey>(PUBLIC_KEY_TAG, TagMode::Implicit)?;
 
-            Ok(Self {
-                algorithm,
-                private_key,
-                public_key,
-            })
+        if version.has_public_key() != public_key.is_some() {
+            return Err(reader.error(
+                der::Tag::ContextSpecific {
+                    constructed: true,
+                    number: PUBLIC_KEY_TAG,
+                }
+                .value_error(),
+            ));
+        }
+
+        // Ignore any remaining extension fields
+        while !reader.is_finished() {
+            reader.decode::<ContextSpecific<AnyRef<'_>>>()?;
+        }
+
+        Ok(Self {
+            algorithm,
+            private_key,
+            public_key,
         })
     }
 }
@@ -365,7 +367,7 @@ where
 }
 
 /// [`PrivateKeyInfo`] with [`AnyRef`] algorithm parameters, and `&[u8]` key.
-pub type PrivateKeyInfoRef<'a> = PrivateKeyInfo<AnyRef<'a>, OctetStringRef<'a>, BitStringRef<'a>>;
+pub type PrivateKeyInfoRef<'a> = PrivateKeyInfo<AnyRef<'a>, &'a OctetStringRef, BitStringRef<'a>>;
 
 /// [`PrivateKeyInfo`] with [`Any`] algorithm parameters, and `Box<[u8]>` key.
 #[cfg(feature = "alloc")]
@@ -387,6 +389,8 @@ impl BitStringLike for BitStringRef<'_> {
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::*;
+    use alloc::borrow::ToOwned;
+    use core::borrow::Borrow;
     use der::referenced::*;
 
     impl BitStringLike for BitString {
@@ -400,7 +404,7 @@ mod allocating {
         fn ref_to_owned(&self) -> Self::Owned {
             PrivateKeyInfoOwned {
                 algorithm: self.algorithm.ref_to_owned(),
-                private_key: self.private_key.ref_to_owned(),
+                private_key: self.private_key.to_owned(),
                 public_key: self.public_key.ref_to_owned(),
             }
         }
@@ -411,7 +415,7 @@ mod allocating {
         fn owned_to_ref(&self) -> Self::Borrowed<'_> {
             PrivateKeyInfoRef {
                 algorithm: self.algorithm.owned_to_ref(),
-                private_key: self.private_key.owned_to_ref(),
+                private_key: self.private_key.borrow(),
                 public_key: self.public_key.owned_to_ref(),
             }
         }

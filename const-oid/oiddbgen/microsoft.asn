@@ -1,0 +1,63 @@
+
+{iso(1) identified-organization(3) dod(6) internet(1) private(4) enterprise(1) microsoft(311)}
+iso                     OBJECT IDENTIFIER ::= { 1 }
+identified-organization OBJECT IDENTIFIER ::= { iso 3 }
+dod                     OBJECT IDENTIFIER ::= { identified-organization 6 }
+internet                OBJECT IDENTIFIER ::= { dod 1 }
+private                 OBJECT IDENTIFIER ::= { internet 4 }
+enterprises             OBJECT IDENTIFIER ::= { private 1 }
+microsoft               OBJECT IDENTIFIER ::= { enterprises 311 }
+
+
+Software                             OBJECT IDENTIFIER ::= { microsoft 1  }
+Authenticode                         OBJECT IDENTIFIER ::= { microsoft 2  }
+Time Stamping                        OBJECT IDENTIFIER ::= { microsoft 3  }
+Permissions                          OBJECT IDENTIFIER ::= { microsoft 4  }
+Crypto 2.0                           OBJECT IDENTIFIER ::= { microsoft 10 }
+Catalog                              OBJECT IDENTIFIER ::= { microsoft 12 }
+Microsoft-PKCS10-OIDs                OBJECT IDENTIFIER ::= { microsoft 13 }
+Microsoft-Java                       OBJECT IDENTIFIER ::= { microsoft 15 }
+Microsoft-Outlook-Exchange           OBJECT IDENTIFIER ::= { microsoft 16 }
+Microsoft-PKCS12-attributes          OBJECT IDENTIFIER ::= { microsoft 17 }
+Microsoft-Hydra                      OBJECT IDENTIFIER ::= { microsoft 18 }
+Microsoft-ISPU-Test                  OBJECT IDENTIFIER ::= { microsoft 19 }
+Microsoft-enrollment-infrastructure  OBJECT IDENTIFIER ::= { microsoft 20 }
+Microsoft-CertSrv-Infrastructure     OBJECT IDENTIFIER ::= { microsoft 21 }
+Microsoft-Directory-Service          OBJECT IDENTIFIER ::= { microsoft 25 }
+IIS                                  OBJECT IDENTIFIER ::= { microsoft 30 }
+Windows-updates-and-service-packs    OBJECT IDENTIFIER ::= { microsoft 31 }
+Fonts                                OBJECT IDENTIFIER ::= { microsoft 40 }
+Microsoft-Licensing-and-Registration OBJECT IDENTIFIER ::= { microsoft 41 }
+Microsoft-Corporate-PKI-ITG          OBJECT IDENTIFIER ::= { microsoft 42 }
+Microsoft-WWOps-BizExt               OBJECT IDENTIFIER ::= { microsoft 43 }
+Microsoft-Peer-Networking            OBJECT IDENTIFIER ::= { microsoft 44 }
+Mobile Devices-Code-Signing          OBJECT IDENTIFIER ::= { microsoft 45 }
+Extended-validation                  OBJECT IDENTIFIER ::= { microsoft 60 }
+BitLocker-Drive-Encryption           OBJECT IDENTIFIER ::= { microsoft 67 }
+CAPICOM                              OBJECT IDENTIFIER ::= { microsoft 88 }
+
+szOID_AUTO_ENROLL_CTL_USAGE          OBJECT IDENTIFIER ::= { Microsoft-enrollment-infrastructure 1 }
+szOID_ENROLL_CERTTYPE_EXTENSION      OBJECT IDENTIFIER ::= { Microsoft-enrollment-infrastructure 2 }
+szOID_CERT_MANIFOLD                  OBJECT IDENTIFIER ::= { Microsoft-enrollment-infrastructure 3 }
+
+MS-Certificate-Services-CA-Version   OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 1 }
+szOID_CERTSRV_PREVIOUS_CERT_HASH     OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 2 }
+szOID_CRL_VIRTUAL_BASE               OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 3 }
+szOID_CRL_NEXT_PUBLISH               OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 4 }
+szOID_KP_CA_EXCHANGE                 OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 5 }
+szOID_KP_KEY_RECOVERY_AGENT          OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 6 }
+szOID_CERTIFICATE_TEMPLATE           OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 7 }
+szOID_ENTERPRISE_OID_ROOT            OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 8 }
+szOID_RDN_DUMMY_SIGNER               OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 9 }
+szOID_APPLICATION_CERT_POLICIES      OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 10 }
+szOID_APPLICATION_POLICY_MAPPINGS    OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 11 }
+szOID_APPLICATION_POLICY_CONSTRAINTS OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 12 }
+szOID_ARCHIVED_KEY_ATTR              OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 13 }
+szOID_CRL_SELF_CDP                   OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 14 }
+szOID_REQUIRE_CERT_CHAIN_POLICY      OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 15 }
+szOID_ARCHIVED_KEY_CERT_HASH         OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 16 }
+szOID_ISSUED_CERT_HASH               OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 17 }
+szOID_DS_EMAIL_REPLICATION           OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 19 }
+szOID_REQUEST_CLIENT_INFO            OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 20 }
+szOID_ENCRYPTED_KEY_HASH             OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 21 }
+szOID_CERTSRV_CROSSCA_VERSION        OBJECT IDENTIFIER ::= {Microsoft-CertSrv-Infrastructure 22 }

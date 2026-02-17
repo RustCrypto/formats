@@ -1,16 +1,15 @@
 //! Request-related types
 
 use alloc::vec::Vec;
-use der::asn1::{BitString, Int};
-use der::Sequence;
 
+use der::{
+    Sequence,
+    asn1::{BitString, Int},
+};
 use spki::{AlgorithmIdentifierOwned, SubjectPublicKeyInfoOwned};
-use x509_cert::attr::Attribute;
-use x509_cert::ext::Extensions;
-use x509_cert::name::Name;
-use x509_cert::serial_number::SerialNumber;
-use x509_cert::time::Time;
-use x509_cert::Version;
+use x509_cert::{
+    Version, attr::Attribute, ext::Extensions, name::Name, serial_number::SerialNumber, time::Time,
+};
 
 use crate::controls::Controls;
 use crate::pop::ProofOfPossession;
@@ -90,7 +89,7 @@ pub struct CertRequest {
 ///       extensions   [9] Extensions{{CertExtensions}}  OPTIONAL }
 /// ```
 ///
-/// Note, the EXPLICIT tagging attribute used in the definition of the the issuer and subject fields
+/// Note, the EXPLICIT tagging attribute used in the definition of the issuer and subject fields
 /// is because Name is a CHOICE and the original tag type cannot be obscured by an IMPLICIT tag.
 /// See 31.2.6 in X.680:
 ///

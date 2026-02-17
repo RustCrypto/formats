@@ -3,19 +3,23 @@
 use crate::{AlgorithmIdentifier, Error, Result};
 use core::cmp::Ordering;
 use der::{
-    asn1::{AnyRef, BitStringRef},
     Choice, Decode, DecodeValue, DerOrd, Encode, EncodeValue, FixedTag, Header, Length, Reader,
     Sequence, ValueOrd, Writer,
+    asn1::{AnyRef, BitStringRef},
 };
 
 #[cfg(feature = "alloc")]
 use der::{
-    asn1::{Any, BitString},
     Document,
+    asn1::{Any, BitString},
 };
 
 #[cfg(feature = "fingerprint")]
-use crate::{fingerprint, FingerprintBytes};
+use {
+    crate::{DigestWriter, FingerprintBytes},
+    digest::Digest,
+    sha2::Sha256,
+};
 
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
@@ -80,9 +84,9 @@ where
     /// [RFC7469 § 2.1.1]: https://datatracker.ietf.org/doc/html/rfc7469#section-2.1.1
     #[cfg(feature = "fingerprint")]
     pub fn fingerprint_bytes(&self) -> Result<FingerprintBytes> {
-        let mut builder = fingerprint::Builder::new();
-        self.encode(&mut builder)?;
-        Ok(builder.finish())
+        let mut hash = Sha256::new();
+        self.encode(&mut DigestWriter(&mut hash))?;
+        Ok(hash.finalize().into())
     }
 }
 
@@ -93,12 +97,10 @@ where
 {
     type Error = der::Error;
 
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
-        reader.read_nested(header.length, |reader| {
-            Ok(Self {
-                algorithm: reader.decode()?,
-                subject_public_key: Key::decode(reader)?,
-            })
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> der::Result<Self> {
+        Ok(Self {
+            algorithm: reader.decode()?,
+            subject_public_key: Key::decode(reader)?,
         })
     }
 }

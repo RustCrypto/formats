@@ -20,7 +20,7 @@ impl Salt {
         let slice = slice.as_ref();
 
         if slice.len() > Self::MAX_LEN {
-            return Err(Self::TAG.length_error());
+            return Err(Self::TAG.length_error().into());
         }
 
         let mut inner = [0u8; Self::MAX_LEN];
@@ -33,7 +33,7 @@ impl Salt {
 
         Ok(Self {
             inner,
-            length: Length::new(slice.len() as u16),
+            length: Length::new(slice.len() as u32),
         })
     }
 
@@ -59,10 +59,10 @@ impl<'a> DecodeValue<'a> for Salt {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        let length = usize::try_from(header.length)?;
+        let length = usize::try_from(header.length())?;
 
         if length > Self::MAX_LEN {
-            return Err(Self::TAG.length_error());
+            return Err(reader.error(Self::TAG.length_error()));
         }
 
         let mut inner = [0u8; Self::MAX_LEN];
@@ -70,7 +70,7 @@ impl<'a> DecodeValue<'a> for Salt {
 
         Ok(Self {
             inner,
-            length: header.length,
+            length: header.length(),
         })
     }
 }

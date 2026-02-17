@@ -5,15 +5,12 @@ pub(super) mod uint;
 
 use core::{cmp::Ordering, mem::size_of};
 
-use crate::{EncodeValue, Result, SliceWriter};
+use crate::{EncodeValue, Result, encode::encode_value_to_slice};
 
 /// Is the highest bit of the first byte in the slice set to `1`? (if present)
 #[inline]
 fn is_highest_bit_set(bytes: &[u8]) -> bool {
-    bytes
-        .first()
-        .map(|byte| byte & 0b10000000 != 0)
-        .unwrap_or(false)
+    bytes.first().is_some_and(|byte| byte & 0b10000000 != 0)
 }
 
 /// Compare two integer values
@@ -25,14 +22,12 @@ where
     debug_assert!(size_of::<T>() <= MAX_INT_SIZE);
 
     let mut buf1 = [0u8; MAX_INT_SIZE];
-    let mut encoder1 = SliceWriter::new(&mut buf1);
-    a.encode_value(&mut encoder1)?;
-
     let mut buf2 = [0u8; MAX_INT_SIZE];
-    let mut encoder2 = SliceWriter::new(&mut buf2);
-    b.encode_value(&mut encoder2)?;
 
-    Ok(encoder1.finish()?.cmp(encoder2.finish()?))
+    let buf1 = encode_value_to_slice(&mut buf1, &a)?;
+    let buf2 = encode_value_to_slice(&mut buf2, &b)?;
+
+    Ok(buf1.cmp(buf2))
 }
 
 #[cfg(test)]

@@ -5,8 +5,8 @@ use const_oid::ObjectIdentifier;
 use crmf::pop::ProofOfPossession;
 use der::{Decode, Encode};
 use hex_literal::hex;
-use x509_cert::ext::pkix::name::GeneralName;
 use x509_cert::Certificate;
+use x509_cert::ext::pkix::name::GeneralName;
 
 #[test]
 fn cr_req_message_test() {
@@ -22,7 +22,7 @@ fn cr_req_message_test() {
     //   - openssl cmp -cmd cr -server 127.0.0.1:8888 -path pkix/ -ref 1234 -secret pass:1234-5678-1234-5678 -recipient "/CN=CMPserver" -newkey ec384-key-pair.pem -subject "/CN=MyName" -cacertsout capubs.pem -certout cl_cert.pem -srv_cert ec384-server-key.crt -reqout cr_req_01.bin -rspout cr_rsp_01.bin
     let req_01 = include_bytes!("examples/cr_req_01.bin");
     let result = PkiMessage::from_der(req_01);
-    println!("{:?}", result);
+    println!("{result:?}");
     assert!(result.is_ok());
     let message = result.unwrap();
 
@@ -100,8 +100,8 @@ fn cr_req_message_test() {
     );
 
     let reencoded_req_01 = message.to_der().unwrap();
-    println!("Original : {:02X?}", req_01);
-    println!("Reencoded: {:02X?}", reencoded_req_01);
+    println!("Original : {req_01:02X?}");
+    println!("Reencoded: {reencoded_req_01:02X?}");
     assert_eq!(req_01, reencoded_req_01.as_slice());
 }
 
@@ -119,7 +119,7 @@ fn cr_rsp_message_test() {
     //   - openssl cmp -cmd cr -server 127.0.0.1:8888 -path pkix/ -ref 1234 -secret pass:1234-5678-1234-5678 -recipient "/CN=CMPserver" -newkey ec384-key-pair.pem -subject "/CN=MyName" -cacertsout capubs.pem -certout cl_cert.pem -srv_cert ec384-server-key.crt -reqout cr_req_01.bin -rspout cr_rsp_01.bin
     let req_01 = include_bytes!("examples/cr_rsp_01.bin");
     let result = PkiMessage::from_der(req_01);
-    println!("{:?}", result);
+    println!("{result:?}");
     assert!(result.is_ok());
     let message = result.unwrap();
 
@@ -175,7 +175,7 @@ fn cr_rsp_message_test() {
     assert_eq!(105u32, protection.encoded_len().unwrap().into());
 
     let reencoded_req_01 = message.to_der().unwrap();
-    println!("Original : {:02X?}", req_01);
-    println!("Reencoded: {:02X?}", reencoded_req_01);
+    println!("Original : {req_01:02X?}");
+    println!("Reencoded: {reencoded_req_01:02X?}");
     assert_eq!(req_01, reencoded_req_01.as_slice());
 }

@@ -1,7 +1,7 @@
 //! CertBag-related types
 
-use der::asn1::{ObjectIdentifier, OctetString};
 use der::Sequence;
+use der::asn1::{ObjectIdentifier, OctetString};
 
 /// The `CertBag` type is defined in [RFC 7292 Section 4.2.3].
 ///

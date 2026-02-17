@@ -2,8 +2,8 @@
 
 use crate::{Error, Result};
 use der::{
-    asn1::UintRef, Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence,
-    Writer,
+    Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Writer,
+    asn1::UintRef,
 };
 
 #[cfg(feature = "alloc")]
@@ -35,12 +35,10 @@ pub struct RsaPublicKey<'a> {
 
 impl<'a> DecodeValue<'a> for RsaPublicKey<'a> {
     type Error = der::Error;
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
-        reader.read_nested(header.length, |reader| {
-            Ok(Self {
-                modulus: reader.decode()?,
-                public_exponent: reader.decode()?,
-            })
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> der::Result<Self> {
+        Ok(Self {
+            modulus: reader.decode()?,
+            public_exponent: reader.decode()?,
         })
     }
 }

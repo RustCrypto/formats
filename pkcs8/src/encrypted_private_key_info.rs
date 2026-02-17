@@ -3,16 +3,16 @@
 use crate::{Error, Result};
 use core::fmt;
 use der::{
-    asn1::OctetStringRef, Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length,
-    Reader, Sequence, Writer,
+    Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Sequence, Writer,
+    asn1::OctetStringRef,
 };
 use pkcs5::EncryptionScheme;
 
 #[cfg(feature = "alloc")]
-use der::{asn1::OctetString, SecretDocument};
+use der::{SecretDocument, asn1::OctetString};
 
 #[cfg(feature = "encryption")]
-use {pkcs5::pbes2, rand_core::CryptoRngCore};
+use {pkcs5::pbes2, rand_core::CryptoRng};
 
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
@@ -64,8 +64,8 @@ where
     /// Encrypt the given ASN.1 DER document using a symmetric encryption key
     /// derived from the provided password.
     #[cfg(feature = "encryption")]
-    pub(crate) fn encrypt(
-        rng: &mut impl CryptoRngCore,
+    pub(crate) fn encrypt<R: CryptoRng>(
+        rng: &mut R,
         password: impl AsRef<[u8]>,
         doc: &[u8],
     ) -> Result<SecretDocument> {
@@ -98,12 +98,10 @@ where
 {
     type Error = der::Error;
 
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> der::Result<Self> {
-        reader.read_nested(header.length, |reader| {
-            Ok(Self {
-                encryption_algorithm: reader.decode()?,
-                encrypted_data: reader.decode()?,
-            })
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> der::Result<Self> {
+        Ok(Self {
+            encryption_algorithm: reader.decode()?,
+            encrypted_data: reader.decode()?,
         })
     }
 }
@@ -177,7 +175,7 @@ impl<Data> PemLabel for EncryptedPrivateKeyInfo<Data> {
 }
 
 /// [`EncryptedPrivateKeyInfo`] with [`OctetStringRef`] encrypted data.
-pub type EncryptedPrivateKeyInfoRef<'a> = EncryptedPrivateKeyInfo<OctetStringRef<'a>>;
+pub type EncryptedPrivateKeyInfoRef<'a> = EncryptedPrivateKeyInfo<&'a OctetStringRef>;
 
 #[cfg(feature = "alloc")]
 /// [`EncryptedPrivateKeyInfo`] with [`OctetString`] encrypted data.

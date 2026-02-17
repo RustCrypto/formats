@@ -1,6 +1,6 @@
 //! DigestInfo-related types
 
-use der::{asn1::OctetString, Sequence, ValueOrd};
+use der::{Sequence, ValueOrd, asn1::OctetString};
 use spki::AlgorithmIdentifierOwned;
 
 /// ```text

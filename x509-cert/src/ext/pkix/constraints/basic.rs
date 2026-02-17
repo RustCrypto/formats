@@ -1,4 +1,4 @@
-use const_oid::{db::rfc5280::ID_CE_BASIC_CONSTRAINTS, AssociatedOid, ObjectIdentifier};
+use const_oid::{AssociatedOid, ObjectIdentifier, db::rfc5280::ID_CE_BASIC_CONSTRAINTS};
 use der::Sequence;
 
 /// BasicConstraints as defined in [RFC 5280 Section 4.2.1.9].
@@ -23,8 +23,8 @@ impl AssociatedOid for BasicConstraints {
     const OID: ObjectIdentifier = ID_CE_BASIC_CONSTRAINTS;
 }
 
-impl crate::ext::AsExtension for BasicConstraints {
-    fn critical(
+impl crate::ext::Criticality for BasicConstraints {
+    fn criticality(
         &self,
         _subject: &crate::name::Name,
         _extensions: &[crate::ext::Extension],

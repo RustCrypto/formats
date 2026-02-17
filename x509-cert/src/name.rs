@@ -3,13 +3,13 @@
 use crate::{attr::AttributeTypeAndValue, ext::pkix::name::DirectoryString};
 use alloc::vec::Vec;
 use const_oid::{
-    db::{rfc3280, rfc4519},
     ObjectIdentifier,
+    db::{rfc3280, rfc4519},
 };
 use core::{cmp::Ordering, fmt, str::FromStr};
 use der::{
-    asn1::{Any, Ia5StringRef, PrintableStringRef, SetOfVec},
     DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Tag, ValueOrd, Writer,
+    asn1::{Any, Ia5StringRef, PrintableStringRef, SetOfVec},
 };
 
 /// X.501 Name as defined in [RFC 5280 Section 4.1.2.4]. X.501 Name is used to represent distinguished names.
@@ -57,7 +57,7 @@ use der::{
 /// [RFC 4514 Section 3]: https://www.rfc-editor.org/rfc/rfc4514#section-3
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Name(pub(crate) RdnSequence);
 
 impl Name {
@@ -136,7 +136,7 @@ impl Name {
 
     /// Returns the number of [`RelativeDistinguishedName`] elements in this [`Name`].
     pub fn len(&self) -> usize {
-        self.0 .0.len()
+        self.0.0.len()
     }
 
     /// Returns an iterator over the inner [`AttributeTypeAndValue`]s.
@@ -145,13 +145,13 @@ impl Name {
     /// [`RelativeDistinguishedName`]s. If you need this, use [`Self::iter_rdn`].
     #[inline]
     pub fn iter(&self) -> impl Iterator<Item = &'_ AttributeTypeAndValue> + '_ {
-        self.0 .0.iter().flat_map(move |rdn| rdn.0.as_slice())
+        self.0.0.iter().flat_map(move |rdn| rdn.0.as_slice())
     }
 
     /// Returns an iterator over the inner [`RelativeDistinguishedName`]s.
     #[inline]
     pub fn iter_rdn(&self) -> impl Iterator<Item = &'_ RelativeDistinguishedName> + '_ {
-        self.0 .0.iter()
+        self.0.0.iter()
     }
 }
 
@@ -307,7 +307,7 @@ impl fmt::Display for Name {
 ///
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct RdnSequence(Vec<RelativeDistinguishedName>);
 
 impl RdnSequence {
@@ -363,8 +363,8 @@ impl fmt::Display for RdnSequence {
         // As per RFC 4514 Section 2.1, the elements are reversed
         for (i, atv) in self.0.iter().rev().enumerate() {
             match i {
-                0 => write!(f, "{}", atv)?,
-                _ => write!(f, ",{}", atv)?,
+                0 => write!(f, "{atv}")?,
+                _ => write!(f, ",{atv}")?,
             }
         }
 
@@ -437,7 +437,7 @@ pub type DistinguishedName = RdnSequence;
 ///
 /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct RelativeDistinguishedName(pub(crate) SetOfVec<AttributeTypeAndValue>);
 
 impl RelativeDistinguishedName {
@@ -494,8 +494,8 @@ impl fmt::Display for RelativeDistinguishedName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (i, atv) in self.0.iter().enumerate() {
             match i {
-                0 => write!(f, "{}", atv)?,
-                _ => write!(f, "+{}", atv)?,
+                0 => write!(f, "{atv}")?,
+                _ => write!(f, "+{atv}")?,
             }
         }
 

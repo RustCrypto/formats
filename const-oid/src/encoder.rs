@@ -1,8 +1,8 @@
 //! OID encoder with `const` support.
 
 use crate::{
-    arcs::{ARC_MAX_FIRST, ARC_MAX_SECOND},
     Arc, Buffer, Error, ObjectIdentifier, Result,
+    arcs::{ARC_MAX_FIRST, ARC_MAX_SECOND},
 };
 
 /// BER/DER encoder.
@@ -119,10 +119,10 @@ impl<const MAX_SIZE: usize> Encoder<MAX_SIZE> {
 /// Compute the length of an arc when encoded in base 128.
 const fn base128_len(arc: Arc) -> usize {
     match arc {
-        0..=0x7f => 1,
-        0x80..=0x3fff => 2,
-        0x4000..=0x1fffff => 3,
-        0x200000..=0x1fffffff => 4,
+        0..=0x7f => 1,              // up to 7 bits
+        0x80..=0x3fff => 2,         // up to 14 bits
+        0x4000..=0x1fffff => 3,     // up to 21 bits
+        0x200000..=0x0fffffff => 4, // up to 28 bits
         _ => 5,
     }
 }

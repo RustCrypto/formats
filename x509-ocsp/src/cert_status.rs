@@ -3,7 +3,7 @@
 use crate::OcspGeneralizedTime;
 use const_oid::AssociatedOid;
 use core::option::Option;
-use der::{asn1::Null, Choice, Decode, Sequence};
+use der::{Choice, Decode, Sequence, asn1::Null};
 use x509_cert::{crl::RevokedCert, ext::pkix::CrlReason};
 
 /// CertStatus structure as defined in [RFC 6960 Section 4.2.1].

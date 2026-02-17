@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
@@ -119,11 +119,18 @@ impl ObjectIdentifier {
 
     /// Parse an OID from from its BER/DER encoding.
     pub fn from_bytes(ber_bytes: &[u8]) -> Result<Self> {
-        ObjectIdentifierRef::from_bytes(ber_bytes)?.try_into()
+        Self::from_bytes_sized(ber_bytes)
     }
 }
 
 impl<const MAX_SIZE: usize> ObjectIdentifier<MAX_SIZE> {
+    /// Parse an OID from from its BER/DER encoding.
+    ///
+    /// Returns `Err(Error::Length)` if bytes do not fit in `MAX_SIZE`.
+    pub fn from_bytes_sized(ber_bytes: &[u8]) -> Result<Self> {
+        ObjectIdentifierRef::from_bytes(ber_bytes)?.try_into()
+    }
+
     /// Get the BER/DER serialization of this OID as bytes.
     ///
     /// Note that this encoding omits the ASN.1 tag/length, and only contains the value portion of
@@ -248,7 +255,7 @@ impl<const MAX_SIZE: usize> TryFrom<&ObjectIdentifierRef> for ObjectIdentifier<M
 
 impl<const MAX_SIZE: usize> fmt::Debug for ObjectIdentifier<MAX_SIZE> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ObjectIdentifier({})", self)
+        write!(f, "ObjectIdentifier({self})")
     }
 }
 
@@ -363,7 +370,7 @@ impl<'a> TryFrom<&'a [u8]> for &'a ObjectIdentifierRef {
 
 impl fmt::Debug for ObjectIdentifierRef {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ObjectIdentifierRef({})", self)
+        write!(f, "ObjectIdentifierRef({self})")
     }
 }
 
@@ -372,7 +379,7 @@ impl fmt::Display for ObjectIdentifierRef {
         let len = self.arcs().count();
 
         for (i, arc) in self.arcs().enumerate() {
-            write!(f, "{}", arc)?;
+            write!(f, "{arc}")?;
 
             if let Some(j) = i.checked_add(1) {
                 if j < len {

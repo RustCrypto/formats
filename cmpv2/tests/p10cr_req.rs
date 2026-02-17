@@ -2,8 +2,8 @@ use cmpv2::body::PkiBody;
 use cmpv2::message::PkiMessage;
 use der::{Decode, Encode};
 use hex_literal::hex;
-use x509_cert::ext::pkix::name::GeneralName;
 use x509_cert::Certificate;
+use x509_cert::ext::pkix::name::GeneralName;
 
 #[test]
 fn p10cr_req_message_test() {
@@ -19,7 +19,7 @@ fn p10cr_req_message_test() {
     //   - openssl cmp -cmd p10cr -server 127.0.0.1:8080 -path pkix/ -ref 1234 -secret pass:1234-5678-1234-5678 -recipient "/CN=CMPserver" -csr ec384-ee-key.csr -cacertsout capubs.pem -certout cl_cert.pem -srv_cert ec384-server-key.crt -reqout p10cr_req_01.bin -rspout p10cr_rsp_01.bin
     let req_01 = include_bytes!("examples/p10cr_req_01.bin");
     let result = PkiMessage::from_der(req_01);
-    println!("{:?}", result);
+    println!("{result:?}");
     assert!(result.is_ok());
     let message = result.unwrap();
 
@@ -72,8 +72,8 @@ fn p10cr_req_message_test() {
     );
 
     let reencoded_req_01 = message.to_der().unwrap();
-    println!("Original : {:02X?}", req_01);
-    println!("Reencoded: {:02X?}", reencoded_req_01);
+    println!("Original : {req_01:02X?}");
+    println!("Reencoded: {reencoded_req_01:02X?}");
     assert_eq!(req_01, reencoded_req_01.as_slice());
 }
 
@@ -91,12 +91,12 @@ fn p10cr_rsp_message_test() {
     //   - openssl cmp -cmd p10cr -server 127.0.0.1:8080 -path pkix/ -ref 1234 -secret pass:1234-5678-1234-5678 -recipient "/CN=CMPserver" -csr ec384-ee-key.csr -cacertsout capubs.pem -certout cl_cert.pem -srv_cert ec384-server-key.crt -reqout p10cr_req_01.bin -rspout p10cr_rsp_01.bin
     let req_01 = include_bytes!("examples/p10cr_rsp_01.bin");
     let result = PkiMessage::from_der(req_01);
-    println!("{:?}", result);
+    println!("{result:?}");
     assert!(result.is_ok());
     let message = result.unwrap();
 
     let reencoded_req_01 = message.to_der().unwrap();
-    println!("Original : {:02X?}", req_01);
-    println!("Reencoded: {:02X?}", reencoded_req_01);
+    println!("Original : {req_01:02X?}");
+    println!("Reencoded: {reencoded_req_01:02X?}");
     assert_eq!(req_01, reencoded_req_01.as_slice());
 }

@@ -4,6 +4,66 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.8.3 (2026-01-11)
+### Added
+- `Base64Pbkdf2` alphabet ([#2168])
+
+[#2168]: https://github.com/RustCrypto/formats/pull/2168
+
+## 1.8.2 (2026-01-03)
+### Changed
+- Deprecate `Base64Crypt` ([#2135])
+
+[#2135]: https://github.com/RustCrypto/formats/pull/2135
+
+## 1.8.1 (2025-12-06)
+### Added
+- Notes on `crypt(3)` alphabet variants ([#2073])
+
+### Fixed
+- Switch from `doc_auto_cfg` to `doc_cfg` ([#2072])
+
+[#2072]: https://github.com/RustCrypto/formats/pull/2072
+[#2073]: https://github.com/RustCrypto/formats/pull/2073
+
+## 1.8.0 (2025-06-04)
+### Changed
+- Bump edition to 2024; MSRV 1.85 ([#1839])
+
+[#1839]: https://github.com/RustCrypto/formats/pull/1839
+
+## 1.7.3 (2025-03-13)
+### Changed
+- Don't fail with `InvalidLength` when reading nothing at end of data ([#1716]).
+
+[#1716]: https://github.com/RustCrypto/formats/pull/1716
+
+## 1.7.2 (2025-03-13)
+### Changed
+- Revert [#1387]: reject zero-length decode requests as it's a breaking change ([#1714])
+
+[#1714]: https://github.com/RustCrypto/formats/pull/1714
+
+## 1.7.1 (2025-03-10)
+### Changed
+- MSRV 1.81 - edition downgraded to 2021 from yanked 1.7.0 release ([#1702])
+
+[#1702]: https://github.com/RustCrypto/formats/pull/1702
+
+## 1.7.0 (2025-02-25) [YANKED]
+### Added
+- derive additional traits on alphabets ([#1578])
+
+### Changed
+- ~~MSRV 1.85 // Edition 2024 ([#1670])~~
+- ~~reject zero-length decode requests ([#1387])~~
+- use `core::error::Error` ([#1681])
+
+[#1387]: https://github.com/RustCrypto/formats/pull/1387
+[#1578]: https://github.com/RustCrypto/formats/pull/1578
+[#1670]: https://github.com/RustCrypto/formats/pull/1670
+[#1681]: https://github.com/RustCrypto/formats/pull/1681
+
 ## 1.6.0 (2023-02-26)
 ### Changed
 - MSRV 1.60 ([#802])

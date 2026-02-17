@@ -6,7 +6,7 @@ use der::{EncodeValue, Tagged};
 #[cfg(feature = "alloc")]
 use {
     crate::AlgorithmIdentifierOwned,
-    der::{asn1::BitString, Any, Document},
+    der::{Any, Document, asn1::BitString},
 };
 
 #[cfg(feature = "pem")]

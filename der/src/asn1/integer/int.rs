@@ -2,8 +2,8 @@
 
 use super::{is_highest_bit_set, uint, value_cmp};
 use crate::{
-    ord::OrdIsValueOrd, AnyRef, BytesRef, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag,
-    Header, Length, Reader, Result, Tag, ValueOrd, Writer,
+    AnyRef, BytesRef, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
+    Result, Tag, ValueOrd, Writer, ord::OrdIsValueOrd,
 };
 use core::cmp::Ordering;
 
@@ -18,14 +18,14 @@ macro_rules! impl_encoding_traits {
 
                 fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> $crate::Result<Self> {
                     let mut buf = [0u8; Self::BITS as usize / 8];
-                    let max_length = u32::from(header.length) as usize;
+                    let max_length = u32::from(header.length()) as usize;
 
                     if max_length == 0 {
-                        return Err(Tag::Integer.length_error());
+                        return Err(reader.error(Tag::Integer.length_error()));
                     }
 
                     if max_length > buf.len() {
-                        return Err(Self::TAG.non_canonical_error());
+                        return Err(reader.error(Self::TAG.non_canonical_error()));
                     }
 
                     let bytes = reader.read_into(&mut buf[..max_length])?;
@@ -39,8 +39,8 @@ macro_rules! impl_encoding_traits {
                     };
 
                     // Ensure we compute the same encoded length as the original any value
-                    if header.length != result.value_len()? {
-                        return Err(Self::TAG.non_canonical_error());
+                    if header.length() != result.value_len()? {
+                        return Err(reader.error(Self::TAG.non_canonical_error()));
                     }
 
                     Ok(result)
@@ -102,11 +102,14 @@ impl_encoding_traits!(i8 => u8, i16 => u16, i32 => u32, i64 => u64, i128 => u128
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct IntRef<'a> {
     /// Inner value
-    inner: BytesRef<'a>,
+    inner: &'a BytesRef,
 }
 
 impl<'a> IntRef<'a> {
     /// Create a new [`IntRef`] from a byte slice.
+    ///
+    /// # Errors
+    /// Returns [`Error`] if `bytes` is too long.
     pub fn new(bytes: &'a [u8]) -> Result<Self> {
         let inner = BytesRef::new(strip_leading_ones(bytes))
             .map_err(|_| ErrorKind::Length { tag: Self::TAG })?;
@@ -116,16 +119,19 @@ impl<'a> IntRef<'a> {
 
     /// Borrow the inner byte slice which contains the least significant bytes
     /// of a big endian integer value with all leading ones stripped.
+    #[must_use]
     pub fn as_bytes(&self) -> &'a [u8] {
         self.inner.as_slice()
     }
 
     /// Get the length of this [`IntRef`] in bytes.
+    #[must_use]
     pub fn len(&self) -> Length {
         self.inner.len()
     }
 
     /// Is the inner byte slice empty?
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.inner.is_empty()
     }
@@ -137,14 +143,14 @@ impl<'a> DecodeValue<'a> for IntRef<'a> {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        let bytes = BytesRef::decode_value(reader, header)?;
+        let bytes = <&'a BytesRef>::decode_value(reader, header)?;
         validate_canonical(bytes.as_slice())?;
 
         let result = Self::new(bytes.as_slice())?;
 
         // Ensure we compute the same encoded length as the original any value.
-        if result.value_len()? != header.length {
-            return Err(Self::TAG.non_canonical_error());
+        if result.value_len()? != header.length() {
+            return Err(reader.error(Self::TAG.non_canonical_error()));
         }
 
         Ok(result)
@@ -176,15 +182,15 @@ impl OrdIsValueOrd for IntRef<'_> {}
 
 #[cfg(feature = "alloc")]
 mod allocating {
-    use super::{strip_leading_ones, validate_canonical, IntRef};
+    use super::{IntRef, strip_leading_ones, validate_canonical};
     use crate::{
+        BytesOwned, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
+        Result, Tag, Writer,
         asn1::Uint,
         ord::OrdIsValueOrd,
         referenced::{OwnedToRef, RefToOwned},
-        BytesOwned, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
-        Result, Tag, Writer,
     };
-    use alloc::vec::Vec;
+    use alloc::{borrow::ToOwned, vec::Vec};
 
     /// Signed arbitrary precision ASN.1 `INTEGER` type.
     ///
@@ -201,6 +207,9 @@ mod allocating {
 
     impl Int {
         /// Create a new [`Int`] from a byte slice.
+        ///
+        /// # Errors
+        /// If `bytes` is too long.
         pub fn new(bytes: &[u8]) -> Result<Self> {
             let inner = BytesOwned::new(strip_leading_ones(bytes))
                 .map_err(|_| ErrorKind::Length { tag: Self::TAG })?;
@@ -210,16 +219,19 @@ mod allocating {
 
         /// Borrow the inner byte slice which contains the least significant bytes
         /// of a big endian integer value with all leading ones stripped.
+        #[must_use]
         pub fn as_bytes(&self) -> &[u8] {
             self.inner.as_slice()
         }
 
         /// Get the length of this [`Int`] in bytes.
+        #[must_use]
         pub fn len(&self) -> Length {
             self.inner.len()
         }
 
         /// Is the inner byte slice empty?
+        #[must_use]
         pub fn is_empty(&self) -> bool {
             self.inner.is_empty()
         }
@@ -231,14 +243,14 @@ mod allocating {
         type Error = Error;
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-            let bytes = BytesOwned::decode_value(reader, header)?;
+            let bytes = BytesOwned::decode_value_parts(reader, header, Self::TAG)?;
             validate_canonical(bytes.as_slice())?;
 
             let result = Self::new(bytes.as_slice())?;
 
             // Ensure we compute the same encoded length as the original any value.
-            if result.value_len()? != header.length {
-                return Err(Self::TAG.non_canonical_error());
+            if result.value_len()? != header.length() {
+                return Err(reader.error(Self::TAG.non_canonical_error()));
             }
 
             Ok(result)
@@ -288,7 +300,7 @@ mod allocating {
     impl<'a> RefToOwned<'a> for IntRef<'a> {
         type Owned = Int;
         fn ref_to_owned(&self) -> Self::Owned {
-            let inner = self.inner.ref_to_owned();
+            let inner = self.inner.to_owned();
 
             Int { inner }
         }
@@ -297,22 +309,91 @@ mod allocating {
     impl OwnedToRef for Int {
         type Borrowed<'a> = IntRef<'a>;
         fn owned_to_ref(&self) -> Self::Borrowed<'_> {
-            let inner = self.inner.owned_to_ref();
+            let inner = self.inner.as_ref();
 
             IntRef { inner }
+        }
+    }
+
+    macro_rules! impl_from_traits {
+        ($($int:ty),+) => {
+            $(
+                impl TryFrom<$int> for Int {
+                    type Error = $crate::Error;
+
+                    fn try_from(value: $int) -> $crate::Result<Self> {
+                        let mut buf  = [0u8; 16];
+                        let buf = $crate::encode::encode_value_to_slice(&mut buf, &value)?;
+                        Int::new(buf)
+                    }
+                }
+            )+
+        };
+    }
+
+    impl_from_traits!(i8, i16, i32, i64, i128);
+
+    #[cfg(test)]
+    #[allow(clippy::unwrap_used)]
+    mod tests {
+        use super::Int;
+
+        #[test]
+        fn from_uint() {
+            assert_eq!(Int::try_from(i8::MIN).unwrap().as_bytes(), &[0x80]);
+            assert_eq!(Int::try_from(i8::MAX).unwrap().as_bytes(), &[0x7F]);
+            assert_eq!(Int::try_from(i16::MIN).unwrap().as_bytes(), &[0x80, 0]);
+            assert_eq!(Int::try_from(i16::MAX).unwrap().as_bytes(), &[0x7F, 0xFF]);
+            assert_eq!(
+                Int::try_from(i32::MIN).unwrap().as_bytes(),
+                &[0x80, 0, 0, 0]
+            );
+            assert_eq!(
+                Int::try_from(i32::MAX).unwrap().as_bytes(),
+                &[0x7F, 0xFF, 0xFF, 0xFF]
+            );
+            assert_eq!(
+                Int::try_from(i64::MIN).unwrap().as_bytes(),
+                &[
+                    0x80, 0, 0, 0, //
+                    0, 0, 0, 0
+                ]
+            );
+            assert_eq!(
+                Int::try_from(i64::MAX).unwrap().as_bytes(),
+                &[
+                    0x7F, 0xFF, 0xFF, 0xFF, //
+                    0xFF, 0xFF, 0xFF, 0xFF //
+                ]
+            );
+            assert_eq!(
+                Int::try_from(i128::MIN).unwrap().as_bytes(),
+                &[0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            );
+            assert_eq!(
+                Int::try_from(i128::MAX).unwrap().as_bytes(),
+                &[
+                    0x7F, 0xFF, 0xFF, 0xFF, //
+                    0xFF, 0xFF, 0xFF, 0xFF, //
+                    0xFF, 0xFF, 0xFF, 0xFF, //
+                    0xFF, 0xFF, 0xFF, 0xFF, //
+                ]
+            );
         }
     }
 }
 
 /// Ensure `INTEGER` is canonically encoded.
 fn validate_canonical(bytes: &[u8]) -> Result<()> {
+    let non_canonical_error = Tag::Integer.non_canonical_error().into();
+
     // The `INTEGER` type always encodes a signed value and we're decoding
     // as signed here, so we allow a zero extension or sign extension byte,
     // but only as permitted under DER canonicalization.
     match bytes {
-        [] => Err(Tag::Integer.non_canonical_error()),
-        [0x00, byte, ..] if *byte < 0x80 => Err(Tag::Integer.non_canonical_error()),
-        [0xFF, byte, ..] if *byte >= 0x80 => Err(Tag::Integer.non_canonical_error()),
+        [] => Err(non_canonical_error),
+        [0x00, byte, ..] if *byte < 0x80 => Err(non_canonical_error),
+        [0xFF, byte, ..] if *byte >= 0x80 => Err(non_canonical_error),
         _ => Ok(()),
     }
 }
@@ -371,8 +452,8 @@ pub(crate) fn strip_leading_ones(mut bytes: &[u8]) -> &[u8] {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use super::{validate_canonical, IntRef};
-    use crate::{asn1::integer::tests::*, Decode, Encode, SliceWriter};
+    use super::{IntRef, validate_canonical};
+    use crate::{Decode, Encode, SliceWriter, asn1::integer::tests::*};
 
     #[test]
     fn validate_canonical_ok() {
@@ -438,10 +519,10 @@ mod tests {
             let uint = IntRef::from_der(example).unwrap();
 
             let mut buf = [0u8; 128];
-            let mut encoder = SliceWriter::new(&mut buf);
-            uint.encode(&mut encoder).unwrap();
+            let mut writer = SliceWriter::new(&mut buf);
+            uint.encode(&mut writer).unwrap();
 
-            let result = encoder.finish().unwrap();
+            let result = writer.finish().unwrap();
             assert_eq!(example, result);
         }
 
@@ -449,10 +530,10 @@ mod tests {
             let uint = IntRef::from_der(example).unwrap();
 
             let mut buf = [0u8; 128];
-            let mut encoder = SliceWriter::new(&mut buf);
-            uint.encode(&mut encoder).unwrap();
+            let mut writer = SliceWriter::new(&mut buf);
+            uint.encode(&mut writer).unwrap();
 
-            let result = encoder.finish().unwrap();
+            let result = writer.finish().unwrap();
             assert_eq!(example, result);
         }
     }

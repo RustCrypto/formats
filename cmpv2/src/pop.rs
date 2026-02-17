@@ -2,8 +2,8 @@
 
 use alloc::vec::Vec;
 
-use der::asn1::{OctetString, UintRef};
 use der::Sequence;
+use der::asn1::{OctetString, UintRef};
 
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::ext::pkix::name::GeneralName;

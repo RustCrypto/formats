@@ -6,9 +6,9 @@ pub use self::salt::Salt;
 
 use crate::{AlgorithmIdentifierRef, Error, Result};
 use der::{
-    asn1::{AnyRef, ObjectIdentifier},
     Decode, DecodeValue, Encode, EncodeValue, ErrorKind, Length, Reader, Sequence, Tag, Tagged,
     Writer,
+    asn1::{AnyRef, ObjectIdentifier},
 };
 
 #[cfg(feature = "pbes2")]
@@ -160,7 +160,7 @@ impl TryFrom<AlgorithmIdentifierRef<'_>> for Kdf {
                 oid => Err(ErrorKind::OidUnknown { oid }.into()),
             }
         } else {
-            Err(Tag::OctetString.value_error())
+            Err(Tag::OctetString.value_error().into())
         }
     }
 }
@@ -334,7 +334,7 @@ impl TryFrom<AlgorithmIdentifierRef<'_>> for Pbkdf2Prf {
         if let Some(params) = alg.parameters {
             // TODO(tarcieri): support non-NULL parameters?
             if !params.is_null() {
-                return Err(params.tag().value_error());
+                return Err(params.tag().value_error().into());
             }
         }
 
@@ -493,7 +493,6 @@ impl TryFrom<&ScryptParams> for scrypt::Params {
             log_n,
             params.block_size.into(),
             params.parallelization.into(),
-            scrypt::Params::RECOMMENDED_LEN,
         )
         .map_err(|_| ScryptParams::INVALID_ERR)
     }

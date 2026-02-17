@@ -1,16 +1,23 @@
 //! Certificate types
 
-use crate::{ext, name::Name, serial_number::SerialNumber, time::Validity};
 use crate::{AlgorithmIdentifier, SubjectPublicKeyInfo};
+use crate::{ext, name::Name, serial_number::SerialNumber, time::Validity};
 use alloc::vec::Vec;
 use const_oid::AssociatedOid;
 use core::{cmp::Ordering, fmt::Debug};
-use der::{asn1::BitString, Decode, Enumerated, ErrorKind, Sequence, Tag, ValueOrd};
+use der::{Decode, Enumerated, ErrorKind, Sequence, Tag, ValueOrd, asn1::BitString};
 
 #[cfg(feature = "pem")]
 use der::{
-    pem::{self, PemLabel},
     DecodePem,
+    pem::{self, PemLabel},
+};
+
+#[cfg(feature = "digest")]
+use {
+    der::Encode,
+    digest::{Digest, Output},
+    spki::DigestWriter,
 };
 
 use crate::time::Time;
@@ -18,20 +25,20 @@ use crate::time::Time;
 /// [`Profile`] allows the consumer of this crate to customize the behavior when parsing
 /// certificates.
 /// By default, parsing will be made in a rfc5280-compliant manner.
-pub trait Profile: PartialEq + Debug + Eq + Clone + Copy + Default + 'static {
+pub trait Profile: PartialEq + Debug + Eq + Ord + Clone + Copy + Default + 'static {
     /// Checks to run when parsing serial numbers
     fn check_serial_number(serial: &SerialNumber<Self>) -> der::Result<()> {
         // See the note in `SerialNumber::new`: we permit lengths of 21 bytes here,
         // since some X.509 implementations interpret the limit of 20 bytes to refer
         // to the pre-encoded value.
         if serial.inner.len() > SerialNumber::<Self>::MAX_DECODE_LEN {
-            Err(Tag::Integer.value_error())
+            Err(Tag::Integer.value_error().into())
         } else {
             Ok(())
         }
     }
 
-    /// Adjustements to the time to run while serializing validity.
+    /// Adjustments to the time to run while serializing validity.
     /// See [RFC 5280 Section 4.1.2.5]:
     /// ```text
     /// CAs conforming to this profile MUST always encode certificate
@@ -47,7 +54,7 @@ pub trait Profile: PartialEq + Debug + Eq + Clone + Copy + Default + 'static {
 }
 
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Debug, PartialEq, Eq, Copy, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Default)]
 /// Parse and serialize certificates in rfc5280-compliant manner
 pub struct Rfc5280;
 
@@ -55,7 +62,7 @@ impl Profile for Rfc5280 {}
 
 #[cfg(feature = "hazmat")]
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Debug, PartialEq, Eq, Copy, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Default)]
 /// Parse raw x509 certificate and disable all the checks and modification to the underlying data.
 pub struct Raw;
 
@@ -80,8 +87,10 @@ impl Profile for Raw {
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Enumerated)]
 #[asn1(type = "INTEGER")]
 #[repr(u8)]
+#[derive(Default)]
 pub enum Version {
     /// Version 1 (default)
+    #[default]
     V1 = 0,
 
     /// Version 2
@@ -94,12 +103,6 @@ pub enum Version {
 impl ValueOrd for Version {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
         (*self as u8).value_cmp(&(*other as u8))
-    }
-}
-
-impl Default for Version {
-    fn default() -> Self {
-        Self::V1
     }
 }
 
@@ -404,7 +407,7 @@ impl<P: Profile> CertificateInner<P> {
             }
         }
 
-        while position < input.len() - 1 {
+        while position + 1 < input.len() {
             let rest = &input[position..];
             let end_pos = find_boundary(rest, end_boundary)
                 .ok_or(pem::Error::PostEncapsulationBoundary)?
@@ -418,5 +421,23 @@ impl<P: Profile> CertificateInner<P> {
         }
 
         Ok(certs)
+    }
+}
+
+#[cfg(feature = "digest")]
+impl<P> CertificateInner<P>
+where
+    P: Profile,
+{
+    /// Return the hash of the DER serialization of this certificate
+    pub fn hash<D>(&self) -> der::Result<Output<D>>
+    where
+        D: Digest,
+    {
+        let mut digest = D::new();
+
+        self.encode(&mut DigestWriter(&mut digest))?;
+
+        Ok(digest.finalize())
     }
 }

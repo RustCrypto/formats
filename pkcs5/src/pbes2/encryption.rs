@@ -2,20 +2,19 @@
 
 use super::{EncryptionScheme, Kdf, Parameters, Pbkdf2Params, Pbkdf2Prf, ScryptParams};
 use crate::{Error, Result};
-use aes_gcm::{AeadInPlace, KeyInit as GcmKeyInit, Nonce, Tag};
+use aes_gcm::{KeyInit as GcmKeyInit, Nonce, Tag, aead::AeadInOut};
 use cbc::cipher::{
-    block_padding::Pkcs7, BlockCipherDecrypt, BlockCipherEncrypt, BlockModeDecrypt,
-    BlockModeEncrypt, KeyInit, KeyIvInit,
+    BlockCipherDecrypt, BlockCipherEncrypt, BlockModeDecrypt, BlockModeEncrypt, KeyInit, KeyIvInit,
+    block_padding::Pkcs7,
 };
 use pbkdf2::{
     hmac::{
-        digest::{
-            block_buffer::Eager,
-            core_api::{BlockSizeUser, BufferKindUser, FixedOutputCore, UpdateCore},
-            typenum::{IsLess, Le, NonZero, U12, U16, U256},
-            HashMarker,
-        },
         EagerHash,
+        digest::{
+            FixedOutput, HashMarker, Update,
+            block_api::BlockSizeUser,
+            typenum::{IsLess, NonZero, True, U12, U16, U256},
+        },
     },
     pbkdf2_hmac,
 };
@@ -46,7 +45,7 @@ fn cbc_decrypt<'a, C: BlockCipherDecrypt + KeyInit>(
     cbc::Decryptor::<C>::new_from_slices(key.as_slice(), iv)
         .map_err(|_| es.to_alg_params_invalid())?
         .decrypt_padded::<Pkcs7>(buffer)
-        .map_err(|_| Error::EncryptFailed)
+        .map_err(|_| Error::DecryptFailed)
 }
 
 fn gcm_encrypt<C, NonceSize, TagSize>(
@@ -69,7 +68,7 @@ where
         <aes_gcm::AesGcm<C, NonceSize, TagSize> as GcmKeyInit>::new_from_slice(key.as_slice())
             .map_err(|_| es.to_alg_params_invalid())?;
     let tag = gcm
-        .encrypt_in_place_detached(&nonce, &[], &mut buffer[..pos])
+        .encrypt_inout_detached(&nonce, &[], (&mut buffer[..pos]).into())
         .map_err(|_| Error::EncryptFailed)?;
     buffer[pos..].copy_from_slice(tag.as_ref());
     Ok(&buffer[0..pos + TagSize::USIZE])
@@ -99,7 +98,7 @@ where
     let tag = Tag::try_from(&buffer[msg_len..]).map_err(|_| Error::DecryptFailed)?;
 
     if gcm
-        .decrypt_in_place_detached(&nonce, &[], &mut buffer[..msg_len], &tag)
+        .decrypt_inout_detached(&nonce, &[], (&mut buffer[..msg_len]).into(), &tag)
         .is_err()
     {
         return Err(Error::DecryptFailed);
@@ -196,7 +195,7 @@ impl EncryptionKey {
                     Pbkdf2Prf::HmacWithSha1 => {
                         return Err(Error::UnsupportedAlgorithm {
                             oid: super::HMAC_WITH_SHA1_OID,
-                        })
+                        });
                     }
                     Pbkdf2Prf::HmacWithSha224 => EncryptionKey::derive_with_pbkdf2::<sha2::Sha224>(
                         password,
@@ -231,16 +230,9 @@ impl EncryptionKey {
     /// Derive key using PBKDF2.
     fn derive_with_pbkdf2<D>(password: &[u8], params: &Pbkdf2Params, length: usize) -> Self
     where
-        D: EagerHash,
-        D::Core: Sync
-            + HashMarker
-            + UpdateCore
-            + FixedOutputCore
-            + BufferKindUser<BufferKind = Eager>
-            + Default
-            + Clone,
-        <D::Core as BlockSizeUser>::BlockSize: IsLess<U256>,
-        Le<<D::Core as BlockSizeUser>::BlockSize, U256>: NonZero,
+        D: EagerHash + HashMarker + Update + FixedOutput + Default + Clone,
+        <D as EagerHash>::Core: Sync,
+        <D as BlockSizeUser>::BlockSize: IsLess<U256, Output = True> + NonZero,
     {
         let mut buffer = [0u8; MAX_KEY_LEN];
 

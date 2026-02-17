@@ -2,8 +2,14 @@
 
 use cms::content_info::ContentInfo;
 use cms::signed_data::{SignedData, SignerInfos};
-use der::{AnyRef, Decode, DecodePem, Encode, ErrorKind, Tag};
-use x509_cert::Certificate;
+use const_oid::db::rfc5911;
+use core::str::FromStr;
+use der::{AnyRef, DateTime, Decode, DecodePem, Encode, ErrorKind, Tag, asn1::SetOfVec};
+use x509_cert::{
+    Certificate,
+    attr::{Attribute, AttributeValue},
+    time::Time,
+};
 
 #[test]
 fn trust_list_sd_test() {
@@ -142,4 +148,24 @@ fn certs_to_p7b() {
     let p7b_ee = ContentInfo::try_from(pki_path).unwrap();
     let p7b_buf2 = p7b_ee.to_der().unwrap();
     assert_eq!(p7b_buf, p7b_buf2.as_slice());
+}
+
+#[test]
+fn encode_decode_signing_time() {
+    let time = DateTime::from_str("2024-12-31T23:59:59Z").unwrap();
+
+    // First serialize the attribute
+    let time = Time::from(time);
+    let time_der = time.to_der().unwrap();
+    let signing_time_attribute_value = AttributeValue::from_der(&time_der).unwrap();
+    let mut values = SetOfVec::<AttributeValue>::new();
+    values.insert(signing_time_attribute_value.clone()).unwrap();
+    let _attribute = Attribute {
+        oid: rfc5911::ID_SIGNING_TIME,
+        values,
+    };
+
+    // and deserialize
+    let time_deserialized = signing_time_attribute_value.decode_as::<Time>().unwrap();
+    assert_eq!(time, time_deserialized);
 }

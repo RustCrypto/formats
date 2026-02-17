@@ -4,7 +4,7 @@
 //! [Certificate Transparency RFC 6962]: https://datatracker.ietf.org/doc/html/rfc6962
 
 use alloc::{format, vec::Vec};
-use const_oid::{db::rfc6962::CT_PRECERT_SCTS, AssociatedOid, ObjectIdentifier};
+use const_oid::{AssociatedOid, ObjectIdentifier, db::rfc6962::CT_PRECERT_SCTS};
 use der::asn1::OctetString;
 use tls_codec::{
     DeserializeBytes, SerializeBytes, TlsByteVecU16, TlsDeserializeBytes, TlsSerializeBytes,
@@ -244,7 +244,7 @@ pub enum HashAlgorithm {
 
 #[cfg(test)]
 mod tests {
-    use der::{asn1::OctetString, Decode, Encode};
+    use der::{Decode, Encode, asn1::OctetString};
     use tls_codec::{DeserializeBytes, SerializeBytes, TlsByteVecU16};
 
     use crate::ext::pkix::sct::LogId;

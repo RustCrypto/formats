@@ -4,7 +4,7 @@
 /// See https://github.com/xemwebe/test_pkcs12_kdf for a sample program.
 ///
 use hex_literal::hex;
-use pkcs12::kdf::{derive_key_utf8, Pkcs12KeyType};
+use pkcs12::kdf::{Pkcs12KeyType, derive_key_utf8};
 
 #[test]
 fn pkcs12_key_derive_sha256() {
@@ -105,13 +105,31 @@ fn pkcs12_key_derive_sha256() {
     );
 
     assert_eq!(
-        derive_key_utf8::<sha2::Sha256>(PASS_SHORT, &SALT_INC, Pkcs12KeyType::EncryptionKey, 1000, 100).unwrap(),
-        hex!("2b95a0569b63f641fae1efca32e84db3699ab74540628ba66283b58cf5400527d8d0ebe2ccbf768c51c4d8fbd1bb156be06c1c59cbb69e44052ffc37376fdb47b2de7f9e543de9d096d8e5474b220410ff1c5d8bb7e5bc0f61baeaa12fd0da1d7a970172")
+        derive_key_utf8::<sha2::Sha256>(
+            PASS_SHORT,
+            &SALT_INC,
+            Pkcs12KeyType::EncryptionKey,
+            1000,
+            100
+        )
+        .unwrap(),
+        hex!(
+            "2b95a0569b63f641fae1efca32e84db3699ab74540628ba66283b58cf5400527d8d0ebe2ccbf768c51c4d8fbd1bb156be06c1c59cbb69e44052ffc37376fdb47b2de7f9e543de9d096d8e5474b220410ff1c5d8bb7e5bc0f61baeaa12fd0da1d7a970172"
+        )
     );
 
     assert_eq!(
-        derive_key_utf8::<sha2::Sha256>(PASS_SHORT, &SALT_INC, Pkcs12KeyType::EncryptionKey, 1000, 200).unwrap(),
-        hex!("2b95a0569b63f641fae1efca32e84db3699ab74540628ba66283b58cf5400527d8d0ebe2ccbf768c51c4d8fbd1bb156be06c1c59cbb69e44052ffc37376fdb47b2de7f9e543de9d096d8e5474b220410ff1c5d8bb7e5bc0f61baeaa12fd0da1d7a9701729cea6014d7fe62a2ed926dc36b61307f119d64edbceb5a9c58133bbf75ba0bef000a1a5180e4b1de7d89c89528bcb7899a1e46fd4da0d9de8f8e65e8d0d775e33d1247e76d596a34303161b219f39afda448bf518a2835fc5e28f0b55a1b6137a2c70cf7")
+        derive_key_utf8::<sha2::Sha256>(
+            PASS_SHORT,
+            &SALT_INC,
+            Pkcs12KeyType::EncryptionKey,
+            1000,
+            200
+        )
+        .unwrap(),
+        hex!(
+            "2b95a0569b63f641fae1efca32e84db3699ab74540628ba66283b58cf5400527d8d0ebe2ccbf768c51c4d8fbd1bb156be06c1c59cbb69e44052ffc37376fdb47b2de7f9e543de9d096d8e5474b220410ff1c5d8bb7e5bc0f61baeaa12fd0da1d7a9701729cea6014d7fe62a2ed926dc36b61307f119d64edbceb5a9c58133bbf75ba0bef000a1a5180e4b1de7d89c89528bcb7899a1e46fd4da0d9de8f8e65e8d0d775e33d1247e76d596a34303161b219f39afda448bf518a2835fc5e28f0b55a1b6137a2c70cf7"
+        )
     );
 }
 
@@ -156,12 +174,14 @@ fn pkcs12_key_derive_special_chars() {
     const PASS_SHORT: &str = "🔥";
     const SALT_INC: [u8; 8] = [0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8];
 
-    assert!(derive_key_utf8::<sha2::Sha256>(
-        PASS_SHORT,
-        &SALT_INC,
-        Pkcs12KeyType::EncryptionKey,
-        100,
-        32
-    )
-    .is_err()); // Emoji is not in the Basic Multilingual Plane
+    assert!(
+        derive_key_utf8::<sha2::Sha256>(
+            PASS_SHORT,
+            &SALT_INC,
+            Pkcs12KeyType::EncryptionKey,
+            100,
+            32
+        )
+        .is_err()
+    ); // Emoji is not in the Basic Multilingual Plane
 }

@@ -1,16 +1,16 @@
 //! OCSP request builder
 
-use crate::{builder::Error, OcspRequest, Request, Signature, TbsRequest, Version};
+use crate::{OcspRequest, Request, Signature, TbsRequest, Version, builder::Error};
 use alloc::vec::Vec;
 use der::Encode;
-use rand_core::CryptoRngCore;
+use rand_core::CryptoRng;
 use signature::{RandomizedSigner, Signer};
 use spki::{DynSignatureAlgorithmIdentifier, SignatureBitStringEncoding};
 use x509_cert::{
-    certificate::Rfc5280,
-    ext::{pkix::name::GeneralName, AsExtension},
-    name::Name,
     Certificate,
+    certificate::Rfc5280,
+    ext::{ToExtension, pkix::name::GeneralName},
+    name::Name,
 };
 
 /// X509 OCSP Request builder
@@ -39,13 +39,13 @@ use x509_cert::{
 ///     .with_request(Request::from_cert::<Sha1>(&issuer, &cert).unwrap())
 ///     .build();
 ///
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 ///
 /// let req = OcspRequestBuilder::default()
 ///     .with_request(Request::from_issuer::<Sha1>(&issuer, SerialNumber::from(2usize)).unwrap())
 ///     .with_request(Request::from_issuer::<Sha1>(&issuer, SerialNumber::from(3usize)).unwrap())
 ///     .with_request(Request::from_issuer::<Sha1>(&issuer, SerialNumber::from(4usize)).unwrap())
-///     .with_extension(Nonce::generate(&mut rng, 32).unwrap())
+///     .with_extension(&Nonce::generate(&mut rng, 32).unwrap())
 ///     .unwrap()
 ///     .build();
 ///
@@ -53,7 +53,7 @@ use x509_cert::{
 /// let signer_cert_chain = vec![cert.clone()];
 /// let req = OcspRequestBuilder::default()
 ///     .with_request(Request::from_cert::<Sha1>(&issuer, &cert).unwrap())
-///     .with_extension(Nonce::generate(&mut rng, 32).unwrap())
+///     .with_extension(&Nonce::generate(&mut rng, 32).unwrap())
 ///     .unwrap()
 ///     .sign(&mut signer, Some(signer_cert_chain))
 ///     .unwrap();
@@ -96,7 +96,7 @@ impl OcspRequestBuilder {
     /// extension encoding fails.
     ///
     /// [RFC 6960 Section 4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4
-    pub fn with_extension(mut self, ext: impl AsExtension) -> Result<Self, Error> {
+    pub fn with_extension<E: ToExtension>(mut self, ext: E) -> Result<Self, E::Error> {
         let ext = ext.to_extension(&Name::default(), &[])?;
         match self.tbs.request_extensions {
             Some(ref mut exts) => exts.push(ext),
@@ -139,15 +139,16 @@ impl OcspRequestBuilder {
 
     /// Consumes the builder and returns a signed [`OcspRequest`]. Errors when the algorithm
     /// identifier encoding, message encoding, or signature generation fails.
-    pub fn sign_with_rng<S, Sig>(
+    pub fn sign_with_rng<S, Sig, R>(
         self,
         signer: &mut S,
-        rng: &mut impl CryptoRngCore,
+        rng: &mut R,
         certificate_chain: Option<Vec<Certificate>>,
     ) -> Result<OcspRequest, Error>
     where
         S: RandomizedSigner<Sig> + DynSignatureAlgorithmIdentifier,
         Sig: SignatureBitStringEncoding,
+        R: CryptoRng + ?Sized,
     {
         let signature_algorithm = signer.signature_algorithm_identifier()?;
         let signature = signer

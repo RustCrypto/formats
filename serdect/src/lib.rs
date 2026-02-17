@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
@@ -48,20 +48,10 @@
 //!
 //! let data = SecretData([42; 32]);
 //!
-//! let serialized = bincode::serialize(&data).unwrap();
-//! // bincode, a binary serialization format is serialized into bytes.
-//! assert_eq!(
-//!     serialized.as_slice(),
-//!     [
-//!         // Array size.
-//!         32, 0, 0, 0, 0, 0, 0, 0,
-//!         // Actual data.
-//!         42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-//!         42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-//!     ]
-//! );
-//! # let deserialized: SecretData = bincode::deserialize(&serialized).unwrap();
-//! # assert_eq!(deserialized, data);
+//! // postcard: an embedded-friendly binary serialization format
+//! let serialized = postcard::to_stdvec(&data).unwrap();
+//! let deserialized: SecretData = postcard::from_bytes(&serialized).unwrap();
+//! assert_eq!(deserialized, data);
 //!
 //! let serialized = serde_json::to_string(&data).unwrap();
 //! // JSON, a human-readable serialization format, is serialized into lower-case HEX.
@@ -102,20 +92,10 @@
 //!
 //! let data = SecretData(vec![42; 32]);
 //!
-//! let serialized = bincode::serialize(&data).unwrap();
-//! // bincode, a binary serialization format is serialized into bytes.
-//! assert_eq!(
-//!     serialized.as_slice(),
-//!     [
-//!         // Slice size.
-//!         32, 0, 0, 0, 0, 0, 0, 0,
-//!         // Actual data.
-//!         42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-//!         42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-//!     ]
-//! );
-//! # let deserialized: SecretData = bincode::deserialize(&serialized).unwrap();
-//! # assert_eq!(deserialized, data);
+//! // postcard: an embedded-friendly binary serialization format
+//! let serialized = postcard::to_stdvec(&data).unwrap();
+//! let deserialized: SecretData = postcard::from_bytes(&serialized).unwrap();
+//! assert_eq!(deserialized, data);
 //!
 //! let serialized = serde_json::to_string(&data).unwrap();
 //! // JSON, a human-readable serialization format is serialized into lower-case HEX.

@@ -19,15 +19,15 @@ use crate::{
     builder::{BuilderProfile, Result},
     certificate::TbsCertificate,
     ext::{
+        Extension, ToExtension,
         pkix::{
-            name::{GeneralName, GeneralNames, HardwareModuleName, OtherName},
             AuthorityKeyIdentifier, KeyUsage, KeyUsages, SubjectAltName,
+            name::{GeneralName, GeneralNames, HardwareModuleName, OtherName},
         },
-        AsExtension, Extension,
     },
     name::Name,
 };
-use der::{asn1::OctetString, ErrorKind};
+use der::{ErrorKind, asn1::OctetString};
 use spki::{ObjectIdentifier, SubjectPublicKeyInfoRef};
 
 // TODO(tarcieri): use this when `const-oid` has been bumped to v0.10.0-rc.0

@@ -10,10 +10,12 @@ where
     type Error = T::Error;
 
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Option<T>, Self::Error> {
-        if let Some(byte) = reader.peek_byte() {
-            if T::can_decode(Tag::try_from(byte)?) {
-                return T::decode(reader).map(Some);
-            }
+        if reader.is_finished() {
+            return Ok(None);
+        }
+
+        if T::can_decode(Tag::peek(reader)?) {
+            return T::decode(reader).map(Some);
         }
 
         Ok(None)
@@ -59,9 +61,9 @@ where
         }
     }
 
-    fn encode(&self, encoder: &mut impl Writer) -> Result<(), Error> {
+    fn encode(&self, writer: &mut impl Writer) -> Result<(), Error> {
         match self {
-            Some(encodable) => encodable.encode(encoder),
+            Some(encodable) => encodable.encode(writer),
             None => Ok(()),
         }
     }

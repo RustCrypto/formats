@@ -2,10 +2,10 @@
 
 use crate::{Error, Result};
 use der::{
-    asn1::{AnyRef, ContextSpecificRef, ObjectIdentifier},
-    oid::AssociatedOid,
     Decode, DecodeValue, Encode, EncodeValue, FixedTag, Length, Reader, Sequence, Tag, TagMode,
     TagNumber, Writer,
+    asn1::{AnyRef, ContextSpecificRef, ObjectIdentifier},
+    oid::AssociatedOid,
 };
 use spki::{AlgorithmIdentifier, AlgorithmIdentifierRef};
 
@@ -25,24 +25,20 @@ const SHA_1_AI: AlgorithmIdentifierRef<'_> = AlgorithmIdentifierRef {
 /// [RFC 8017 Appendix 2.3]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.2.3
 #[derive(Clone, Debug, Copy, PartialEq, Eq)]
 #[repr(u8)]
+#[derive(Default)]
 pub enum TrailerField {
     /// the only supported value (0xbc, default)
+    #[default]
     BC = 1,
-}
-
-impl Default for TrailerField {
-    fn default() -> Self {
-        Self::BC
-    }
 }
 
 impl<'a> DecodeValue<'a> for TrailerField {
     type Error = der::Error;
 
-    fn decode_value<R: Reader<'a>>(decoder: &mut R, header: der::Header) -> der::Result<Self> {
-        match u8::decode_value(decoder, header)? {
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
+        match u8::decode_value(reader, header)? {
             1 => Ok(TrailerField::BC),
-            _ => Err(Self::TAG.value_error()),
+            _ => Err(reader.error(Self::TAG.value_error())),
         }
     }
 }
@@ -122,7 +118,7 @@ impl<'a> RsaPssParams<'a> {
             None
         } else {
             Some(ContextSpecificRef {
-                tag_number: TagNumber::N0,
+                tag_number: TagNumber(0),
                 tag_mode: TagMode::Explicit,
                 value: &self.hash,
             })
@@ -136,7 +132,7 @@ impl<'a> RsaPssParams<'a> {
             None
         } else {
             Some(ContextSpecificRef {
-                tag_number: TagNumber::N1,
+                tag_number: TagNumber(1),
                 tag_mode: TagMode::Explicit,
                 value: &self.mask_gen,
             })
@@ -148,7 +144,7 @@ impl<'a> RsaPssParams<'a> {
             None
         } else {
             Some(ContextSpecificRef {
-                tag_number: TagNumber::N2,
+                tag_number: TagNumber(2),
                 tag_mode: TagMode::Explicit,
                 value: &self.salt_len,
             })
@@ -160,7 +156,7 @@ impl<'a> RsaPssParams<'a> {
             None
         } else {
             Some(ContextSpecificRef {
-                tag_number: TagNumber::N3,
+                tag_number: TagNumber(3),
                 tag_mode: TagMode::Explicit,
                 value: &self.trailer_field,
             })
@@ -182,22 +178,20 @@ impl Default for RsaPssParams<'_> {
 impl<'a> DecodeValue<'a> for RsaPssParams<'a> {
     type Error = der::Error;
 
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
-        reader.read_nested(header.length, |reader| {
-            Ok(Self {
-                hash: reader
-                    .context_specific(TagNumber::N0, TagMode::Explicit)?
-                    .unwrap_or(SHA_1_AI),
-                mask_gen: reader
-                    .context_specific(TagNumber::N1, TagMode::Explicit)?
-                    .unwrap_or_else(default_mgf1_sha1),
-                salt_len: reader
-                    .context_specific(TagNumber::N2, TagMode::Explicit)?
-                    .unwrap_or(RsaPssParams::SALT_LEN_DEFAULT),
-                trailer_field: reader
-                    .context_specific(TagNumber::N3, TagMode::Explicit)?
-                    .unwrap_or_default(),
-            })
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: der::Header) -> der::Result<Self> {
+        Ok(Self {
+            hash: reader
+                .context_specific(TagNumber(0), TagMode::Explicit)?
+                .unwrap_or(SHA_1_AI),
+            mask_gen: reader
+                .context_specific(TagNumber(1), TagMode::Explicit)?
+                .unwrap_or_else(default_mgf1_sha1),
+            salt_len: reader
+                .context_specific(TagNumber(2), TagMode::Explicit)?
+                .unwrap_or(RsaPssParams::SALT_LEN_DEFAULT),
+            trailer_field: reader
+                .context_specific(TagNumber(3), TagMode::Explicit)?
+                .unwrap_or_default(),
         })
     }
 }
@@ -290,7 +284,7 @@ impl<'a> RsaOaepParams<'a> {
                     parameters: Some(AnyRef::NULL),
                 }),
             },
-            p_source: pspecicied_algorithm_identifier(label),
+            p_source: pspecified_algorithm_identifier(label),
         }
     }
 
@@ -299,7 +293,7 @@ impl<'a> RsaOaepParams<'a> {
             None
         } else {
             Some(ContextSpecificRef {
-                tag_number: TagNumber::N0,
+                tag_number: TagNumber(0),
                 tag_mode: TagMode::Explicit,
                 value: &self.hash,
             })
@@ -313,7 +307,7 @@ impl<'a> RsaOaepParams<'a> {
             None
         } else {
             Some(ContextSpecificRef {
-                tag_number: TagNumber::N1,
+                tag_number: TagNumber(1),
                 tag_mode: TagMode::Explicit,
                 value: &self.mask_gen,
             })
@@ -327,7 +321,7 @@ impl<'a> RsaOaepParams<'a> {
             None
         } else {
             Some(ContextSpecificRef {
-                tag_number: TagNumber::N2,
+                tag_number: TagNumber(2),
                 tag_mode: TagMode::Explicit,
                 value: &self.p_source,
             })
@@ -347,19 +341,18 @@ impl Default for RsaOaepParams<'_> {
 
 impl<'a> DecodeValue<'a> for RsaOaepParams<'a> {
     type Error = der::Error;
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: der::Header) -> der::Result<Self> {
-        reader.read_nested(header.length, |reader| {
-            Ok(Self {
-                hash: reader
-                    .context_specific(TagNumber::N0, TagMode::Explicit)?
-                    .unwrap_or(SHA_1_AI),
-                mask_gen: reader
-                    .context_specific(TagNumber::N1, TagMode::Explicit)?
-                    .unwrap_or_else(default_mgf1_sha1),
-                p_source: reader
-                    .context_specific(TagNumber::N2, TagMode::Explicit)?
-                    .unwrap_or_else(default_pempty_string),
-            })
+
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: der::Header) -> der::Result<Self> {
+        Ok(Self {
+            hash: reader
+                .context_specific(TagNumber(0), TagMode::Explicit)?
+                .unwrap_or(SHA_1_AI),
+            mask_gen: reader
+                .context_specific(TagNumber(1), TagMode::Explicit)?
+                .unwrap_or_else(default_mgf1_sha1),
+            p_source: reader
+                .context_specific(TagNumber(2), TagMode::Explicit)?
+                .unwrap_or_else(default_pempty_string),
         })
     }
 }
@@ -389,7 +382,7 @@ impl<'a> TryFrom<&'a [u8]> for RsaOaepParams<'a> {
     }
 }
 
-fn pspecicied_algorithm_identifier(label: &impl AsRef<[u8]>) -> AlgorithmIdentifierRef<'_> {
+fn pspecified_algorithm_identifier(label: &impl AsRef<[u8]>) -> AlgorithmIdentifierRef<'_> {
     AlgorithmIdentifierRef {
         oid: OID_PSPECIFIED,
         parameters: Some(
@@ -400,5 +393,5 @@ fn pspecicied_algorithm_identifier(label: &impl AsRef<[u8]>) -> AlgorithmIdentif
 
 /// Default Source Algorithm, empty string
 fn default_pempty_string<'a>() -> AlgorithmIdentifierRef<'a> {
-    pspecicied_algorithm_identifier(&[])
+    pspecified_algorithm_identifier(&[])
 }

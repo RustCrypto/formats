@@ -1,5 +1,6 @@
 [advisories]
 ignore = [
-    "RUSTSEC-2021-0127", # serde_cbor is unmaintained
-    "RUSTSEC-2023-0071", # rsa: Marvin Attack: potential key recovery
-]
+    "RUSTSEC-2023-0071", # rsa marvin attack - patched in 0.10, we're depending on 0.10.0-rc.0
+    "RUSTSEC-2023-0089", # atomic-polyfill unmaintained
+    "RUSTSEC-2024-0436", # paste unmaintained
+] # advisory IDs to ignore e.g. ["RUSTSEC-2019-0001", ...]

@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
@@ -63,8 +63,8 @@ mod error;
 mod grammar;
 
 pub use crate::{
-    decoder::{decode, decode_label, detect_base64_line_width, Decoder},
-    encoder::{encapsulated_len, encapsulated_len_wrapped, encode, encoded_len, Encoder},
+    decoder::{Decoder, decode, decode_label, detect_base64_line_width},
+    encoder::{Encoder, encapsulated_len, encapsulated_len_wrapped, encode, encoded_len},
     error::{Error, Result},
 };
 pub use base64ct::LineEnding;

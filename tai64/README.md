@@ -2,22 +2,22 @@
 
 [![Crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
-![Apache2/MIT licensed][license-image]
-![MSRV][rustc-image]
 [![Build Status][build-image]][build-link]
+![Apache2/MIT licensed][license-image]
+![Rust Version][rustc-image]
+[![Project Chat][chat-image]][chat-link]
 
 An implementation of the [TAI64(N)] (*Temps Atomique International*) timestamp
 format in Rust.
 
 [Documentation][docs-link]
 
-## Minimum Supported Rust Version
+## Minimum Supported Rust Version (MSRV) Policy
 
-Rust **1.60** or newer.
+MSRV increases are not considered breaking changes and can happen in patch releases.
 
-In the future, we reserve the right to change MSRV (i.e. MSRV is out-of-scope
-for this crate's SemVer guarantees), however when we do it will be accompanied by
-a minor version bump.
+The crate MSRV accounts for all supported targets and crate feature combinations, excluding
+explicitly unstable features.
 
 ## License
 
@@ -41,11 +41,13 @@ dual licensed as above, without any additional terms or conditions.
 [docs-image]: https://docs.rs/tai64/badge.svg
 [docs-link]: https://docs.rs/tai64/
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.60+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
 [build-image]: https://github.com/RustCrypto/formats/actions/workflows/tai64.yml/badge.svg
 [build-link]: https://github.com/RustCrypto/formats/actions/workflows/tai64.yml
+[chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
+[chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/300570-formats
 
-[//]: # (general links)
+[//]: # (links)
 
 [RustCrypto]: https://github.com/RustCrypto/
 [TAI64(N)]: https://cr.yp.to/libtai/tai64.html

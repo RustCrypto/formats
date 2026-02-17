@@ -1,6 +1,6 @@
 [package]
 name = "cms"
-version = "0.3.0-pre.0"
+version = "0.3.0-pre.2"
 description = """
 Pure Rust implementation of the Cryptographic Message Syntax (CMS) as described in RFC 5652 and RFC 3274.
 """
@@ -11,48 +11,55 @@ repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "p7b", "pkcs7", "signing"]
 readme = "README.md"
-edition = "2021"
-rust-version = "1.81"
+edition = "2024"
+rust-version = "1.85"
 
 [dependencies]
-const-oid = { version = "0.10.0-rc.0", features = ["db"] }
-der = { version = "0.8.0-rc.0", features = ["alloc", "derive", "oid"] }
-spki = { version = "0.8.0-rc.0" }
-x509-cert = { version = "=0.3.0-pre.0", default-features = false }
+const-oid = { version = "0.10", features = ["db"] }
+der = { version = "0.8", features = ["ber", "derive", "oid"] }
+spki = "0.8.0-rc.4"
+x509-cert = { version = "0.3.0-rc.4", default-features = false }
 
 # optional dependencies
-aes = { version = "=0.9.0-pre.2", optional = true }
-async-signature = { version = "=0.6.0-pre.4", features = ["digest", "rand_core"], optional = true }
-cbc = { version = "=0.2.0-pre.2", optional = true }
-cipher = { version = "=0.5.0-pre.7", features = ["alloc", "block-padding", "rand_core"], optional = true }
-rsa = { version = "=0.10.0-pre.3", optional = true }
-sha1 = { version = "=0.11.0-pre.4", optional = true }
-sha2 = { version = "=0.11.0-pre.4", optional = true }
-sha3 = { version = "=0.11.0-pre.4", optional = true }
-signature = { version = "=2.3.0-pre.4", features = ["digest", "alloc"], optional = true }
+aes = { version = "0.9.0-rc.4", optional = true }
+aes-kw = { version = "0.3.0-rc.2", optional = true }
+ansi-x963-kdf = { version = "0.1.0-rc.2", optional = true }
+cbc = { version = "0.2.0-rc.3", optional = true }
+cipher = { version = "0.5", features = ["alloc", "block-padding", "rand_core"], optional = true }
+digest = { version = "0.11", optional = true }
+elliptic-curve = { version = "0.14.0-rc.28", optional = true }
+rsa = { version = "0.10.0-rc.15", optional = true }
+sha1 = { version = "0.11.0-rc.5", optional = true }
+sha2 = { version = "0.11.0-rc.5", optional = true }
+sha3 = { version = "0.11.0-rc.7", optional = true }
+signature = { version = "3.0.0-rc.10", features = ["digest", "alloc"], optional = true }
 zeroize = { version = "1.8.1", optional = true }
 
 [dev-dependencies]
-aes = "=0.9.0-pre.2"
-getrandom = "0.3"
-hex-literal = "0.4"
-pem-rfc7468 = "1.0.0-rc.1"
-pkcs5 = "0.8.0-rc.1"
-pbkdf2 = "0.13.0-pre.0"
-rand = "0.8.5"
-rsa = { version = "=0.10.0-pre.3", features = ["sha2"] }
-ecdsa = { version = "=0.17.0-pre.9", features = ["digest", "pem"] }
-p256 = "=0.14.0-pre.2"
-tokio = { version = "1.43.0", features = ["macros", "rt"] }
-x509-cert = { version = "=0.3.0-pre.0", features = ["pem"] }
+aes = "0.9.0-rc.2"
+getrandom = "0.4"
+hex-literal = "1"
+pem-rfc7468 = "1"
+pkcs5 = "0.8.0-rc.13"
+pbkdf2 = "0.13.0-rc.9"
+rand = "0.10"
+rsa = { version = "0.10.0-rc.15", features = ["sha2"] }
+ecdsa = { version = "0.17.0-rc.16", features = ["digest", "pem"] }
+p256 = "0.14.0-rc.7"
+tokio = { version = "1.45.1", features = ["macros", "rt"] }
+x509-cert = { version = "0.3.0-rc.4", features = ["pem"] }
 
 [features]
-std = ["der/std", "spki/std"]
+std = ["der/std", "x509-cert/std", "spki/std"]
 builder = [
     "dep:aes",
-    "dep:async-signature",
+    "dep:aes-kw",
+    "dep:ansi-x963-kdf",
     "dep:cbc",
     "dep:cipher",
+    "digest",
+    "elliptic-curve/ecdh",
+    "elliptic-curve/pkcs8",
     "dep:rsa",
     "dep:sha1",
     "dep:sha2",

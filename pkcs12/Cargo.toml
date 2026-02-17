@@ -1,6 +1,6 @@
 [package]
 name = "pkcs12"
-version = "0.2.0-pre"
+version = "0.2.0-pre.0"
 description = """
 Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #12:
 Personal Information Exchange Syntax v1.1 (RFC7292)
@@ -12,31 +12,32 @@ repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "key", "pkcs", "private"]
 readme = "README.md"
-edition = "2021"
-rust-version = "1.81"
+edition = "2024"
+rust-version = "1.85"
 
 [dependencies]
-der = { version = "0.8.0-rc.0", features = ["alloc", "derive", "oid", "pem"] }
-spki = { version = "0.8.0-rc.0" }
-x509-cert = { version = "=0.3.0-pre.0", default-features = false, features = ["pem"] }
-const-oid = { version = "0.10.0-rc.0", features = ["db"] }
-cms = "=0.3.0-pre.0"
+der = { version = "0.8", features = ["alloc", "derive", "oid"], default-features = false }
+spki = { version = "0.8.0-rc.4", default-features = false }
+x509-cert = { version = "0.3.0-rc.4", default-features = false }
+const-oid = { version = "0.10", features = ["db"], default-features = false }
+cms = { version = "=0.3.0-pre.2", default-features = false }
 
 # optional dependencies
-digest = { version = "0.11.0-pre.9", features = ["alloc"], optional = true }
+digest = { version = "0.11", features = ["alloc"], optional = true }
 zeroize = { version = "1.8.1", optional = true, default-features = false }
 
 [dev-dependencies]
-hex-literal = "0.4"
-pkcs8 = { version = "0.11.0-rc.1", features = ["pkcs5", "getrandom"] }
-pkcs5 = { version = "0.8.0-rc.0", features = ["pbes2", "3des"] }
-sha2 = "=0.11.0-pre.4"
-whirlpool = "=0.11.0-pre.4"
+hex-literal = "1"
+pkcs8 = { version = "0.11.0-rc.10", features = ["pkcs5"] }
+pkcs5 = { version = "0.8.0-rc.13", features = ["pbes2", "3des"] }
+sha2 = "0.11.0-rc.5"
+whirlpool = "0.11.0-rc.5"
 
 [features]
-kdf = ["dep:digest", "dep:zeroize"]
+default = ["pem"]
+kdf = ["dep:digest", "zeroize/alloc"]
+pem = ["der/pem", "x509-cert/pem"]
 
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
-

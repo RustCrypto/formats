@@ -1,6 +1,6 @@
 //! X.509 OCSP ResponderID
 
-use der::{asn1::OctetString, Choice};
+use der::{Choice, asn1::OctetString};
 use x509_cert::name::Name;
 
 /// ResponderID structure as defined in [RFC 6960 Section 4.2.1].

@@ -1,9 +1,10 @@
-use cms::content_info::{CmsVersion, ContentInfo};
-use cms::encrypted_data::EncryptedData;
-use cms::signed_data::SignedData;
+use cms::{
+    content_info::{CmsVersion, ContentInfo},
+    encrypted_data::EncryptedData,
+    signed_data::SignedData,
+};
 use const_oid::ObjectIdentifier;
-use der::asn1::OctetStringRef;
-use der::{AnyRef, Decode, Encode};
+use der::{AnyRef, Decode, Encode, EncodingRules, Tagged, asn1::OctetStringRef};
 use hex_literal::hex;
 use pkcs5::pbes2::Pbkdf2Params;
 
@@ -122,7 +123,7 @@ fn cms_decode_signed_der() {
         sd.encap_content_info
             .econtent
             .unwrap()
-            .decode_as::<OctetStringRef>()
+            .decode_as::<&OctetStringRef>()
             .unwrap()
             .as_bytes()
             .len(),
@@ -140,4 +141,39 @@ fn cms_decode_signed_der() {
 
     // should match the original
     assert_eq!(reencoded_der_signed_data_in_ci, der_signed_data_in_ci)
+}
+
+#[test]
+fn cms_decode_signed_ber() {
+    let cms_ber = include_bytes!("../tests/examples/cms_ber.bin");
+    let content_info_ber = ContentInfo::from_ber(cms_ber).unwrap();
+
+    let cms_der = include_bytes!("../tests/examples/cms_der.bin");
+    let content_info_der = ContentInfo::from_der(cms_der).unwrap();
+
+    assert_eq!(content_info_ber.content_type, content_info_der.content_type);
+    assert_eq!(
+        content_info_ber.content.tag(),
+        content_info_der.content.tag()
+    );
+
+    let signed_data_ber = content_info_ber
+        .content
+        .decode_as_encoding::<SignedData>(EncodingRules::Ber)
+        .unwrap();
+    let signed_data_der = content_info_der.content.decode_as::<SignedData>().unwrap();
+
+    assert_eq!(signed_data_ber.version, signed_data_der.version);
+    assert_eq!(
+        signed_data_ber.digest_algorithms,
+        signed_data_der.digest_algorithms
+    );
+    assert_eq!(signed_data_ber.crls, signed_data_der.crls);
+
+    assert_eq!(
+        signed_data_ber.encap_content_info.econtent_type,
+        signed_data_der.encap_content_info.econtent_type
+    );
+
+    // TODO(tarcieri): decode encapsulated content info, signer info, and certificates and compare
 }

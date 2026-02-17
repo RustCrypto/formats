@@ -1,6 +1,6 @@
 //! pkcs-12PbeParams implementation
 
-use der::{asn1::OctetString, Sequence, ValueOrd};
+use der::{Sequence, ValueOrd, asn1::OctetString};
 use spki::AlgorithmIdentifierOwned;
 
 /// The `pkcs-12PbeParams` type is defined in [RFC 7292 Appendix C].

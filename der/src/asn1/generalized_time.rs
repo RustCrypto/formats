@@ -2,10 +2,10 @@
 #![cfg_attr(feature = "arbitrary", allow(clippy::arithmetic_side_effects))]
 
 use crate::{
-    datetime::{self, DateTime},
-    ord::OrdIsValueOrd,
     DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag,
     Writer,
+    datetime::{self, DateTime},
+    ord::OrdIsValueOrd,
 };
 use core::time::Duration;
 
@@ -35,38 +35,48 @@ impl GeneralizedTime {
     const LENGTH: usize = 15;
 
     /// Create a [`GeneralizedTime`] from a [`DateTime`].
+    #[must_use]
     pub const fn from_date_time(datetime: DateTime) -> Self {
         Self(datetime)
     }
 
     /// Convert this [`GeneralizedTime`] into a [`DateTime`].
-    pub fn to_date_time(&self) -> DateTime {
+    #[must_use]
+    pub const fn to_date_time(&self) -> DateTime {
         self.0
     }
 
     /// Create a new [`GeneralizedTime`] given a [`Duration`] since `UNIX_EPOCH`
-    /// (a.k.a. "Unix time")
+    /// (a.k.a. "Unix time").
+    ///
+    /// # Errors
+    /// Returns [`Error`] with a value error kind in the event `unix_duration` could not be parsed.
     pub fn from_unix_duration(unix_duration: Duration) -> Result<Self> {
         DateTime::from_unix_duration(unix_duration)
             .map(Into::into)
-            .map_err(|_| Self::TAG.value_error())
+            .map_err(|_| Self::TAG.value_error().into())
     }
 
     /// Get the duration of this timestamp since `UNIX_EPOCH`.
+    #[must_use]
     pub fn to_unix_duration(&self) -> Duration {
         self.0.unix_duration()
     }
 
     /// Instantiate from [`SystemTime`].
+    ///
+    /// # Errors
+    /// If the time conversion failed.
     #[cfg(feature = "std")]
     pub fn from_system_time(time: SystemTime) -> Result<Self> {
         DateTime::try_from(time)
             .map(Into::into)
-            .map_err(|_| Self::TAG.value_error())
+            .map_err(|_| Self::TAG.value_error().into())
     }
 
     /// Convert to [`SystemTime`].
     #[cfg(feature = "std")]
+    #[must_use]
     pub fn to_system_time(&self) -> SystemTime {
         self.0.to_system_time()
     }
@@ -74,12 +84,48 @@ impl GeneralizedTime {
 
 impl_any_conversions!(GeneralizedTime);
 
+/// Creates a [`GeneralizedTime`] from its individual, ascii
+/// encoded components.
+fn decode_from_values(
+    year: (u8, u8, u8, u8),
+    month: (u8, u8),
+    day: (u8, u8),
+    hour: (u8, u8),
+    min: (u8, u8),
+    sec: (u8, u8),
+) -> Result<GeneralizedTime> {
+    let year = u16::from(datetime::decode_decimal(
+        GeneralizedTime::TAG,
+        year.0,
+        year.1,
+    )?)
+    .checked_mul(100)
+    .and_then(|y| {
+        y.checked_add(
+            datetime::decode_decimal(GeneralizedTime::TAG, year.2, year.3)
+                .ok()?
+                .into(),
+        )
+    })
+    .ok_or(ErrorKind::DateTime)?;
+    let month = datetime::decode_decimal(GeneralizedTime::TAG, month.0, month.1)?;
+    let day = datetime::decode_decimal(GeneralizedTime::TAG, day.0, day.1)?;
+    let hour = datetime::decode_decimal(GeneralizedTime::TAG, hour.0, hour.1)?;
+    let minute = datetime::decode_decimal(GeneralizedTime::TAG, min.0, min.1)?;
+    let second = datetime::decode_decimal(GeneralizedTime::TAG, sec.0, sec.1)?;
+
+    let dt = DateTime::new(year, month, day, hour, minute, second)
+        .map_err(|_| GeneralizedTime::TAG.value_error())?;
+
+    GeneralizedTime::from_unix_duration(dt.unix_duration())
+}
+
 impl<'a> DecodeValue<'a> for GeneralizedTime {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        if Self::LENGTH != usize::try_from(header.length)? {
-            return Err(Self::TAG.value_error());
+        if Self::LENGTH != usize::try_from(header.length())? {
+            return Err(reader.error(Self::TAG.value_error()));
         }
 
         let mut bytes = [0u8; Self::LENGTH];
@@ -87,24 +133,32 @@ impl<'a> DecodeValue<'a> for GeneralizedTime {
 
         match bytes {
             // RFC 5280 requires mandatory seconds and Z-normalized time zone
-            [y1, y2, y3, y4, mon1, mon2, day1, day2, hour1, hour2, min1, min2, sec1, sec2, b'Z'] => {
-                let year = u16::from(datetime::decode_decimal(Self::TAG, y1, y2)?)
-                    .checked_mul(100)
-                    .and_then(|y| {
-                        y.checked_add(datetime::decode_decimal(Self::TAG, y3, y4).ok()?.into())
-                    })
-                    .ok_or(ErrorKind::DateTime)?;
-                let month = datetime::decode_decimal(Self::TAG, mon1, mon2)?;
-                let day = datetime::decode_decimal(Self::TAG, day1, day2)?;
-                let hour = datetime::decode_decimal(Self::TAG, hour1, hour2)?;
-                let minute = datetime::decode_decimal(Self::TAG, min1, min2)?;
-                let second = datetime::decode_decimal(Self::TAG, sec1, sec2)?;
-
-                DateTime::new(year, month, day, hour, minute, second)
-                    .map_err(|_| Self::TAG.value_error())
-                    .and_then(|dt| Self::from_unix_duration(dt.unix_duration()))
-            }
-            _ => Err(Self::TAG.value_error()),
+            [
+                y1,
+                y2,
+                y3,
+                y4,
+                mon1,
+                mon2,
+                day1,
+                day2,
+                hour1,
+                hour2,
+                min1,
+                min2,
+                sec1,
+                sec2,
+                b'Z',
+            ] => decode_from_values(
+                (y1, y2, y3, y4),
+                (mon1, mon2),
+                (day1, day2),
+                (hour1, hour2),
+                (min1, min2),
+                (sec1, sec2),
+            )
+            .map_err(|err| reader.error(err.kind())),
+            _ => Err(reader.error(Self::TAG.value_error())),
         }
     }
 }
@@ -327,8 +381,56 @@ mod tests {
         assert_eq!(utc_time.to_unix_duration().as_secs(), 673573540);
 
         let mut buf = [0u8; 128];
-        let mut encoder = SliceWriter::new(&mut buf);
-        utc_time.encode(&mut encoder).unwrap();
-        assert_eq!(example_bytes, encoder.finish().unwrap());
+        let mut writer = SliceWriter::new(&mut buf);
+        utc_time.encode(&mut writer).unwrap();
+        assert_eq!(example_bytes, writer.finish().unwrap());
+    }
+
+    #[test]
+    fn max_valid_generalized_time() {
+        let example_bytes = "\x18\x0f99991231235959Z".as_bytes();
+        let utc_time = GeneralizedTime::from_der(example_bytes).unwrap();
+        assert_eq!(utc_time.to_unix_duration().as_secs(), 253402300799);
+
+        let mut buf = [0u8; 128];
+        let mut writer = SliceWriter::new(&mut buf);
+        utc_time.encode(&mut writer).unwrap();
+        assert_eq!(example_bytes, writer.finish().unwrap());
+    }
+
+    #[test]
+    fn invalid_year_generalized_time() {
+        let example_bytes = "\x18\x0f999@1231235959Z".as_bytes();
+        assert!(GeneralizedTime::from_der(example_bytes).is_err());
+    }
+
+    #[test]
+    fn invalid_month_generalized_time() {
+        let example_bytes = "\x18\x0f99991331235959Z".as_bytes();
+        assert!(GeneralizedTime::from_der(example_bytes).is_err());
+    }
+
+    #[test]
+    fn invalid_day_generalized_time() {
+        let example_bytes = "\x18\x0f99991232235959Z".as_bytes();
+        assert!(GeneralizedTime::from_der(example_bytes).is_err());
+    }
+
+    #[test]
+    fn invalid_hour_generalized_time() {
+        let example_bytes = "\x18\x0f99991231245959Z".as_bytes();
+        assert!(GeneralizedTime::from_der(example_bytes).is_err());
+    }
+
+    #[test]
+    fn invalid_minute_generalized_time() {
+        let example_bytes = "\x18\x0f99991231236059Z".as_bytes();
+        assert!(GeneralizedTime::from_der(example_bytes).is_err());
+    }
+
+    #[test]
+    fn invalid_second_generalized_time() {
+        let example_bytes = "\x18\x0f99991231235960Z".as_bytes();
+        assert!(GeneralizedTime::from_der(example_bytes).is_err());
     }
 }

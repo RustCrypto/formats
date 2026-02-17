@@ -1,16 +1,16 @@
 use alloc::vec;
 
-use der::{asn1::BitString, Encode};
+use der::{Encode, asn1::BitString};
 use signature::Keypair;
 use spki::{
     AlgorithmIdentifier, DynSignatureAlgorithmIdentifier, EncodePublicKey, SubjectPublicKeyInfo,
 };
 
 use crate::{
-    builder::{Builder, Error, Result, NULL_OID},
-    ext::AsExtension,
+    builder::{Builder, Error, NULL_OID, Result},
+    ext::ToExtension,
     name::Name,
-    request::{attributes::AsAttribute, CertReq, CertReqInfo, ExtensionReq},
+    request::{CertReq, CertReqInfo, ExtensionReq, attributes::AsAttribute},
 };
 
 /// Builder for X509 Certificate Requests (CSR)
@@ -77,10 +77,13 @@ impl RequestBuilder {
 
     /// Add an extension to this certificate request
     ///
-    /// Extensions need to implement [`AsExtension`], examples may be found in
-    /// in [`AsExtension` documentation](../ext/trait.AsExtension.html#examples) or
-    /// [the implementors](../ext/trait.AsExtension.html#implementors).
-    pub fn add_extension<E: AsExtension>(&mut self, extension: &E) -> Result<()> {
+    /// Extensions need to implement [`ToExtension`], examples may be found in
+    /// in [`ToExtension` documentation](../ext/trait.ToExtension.html#examples) or
+    /// [the implementors](../ext/trait.ToExtension.html#implementors).
+    pub fn add_extension<E: ToExtension>(
+        &mut self,
+        extension: E,
+    ) -> core::result::Result<(), E::Error> {
         let ext = extension.to_extension(&self.info.subject, &self.extension_req.0)?;
 
         self.extension_req.0.push(ext);

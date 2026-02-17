@@ -1,8 +1,8 @@
 use crate::ext::pkix::name::OtherName;
 use const_oid::db::rfc5911::ID_ON_HARDWARE_MODULE_NAME;
 use der::{
-    asn1::{ObjectIdentifier, OctetString},
     Any, Sequence, ValueOrd,
+    asn1::{ObjectIdentifier, OctetString},
 };
 
 /// HardwareModuleName as defined in [RFC 4108 Section 5].

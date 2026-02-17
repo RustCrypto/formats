@@ -1,8 +1,9 @@
 //! `SetOf` tests.
 
-#![cfg(feature = "alloc")]
+#![cfg(all(any(unix, windows), feature = "alloc", feature = "heapless"))]
+#![allow(clippy::std_instead_of_alloc)]
 
-use der::{asn1::SetOfVec, DerOrd};
+use der::{DerOrd, asn1::SetOfVec};
 use proptest::{prelude::*, string::*};
 use std::collections::BTreeSet;
 
@@ -26,8 +27,8 @@ proptest! {
 #[cfg(all(feature = "derive", feature = "oid"))]
 mod ordering {
     use der::{
-        asn1::{AnyRef, ObjectIdentifier, SetOf, SetOfVec},
         Decode, Sequence, ValueOrd,
+        asn1::{AnyRef, ObjectIdentifier, SetOf, SetOfVec},
     };
     use hex_literal::hex;
 
@@ -57,7 +58,9 @@ mod ordering {
     /// Test to ensure ordering is handled correctly.
     #[test]
     fn ordering_regression() {
-        let der_bytes = hex!("3139301906035504030C12546573742055736572393031353734333830301C060A0992268993F22C640101130E3437303031303030303134373333");
+        let der_bytes = hex!(
+            "3139301906035504030C12546573742055736572393031353734333830301C060A0992268993F22C640101130E3437303031303030303134373333"
+        );
         let set = SetOf::<AttributeTypeAndValue<'_>, 3>::from_der(&der_bytes).unwrap();
         let attr1 = set.get(0).unwrap();
         assert_eq!(ObjectIdentifier::new("2.5.4.3").unwrap(), attr1.oid);

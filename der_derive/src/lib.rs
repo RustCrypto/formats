@@ -151,6 +151,7 @@ macro_rules! abort {
 
 mod asn1_type;
 mod attributes;
+mod bitstring;
 mod choice;
 mod enumerated;
 mod sequence;
@@ -159,7 +160,8 @@ mod value_ord;
 
 use crate::{
     asn1_type::Asn1Type,
-    attributes::{ErrorType, FieldAttrs, TypeAttrs, ATTR_NAME},
+    attributes::{ATTR_NAME, ErrorType, FieldAttrs, TypeAttrs},
+    bitstring::DeriveBitString,
     choice::DeriveChoice,
     enumerated::DeriveEnumerated,
     sequence::DeriveSequence,
@@ -168,7 +170,7 @@ use crate::{
 };
 use proc_macro::TokenStream;
 use proc_macro2::Span;
-use syn::{parse_macro_input, DeriveInput, Lifetime};
+use syn::{DeriveInput, Lifetime, parse_macro_input};
 
 /// Get the default lifetime.
 fn default_lifetime() -> Lifetime {
@@ -183,7 +185,7 @@ fn default_lifetime() -> Lifetime {
 ///
 /// The enum must consist entirely of 1-tuple variants wrapping inner
 /// types which must also impl the [`Decode`][2] and [`Encode`][3]
-/// traits. It will will also generate [`From`] impls for each of the
+/// traits. It will also generate [`From`] impls for each of the
 /// inner types of the variants into the enum that wraps them.
 ///
 /// # Usage
@@ -259,7 +261,7 @@ pub fn derive_enumerated(input: TokenStream) -> TokenStream {
     }
 }
 
-/// Derive the [`Sequence`][1] trait on a `struct`.
+/// Derive the [`DecodeValue`][1], [`EncodeValue`][2], [`Sequence`][3] traits on a `struct`.
 ///
 /// This custom derive macro can be used to automatically impl the
 /// `Sequence` trait for any struct which can be decoded/encoded as an
@@ -287,16 +289,42 @@ pub fn derive_enumerated(input: TokenStream) -> TokenStream {
 ///
 /// # `#[asn1(type = "...")]` attribute
 ///
-/// See [toplevel documentation for the `der_derive` crate][2] for more
+/// See [toplevel documentation for the `der_derive` crate][4] for more
 /// information about the `#[asn1]` attribute.
 ///
-/// [1]: https://docs.rs/der/latest/der/trait.Sequence.html
-/// [2]: https://docs.rs/der_derive/
+/// [1]: https://docs.rs/der/latest/der/trait.DecodeValue.html
+/// [2]: https://docs.rs/der/latest/der/trait.EncodeValue.html
+/// [3]: https://docs.rs/der/latest/der/trait.Sequence.html
+/// [4]: https://docs.rs/der_derive/
 #[proc_macro_derive(Sequence, attributes(asn1))]
 pub fn derive_sequence(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match DeriveSequence::new(input) {
-        Ok(t) => t.to_tokens().into(),
+        Ok(t) => t.to_tokens_all().into(),
+        Err(e) => e.to_compile_error().into(),
+    }
+}
+
+/// Derive the [`EncodeValue`][1] trait on a `struct`.
+///
+/// [1]: https://docs.rs/der/latest/der/trait.EncodeValue.html
+#[proc_macro_derive(EncodeValue, attributes(asn1))]
+pub fn derive_sequence_encode(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    match DeriveSequence::new(input) {
+        Ok(t) => t.to_tokens_encode().into(),
+        Err(e) => e.to_compile_error().into(),
+    }
+}
+
+/// Derive the [`DecodeValue`][1] trait on a `struct`.
+///
+/// [1]: https://docs.rs/der/latest/der/trait.DecodeValue.html
+#[proc_macro_derive(DecodeValue, attributes(asn1))]
+pub fn derive_sequence_decode(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    match DeriveSequence::new(input) {
+        Ok(t) => t.to_tokens_decode().into(),
         Err(e) => e.to_compile_error().into(),
     }
 }
@@ -312,6 +340,29 @@ pub fn derive_value_ord(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match DeriveValueOrd::new(input) {
         Ok(t) => t.to_tokens().into(),
+        Err(e) => e.to_compile_error().into(),
+    }
+}
+
+/// Derive the [`BitString`] on a `struct` with bool fields.
+///
+/// ```ignore
+/// use der::BitString;
+///
+/// #[derive(BitString)]
+/// pub struct MyFlags {
+///     pub flag_0: bool,
+///     pub flag_1: bool,
+///     pub flag_2: bool,
+/// }
+/// ```
+#[proc_macro_derive(BitString, attributes(asn1))]
+pub fn derive_bitstring(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+
+    match DeriveBitString::new(input) {
+        Ok(t) => t.to_tokens().into(),
+
         Err(e) => e.to_compile_error().into(),
     }
 }

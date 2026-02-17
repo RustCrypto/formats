@@ -1,11 +1,10 @@
 //! Buffered Base64 decoder.
 
 use crate::{
-    encoding,
-    line_ending::{CHAR_CR, CHAR_LF},
     Encoding,
     Error::{self, InvalidLength},
-    MIN_LINE_WIDTH,
+    MIN_LINE_WIDTH, encoding,
+    line_ending::{CHAR_CR, CHAR_LF},
 };
 use core::{cmp, marker::PhantomData};
 
@@ -103,14 +102,9 @@ impl<'i, E: Encoding> Decoder<'i, E> {
     ///
     /// # Returns
     /// - `Ok(bytes)` if the expected amount of data was read
-    /// - `Err(Error::InvalidLength)` if the exact amount of data couldn't be read, or
-    ///   if the output buffer has a length of 0
+    /// - `Err(Error::InvalidLength)` if the exact amount of data couldn't be read
     pub fn decode<'o>(&mut self, out: &'o mut [u8]) -> Result<&'o [u8], Error> {
-        if out.is_empty() {
-            return Err(InvalidLength);
-        }
-
-        if self.is_finished() {
+        if self.is_finished() && !out.is_empty() {
             return Err(InvalidLength);
         }
 
@@ -181,7 +175,7 @@ impl<'i, E: Encoding> Decoder<'i, E> {
         }
 
         // Append `decoded_len` zeroes to the vector
-        buf.extend(iter::repeat(0).take(remaining_len));
+        buf.extend(iter::repeat_n(0, remaining_len));
         self.decode(&mut buf[start_len..])?;
         Ok(&buf[start_len..])
     }
@@ -550,10 +544,8 @@ impl<'i> Iterator for LineReader<'i> {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use crate::{alphabet::Alphabet, test_vectors::*, Base64, Base64Unpadded, Decoder};
+    use crate::{Base64, Base64Unpadded, Decoder, alphabet::Alphabet, test_vectors::*};
 
-    #[cfg(feature = "std")]
-    use crate::Error::InvalidLength;
     #[cfg(feature = "std")]
     use {alloc::vec::Vec, std::io::Read};
 
@@ -601,12 +593,17 @@ mod tests {
 
     #[cfg(feature = "std")]
     #[test]
-    fn reject_empty_read() {
+    fn decode_empty_at_end() {
         let mut decoder = Decoder::<Base64>::new(b"AAAA").unwrap();
 
+        // Strip initial bytes
+        let mut buf = vec![0u8; 3];
+        assert_eq!(decoder.decode(&mut buf), Ok(&vec![0u8; 3][..]));
+
+        // Now try to read nothing from the end
         let mut buf: Vec<u8> = vec![];
 
-        assert_eq!(decoder.decode(&mut buf), Err(InvalidLength));
+        assert_eq!(decoder.decode(&mut buf), Ok(&[][..]));
     }
 
     /// Core functionality of a decoding test

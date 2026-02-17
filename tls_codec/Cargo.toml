@@ -8,8 +8,8 @@ description = "A pure Rust implementation of the TLS (de)serialization"
 readme = "README.md"
 homepage = "https://github.com/RustCrypto/formats/tree/master/tls_codec"
 repository = "https://github.com/RustCrypto/formats"
-edition = "2021"
-rust-version = "1.74"
+edition = "2024"
+rust-version = "1.85"
 
 [dependencies]
 zeroize = { version = "1.8", default-features = false, features = [
@@ -21,15 +21,17 @@ zeroize = { version = "1.8", default-features = false, features = [
 arbitrary = { version = "1.4", features = ["derive"], optional = true }
 tls_codec_derive = { version = "=0.4.2", path = "./derive", optional = true }
 serde = { version = "1.0.184", features = ["derive"], optional = true }
+serde_bytes = { version = "0.11.17", optional = true }
 
 [dev-dependencies]
-criterion = { version = "0.5", default-features = false }
+criterion = { version = "0.6", default-features = false }
+ciborium = "0.2.2"
 
 [features]
 default = ["std"]
 arbitrary = ["std", "dep:arbitrary"]
 derive = ["tls_codec_derive"]
-serde = ["std", "dep:serde"]
+serde = ["std", "dep:serde", "dep:serde_bytes"]
 mls = [] # In MLS variable length vectors are limited compared to QUIC.
 std = ["tls_codec_derive?/std"]
 conditional_deserialization = [

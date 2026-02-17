@@ -1,6 +1,6 @@
 [package]
 name = "const-oid"
-version = "0.10.0-rc.3"
+version = "0.10.2"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 description = """
@@ -14,14 +14,14 @@ repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-implementations"]
 keywords = ["iso", "iec", "itu", "oid"]
 readme = "README.md"
-edition = "2021"
-rust-version = "1.81"
+edition = "2024"
+rust-version = "1.85"
 
 [dependencies]
 arbitrary = { version = "1.4", optional = true, features = ["derive"] }
 
 [dev-dependencies]
-hex-literal = "0.4"
+hex-literal = "1"
 proptest = "1"
 regex = "1"
 

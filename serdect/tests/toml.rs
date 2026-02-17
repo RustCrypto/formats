@@ -31,7 +31,7 @@ struct ArrayTest {
 #[test]
 fn deserialize_slice() {
     let deserialized =
-        toml::from_str::<SliceTest>(&format!("lower={}\nupper={}", HEX_LOWER, HEX_UPPER)).unwrap();
+        toml::from_str::<SliceTest>(&format!("lower={HEX_LOWER}\nupper={HEX_UPPER}")).unwrap();
 
     assert_eq!(deserialized.lower.0, EXAMPLE_BYTES);
     assert_eq!(deserialized.upper.0, EXAMPLE_BYTES);
@@ -40,7 +40,7 @@ fn deserialize_slice() {
 #[test]
 fn deserialize_array() {
     let deserialized =
-        toml::from_str::<ArrayTest>(&format!("lower={}\nupper={}", HEX_LOWER, HEX_UPPER)).unwrap();
+        toml::from_str::<ArrayTest>(&format!("lower={HEX_LOWER}\nupper={HEX_UPPER}")).unwrap();
 
     assert_eq!(deserialized.lower.0, EXAMPLE_BYTES);
     assert_eq!(deserialized.upper.0, EXAMPLE_BYTES);
@@ -57,7 +57,7 @@ fn serialize_slice() {
 
     assert_eq!(
         serialized,
-        format!("lower = {}\nupper = {}\n", HEX_LOWER, HEX_UPPER)
+        format!("lower = {HEX_LOWER}\nupper = {HEX_UPPER}\n")
     );
 }
 
@@ -72,7 +72,7 @@ fn serialize_array() {
 
     assert_eq!(
         serialized,
-        format!("lower = {}\nupper = {}\n", HEX_LOWER, HEX_UPPER)
+        format!("lower = {HEX_LOWER}\nupper = {HEX_UPPER}\n")
     );
 }
 

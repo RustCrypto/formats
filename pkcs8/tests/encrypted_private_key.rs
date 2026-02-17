@@ -4,7 +4,7 @@
 
 use der::asn1::OctetStringRef;
 use hex_literal::hex;
-use pkcs8::{pkcs5::pbes2, EncryptedPrivateKeyInfoRef, PrivateKeyInfoRef};
+use pkcs8::{EncryptedPrivateKeyInfoRef, pkcs5::pbes2};
 
 #[cfg(feature = "alloc")]
 use der::Encode;
@@ -13,7 +13,7 @@ use der::Encode;
 use der::EncodePem;
 
 #[cfg(feature = "encryption")]
-use pkcs8::EncryptedPrivateKeyInfoOwned;
+use pkcs8::{EncryptedPrivateKeyInfoOwned, PrivateKeyInfoRef};
 
 /// Ed25519 PKCS#8 private key plaintext encoded as ASN.1 DER
 #[cfg(feature = "encryption")]
@@ -124,7 +124,7 @@ fn decode_ed25519_encpriv_aes128_pbkdf2_sha1_der() {
         pbes2::EncryptionScheme::Aes128Cbc { iv } => {
             assert_eq!(iv, hex!("223080a71bcd2b9a256d876c924979d2"));
         }
-        other => panic!("unexpected encryption scheme: {:?}", other),
+        other => panic!("unexpected encryption scheme: {other:?}"),
     }
 
     // Extracted with:
@@ -159,7 +159,7 @@ fn decode_ed25519_encpriv_aes256_pbkdf2_sha256_der() {
         pbes2::EncryptionScheme::Aes256Cbc { iv } => {
             assert_eq!(iv, hex!("b2d02d78b2efd9dff694cf8e0af40925"));
         }
-        other => panic!("unexpected encryption scheme: {:?}", other),
+        other => panic!("unexpected encryption scheme: {other:?}"),
     }
 
     // Extracted with:
@@ -202,7 +202,7 @@ fn decrypt_ed25519_der_encpriv_aes128_gcm_scrypt() {
 #[test]
 fn encrypt_ed25519_der_encpriv_aes128_gcm_scrypt() {
     let scrypt_params = pkcs5::pbes2::Parameters::scrypt_aes128gcm(
-        pkcs5::scrypt::Params::new(14, 8, 1, 16).unwrap(),
+        pkcs5::scrypt::Params::new(14, 8, 1).unwrap(),
         &hex!("05BE17663E551D120F81308E"),
         hex!("D7E967A5DF6189471BCC1F49"),
     )
@@ -232,7 +232,7 @@ fn decrypt_ed25519_der_encpriv_aes256_gcm_scrypt() {
 #[test]
 fn encrypt_ed25519_der_encpriv_aes256_gcm_scrypt() {
     let scrypt_params = pkcs5::pbes2::Parameters::scrypt_aes256gcm(
-        pkcs5::scrypt::Params::new(15, 8, 1, 32).unwrap(),
+        pkcs5::scrypt::Params::new(15, 8, 1).unwrap(),
         &hex!("F67F4005A8393BD41F5B4981"),
         hex!("98B118A950D39E2ECB5B125C"),
     )
@@ -274,7 +274,7 @@ fn encrypt_ed25519_der_encpriv_aes256_pbkdf2_sha256() {
 #[test]
 fn encrypt_ed25519_der_encpriv_aes256_scrypt() {
     let scrypt_params = pkcs5::pbes2::Parameters::scrypt_aes256cbc(
-        pkcs5::scrypt::Params::new(15, 8, 1, 32).unwrap(),
+        pkcs5::scrypt::Params::new(15, 8, 1).unwrap(),
         &hex!("E6211E2348AD69E0"),
         hex!("9BD0A6251F2254F9FD5963887C27CF01"),
     )

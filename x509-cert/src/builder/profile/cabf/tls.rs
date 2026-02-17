@@ -16,11 +16,11 @@ use crate::{
     builder::{BuilderProfile, Result},
     certificate::TbsCertificate,
     ext::{
+        Extension, ToExtension,
         pkix::{
-            name::GeneralNames, AuthorityKeyIdentifier, BasicConstraints, ExtendedKeyUsage,
-            KeyUsage, KeyUsages, SubjectKeyIdentifier,
+            AuthorityKeyIdentifier, BasicConstraints, ExtendedKeyUsage, KeyUsage, KeyUsages,
+            SubjectKeyIdentifier, name::GeneralNames,
         },
-        AsExtension, Extension,
     },
     name::{Name, RelativeDistinguishedName},
 };
@@ -149,7 +149,10 @@ impl CertificateType {
             .filter_map(|rdn| {
                 let out = SetOfVec::<AttributeTypeAndValue>::from_iter(
                     rdn.iter()
-                        .filter(|attr_value| attr_value.oid == rfc4519::COUNTRY_NAME)
+                        .filter(|attr_value| {
+                            attr_value.oid == rfc4519::COUNTRY_NAME
+                                || attr_value.oid == rfc4519::COMMON_NAME
+                        })
                         .cloned(),
                 )
                 .ok()?;

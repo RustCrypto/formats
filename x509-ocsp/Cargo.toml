@@ -12,27 +12,27 @@ repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std"]
 keywords = ["crypto", "x509"]
 readme = "README.md"
-edition = "2021"
-rust-version = "1.81"
+edition = "2024"
+rust-version = "1.85"
 
 [dependencies]
-const-oid = { version = "0.10.0-rc.0", default-features = false, features = ["db"] }
-der = { version = "0.8.0-rc.0", features = ["alloc", "derive", "oid"] }
-spki = { version = "0.8.0-rc.0", features = ["alloc"] }
-x509-cert = { version = "=0.3.0-pre.0", default-features = false }
+const-oid = { version = "0.10", default-features = false, features = ["db"] }
+der = { version = "0.8", features = ["alloc", "derive", "oid"] }
+spki = { version = "0.8.0-rc.4", features = ["alloc"] }
+x509-cert = { version = "0.3.0-rc.4", default-features = false }
 
 # Optional
-digest = { version = "=0.11.0-pre.9", optional = true, default-features = false, features = ["oid"] }
-rand_core = { version = "0.6.4", optional = true, default-features = false }
-signature = { version = "=2.3.0-pre.4", optional = true, default-features = false, features = ["digest", "rand_core"] }
+digest = { version = "0.11", optional = true, default-features = false, features = ["oid"] }
+rand_core = { version = "0.10", optional = true, default-features = false }
+signature = { version = "3.0.0-rc.10", optional = true, default-features = false, features = ["digest", "rand_core"] }
 
 [dev-dependencies]
-hex-literal = "0.4.1"
+hex-literal = "1"
 lazy_static = "1.5.0"
-rand = "0.8.5"
-rsa = { version = "=0.10.0-pre.3", default-features = false, features = ["sha2"] }
-sha1 = { version = "=0.11.0-pre.4", default-features = false, features = ["oid"] }
-sha2 = { version = "=0.11.0-pre.4", default-features = false, features = ["oid"] }
+rand = "0.10"
+rsa = { version = "0.10.0-rc.15", default-features = false, features = ["encoding", "sha2"] }
+sha1 = { version = "0.11.0-rc.5", default-features = false, features = ["oid"] }
+sha2 = { version = "0.11.0-rc.5", default-features = false, features = ["oid"] }
 
 [features]
 rand = ["rand_core"]

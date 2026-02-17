@@ -1,6 +1,6 @@
 //! AuthEnvelopedData-related types
 
-use der::{asn1::SetOfVec, Sequence};
+use der::{Sequence, asn1::SetOfVec};
 use x509_cert::attr::Attribute;
 
 use crate::{

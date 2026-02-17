@@ -8,10 +8,10 @@ use crate::{
     builder::{BuilderProfile, Error, Result},
     certificate::TbsCertificate,
     ext::{
+        Extension, ToExtension,
         pkix::{
             AuthorityKeyIdentifier, BasicConstraints, KeyUsage, KeyUsages, SubjectKeyIdentifier,
         },
-        AsExtension, Extension,
     },
     name::Name,
 };
@@ -212,7 +212,7 @@ impl BuilderProfile for Root {
 pub mod tls;
 
 pub mod codesigning {
-    //! <https://cabforum.org/wp-content/uploads/Baseline-Requirements-for-the-Issuance-and-Management-of-Code-Signing.v2.8.pdf>
+    //! <https://cabforum.org/uploads/Baseline-Requirements-for-the-Issuance-and-Management-of-Code-Signing.v3.9.pdf>
     // TODO
 }
 
@@ -230,10 +230,12 @@ mod tests {
         assert!(
             check_names_encoding(&Name::from_str("ST=CA,C=US").expect("parse name"), false).is_ok()
         );
-        assert!(check_names_encoding(
-            &Name::from_str("serialNumber=1234,ST=CA,C=US").expect("parse name"),
-            false
-        )
-        .is_ok());
+        assert!(
+            check_names_encoding(
+                &Name::from_str("serialNumber=1234,ST=CA,C=US").expect("parse name"),
+                false
+            )
+            .is_ok()
+        );
     }
 }

@@ -34,4 +34,35 @@ proptest! {
         let expected = base32::encode(RFC4648_PADDED, &bytes).to_lowercase();
         prop_assert_eq!(actual, expected);
     }
+
+    /// Make sure that, if base32ct and base32 _both_ decode a value
+    /// when expecting padded inputs, they give the same output.
+    ///
+    /// TODO: It might be desirable to ensure that they both decode the
+    /// _same_ values: that is, that they are equivalently strict about
+    /// which inputs they accept.  But first, we should verify that
+    /// `base32`'s behavior is actually what we want.
+    #[test]
+    fn decode_arbitrary_padded(string in string_regex("[a-z0-9]{0,32}={0,8}").unwrap()) {
+        let actual = Base32Ct::decode_vec(&string);
+        let expected = base32::decode(RFC4648_PADDED, &string);
+        // assert_eq!(actual.ok(), expected);
+        if let (Ok(a), Some(b)) = (actual, expected) {
+            assert_eq!(a, b);
+        }
+    }
+
+    /// Make sure that, if base32ct and base32 _both_ decode a value
+    /// when expecting unpadded inputs, they give the same output.
+    ///
+    /// TODO: See note above.
+    #[test]
+    fn decode_arbitrary_unpadded(string in string_regex("[a-z0-9]{0,32}={0,8}").unwrap()) {
+        let actual = Base32UnpaddedCt::decode_vec(&string);
+        let expected = base32::decode(RFC4648_UNPADDED, &string);
+        // assert_eq!(actual.ok(), expected);
+        if let (Ok(a), Some(b)) = (actual, expected) {
+            assert_eq!(a, b);
+        }
+    }
 }

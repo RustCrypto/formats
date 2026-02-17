@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg"
@@ -89,7 +89,7 @@ mod test_vectors;
 pub use crate::{
     alphabet::{
         bcrypt::Base64Bcrypt,
-        crypt::Base64Crypt,
+        pbkdf2::Base64Pbkdf2,
         shacrypt::Base64ShaCrypt,
         standard::{Base64, Base64Unpadded},
         url::{Base64Url, Base64UrlUnpadded},
@@ -100,6 +100,9 @@ pub use crate::{
     errors::{Error, InvalidEncodingError, InvalidLengthError},
     line_ending::LineEnding,
 };
+
+#[allow(deprecated)]
+pub use crate::alphabet::crypt::Base64Crypt;
 
 /// Minimum supported line width.
 const MIN_LINE_WIDTH: usize = 4;

@@ -1,6 +1,6 @@
 [package]
 name = "pkcs1"
-version = "0.8.0-rc.1"
+version = "0.8.0-rc.4"
 description = """
 Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #1:
 RSA Cryptography Specifications Version 2.2 (RFC 8017)
@@ -12,26 +12,24 @@ repository = "https://github.com/RustCrypto/formats"
 categories = ["cryptography", "data-structures", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "key", "pem", "pkcs", "rsa"]
 readme = "README.md"
-edition = "2021"
-rust-version = "1.81"
+edition = "2024"
+rust-version = "1.85"
 
 [dependencies]
-der = { version = "0.8.0-rc.0", features = ["oid"] }
-spki = { version = "0.8.0-rc.0" }
-
-# optional dependencies
-pkcs8 = { version = "0.11.0-rc.1", optional = true, default-features = false }
+der = { version = "0.8", features = ["oid"] }
+spki = "0.8.0-rc.4"
 
 [dev-dependencies]
-const-oid = { version = "0.10.0-rc.0", features = ["db"] }
-hex-literal = "0.4"
+const-oid = { version = "0.10", features = ["db"] }
+hex-literal = "1"
 tempfile = "3"
 
 [features]
-zeroize = ["der/zeroize"]
-alloc = ["der/alloc", "zeroize", "pkcs8?/alloc"]
-pem = ["alloc", "der/pem", "pkcs8?/pem"]
+alloc = ["der/alloc", "zeroize"]
 std = ["der/std", "alloc"]
+
+pem = ["alloc", "der/pem"]
+zeroize = ["der/zeroize"]
 
 [package.metadata.docs.rs]
 all-features = true

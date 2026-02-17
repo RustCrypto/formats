@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
@@ -199,7 +199,7 @@ impl TryFrom<AlgorithmIdentifierRef<'_>> for EncryptionScheme {
         if alg.oid == pbes2::PBES2_OID {
             match alg.parameters {
                 Some(params) => pbes2::Parameters::try_from(params).map(Into::into),
-                None => Err(Tag::OctetString.value_error()),
+                None => Err(Tag::OctetString.value_error().into()),
             }
         } else {
             pbes1::Algorithm::try_from(alg).map(Into::into)

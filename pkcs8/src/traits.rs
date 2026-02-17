@@ -6,7 +6,7 @@ use crate::{Error, PrivateKeyInfoRef, Result};
 use der::SecretDocument;
 
 #[cfg(feature = "encryption")]
-use {crate::EncryptedPrivateKeyInfoRef, rand_core::CryptoRngCore};
+use {crate::EncryptedPrivateKeyInfoRef, rand_core::CryptoRng};
 
 #[cfg(feature = "pem")]
 use {
@@ -101,9 +101,9 @@ pub trait EncodePrivateKey {
     /// Create an [`SecretDocument`] containing the ciphertext of
     /// a PKCS#8 encoded private key encrypted under the given `password`.
     #[cfg(feature = "encryption")]
-    fn to_pkcs8_encrypted_der(
+    fn to_pkcs8_encrypted_der<R: CryptoRng>(
         &self,
-        rng: &mut impl CryptoRngCore,
+        rng: &mut R,
         password: impl AsRef<[u8]>,
     ) -> Result<SecretDocument> {
         EncryptedPrivateKeyInfoRef::encrypt(rng, password, self.to_pkcs8_der()?.as_bytes())
@@ -119,9 +119,9 @@ pub trait EncodePrivateKey {
     /// Serialize this private key as an encrypted PEM-encoded PKCS#8 private
     /// key using the `provided` to derive an encryption key.
     #[cfg(all(feature = "encryption", feature = "pem"))]
-    fn to_pkcs8_encrypted_pem(
+    fn to_pkcs8_encrypted_pem<R: CryptoRng>(
         &self,
-        rng: &mut impl CryptoRngCore,
+        rng: &mut R,
         password: impl AsRef<[u8]>,
         line_ending: LineEnding,
     ) -> Result<Zeroizing<String>> {

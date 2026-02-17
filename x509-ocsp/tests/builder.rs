@@ -4,10 +4,10 @@
 use der::{DateTime, Decode, Encode};
 use hex_literal::hex;
 use lazy_static::lazy_static;
-use rsa::{pkcs1v15::SigningKey, pkcs8::DecodePrivateKey, RsaPrivateKey};
+use rsa::{RsaPrivateKey, pkcs1v15::SigningKey, pkcs8::DecodePrivateKey};
 use sha1::Sha1;
 use sha2::{Sha224, Sha256, Sha384, Sha512};
-use x509_cert::{name::Name, serial_number::SerialNumber, Certificate};
+use x509_cert::{Certificate, name::Name, serial_number::SerialNumber};
 use x509_ocsp::builder::*;
 use x509_ocsp::{ext::*, *};
 
@@ -126,12 +126,12 @@ fn encode_ocsp_req_multiple_extensions() {
         .with_request(
             Request::from_issuer::<Sha1>(&ISSUER, SerialNumber::from(0x10001usize))
                 .unwrap()
-                .with_extension(single_ext1)
+                .with_extension(&single_ext1)
                 .unwrap(),
         )
-        .with_extension(ext1)
+        .with_extension(&ext1)
         .unwrap()
-        .with_extension(ext2)
+        .with_extension(&ext2)
         .unwrap()
         .build();
     assert_eq!(&req.to_der().unwrap(), &req_der);
@@ -296,12 +296,12 @@ fn encode_ocsp_resp_multiple_extensions() {
             .with_next_update(OcspGeneralizedTime::from(
                 DateTime::new(2020, 1, 1, 0, 0, 0).unwrap(),
             ))
-            .with_extension(single_ext1)
+            .with_extension(&single_ext1)
             .unwrap()
-            .with_extension(single_ext2)
+            .with_extension(&single_ext2)
             .unwrap(),
         )
-        .with_extension(ext1)
+        .with_extension(&ext1)
         .unwrap()
         .sign(
             &mut signer,

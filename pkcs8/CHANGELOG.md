@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.11.0 (UNRELEASED)
+
+### Changed
+- eagerly decode PEM labels ([#1163])
+- use `pbes2::Parameters::recommended` ([#1430])
+- Bump `rand_core` to `0.9` ([#1658])
+- Use 2024 edition, bump MSRV to 1.85 ([#1670])
+
+### Added
+- custom error types support to the Decode and DecodeValue traits. ([#1055])
+-  PrivateKeyInfoRef/PrivateKeyInfoOwned ([#1483])
+
+[#1055]: https://github.com/RustCrypto/formats/pull/1055
+[#1163]: https://github.com/RustCrypto/formats/pull/1163
+[#1430]: https://github.com/RustCrypto/formats/pull/1430
+[#1483]: https://github.com/RustCrypto/formats/pull/1483
+[#1658]: https://github.com/RustCrypto/formats/pull/1658
+[#1670]: https://github.com/RustCrypto/formats/pull/1670
+
 ## 0.10.2 (2023-04-04)
 ### Changed
 - Bump `spki` to v0.7.1 ([#981])

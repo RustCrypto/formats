@@ -1,12 +1,12 @@
 //! Slice reader.
 
-use crate::{BytesRef, Decode, EncodingRules, Error, ErrorKind, Length, Reader, Tag};
+use crate::{BytesRef, Decode, EncodingRules, Error, ErrorKind, Length, Reader};
 
 /// [`Reader`] which consumes an input byte slice.
 #[derive(Clone, Debug)]
 pub struct SliceReader<'a> {
     /// Byte slice being decoded.
-    bytes: BytesRef<'a>,
+    bytes: &'a BytesRef,
 
     /// Encoding rules to apply when decoding the input.
     encoding_rules: EncodingRules,
@@ -20,11 +20,17 @@ pub struct SliceReader<'a> {
 
 impl<'a> SliceReader<'a> {
     /// Create a new slice reader for the given byte slice.
+    ///
+    /// # Errors
+    /// If `bytes` is too long.
     pub fn new(bytes: &'a [u8]) -> Result<Self, Error> {
         Self::new_with_encoding_rules(bytes, EncodingRules::default())
     }
 
     /// Create a new slice reader with the given encoding rules.
+    ///
+    /// # Errors
+    /// If `bytes` is too long.
     pub fn new_with_encoding_rules(
         bytes: &'a [u8],
         encoding_rules: EncodingRules,
@@ -44,19 +50,15 @@ impl<'a> SliceReader<'a> {
         kind.at(self.position)
     }
 
-    /// Return an error for an invalid value with the given tag.
-    pub fn value_error(&mut self, tag: Tag) -> Error {
-        self.error(tag.value_error().kind())
-    }
-
     /// Did the decoding operation fail due to an error?
+    #[must_use]
     pub fn is_failed(&self) -> bool {
         self.failed
     }
 
     /// Obtain the remaining bytes in this slice reader from the current cursor
     /// position.
-    fn remaining(&self) -> Result<&'a [u8], Error> {
+    pub(crate) fn remaining(&self) -> Result<&'a [u8], Error> {
         if self.is_failed() {
             Err(ErrorKind::Failed.at(self.position))
         } else {
@@ -66,20 +68,24 @@ impl<'a> SliceReader<'a> {
                 .ok_or_else(|| Error::incomplete(self.input_len()))
         }
     }
+    /// Creates new [`SliceReader`] without advancing current reader.
+    pub(crate) fn new_nested_reader(&mut self, len: Length) -> Result<Self, Error> {
+        let prefix_len = (self.position + len)?;
+        let mut nested_reader = self.clone();
+        nested_reader.bytes = self.bytes.prefix(prefix_len)?;
+        Ok(nested_reader)
+    }
 }
 
 impl<'a> Reader<'a> for SliceReader<'a> {
+    const CAN_READ_SLICE: bool = true;
+
     fn encoding_rules(&self) -> EncodingRules {
         self.encoding_rules
     }
 
     fn input_len(&self) -> Length {
         self.bytes.len()
-    }
-
-    fn peek_into(&self, buf: &mut [u8]) -> crate::Result<()> {
-        self.clone().read_into(buf)?;
-        Ok(())
     }
 
     fn position(&self) -> Length {
@@ -92,20 +98,20 @@ impl<'a> Reader<'a> for SliceReader<'a> {
         F: FnOnce(&mut Self) -> Result<T, E>,
         E: From<Error>,
     {
-        let prefix_len = (self.position + len)?;
-        let mut nested_reader = self.clone();
-        nested_reader.bytes = self.bytes.prefix(prefix_len)?;
-
+        let mut nested_reader = self.new_nested_reader(len)?;
         let ret = f(&mut nested_reader);
         self.position = nested_reader.position;
         self.failed = nested_reader.failed;
 
-        ret.and_then(|value| {
-            nested_reader.finish(value).map_err(|e| {
-                self.failed = true;
-                e.into()
-            })
-        })
+        match ret {
+            Ok(value) => {
+                nested_reader.finish().inspect_err(|_e| {
+                    self.failed = true;
+                })?;
+                Ok(value)
+            }
+            Err(err) => Err(err),
+        }
     }
 
     fn read_slice(&mut self, len: Length) -> Result<&'a [u8], Error> {
@@ -140,7 +146,7 @@ impl<'a> Reader<'a> for SliceReader<'a> {
         kind.at(self.position)
     }
 
-    fn finish<T>(self, value: T) -> Result<T, Error> {
+    fn finish(self) -> Result<(), Error> {
         if self.is_failed() {
             Err(ErrorKind::Failed.at(self.position))
         } else if !self.is_finished() {
@@ -150,7 +156,7 @@ impl<'a> Reader<'a> for SliceReader<'a> {
             }
             .at(self.position))
         } else {
-            Ok(value)
+            Ok(())
         }
     }
 
@@ -214,7 +220,7 @@ mod tests {
         let x = i8::decode(&mut reader).unwrap();
         assert_eq!(42i8, x);
 
-        let err = reader.finish(x).err().unwrap();
+        let err = reader.finish().err().unwrap();
         assert_eq!(Some(Length::from(3u8)), err.position());
 
         assert_eq!(

@@ -46,7 +46,7 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
-            Error::Base64(err) => write!(f, "PEM Base64 error: {}", err),
+            Error::Base64(err) => write!(f, "PEM Base64 error: {err}"),
             Error::CharacterEncoding => f.write_str("PEM character encoding error"),
             Error::EncapsulatedText => f.write_str("PEM error in encapsulated text"),
             Error::HeaderDisallowed => f.write_str("PEM headers disallowed by RFC7468"),
@@ -62,8 +62,7 @@ impl fmt::Display for Error {
             Error::UnexpectedTypeLabel { expected } => {
                 write!(
                     f,
-                    "unexpected PEM type label: expecting \"BEGIN {}\"",
-                    expected
+                    "unexpected PEM type label: expecting \"BEGIN {expected}\""
                 )
             }
         }

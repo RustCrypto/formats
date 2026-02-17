@@ -1,13 +1,13 @@
 //! Certificate tests
 
 use der::{
-    asn1::{BitStringRef, ContextSpecific, ObjectIdentifier, PrintableStringRef, Utf8StringRef},
     Decode, DecodeValue, Encode, FixedTag, Header, Reader, Tag, Tagged,
+    asn1::{BitStringRef, ContextSpecific, ObjectIdentifier, PrintableStringRef, Utf8StringRef},
 };
 use hex_literal::hex;
 use spki::AlgorithmIdentifierRef;
-use x509_cert::serial_number::SerialNumber;
 use x509_cert::Certificate;
+use x509_cert::serial_number::SerialNumber;
 use x509_cert::*;
 
 #[cfg(feature = "pem")]
@@ -42,14 +42,12 @@ impl<'a> DecodeValue<'a> for DeferDecodeCertificate<'a> {
 
     fn decode_value<R: Reader<'a>>(
         reader: &mut R,
-        header: Header,
+        _header: Header,
     ) -> der::Result<DeferDecodeCertificate<'a>> {
-        reader.read_nested(header.length, |reader| {
-            Ok(Self {
-                tbs_certificate: reader.tlv_bytes()?,
-                signature_algorithm: reader.tlv_bytes()?,
-                signature: reader.tlv_bytes()?,
-            })
+        Ok(Self {
+            tbs_certificate: reader.tlv_bytes()?,
+            signature_algorithm: reader.tlv_bytes()?,
+            signature: reader.tlv_bytes()?,
         })
     }
 }
@@ -87,25 +85,23 @@ impl<'a> DecodeValue<'a> for DeferDecodeTbsCertificate<'a> {
 
     fn decode_value<R: Reader<'a>>(
         reader: &mut R,
-        header: Header,
+        _header: Header,
     ) -> der::Result<DeferDecodeTbsCertificate<'a>> {
-        reader.read_nested(header.length, |reader| {
-            let version = ContextSpecific::decode_explicit(reader, ::der::TagNumber::N0)?
-                .map(|cs| cs.value)
-                .unwrap_or_else(Default::default);
+        let version = ContextSpecific::decode_explicit(reader, ::der::TagNumber(0))?
+            .map(|cs| cs.value)
+            .unwrap_or_else(Default::default);
 
-            Ok(Self {
-                version,
-                serial_number: reader.tlv_bytes()?,
-                signature: reader.tlv_bytes()?,
-                issuer: reader.tlv_bytes()?,
-                validity: reader.tlv_bytes()?,
-                subject: reader.tlv_bytes()?,
-                subject_public_key_info: reader.tlv_bytes()?,
-                issuer_unique_id: reader.decode()?,
-                subject_unique_id: reader.decode()?,
-                extensions: reader.tlv_bytes()?,
-            })
+        Ok(Self {
+            version,
+            serial_number: reader.tlv_bytes()?,
+            signature: reader.tlv_bytes()?,
+            issuer: reader.tlv_bytes()?,
+            validity: reader.tlv_bytes()?,
+            subject: reader.tlv_bytes()?,
+            subject_public_key_info: reader.tlv_bytes()?,
+            issuer_unique_id: reader.decode()?,
+            subject_unique_id: reader.decode()?,
+            extensions: reader.tlv_bytes()?,
         })
     }
 }
@@ -166,7 +162,7 @@ fn reencode_cert() {
 
 #[test]
 fn decode_oversized_oids() {
-    let o1parse = ObjectIdentifier::from_der(&hex!(
+    let o1parse: ObjectIdentifier = Decode::from_der(&hex!(
         "06252B060104018237150885C8B86B87AFF00383A99F3C96C34081ADE6494D82B0E91D85B2873D"
     ))
     .unwrap();
@@ -198,7 +194,7 @@ fn decode_cert() {
         include_bytes!("examples/026EDA6FA1EDFA8C253936C75B5EEBD954BFF452.fake.der");
     let result = Certificate::from_der(der_encoded_cert);
     let cert: Certificate = result.unwrap();
-    println!("{:?}", cert);
+    println!("{cert:?}");
     let exts = cert.tbs_certificate().extensions().unwrap();
     for (ext, (oid, crit)) in exts.iter().zip(EXTENSIONS) {
         assert_eq!(ext.extn_id.to_string(), *oid);
@@ -230,13 +226,14 @@ fn decode_cert() {
             .tag(),
         Tag::Null
     );
-    assert!(cert
-        .tbs_certificate()
-        .signature()
-        .parameters
-        .as_ref()
-        .unwrap()
-        .is_null());
+    assert!(
+        cert.tbs_certificate()
+            .signature()
+            .parameters
+            .as_ref()
+            .unwrap()
+            .is_null()
+    );
 
     for (counter, atav) in cert.tbs_certificate().issuer().iter().enumerate() {
         if 0 == counter {
@@ -342,14 +339,15 @@ fn decode_cert() {
             .tag(),
         Tag::Null
     );
-    assert!(cert
-        .tbs_certificate()
-        .subject_public_key_info()
-        .algorithm
-        .parameters
-        .as_ref()
-        .unwrap()
-        .is_null());
+    assert!(
+        cert.tbs_certificate()
+            .subject_public_key_info()
+            .algorithm
+            .parameters
+            .as_ref()
+            .unwrap()
+            .is_null()
+    );
 
     // TODO - parse and compare public key
 
@@ -371,15 +369,18 @@ fn decode_cert() {
             .tag(),
         Tag::Null
     );
-    assert!(cert
-        .signature_algorithm()
-        .parameters
-        .as_ref()
-        .unwrap()
-        .is_null());
+    assert!(
+        cert.signature_algorithm()
+            .parameters
+            .as_ref()
+            .unwrap()
+            .is_null()
+    );
 
     assert_eq!(
-        &hex!("2A892F357BF3EF19E1211986106803FA18E66237802F1B1B0C6756CE678DB01D72CD0A4EB7171C2CDDF110ACD38AA65C35699E869C219AD7550AA4F287BB784F72EF8C9EA0E3DD103EFE5BF182EA36FFBCB45AAE65840263680534789C4F3215AF5454AD48CBC4B7A881E0135401A0BD5A849C11101DD1C66178E762C00DF59DD50F8DE9ED46FC6A0D742AE5697D87DD08DAC5291A75FB13C82FF2865C9E36799EA726137E1814E6A878C9532E8FC3D0A2A942D1CCC668FFCEAC255E6002FDE5ACDF2CE47556BB141C3A797A4BFDB673F6F1C229D7914FFEEF1505EE36F8038137D1B8F90106994BAB3E6FF0F60360A2E32F7A30B7ECEC1502DF3CC725BD6E436BA8F96A1847C9CEBB3F5A5906472292501D59BE1A98475BB1F30B677FAA8A45E351640C85B1B22661D33BD23EC6C0CA33DDD79E1120C7FC869EC4D0175ADB4A258AEAC5E8D2F0F578B8BF4B2C5DCC3269768AAA5B9E26D0592C5BB09C702C72E0A60F66D3EEB2B4983279634D59B0A2011B0E26AE796CC95D3243DF49615434E5CC06C374C3F936C005D360CAE6101F3AE7E97E29A157F5020770D4648D7877EBF8248CF3F3E68F9957A36F92D50616F2C60D3842327EF9BC0312CFF03A48C78E97254C2ADEADCA05069168443D833831FF66295A2EED685F164F1DBE01F8C897E1F63D42851682CBEE7B5A64D7BA2923D33644DBF1F7B3EDCE996F9928F043"),
+        &hex!(
+            "2A892F357BF3EF19E1211986106803FA18E66237802F1B1B0C6756CE678DB01D72CD0A4EB7171C2CDDF110ACD38AA65C35699E869C219AD7550AA4F287BB784F72EF8C9EA0E3DD103EFE5BF182EA36FFBCB45AAE65840263680534789C4F3215AF5454AD48CBC4B7A881E0135401A0BD5A849C11101DD1C66178E762C00DF59DD50F8DE9ED46FC6A0D742AE5697D87DD08DAC5291A75FB13C82FF2865C9E36799EA726137E1814E6A878C9532E8FC3D0A2A942D1CCC668FFCEAC255E6002FDE5ACDF2CE47556BB141C3A797A4BFDB673F6F1C229D7914FFEEF1505EE36F8038137D1B8F90106994BAB3E6FF0F60360A2E32F7A30B7ECEC1502DF3CC725BD6E436BA8F96A1847C9CEBB3F5A5906472292501D59BE1A98475BB1F30B677FAA8A45E351640C85B1B22661D33BD23EC6C0CA33DDD79E1120C7FC869EC4D0175ADB4A258AEAC5E8D2F0F578B8BF4B2C5DCC3269768AAA5B9E26D0592C5BB09C702C72E0A60F66D3EEB2B4983279634D59B0A2011B0E26AE796CC95D3243DF49615434E5CC06C374C3F936C005D360CAE6101F3AE7E97E29A157F5020770D4648D7877EBF8248CF3F3E68F9957A36F92D50616F2C60D3842327EF9BC0312CFF03A48C78E97254C2ADEADCA05069168443D833831FF66295A2EED685F164F1DBE01F8C897E1F63D42851682CBEE7B5A64D7BA2923D33644DBF1F7B3EDCE996F9928F043"
+        ),
         cert.signature().raw_bytes()
     );
 
@@ -402,7 +403,9 @@ fn decode_cert_negative_serial_number() {
     assert_eq!(
         cert.tbs_certificate().serial_number().as_bytes(),
         // INTEGER (125 bit) -2.370157924795571e+37
-        &[238, 43, 61, 235, 212, 33, 222, 20, 168, 98, 172, 4, 243, 221, 196, 1]
+        &[
+            238, 43, 61, 235, 212, 33, 222, 20, 168, 98, 172, 4, 243, 221, 196, 1
+        ]
     );
 
     let reencoded = cert.to_der().unwrap();
@@ -412,7 +415,7 @@ fn decode_cert_negative_serial_number() {
 #[cfg(all(feature = "pem", feature = "hazmat"))]
 #[test]
 fn decode_cert_overlength_serial_number() {
-    use der::{pem::LineEnding, DecodePem, EncodePem};
+    use der::{DecodePem, EncodePem, pem::LineEnding};
     use x509_cert::certificate::CertificateInner;
 
     let pem_encoded_cert = include_bytes!("examples/qualcomm.pem");
@@ -460,4 +463,26 @@ fn certificate_arbitrary() {
     ) {
         check_arbitrary(certificate);
     }
+}
+
+#[cfg(feature = "pem")]
+#[test]
+fn decode_cert_bmpstring() {
+    let der_encoded_cert = include_bytes!("examples/windows_bmpstring.pem");
+    let result = Certificate::from_pem(der_encoded_cert);
+    let cert: Certificate = result.unwrap();
+
+    let common_name = cert.tbs_certificate().issuer().common_name().unwrap();
+
+    assert_eq!(
+        common_name.unwrap().value(),
+        "WDKTestCert 混沌,133906716390833193"
+    );
+}
+
+#[cfg(feature = "pem")]
+#[test]
+fn decode_cert_with_comments() {
+    let pem_encoded_cert = include_bytes!("examples/lenovo_pk.pem");
+    Certificate::from_pem(pem_encoded_cert).expect("parse certificate with comments in the header");
 }

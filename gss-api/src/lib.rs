@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
@@ -57,7 +57,7 @@ pub struct InitialContextToken<'a> {
 impl FixedTag for InitialContextToken<'_> {
     const TAG: Tag = Tag::Application {
         constructed: true,
-        number: TagNumber::new(0),
+        number: TagNumber(0),
     };
 }
 
@@ -130,8 +130,12 @@ mod tests {
 
     #[test]
     fn initial_context_token() {
-        let gss_bytes = hex!("604806062b0601050502a03e303ca00e300c060a2b06010401823702020aa22a04284e544c4d535350000100000005028862000000000000000000000000000000000601b01d0000000f");
-        let inner_bytes = hex!("303ca00e300c060a2b06010401823702020aa22a04284e544c4d535350000100000005028862000000000000000000000000000000000601b01d0000000f");
+        let gss_bytes = hex!(
+            "604806062b0601050502a03e303ca00e300c060a2b06010401823702020aa22a04284e544c4d535350000100000005028862000000000000000000000000000000000601b01d0000000f"
+        );
+        let inner_bytes = hex!(
+            "303ca00e300c060a2b06010401823702020aa22a04284e544c4d535350000100000005028862000000000000000000000000000000000601b01d0000000f"
+        );
 
         let gss = InitialContextToken::from_der(&gss_bytes).unwrap();
 
@@ -140,7 +144,7 @@ mod tests {
             AnyRef::new(
                 Tag::ContextSpecific {
                     constructed: true,
-                    number: TagNumber::N0
+                    number: TagNumber(0)
                 },
                 &inner_bytes
             )
@@ -153,7 +157,7 @@ mod tests {
             inner_context_token: AnyRef::new(
                 Tag::ContextSpecific {
                     constructed: true,
-                    number: TagNumber::N0,
+                    number: TagNumber(0),
                 },
                 &inner_bytes,
             )

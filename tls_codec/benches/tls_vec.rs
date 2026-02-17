@@ -1,26 +1,26 @@
-use criterion::{criterion_group, criterion_main};
 use criterion::{BatchSize, Criterion};
+use criterion::{criterion_group, criterion_main};
+
+/// Length of the test bytes vector.
+const N: usize = 0xFFFF;
 
 fn vector(c: &mut Criterion) {
     use tls_codec::*;
     c.bench_function("TLS Serialize Vector", |b| {
-        b.iter_batched(
-            || TlsVecU32::from(vec![77u8; 65535]),
-            |long_vector| {
-                let _serialized_long_vec = long_vector.tls_serialize_detached().unwrap();
-            },
+        b.iter_batched_ref(
+            || (TlsVecU32::from(vec![77u8; N]), Vec::with_capacity(8 + N)),
+            |(long_vec, buf)| long_vec.tls_serialize(buf).unwrap(),
             BatchSize::SmallInput,
         )
     });
     c.bench_function("TLS Deserialize Vector", |b| {
-        b.iter_batched(
+        b.iter_batched_ref(
             || {
-                let long_vector = vec![77u8; 65535];
-                TlsSliceU32(&long_vector).tls_serialize_detached().unwrap()
+                let long_vec = vec![77u8; N];
+                TlsSliceU32(&long_vec).tls_serialize_detached().unwrap()
             },
             |serialized_long_vec| {
-                let _deserialized_long_vec =
-                    TlsVecU32::<u8>::tls_deserialize(&mut serialized_long_vec.as_slice()).unwrap();
+                TlsVecU32::<u8>::tls_deserialize(&mut serialized_long_vec.as_slice()).unwrap()
             },
             BatchSize::SmallInput,
         )
@@ -30,25 +30,25 @@ fn vector(c: &mut Criterion) {
 fn byte_vector(c: &mut Criterion) {
     use tls_codec::*;
     c.bench_function("TLS Serialize Byte Vector", |b| {
-        b.iter_batched(
-            || TlsByteVecU32::from(vec![77u8; 65535]),
-            |long_vector| {
-                let _serialized_long_vec = long_vector.tls_serialize_detached().unwrap();
+        b.iter_batched_ref(
+            || {
+                (
+                    TlsByteVecU32::from(vec![77u8; N]),
+                    Vec::with_capacity(8 + N),
+                )
             },
+            |(long_vec, buf)| Serialize::tls_serialize(long_vec, buf).unwrap(),
             BatchSize::SmallInput,
         )
     });
     c.bench_function("TLS Deserialize Byte Vector", |b| {
-        b.iter_batched(
+        b.iter_batched_ref(
             || {
-                let long_vector = vec![77u8; 65535];
-                TlsByteSliceU32(&long_vector)
-                    .tls_serialize_detached()
-                    .unwrap()
+                let long_vec = vec![77u8; N];
+                TlsByteSliceU32(&long_vec).tls_serialize_detached().unwrap()
             },
             |serialized_long_vec| {
-                let _deserialized_long_vec =
-                    TlsVecU32::<u8>::tls_deserialize(&mut serialized_long_vec.as_slice()).unwrap();
+                TlsVecU32::<u8>::tls_deserialize(&mut serialized_long_vec.as_slice()).unwrap()
             },
             BatchSize::SmallInput,
         )
@@ -58,13 +58,9 @@ fn byte_vector(c: &mut Criterion) {
 fn byte_slice(c: &mut Criterion) {
     use tls_codec::*;
     c.bench_function("TLS Serialize Byte Slice", |b| {
-        b.iter_batched(
-            || vec![77u8; 65535],
-            |long_vector| {
-                let _serialized_long_vec = TlsByteSliceU32(&long_vector)
-                    .tls_serialize_detached()
-                    .unwrap();
-            },
+        b.iter_batched_ref(
+            || (vec![77u8; N], Vec::with_capacity(8 + N)),
+            |(long_vec, buf)| TlsByteSliceU32(long_vec).tls_serialize(buf).unwrap(),
             BatchSize::SmallInput,
         )
     });
@@ -73,12 +69,9 @@ fn byte_slice(c: &mut Criterion) {
 fn slice(c: &mut Criterion) {
     use tls_codec::*;
     c.bench_function("TLS Serialize Slice", |b| {
-        b.iter_batched(
-            || vec![77u8; 65535],
-            |long_vector| {
-                let _serialized_long_vec =
-                    TlsSliceU32(&long_vector).tls_serialize_detached().unwrap();
-            },
+        b.iter_batched_ref(
+            || (vec![77u8; N], Vec::with_capacity(8 + N)),
+            |(long_vec, buf)| TlsSliceU32(long_vec).tls_serialize(buf).unwrap(),
             BatchSize::SmallInput,
         )
     });

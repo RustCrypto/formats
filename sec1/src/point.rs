@@ -14,50 +14,41 @@ use core::{
     ops::{Add, Sub},
     str,
 };
-use hybrid_array::{typenum::U1, Array, ArraySize};
+use hybrid_array::{Array, ArraySize, typenum::U1};
 
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
-
+#[cfg(feature = "ctutils")]
+use ctutils::{Choice, CtSelect};
 #[cfg(feature = "serde")]
-use serdect::serde::{de, ser, Deserialize, Serialize};
-
-#[cfg(feature = "subtle")]
-use subtle::{Choice, ConditionallySelectable};
-
+use serdect::serde::{Deserialize, Serialize, de, ser};
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
 
 /// Trait for supported modulus sizes which precomputes the typenums for various point encodings so
 /// they don't need to be included as bounds.
 // TODO(tarcieri): replace this all with const generic expressions.
-pub trait ModulusSize:
-    'static + ArraySize + Copy + Debug + Add<U1, Output = Self::CompressedPointSize>
-{
+pub trait ModulusSize: ArraySize + Add<U1, Output = Self::CompressedPointSize> {
     /// Size of a compressed point for the given elliptic curve when encoded using the SEC1
     /// `Elliptic-Curve-Point-to-Octet-String` algorithm (including leading `0x02` or `0x03`
     /// tag byte).
-    type CompressedPointSize: 'static
-        + ArraySize
-        + Copy
-        + Debug
-        + Add<Self, Output = Self::UncompressedPointSize>;
+    type CompressedPointSize: ArraySize + Add<Self, Output = Self::UncompressedPointSize>;
 
     /// Size of an uncompressed point for the given elliptic curve when encoded using the SEC1
     /// `Elliptic-Curve-Point-to-Octet-String` algorithm (including leading `0x04` tag byte).
-    type UncompressedPointSize: 'static + ArraySize + Copy + Debug;
+    type UncompressedPointSize: ArraySize;
 
     /// Size of an untagged point for given elliptic curve, i.e. size of two serialized base field
     /// elements when concatenated.
-    type UntaggedPointSize: 'static + ArraySize + Copy + Debug + Sub<Self, Output = Self>;
+    type UntaggedPointSize: ArraySize + Sub<Self, Output = Self>;
 }
 
 impl<T> ModulusSize for T
 where
-    T: 'static + ArraySize + Copy + Debug,
-    T: Add<U1, Output: 'static + ArraySize + Copy + Debug>,
-    T: Add<T, Output: 'static + ArraySize + Copy + Debug + Sub<T, Output = T>>,
-    <T as Add<U1>>::Output: Add<T, Output: 'static + ArraySize + Copy + Debug>,
+    T: ArraySize,
+    T: Add<U1, Output: ArraySize>,
+    T: Add<T, Output: ArraySize + Sub<T, Output = T>>,
+    <T as Add<U1>>::Output: Add<T, Output: 'static + ArraySize>,
 {
     type CompressedPointSize = <T as Add<U1>>::Output;
     type UncompressedPointSize = <Self::CompressedPointSize as Add<T>>::Output;
@@ -254,23 +245,6 @@ where
     }
 }
 
-#[cfg(feature = "subtle")]
-impl<Size> ConditionallySelectable for EncodedPoint<Size>
-where
-    Size: ModulusSize,
-    <Size::UncompressedPointSize as ArraySize>::ArrayType<u8>: Copy,
-{
-    fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
-        let mut bytes = Array::default();
-
-        for (i, byte) in bytes.iter_mut().enumerate() {
-            *byte = u8::conditional_select(&a.bytes[i], &b.bytes[i], choice);
-        }
-
-        Self { bytes }
-    }
-}
-
 impl<Size> Copy for EncodedPoint<Size>
 where
     Size: ModulusSize,
@@ -336,23 +310,12 @@ where
     }
 }
 
-#[cfg(feature = "zeroize")]
-impl<Size> Zeroize for EncodedPoint<Size>
-where
-    Size: ModulusSize,
-{
-    fn zeroize(&mut self) {
-        self.bytes.zeroize();
-        *self = Self::identity();
-    }
-}
-
 impl<Size> fmt::Display for EncodedPoint<Size>
 where
     Size: ModulusSize,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:X}", self)
+        write!(f, "{self:X}")
     }
 }
 
@@ -392,6 +355,40 @@ where
     }
 }
 
+// TODO(tarcieri): add `ctutils` support to `hybrid-array`
+#[cfg(feature = "ctutils")]
+impl<Size> CtSelect for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    fn ct_select(&self, other: &Self, choice: Choice) -> Self {
+        let mut bytes = Array::default();
+
+        for (i, byte) in bytes.iter_mut().enumerate() {
+            *byte = self.bytes[i].ct_select(&other.bytes[i], choice);
+        }
+
+        Self { bytes }
+    }
+}
+
+#[cfg(feature = "subtle")]
+impl<Size> subtle::ConditionallySelectable for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+    <Size::UncompressedPointSize as ArraySize>::ArrayType<u8>: Copy,
+{
+    fn conditional_select(a: &Self, b: &Self, choice: subtle::Choice) -> Self {
+        let mut bytes = Array::default();
+
+        for (i, byte) in bytes.iter_mut().enumerate() {
+            *byte = u8::conditional_select(&a.bytes[i], &b.bytes[i], choice);
+        }
+
+        Self { bytes }
+    }
+}
+
 #[cfg(feature = "serde")]
 impl<Size> Serialize for EncodedPoint<Size>
 where
@@ -416,6 +413,17 @@ where
     {
         let bytes = serdect::slice::deserialize_hex_or_bin_vec(deserializer)?;
         Self::from_bytes(bytes).map_err(de::Error::custom)
+    }
+}
+
+#[cfg(feature = "zeroize")]
+impl<Size> Zeroize for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    fn zeroize(&mut self) {
+        self.bytes.zeroize();
+        *self = Self::identity();
     }
 }
 
@@ -574,7 +582,9 @@ mod tests {
     const IDENTITY_BYTES: [u8; 1] = [0];
 
     /// Example uncompressed point
-    const UNCOMPRESSED_BYTES: [u8; 65] = hex!("0411111111111111111111111111111111111111111111111111111111111111112222222222222222222222222222222222222222222222222222222222222222");
+    const UNCOMPRESSED_BYTES: [u8; 65] = hex!(
+        "0411111111111111111111111111111111111111111111111111111111111111112222222222222222222222222222222222222222222222222222222222222222"
+    );
 
     /// Example compressed point: `UNCOMPRESSED_BYTES` after point compression
     const COMPRESSED_BYTES: [u8; 33] =
@@ -703,7 +713,9 @@ mod tests {
 
     #[test]
     fn from_untagged_point() {
-        let untagged_bytes = hex!("11111111111111111111111111111111111111111111111111111111111111112222222222222222222222222222222222222222222222222222222222222222");
+        let untagged_bytes = hex!(
+            "11111111111111111111111111111111111111111111111111111111111111112222222222222222222222222222222222222222222222222222222222222222"
+        );
         let uncompressed_point = EncodedPoint::from_untagged_bytes(&untagged_bytes.into());
         assert_eq!(uncompressed_point.as_bytes(), &UNCOMPRESSED_BYTES[..]);
     }

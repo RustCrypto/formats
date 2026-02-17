@@ -1,5 +1,7 @@
 //! `crypt(3)` Base64 tests
 
+#![allow(deprecated)]
+
 #[macro_use]
 mod common;
 

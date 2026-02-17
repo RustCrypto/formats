@@ -33,7 +33,7 @@
 // SOFTWARE.
 
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg"
@@ -50,8 +50,6 @@
 #[cfg(feature = "alloc")]
 #[macro_use]
 extern crate alloc;
-#[cfg(feature = "std")]
-extern crate std;
 
 mod alphabet;
 mod encoding;
@@ -59,6 +57,6 @@ mod error;
 
 pub use crate::{
     alphabet::rfc4648::{Base32, Base32Unpadded, Base32Upper, Base32UpperUnpadded},
-    encoding::{encoded_len, Encoding},
+    encoding::{Encoding, encoded_len},
     error::{Error, Result},
 };

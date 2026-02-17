@@ -16,7 +16,7 @@
 
 use alloc::{vec, vec::Vec};
 use der::asn1::BmpString;
-use digest::{core_api::BlockSizeUser, Digest, FixedOutputReset, OutputSizeUser, Update};
+use digest::{Digest, FixedOutputReset, OutputSizeUser, Update, block_api::BlockSizeUser};
 use zeroize::{Zeroize, Zeroizing};
 
 /// Specify the usage type of the generated key

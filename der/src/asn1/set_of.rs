@@ -2,79 +2,90 @@
 //!
 //! # Ordering Notes
 //!
-//! Some DER serializer implementations fail to properly sort elements of a
-//! `SET OF`. This is technically non-canonical, but occurs frequently
-//! enough that most DER decoders tolerate it. Unfortunately because
-//! of that, we must also follow suit.
+//! Some DER serializer implementations fail to properly sort elements of a `SET OF`. This is
+//! technically non-canonical, but occurs frequently enough that most DER decoders tolerate it.
 //!
-//! However, all types in this module sort elements of a set at decode-time,
-//! ensuring they'll be in the proper order if reserialized.
+//! When decoding with `EncodingRules::Der`, this implementation sorts the elements of `SET OF` at
+//! decode-time to ensure reserializations are canonical.
+
+#![cfg(any(feature = "alloc", feature = "heapless"))]
 
 use crate::{
-    arrayvec, ord::iter_cmp, ArrayVec, Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error,
-    ErrorKind, FixedTag, Header, Length, Reader, Tag, ValueOrd, Writer,
+    Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error, ErrorKind, FixedTag, Header, Length,
+    Reader, Tag, ValueOrd, Writer, ord::iter_cmp,
 };
 use core::cmp::Ordering;
 
 #[cfg(feature = "alloc")]
-use {alloc::vec::Vec, core::slice};
+use alloc::vec::Vec;
+#[cfg(any(feature = "alloc", feature = "heapless"))]
+use core::slice;
 
 /// ASN.1 `SET OF` backed by an array.
 ///
 /// This type implements an append-only `SET OF` type which is stack-based
 /// and does not depend on `alloc` support.
-// TODO(tarcieri): use `ArrayVec` when/if it's merged into `core`
-// See: https://github.com/rust-lang/rfcs/pull/2990
-#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+// TODO(tarcieri): use `ArrayVec` when/if it's merged into `core` (rust-lang/rfcs#3316)
+#[cfg(feature = "heapless")]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub struct SetOf<T, const N: usize>
 where
     T: DerOrd,
 {
-    inner: ArrayVec<T, N>,
+    inner: heapless::Vec<T, N>,
 }
 
+#[cfg(feature = "heapless")]
 impl<T, const N: usize> SetOf<T, N>
 where
     T: DerOrd,
 {
     /// Create a new [`SetOf`].
+    #[must_use]
     pub fn new() -> Self {
         Self {
-            inner: ArrayVec::default(),
+            inner: heapless::Vec::default(),
         }
     }
 
-    /// Add an item to this [`SetOf`].
-    ///
-    /// Items MUST be added in lexicographical order according to the
-    /// [`DerOrd`] impl on `T`.
-    #[deprecated(since = "0.7.6", note = "use `insert` or `insert_ordered` instead")]
-    pub fn add(&mut self, new_elem: T) -> Result<(), Error> {
-        self.insert_ordered(new_elem)
-    }
-
     /// Insert an item into this [`SetOf`].
+    ///
+    /// # Errors
+    /// If there's a duplicate or sorting error.
     pub fn insert(&mut self, item: T) -> Result<(), Error> {
-        self.inner.push(item)?;
+        check_duplicate(&item, self.iter())?;
+        self.try_push(item)?;
         der_sort(self.inner.as_mut())
     }
 
     /// Insert an item into this [`SetOf`].
     ///
-    /// Items MUST be added in lexicographical order according to the
-    /// [`DerOrd`] impl on `T`.
+    /// Items MUST be added in lexicographical order according to the [`DerOrd`] impl on `T`.
+    ///
+    /// # Errors
+    /// If items are added out-of-order or there isn't sufficient space.
     pub fn insert_ordered(&mut self, item: T) -> Result<(), Error> {
         // Ensure set elements are lexicographically ordered
         if let Some(last) = self.inner.last() {
             check_der_ordering(last, &item)?;
         }
 
-        self.inner.push(item)
+        self.try_push(item)
+    }
+
+    /// Borrow the elements of this [`SetOf`] as a slice.
+    pub fn as_slice(&self) -> &[T] {
+        self.inner.as_slice()
     }
 
     /// Get the nth element from this [`SetOf`].
     pub fn get(&self, index: usize) -> Option<&T> {
         self.inner.get(index)
+    }
+
+    /// Extract the inner `heapless::Vec`.
+    pub fn into_inner(self) -> heapless::Vec<T, N> {
+        self.inner
     }
 
     /// Iterate over the elements of this [`SetOf`].
@@ -93,8 +104,28 @@ where
     pub fn len(&self) -> usize {
         self.inner.len()
     }
+
+    /// Attempt to push an element onto the [`SetOf`].
+    ///
+    /// Does not perform ordering or uniqueness checks.
+    fn try_push(&mut self, item: T) -> Result<(), Error> {
+        self.inner
+            .push(item)
+            .map_err(|_| ErrorKind::Overlength.into())
+    }
 }
 
+#[cfg(feature = "heapless")]
+impl<T, const N: usize> AsRef<[T]> for SetOf<T, N>
+where
+    T: DerOrd,
+{
+    fn as_ref(&self) -> &[T] {
+        self.as_slice()
+    }
+}
+
+#[cfg(feature = "heapless")]
 impl<T, const N: usize> Default for SetOf<T, N>
 where
     T: DerOrd,
@@ -104,30 +135,33 @@ where
     }
 }
 
+#[cfg(feature = "heapless")]
 impl<'a, T, const N: usize> DecodeValue<'a> for SetOf<T, N>
 where
     T: Decode<'a> + DerOrd,
 {
     type Error = T::Error;
 
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
-        reader.read_nested(header.length, |reader| {
-            let mut result = Self::new();
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> Result<Self, Self::Error> {
+        let mut result = Self::new();
 
-            while !reader.is_finished() {
-                result.inner.push(T::decode(reader)?)?;
-            }
+        while !reader.is_finished() {
+            result.try_push(T::decode(reader)?)?;
+        }
 
+        if reader.encoding_rules().is_der() {
             // Ensure elements of the `SetOf` are sorted and will serialize as valid DER
             der_sort(result.inner.as_mut())?;
-            Ok(result)
-        })
+        }
+
+        Ok(result)
     }
 }
 
-impl<'a, T, const N: usize> EncodeValue for SetOf<T, N>
+#[cfg(feature = "heapless")]
+impl<T, const N: usize> EncodeValue for SetOf<T, N>
 where
-    T: 'a + Decode<'a> + Encode + DerOrd,
+    T: Encode + DerOrd,
 {
     fn value_len(&self) -> Result<Length, Error> {
         self.iter()
@@ -143,13 +177,15 @@ where
     }
 }
 
-impl<'a, T, const N: usize> FixedTag for SetOf<T, N>
+#[cfg(feature = "heapless")]
+impl<T, const N: usize> FixedTag for SetOf<T, N>
 where
-    T: Decode<'a> + DerOrd,
+    T: DerOrd,
 {
     const TAG: Tag = Tag::Set;
 }
 
+#[cfg(feature = "heapless")]
 impl<T, const N: usize> TryFrom<[T; N]> for SetOf<T, N>
 where
     T: DerOrd,
@@ -169,6 +205,7 @@ where
     }
 }
 
+#[cfg(feature = "heapless")]
 impl<T, const N: usize> ValueOrd for SetOf<T, N>
 where
     T: DerOrd,
@@ -182,25 +219,29 @@ where
 #[derive(Clone, Debug)]
 pub struct SetOfIter<'a, T> {
     /// Inner iterator.
-    inner: arrayvec::Iter<'a, T>,
+    inner: slice::Iter<'a, T>,
 }
 
-impl<'a, T> Iterator for SetOfIter<'a, T> {
+impl<'a, T: 'a> Iterator for SetOfIter<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<&'a T> {
         self.inner.next()
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.inner.size_hint()
+    }
 }
 
-impl<T> ExactSizeIterator for SetOfIter<'_, T> {}
+impl<'a, T: 'a> ExactSizeIterator for SetOfIter<'a, T> {}
 
 /// ASN.1 `SET OF` backed by a [`Vec`].
 ///
 /// This type implements an append-only `SET OF` type which is heap-backed
 /// and depends on `alloc` support.
 #[cfg(feature = "alloc")]
-#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub struct SetOfVec<T>
 where
     T: DerOrd,
@@ -223,6 +264,7 @@ where
     T: DerOrd,
 {
     /// Create a new [`SetOfVec`].
+    #[must_use]
     pub fn new() -> Self {
         Self {
             inner: Vec::default(),
@@ -231,8 +273,11 @@ where
 
     /// Create a new [`SetOfVec`] from the given iterator.
     ///
-    /// Note: this is an inherent method instead of an impl of the
-    /// [`FromIterator`] trait in order to be fallible.
+    /// Note: this is an inherent method instead of an impl of the [`FromIterator`] trait in order
+    /// to be fallible.
+    ///
+    /// # Errors
+    /// If a sorting error occurred.
     #[allow(clippy::should_implement_trait)]
     pub fn from_iter<I>(iter: I) -> Result<Self, Error>
     where
@@ -241,19 +286,13 @@ where
         Vec::from_iter(iter).try_into()
     }
 
-    /// Add an element to this [`SetOfVec`].
-    ///
-    /// Items MUST be added in lexicographical order according to the
-    /// [`DerOrd`] impl on `T`.
-    #[deprecated(since = "0.7.6", note = "use `insert` or `insert_ordered` instead")]
-    pub fn add(&mut self, item: T) -> Result<(), Error> {
-        self.insert_ordered(item)
-    }
-
     /// Extend a [`SetOfVec`] using an iterator.
     ///
-    /// Note: this is an inherent method instead of an impl of the
-    /// [`Extend`] trait in order to be fallible.
+    /// Note: this is an inherent method instead of an impl of the [`Extend`] trait in order to
+    /// be fallible.
+    ///
+    /// # Errors
+    /// If a sorting error occurred.
     pub fn extend<I>(&mut self, iter: I) -> Result<(), Error>
     where
         I: IntoIterator<Item = T>,
@@ -263,15 +302,21 @@ where
     }
 
     /// Insert an item into this [`SetOfVec`]. Must be unique.
+    ///
+    /// # Errors
+    /// If `item` is a duplicate or a sorting error occurred.
     pub fn insert(&mut self, item: T) -> Result<(), Error> {
+        check_duplicate(&item, self.iter())?;
         self.inner.push(item);
         der_sort(&mut self.inner)
     }
 
     /// Insert an item into this [`SetOfVec`]. Must be unique.
     ///
-    /// Items MUST be added in lexicographical order according to the
-    /// [`DerOrd`] impl on `T`.
+    /// Items MUST be added in lexicographical order according to the [`DerOrd`] impl on `T`.
+    ///
+    /// # Errors
+    /// If a sorting error occurred.
     pub fn insert_ordered(&mut self, item: T) -> Result<(), Error> {
         // Ensure set elements are lexicographically ordered
         if let Some(last) = self.inner.last() {
@@ -283,31 +328,39 @@ where
     }
 
     /// Borrow the elements of this [`SetOfVec`] as a slice.
+    #[must_use]
     pub fn as_slice(&self) -> &[T] {
         self.inner.as_slice()
     }
 
     /// Get the nth element from this [`SetOfVec`].
+    #[must_use]
     pub fn get(&self, index: usize) -> Option<&T> {
         self.inner.get(index)
     }
 
     /// Convert this [`SetOfVec`] into the inner [`Vec`].
+    #[must_use]
     pub fn into_vec(self) -> Vec<T> {
         self.inner
     }
 
     /// Iterate over the elements of this [`SetOfVec`].
-    pub fn iter(&self) -> slice::Iter<'_, T> {
-        self.inner.iter()
+    #[must_use]
+    pub fn iter(&self) -> SetOfIter<'_, T> {
+        SetOfIter {
+            inner: self.inner.iter(),
+        }
     }
 
     /// Is this [`SetOfVec`] empty?
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.inner.is_empty()
     }
 
     /// Number of elements in this [`SetOfVec`].
+    #[must_use]
     pub fn len(&self) -> usize {
         self.inner.len()
     }
@@ -330,24 +383,25 @@ where
 {
     type Error = T::Error;
 
-    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
-        reader.read_nested(header.length, |reader| {
-            let mut inner = Vec::new();
+    fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> Result<Self, Self::Error> {
+        let mut inner = Vec::new();
 
-            while !reader.is_finished() {
-                inner.push(T::decode(reader)?);
-            }
+        while !reader.is_finished() {
+            inner.push(T::decode(reader)?);
+        }
 
+        if reader.encoding_rules().is_der() {
             der_sort(inner.as_mut())?;
-            Ok(Self { inner })
-        })
+        }
+
+        Ok(Self { inner })
     }
 }
 
 #[cfg(feature = "alloc")]
-impl<'a, T> EncodeValue for SetOfVec<T>
+impl<T> EncodeValue for SetOfVec<T>
 where
-    T: 'a + Decode<'a> + Encode + DerOrd,
+    T: Encode + DerOrd,
 {
     fn value_len(&self) -> Result<Length, Error> {
         self.iter()
@@ -417,7 +471,7 @@ where
     }
 }
 
-// Implement by hand because the derive would create invalid values.
+// Implement by hand because custom derive would create invalid values.
 // Use the conversion from Vec to create a valid value.
 #[cfg(feature = "arbitrary")]
 impl<'a, T> arbitrary::Arbitrary<'a> for SetOfVec<T>
@@ -432,6 +486,24 @@ where
     fn size_hint(_depth: usize) -> (usize, Option<usize>) {
         (0, None)
     }
+}
+
+/// Check if the given item is a duplicate, given an iterator over sorted items (which we can
+/// short-circuit once we hit `Ordering::Less`.
+fn check_duplicate<'a, T, I>(item: &T, iter: I) -> Result<(), Error>
+where
+    T: DerOrd + 'a,
+    I: Iterator<Item = &'a T>,
+{
+    for item2 in iter {
+        match item.der_cmp(item2)? {
+            Ordering::Less => return Ok(()), // all remaining items are greater
+            Ordering::Equal => return Err(ErrorKind::SetDuplicate.into()),
+            Ordering::Greater => continue,
+        }
+    }
+
+    Ok(())
 }
 
 /// Ensure set elements are lexicographically ordered using [`DerOrd`].
@@ -475,11 +547,29 @@ fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<(), Error> {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use super::SetOf;
     #[cfg(feature = "alloc")]
     use super::SetOfVec;
     use crate::ErrorKind;
+    #[cfg(feature = "heapless")]
+    use {super::SetOf, crate::DerOrd};
 
+    #[cfg(feature = "heapless")]
+    #[test]
+    fn setof_insert() {
+        let mut setof = SetOf::<u8, 10>::new();
+        setof.insert(42).unwrap();
+        assert_eq!(setof.len(), 1);
+        assert_eq!(*setof.iter().next().unwrap(), 42);
+
+        // Ensure duplicates are disallowed
+        assert_eq!(
+            setof.insert(42).unwrap_err().kind(),
+            ErrorKind::SetDuplicate
+        );
+        assert_eq!(setof.len(), 1);
+    }
+
+    #[cfg(feature = "heapless")]
     #[test]
     fn setof_tryfrom_array() {
         let arr = [3u16, 2, 1, 65535, 0];
@@ -487,11 +577,40 @@ mod tests {
         assert!(set.iter().copied().eq([0, 1, 2, 3, 65535]));
     }
 
+    #[cfg(feature = "heapless")]
     #[test]
     fn setof_tryfrom_array_reject_duplicates() {
         let arr = [1u16, 1];
         let err = SetOf::try_from(arr).err().unwrap();
         assert_eq!(err.kind(), ErrorKind::SetDuplicate);
+    }
+
+    #[cfg(feature = "heapless")]
+    #[test]
+    fn setof_valueord_value_cmp() {
+        use core::cmp::Ordering;
+
+        let arr1 = [3u16, 2, 1, 5, 0];
+        let arr2 = [3u16, 2, 1, 4, 0];
+        let set1 = SetOf::try_from(arr1).unwrap();
+        let set2 = SetOf::try_from(arr2).unwrap();
+        assert_eq!(set1.der_cmp(&set2), Ok(Ordering::Greater));
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn setofvec_insert() {
+        let mut setof = SetOfVec::new();
+        setof.insert(42).unwrap();
+        assert_eq!(setof.len(), 1);
+        assert_eq!(*setof.iter().next().unwrap(), 42);
+
+        // Ensure duplicates are disallowed
+        assert_eq!(
+            setof.insert(42).unwrap_err().kind(),
+            ErrorKind::SetDuplicate
+        );
+        assert_eq!(setof.len(), 1);
     }
 
     #[cfg(feature = "alloc")]

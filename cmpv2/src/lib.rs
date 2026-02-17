@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
@@ -21,7 +21,7 @@ extern crate std;
 pub mod ann;
 pub mod body;
 pub mod certified_key_pair;
-pub mod gen;
+pub mod gp;
 pub mod header;
 pub mod message;
 pub mod oob;

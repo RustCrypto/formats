@@ -1,14 +1,14 @@
 //! OCSP Request
 
-use crate::{ext::Nonce, CertId, Version};
+use crate::{CertId, Version, ext::Nonce};
 use alloc::vec::Vec;
 use const_oid::db::rfc6960::ID_PKIX_OCSP_NONCE;
 use core::{default::Default, option::Option};
-use der::{asn1::BitString, Decode, Sequence};
+use der::{Decode, Sequence, asn1::BitString};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::{
     certificate::{CertificateInner, Profile, Rfc5280},
-    ext::{pkix::name::GeneralName, Extensions},
+    ext::{Extensions, pkix::name::GeneralName},
 };
 
 /// OCSPRequest structure as defined in [RFC 6960 Section 4.1.1].
@@ -124,10 +124,10 @@ pub struct Request<P: Profile + 'static = Rfc5280> {
 
 #[cfg(feature = "builder")]
 mod builder {
-    use crate::{builder::Error, CertId, Request};
+    use crate::{CertId, Request, builder::Error};
     use const_oid::AssociatedOid;
     use digest::Digest;
-    use x509_cert::{ext::AsExtension, name::Name, serial_number::SerialNumber, Certificate};
+    use x509_cert::{Certificate, ext::ToExtension, name::Name, serial_number::SerialNumber};
 
     impl Request {
         /// Returns a new `Request` with the specified `CertID`
@@ -172,7 +172,7 @@ mod builder {
         /// extension encoding fails.
         ///
         /// [RFC 6960 Section 4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4
-        pub fn with_extension(mut self, ext: impl AsExtension) -> Result<Self, Error> {
+        pub fn with_extension<E: ToExtension>(mut self, ext: E) -> Result<Self, E::Error> {
             let ext = ext.to_extension(&Name::default(), &[])?;
             match self.single_request_extensions {
                 Some(ref mut exts) => exts.push(ext),

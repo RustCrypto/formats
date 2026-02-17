@@ -22,6 +22,7 @@ const RFCS: &[(&str, &str)] = &[
     ("rfc7693", include_str!("../rfc7693.txt")),
     ("rfc8410", include_str!("../rfc8410.txt")),
     ("rfc5639", include_str!("../rfc5639.txt")),
+    ("rfc9688", include_str!("../rfc9688.txt")),
 ];
 
 const MDS: &[(&str, &str)] = &[
@@ -42,6 +43,11 @@ const MDS: &[(&str, &str)] = &[
     ("brng", include_str!("../stb/brng.asn")),
     ("bash", include_str!("../stb/bash.asn")),
     ("bake", include_str!("../stb/bake.asn")),
+    // created from: https://oidref.com/1.3.6.1.4.1.311
+    ("microsoft", include_str!("../microsoft.asn")),
+
+    // loaded from https://web.mit.edu/kerberos/krb5-oids/krb5-oids.asn
+    ("kerberosv5", include_str!("../krb5-oids.asn")),
 ];
 
 // Bases defined in other places.

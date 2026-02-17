@@ -90,7 +90,7 @@ impl<'a> Arcs<'a> {
                                 return Err(Error::ArcTooBig);
                             }
 
-                            result = result << 7 | (byte & 0b1111111) as Arc;
+                            result = (result << 7) | (byte & 0b1111111) as Arc;
 
                             if byte & 0b10000000 == 0 {
                                 self.cursor = Some(checked_add!(offset, arc_bytes));

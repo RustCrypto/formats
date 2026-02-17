@@ -1,11 +1,11 @@
 //! Streaming PEM reader.
 
-use super::Reader;
-use crate::{EncodingRules, Error, ErrorKind, Length};
+use super::{Reader, position::Position};
+use crate::{EncodingRules, Error, ErrorKind, Length, Result};
+use core::fmt;
 use pem_rfc7468::Decoder;
 
 /// `Reader` type which decodes PEM on-the-fly.
-#[cfg(feature = "pem")]
 #[derive(Clone)]
 pub struct PemReader<'i> {
     /// Inner PEM decoder.
@@ -14,90 +14,79 @@ pub struct PemReader<'i> {
     /// Encoding rules to apply when decoding the input.
     encoding_rules: EncodingRules,
 
-    /// Input length (in bytes after Base64 decoding).
-    input_len: Length,
-
-    /// Position in the input buffer (in bytes after Base64 decoding).
-    position: Length,
+    /// Position tracker.
+    position: Position,
 }
 
-#[cfg(feature = "pem")]
 impl<'i> PemReader<'i> {
     /// Create a new PEM reader which decodes data on-the-fly.
     ///
     /// Uses the default 64-character line wrapping.
-    pub fn new(pem: &'i [u8]) -> crate::Result<Self> {
+    ///
+    /// # Errors
+    /// If a decoding error occurred.
+    pub fn new(pem: &'i [u8]) -> Result<Self> {
         let decoder = Decoder::new(pem)?;
         let input_len = Length::try_from(decoder.remaining_len())?;
 
         Ok(Self {
             decoder,
             encoding_rules: EncodingRules::default(),
-            input_len,
-            position: Length::ZERO,
+            position: Position::new(input_len),
         })
     }
 
     /// Get the PEM label which will be used in the encapsulation boundaries
     /// for this document.
+    #[must_use]
     pub fn type_label(&self) -> &'i str {
         self.decoder.type_label()
     }
 }
 
-#[cfg(feature = "pem")]
-impl<'i> Reader<'i> for PemReader<'i> {
+impl<'i> Reader<'static> for PemReader<'i> {
+    const CAN_READ_SLICE: bool = false;
+
     fn encoding_rules(&self) -> EncodingRules {
         self.encoding_rules
     }
 
     fn input_len(&self) -> Length {
-        self.input_len
-    }
-
-    fn peek_into(&self, buf: &mut [u8]) -> crate::Result<()> {
-        self.clone().read_into(buf)?;
-        Ok(())
+        self.position.input_len()
     }
 
     fn position(&self) -> Length {
-        self.position
+        self.position.current()
     }
 
-    fn read_nested<T, F, E>(&mut self, len: Length, f: F) -> Result<T, E>
+    fn read_nested<T, F, E>(&mut self, len: Length, f: F) -> core::result::Result<T, E>
     where
-        F: FnOnce(&mut Self) -> Result<T, E>,
+        F: FnOnce(&mut Self) -> core::result::Result<T, E>,
         E: From<Error>,
     {
-        let nested_input_len = (self.position + len)?;
-        if nested_input_len > self.input_len {
-            return Err(Error::incomplete(self.input_len).into());
-        }
-
-        let orig_input_len = self.input_len;
-        self.input_len = nested_input_len;
+        let resumption = self.position.split_nested(len)?;
         let ret = f(self);
-        self.input_len = orig_input_len;
+        self.position.resume_nested(resumption);
         ret
     }
 
-    fn read_slice(&mut self, _len: Length) -> crate::Result<&'i [u8]> {
+    fn read_slice(&mut self, _len: Length) -> Result<&'static [u8]> {
         // Can't borrow from PEM because it requires decoding
-        Err(ErrorKind::Reader.into())
+        Err(self.error(ErrorKind::Reader))
     }
 
-    fn read_into<'o>(&mut self, buf: &'o mut [u8]) -> crate::Result<&'o [u8]> {
-        let new_position = (self.position + buf.len())?;
-        if new_position > self.input_len {
-            return Err(ErrorKind::Incomplete {
-                expected_len: new_position,
-                actual_len: self.input_len,
-            }
-            .at(self.position));
-        }
-
+    fn read_into<'o>(&mut self, buf: &'o mut [u8]) -> Result<&'o [u8]> {
+        self.position.advance(Length::try_from(buf.len())?)?;
         self.decoder.decode(buf)?;
-        self.position = new_position;
         Ok(buf)
+    }
+}
+
+impl fmt::Debug for PemReader<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PemReader")
+            .field("position", &self.position)
+            .field("encoding_rules", &self.encoding_rules)
+            .finish_non_exhaustive()
     }
 }

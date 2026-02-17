@@ -3,8 +3,8 @@ use crate::serial_number::SerialNumber;
 
 use const_oid::db::rfc5280::ID_CE_AUTHORITY_KEY_IDENTIFIER;
 use const_oid::{AssociatedOid, ObjectIdentifier};
-use der::asn1::OctetString;
 use der::Sequence;
+use der::asn1::OctetString;
 
 /// AuthorityKeyIdentifier as defined in [RFC 5280 Section 4.2.1.1].
 ///

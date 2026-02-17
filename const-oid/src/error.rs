@@ -71,7 +71,7 @@ impl Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
-            Error::ArcInvalid { arc } => write!(f, "OID contains out-of-range arc: {}", arc),
+            Error::ArcInvalid { arc } => write!(f, "OID contains out-of-range arc: {arc}"),
             Error::ArcTooBig => f.write_str("OID contains arc which is larger than 32-bits"),
             Error::Base128 => f.write_str("OID contains arc with invalid base 128 encoding"),
             Error::DigitExpected { actual } => {

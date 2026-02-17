@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
@@ -51,7 +51,7 @@
 //!  
 //! ## Legacy DES-CBC and DES-EDE3-CBC (3DES) support (optional)
 //! When the `des-insecure` and/or `3des` features are enabled this crate provides support for
-//! private keys encrypted with with DES-CBC and DES-EDE3-CBC (3DES or Triple DES) symmetric
+//! private keys encrypted with DES-CBC and DES-EDE3-CBC (3DES or Triple DES) symmetric
 //! encryption, respectively.
 //!
 //! ⚠️ WARNING ⚠️
@@ -70,7 +70,7 @@
 //! [PKCS#5v2 Password Based Encryption Scheme 2 (RFC 8018)]: https://tools.ietf.org/html/rfc8018#section-6.2
 //! [scrypt]: https://en.wikipedia.org/wiki/Scrypt
 
-#[cfg(feature = "pem")]
+#[cfg(feature = "alloc")]
 extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;

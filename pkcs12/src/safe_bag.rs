@@ -37,24 +37,22 @@ pub struct SafeBag {
 }
 
 impl<'a> ::der::DecodeValue<'a> for SafeBag {
-    type Error = ::der::Error;
+    type Error = der::Error;
 
     fn decode_value<R: ::der::Reader<'a>>(
         reader: &mut R,
-        header: ::der::Header,
+        _header: ::der::Header,
     ) -> ::der::Result<Self> {
-        reader.read_nested(header.length, |reader| {
-            let bag_id = reader.decode()?;
-            let bag_value = match reader.tlv_bytes() {
-                Ok(v) => v.to_vec(),
-                Err(e) => return Err(e),
-            };
-            let bag_attributes = reader.decode()?;
-            Ok(Self {
-                bag_id,
-                bag_value,
-                bag_attributes,
-            })
+        let bag_id = reader.decode()?;
+        let bag_value = match reader.tlv_bytes() {
+            Ok(v) => v.to_vec(),
+            Err(e) => return Err(e),
+        };
+        let bag_attributes = reader.decode()?;
+        Ok(Self {
+            bag_id,
+            bag_value,
+            bag_attributes,
         })
     }
 }
@@ -65,7 +63,7 @@ impl ::der::EncodeValue for SafeBag {
         [
             self.bag_id.encoded_len()?,
             ::der::asn1::ContextSpecificRef {
-                tag_number: ::der::TagNumber::N0,
+                tag_number: ::der::TagNumber(0),
                 tag_mode: ::der::TagMode::Explicit,
                 value: &content,
             }
@@ -80,7 +78,7 @@ impl ::der::EncodeValue for SafeBag {
         self.bag_id.encode(writer)?;
         let content = AnyRef::from_der(&self.bag_value)?;
         ::der::asn1::ContextSpecificRef {
-            tag_number: ::der::TagNumber::N0,
+            tag_number: ::der::TagNumber(0),
             tag_mode: ::der::TagMode::Explicit,
             value: &content,
         }

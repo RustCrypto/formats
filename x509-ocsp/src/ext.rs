@@ -1,33 +1,33 @@
 //! OCSP Extensions
 
 use crate::OcspGeneralizedTime;
-use alloc::vec::Vec;
+use alloc::{boxed::Box, vec::Vec};
 use const_oid::{
+    AssociatedOid,
     db::rfc6960::{
         ID_PKIX_OCSP_ARCHIVE_CUTOFF, ID_PKIX_OCSP_CRL, ID_PKIX_OCSP_NONCE,
         ID_PKIX_OCSP_PREF_SIG_ALGS, ID_PKIX_OCSP_RESPONSE, ID_PKIX_OCSP_SERVICE_LOCATOR,
     },
-    AssociatedOid,
 };
 use der::{
-    asn1::{Ia5String, ObjectIdentifier, OctetString, Uint},
     Sequence, ValueOrd,
+    asn1::{Ia5String, ObjectIdentifier, OctetString, Uint},
 };
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::{
-    ext::{pkix::AuthorityInfoAccessSyntax, AsExtension, Extension},
+    ext::{Criticality, Extension, pkix::AuthorityInfoAccessSyntax},
     impl_newtype,
     name::Name,
 };
 
 #[cfg(feature = "rand")]
-use rand_core::CryptoRngCore;
+use rand_core::CryptoRng;
 
 // x509-cert's is not exported
 macro_rules! impl_extension {
     ($newtype:ty, critical = $critical:expr) => {
-        impl AsExtension for $newtype {
-            fn critical(&self, _subject: &Name, _extensions: &[Extension]) -> bool {
+        impl Criticality for $newtype {
+            fn criticality(&self, _subject: &Name, _extensions: &[Extension]) -> bool {
                 $critical
             }
         }
@@ -49,7 +49,7 @@ impl AssociatedOid for Nonce {
 
 impl Nonce {
     /// Creates a Nonce object given the bytes
-    pub fn new(bytes: impl Into<Vec<u8>>) -> Result<Self, der::Error> {
+    pub fn new(bytes: impl Into<Box<[u8]>>) -> Result<Self, der::Error> {
         Ok(Self(OctetString::new(bytes)?))
     }
 
@@ -64,7 +64,7 @@ impl Nonce {
     #[cfg(feature = "rand")]
     pub fn generate<R>(rng: &mut R, length: usize) -> Result<Self, der::Error>
     where
-        R: CryptoRngCore,
+        R: CryptoRng + ?Sized,
     {
         let mut bytes = alloc::vec![0; length];
         rng.fill_bytes(&mut bytes);

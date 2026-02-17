@@ -1,7 +1,7 @@
 //! Negotiation-related types
 use der::{
-    asn1::{BitString, OctetStringRef},
-    AnyRef, Choice, Enumerated, Sequence,
+    Choice, Enumerated, Sequence,
+    asn1::{BitString, GeneralStringRef, OctetStringRef},
 };
 
 use crate::MechType;
@@ -89,13 +89,13 @@ pub struct NegTokenInit<'a> {
 
     /// This field, if present, contains the optimistic mechanism token.
     #[asn1(context_specific = "2", optional = "true", tag_mode = "IMPLICIT")]
-    pub mech_token: Option<OctetStringRef<'a>>,
+    pub mech_token: Option<&'a OctetStringRef>,
 
     /// This field, if present, contains an MIC token for the mechanism
     /// list in the initial negotiation message.  This MIC token is
     /// computed according to Section 5.
     #[asn1(context_specific = "3", optional = "true", tag_mode = "IMPLICIT")]
-    pub mech_list_mic: Option<OctetStringRef<'a>>,
+    pub mech_list_mic: Option<&'a OctetStringRef>,
 }
 
 /// `ContextFlags` as defined in [RFC 4178 Section 4.2.1].
@@ -172,7 +172,7 @@ pub struct NegTokenTarg<'a> {
     /// from the list has been selected by the target or to carry the
     /// tokens specific to the selected security mechanism.
     #[asn1(context_specific = "2", optional = "true", tag_mode = "EXPLICIT")]
-    pub response_token: Option<OctetStringRef<'a>>,
+    pub response_token: Option<&'a OctetStringRef>,
 
     /// If the selected mechanism is capable of integrity protection, this
     ///  field must be present in the last message of the negotiation,
@@ -182,7 +182,7 @@ pub struct NegTokenTarg<'a> {
     ///  allows to verify that the list initially sent by the initiator has
     ///  been received unmodified by the target.
     #[asn1(context_specific = "3", optional = "true", tag_mode = "EXPLICIT")]
-    pub mech_list_mic: Option<OctetStringRef<'a>>,
+    pub mech_list_mic: Option<&'a OctetStringRef>,
 }
 
 /// `NegResult` as defined in [RFC 2479 Section 3.2.1].
@@ -252,13 +252,13 @@ pub struct NegTokenResp<'a> {
     /// This field, if present, contains tokens specific to the mechanism
     /// selected.
     #[asn1(context_specific = "2", optional = "true", tag_mode = "EXPLICIT")]
-    pub response_token: Option<OctetStringRef<'a>>,
+    pub response_token: Option<&'a OctetStringRef>,
 
     /// This field, if present, contains an MIC token for the mechanism
     /// list in the initial negotiation message.  This MIC token is
     /// computed according to Section 5.
     #[asn1(context_specific = "3", optional = "true", tag_mode = "EXPLICIT")]
-    pub mech_list_mic: Option<OctetStringRef<'a>>,
+    pub mech_list_mic: Option<&'a OctetStringRef>,
 }
 
 #[derive(Clone, Debug, Copy, PartialEq, Eq, PartialOrd, Ord, Enumerated)]
@@ -295,20 +295,14 @@ pub enum NegState {
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Sequence)]
 pub struct NegHints<'a> {
     /// SHOULD<5> contain the string "not_defined_in_RFC4178@please_ignore".
-    /// This is currently `AnyRef` as `GeneralString` is not part of the `der` crate
-    #[asn1(
-        context_specific = "0",
-        optional = "true",
-        tag_mode = "IMPLICIT",
-        constructed = "true"
-    )]
-    pub hint_name: Option<AnyRef<'a>>, // TODO: GeneralString
+    #[asn1(context_specific = "0", optional = "true")]
+    pub hint_name: Option<GeneralStringRef<'a>>,
 
     /// Never present. MUST be omitted by the sender. Note that the encoding rules, as specified in [X690], require that this structure not be present at all, not just be zero.
     ///
     /// [X690]: https://www.itu.int/rec/T-REC-X.690/
     #[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
-    pub hint_address: Option<OctetStringRef<'a>>,
+    pub hint_address: Option<&'a OctetStringRef>,
 }
 
 /// `NegTokenInit2` as defined in [MS-SPNG Section 2.2.1].
@@ -343,7 +337,7 @@ pub struct NegTokenInit2<'a> {
     ///
     /// [RFC4178]: https://datatracker.ietf.org/doc/html/rfc4178
     #[asn1(context_specific = "2", optional = "true", tag_mode = "EXPLICIT")]
-    pub mech_token: Option<OctetStringRef<'a>>,
+    pub mech_token: Option<&'a OctetStringRef>,
 
     /// The server supplies the negotiation hints using a NegHints structure.
     #[asn1(context_specific = "3", optional = "true", tag_mode = "EXPLICIT")]
@@ -353,7 +347,7 @@ pub struct NegTokenInit2<'a> {
     ///
     /// [RFC4178]: https://datatracker.ietf.org/doc/html/rfc4178
     #[asn1(context_specific = "4", optional = "true", tag_mode = "EXPLICIT")]
-    pub mech_list_mic: Option<OctetStringRef<'a>>,
+    pub mech_list_mic: Option<&'a OctetStringRef>,
 }
 
 #[cfg(test)]
@@ -378,7 +372,9 @@ mod tests {
 
     #[test]
     fn token_init() {
-        let neg_token_init_bytes = hex!("303ca00e300c060a2b06010401823702020aa32a3028a0261b246e6f745f646566696e65645f696e5f5246433431373840706c656173655f69676e6f7265");
+        let neg_token_init_bytes = hex!(
+            "303ca00e300c060a2b06010401823702020aa32a3028a0261b246e6f745f646566696e65645f696e5f5246433431373840706c656173655f69676e6f7265"
+        );
         let neg_token = NegTokenInit2::from_der(&neg_token_init_bytes).unwrap();
         assert_eq!(
             1,
@@ -387,13 +383,15 @@ mod tests {
         );
         assert_eq!(
             b"not_defined_in_RFC4178@please_ignore",
-            &neg_token.neg_hints.unwrap().hint_name.unwrap().value()[2..]
+            &neg_token.neg_hints.unwrap().hint_name.unwrap().as_bytes()
         );
     }
 
     #[test]
     fn token_response() {
-        let neg_token_resp_bytes = hex!("308199a0030a0101a10c060a2b06010401823702020aa281830481804e544c4d53535000020000000a000a003800000005028a6234805409a0e0e1f900000000000000003e003e0042000000060100000000000f530041004d004200410002000a00530041004d004200410001000a00530041004d00420041000400000003000a00730061006d00620061000700080036739dbd327fd90100000000");
+        let neg_token_resp_bytes = hex!(
+            "308199a0030a0101a10c060a2b06010401823702020aa281830481804e544c4d53535000020000000a000a003800000005028a6234805409a0e0e1f900000000000000003e003e0042000000060100000000000f530041004d004200410002000a00530041004d004200410001000a00530041004d00420041000400000003000a00730061006d00620061000700080036739dbd327fd90100000000"
+        );
         let neg_token_resp = NegTokenResp::from_der(&neg_token_resp_bytes).unwrap();
         assert_eq!(
             ObjectIdentifier::new_unwrap("1.3.6.1.4.1.311.2.2.10"),
@@ -404,7 +402,9 @@ mod tests {
     #[cfg(feature = "rfc2478")]
     #[test]
     fn decode_rfc2478() {
-        let neg_token_targ_bytes = hex!("308199a0030a0101a10c060a2b06010401823702020aa281830481804e544c4d53535000020000000a000a003800000005028a6234805409a0e0e1f900000000000000003e003e0042000000060100000000000f530041004d004200410002000a00530041004d004200410001000a00530041004d00420041000400000003000a00730061006d00620061000700080036739dbd327fd90100000000");
+        let neg_token_targ_bytes = hex!(
+            "308199a0030a0101a10c060a2b06010401823702020aa281830481804e544c4d53535000020000000a000a003800000005028a6234805409a0e0e1f900000000000000003e003e0042000000060100000000000f530041004d004200410002000a00530041004d004200410001000a00530041004d00420041000400000003000a00730061006d00620061000700080036739dbd327fd90100000000"
+        );
         let neg_token_targ = NegTokenTarg::from_der(&neg_token_targ_bytes).unwrap();
         assert_eq!(
             NegResult::AcceptIncomplete,

@@ -1,22 +1,21 @@
-#![cfg(all(feature = "builder", feature = "pem"))]
+#![cfg(all(feature = "builder", feature = "pem", feature = "std"))]
 
 use der::{
+    EncodePem,
     asn1::{Ia5String, PrintableString},
     pem::LineEnding,
-    EncodePem,
 };
-use p256::{ecdsa::DerSignature, pkcs8::DecodePrivateKey, NistP256};
-use rand::rngs::OsRng;
+use p256::{NistP256, ecdsa::DerSignature, elliptic_curve::Generate, pkcs8::DecodePrivateKey};
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::SigningKey;
 use sha2::Sha256;
 use spki::SubjectPublicKeyInfo;
 use std::{str::FromStr, time::Duration};
 use x509_cert::{
-    builder::{profile, AsyncBuilder, Builder, CertificateBuilder, RequestBuilder},
+    builder::{AsyncBuilder, Builder, CertificateBuilder, RequestBuilder, profile},
     ext::pkix::{
-        name::{DirectoryString, GeneralName},
         SubjectAltName,
+        name::{DirectoryString, GeneralName},
     },
     name::Name,
     request,
@@ -111,6 +110,7 @@ fn sub_ca_certificate() {
         "e_sub_ca_crl_distribution_points_missing",
         "e_sub_ca_certificate_policies_missing",
         "w_sub_ca_aia_does_not_contain_issuing_ca_url",
+        "e_invalid_ca_certificate_policies",
     ];
 
     zlint::check_certificate(pem.as_bytes(), ignored);
@@ -211,7 +211,7 @@ fn pss_certificate() {
         .expect("Create certificate");
 
     let certificate = builder
-        .build_with_rng::<_, rsa::pss::Signature>(&signer, &mut rand::thread_rng())
+        .build_with_rng::<_, rsa::pss::Signature, _>(&signer, &mut rand::rng())
         .unwrap();
 
     let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
@@ -313,9 +313,10 @@ fn dynamic_signer() {
     let subject = Name::from_str("CN=Test").expect("parse common name");
 
     let csr_builder = RequestBuilder::new(subject).expect("construct builder");
+    let mut rng = rand::rng();
 
     let csr = if true {
-        let req_signer = p256::ecdsa::SigningKey::random(&mut OsRng);
+        let req_signer = p256::ecdsa::SigningKey::generate_from_rng(&mut rng);
         csr_builder
             .build::<_, p256::ecdsa::DerSignature>(&req_signer)
             .expect("Sign request")
@@ -326,7 +327,7 @@ fn dynamic_signer() {
 
     let csr_pem = csr.to_pem(LineEnding::LF).expect("format CSR");
 
-    println!("{}", csr_pem);
+    println!("{csr_pem}");
 }
 
 #[tokio::test]

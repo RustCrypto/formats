@@ -1,7 +1,7 @@
 //! PKCS#1 version identifier.
 
 use crate::Error;
-use der::{Decode, Encode, FixedTag, Reader, Tag, Writer};
+use der::{Decode, Encode, FixedTag, Reader, Tag, Tagged, Writer};
 
 /// Version identifier for PKCS#1 documents as defined in
 /// [RFC 8017 Appendix 1.2].
@@ -53,14 +53,14 @@ impl TryFrom<u8> for Version {
 
 impl<'a> Decode<'a> for Version {
     type Error = der::Error;
-    fn decode<R: Reader<'a>>(decoder: &mut R) -> der::Result<Self> {
-        Version::try_from(u8::decode(decoder)?).map_err(|_| Self::TAG.value_error())
+    fn decode<R: Reader<'a>>(reader: &mut R) -> der::Result<Self> {
+        Version::try_from(u8::decode(reader)?).map_err(|_| reader.error(Self::TAG.value_error()))
     }
 }
 
 impl Encode for Version {
     fn encoded_len(&self) -> der::Result<der::Length> {
-        der::Length::ONE.for_tlv()
+        der::Length::ONE.for_tlv(self.tag())
     }
 
     fn encode(&self, writer: &mut impl Writer) -> der::Result<()> {

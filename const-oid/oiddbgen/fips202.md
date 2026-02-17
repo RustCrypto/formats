@@ -8,7 +8,7 @@ This document lists the OIDs for
 - SHAKE128, and
 - SHAKE256.
 
-This file was manually created, as there exists no offical document that is easily parsable.
+This file was manually created, as there exists no official document that is easily parsable.
 The SHA-3 standard is specified in [FIPS 202](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf).
 It references [Computer Security Objects Register (CSOR)]
 (https://csrc.nist.gov/projects/computer-security-objects-register/algorithm-registration),

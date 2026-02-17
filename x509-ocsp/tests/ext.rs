@@ -2,8 +2,8 @@
 
 use core::str::FromStr;
 use der::{
-    asn1::{Ia5String, Null, ObjectIdentifier, Uint},
     DateTime, Encode,
+    asn1::{Ia5String, Null, ObjectIdentifier, Uint},
 };
 use hex_literal::hex;
 use spki::AlgorithmIdentifierOwned;
@@ -14,7 +14,7 @@ use x509_cert::{
     },
     name::Name,
 };
-use x509_ocsp::{ext::*, OcspGeneralizedTime};
+use x509_ocsp::{OcspGeneralizedTime, ext::*};
 
 const ID_AD_OCSP: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1");
 const ID_PKIX_OCSP_BASIC: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.1");
@@ -41,7 +41,7 @@ fn as_extension_nonce() {
 #[cfg(feature = "rand")]
 #[test]
 fn nonce_generation() {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let nonce = Nonce::generate(&mut rng, 10).unwrap();
     assert_eq!(nonce.0.as_bytes().len(), 10);
     let nonce = Nonce::generate(&mut rng, 5).unwrap();

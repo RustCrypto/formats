@@ -7,7 +7,7 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Update leap seconds in code
@@ -18,7 +18,7 @@ jobs:
           sed -i -E 's/(Self\()[0-9]+ \+ \(1 << 62\)\)/\1'"${number}"' + (1 << 62))/' tai64/src/lib.rs
           rm leap_seconds_list
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: update leap seconds in tai64
           title: Update leap seconds in tai64

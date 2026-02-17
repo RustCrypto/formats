@@ -1,0 +1,22 @@
+[files]
+extend-exclude = [
+    ".git/",
+    "const-oid/oiddbgen/*.txt",
+    "const-oid/oiddbgen/ldap-parameters-3.csv",
+    "const-oid/src/db/generated.rs",
+    "der/src/asn1/context_specific.rs",
+    "pem-rfc7468/README.md",
+    "pkcs12/tests/cert_tests.rs",
+    "x509-ocsp/tests/responses.rs",
+]
+
+[default.extend-identifiers]
+# typ stands for type, but it's a reversed identifier
+typ = "typ"
+
+[default.extend-words]
+consts = "consts"
+# Certificate Ann
+"cann" = "cann"
+# encrypt-decrypt-encrypt 
+"EDE" = "EDE"

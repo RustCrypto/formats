@@ -5,9 +5,9 @@
 mod variant;
 
 use self::variant::ChoiceVariant;
-use crate::{default_lifetime, ErrorType, TypeAttrs};
+use crate::{ErrorType, TypeAttrs, default_lifetime};
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use syn::{DeriveInput, GenericParam, Generics, Ident, LifetimeParam};
 
 /// Derive the `Choice` trait for an enum.
@@ -76,6 +76,7 @@ impl DeriveChoice {
 
         let mut can_decode_body = Vec::new();
         let mut decode_body = Vec::new();
+        let mut decode_value_body = Vec::new();
         let mut encode_body = Vec::new();
         let mut value_len_body = Vec::new();
         let mut tagged_body = Vec::new();
@@ -83,6 +84,7 @@ impl DeriveChoice {
         for variant in &self.variants {
             can_decode_body.push(variant.tag.to_tokens());
             decode_body.push(variant.to_decode_tokens());
+            decode_value_body.push(variant.to_decode_value_tokens());
             encode_body.push(variant.to_encode_value_tokens());
             value_len_body.push(variant.to_value_len_tokens());
             tagged_body.push(variant.to_tagged_tokens());
@@ -97,6 +99,10 @@ impl DeriveChoice {
                 }
             }
 
+            impl #impl_generics ::der::IsConstructed for #ident #ty_generics #where_clause {
+                const CONSTRUCTED: bool = true;
+            }
+
             impl #impl_generics ::der::Decode<#lifetime> for #ident #ty_generics #where_clause {
                 type Error = #error;
 
@@ -104,6 +110,24 @@ impl DeriveChoice {
                     use der::Reader as _;
                     match ::der::Tag::peek(reader)? {
                         #(#decode_body)*
+                        actual => Err(::der::Error::new(
+                            ::der::ErrorKind::TagUnexpected {
+                                expected: None,
+                                actual
+                            },
+                            reader.position()
+                        ).into()
+                        ),
+                    }
+                }
+            }
+
+            impl #impl_generics ::der::DecodeValue<#lifetime> for #ident #ty_generics #where_clause {
+                type Error = #error;
+
+                fn decode_value<R: ::der::Reader<#lifetime>>(reader: &mut R, header: der::Header) -> ::core::result::Result<Self, #error> {
+                    match header.tag() {
+                        #(#decode_value_body)*
                         actual => Err(::der::Error::new(
                             ::der::ErrorKind::TagUnexpected {
                                 expected: None,
@@ -145,7 +169,7 @@ impl DeriveChoice {
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::DeriveChoice;
-    use crate::{Asn1Type, Tag, TagMode};
+    use crate::{Asn1Type, Tag, TagMode, attributes::ClassNum};
     use syn::parse_quote;
 
     /// Based on `Time` as defined in RFC 5280:
@@ -176,7 +200,7 @@ mod tests {
         let utc_time = &ir.variants[0];
         assert_eq!(utc_time.ident, "UtcTime");
         assert_eq!(utc_time.attrs.asn1_type, Some(Asn1Type::UtcTime));
-        assert_eq!(utc_time.attrs.context_specific, None);
+        assert_eq!(utc_time.attrs.class_num, None);
         assert_eq!(utc_time.attrs.tag_mode, TagMode::Explicit);
         assert_eq!(utc_time.tag, Tag::Universal(Asn1Type::UtcTime));
 
@@ -186,7 +210,7 @@ mod tests {
             general_time.attrs.asn1_type,
             Some(Asn1Type::GeneralizedTime)
         );
-        assert_eq!(general_time.attrs.context_specific, None);
+        assert_eq!(general_time.attrs.class_num, None);
         assert_eq!(general_time.attrs.tag_mode, TagMode::Explicit);
         assert_eq!(general_time.tag, Tag::Universal(Asn1Type::GeneralizedTime));
     }
@@ -220,8 +244,8 @@ mod tests {
         assert_eq!(bit_string.ident, "BitString");
         assert_eq!(bit_string.attrs.asn1_type, Some(Asn1Type::BitString));
         assert_eq!(
-            bit_string.attrs.context_specific,
-            Some("0".parse().unwrap())
+            bit_string.attrs.class_num,
+            Some(ClassNum::ContextSpecific("0".parse().unwrap()))
         );
         assert_eq!(bit_string.attrs.tag_mode, TagMode::Implicit);
         assert_eq!(
@@ -235,7 +259,10 @@ mod tests {
         let time = &ir.variants[1];
         assert_eq!(time.ident, "Time");
         assert_eq!(time.attrs.asn1_type, Some(Asn1Type::GeneralizedTime));
-        assert_eq!(time.attrs.context_specific, Some("1".parse().unwrap()));
+        assert_eq!(
+            time.attrs.class_num,
+            Some(ClassNum::ContextSpecific("1".parse().unwrap()))
+        );
         assert_eq!(time.attrs.tag_mode, TagMode::Implicit);
         assert_eq!(
             time.tag,
@@ -249,8 +276,8 @@ mod tests {
         assert_eq!(utf8_string.ident, "Utf8String");
         assert_eq!(utf8_string.attrs.asn1_type, Some(Asn1Type::Utf8String));
         assert_eq!(
-            utf8_string.attrs.context_specific,
-            Some("2".parse().unwrap())
+            utf8_string.attrs.class_num,
+            Some(ClassNum::ContextSpecific("2".parse().unwrap()))
         );
         assert_eq!(utf8_string.attrs.tag_mode, TagMode::Implicit);
         assert_eq!(

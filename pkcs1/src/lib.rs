@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
@@ -43,7 +43,7 @@ pub use crate::{
 
 #[cfg(feature = "alloc")]
 pub use crate::{
-    private_key::{other_prime_info::OtherPrimeInfo, OtherPrimeInfos},
+    private_key::{OtherPrimeInfos, other_prime_info::OtherPrimeInfo},
     traits::{EncodeRsaPrivateKey, EncodeRsaPublicKey},
 };
 
@@ -51,12 +51,10 @@ pub use crate::{
 pub use der::pem::{self, LineEnding};
 
 /// `rsaEncryption` Object Identifier (OID)
-#[cfg(feature = "pkcs8")]
 pub const ALGORITHM_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.1");
 
 /// `AlgorithmIdentifier` for RSA.
-#[cfg(feature = "pkcs8")]
-pub const ALGORITHM_ID: pkcs8::AlgorithmIdentifierRef<'static> = pkcs8::AlgorithmIdentifierRef {
+pub const ALGORITHM_ID: spki::AlgorithmIdentifierRef<'static> = spki::AlgorithmIdentifierRef {
     oid: ALGORITHM_OID,
     parameters: Some(der::asn1::AnyRef::NULL),
 };

@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
@@ -40,4 +40,5 @@ pub mod enveloped_data;
 pub mod kemri;
 pub mod revocation;
 pub mod signed_data;
+pub mod symmetric_key;
 pub mod timestamped_data;

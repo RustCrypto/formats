@@ -7,8 +7,8 @@ use const_oid::ObjectIdentifier;
 use crmf::pop::ProofOfPossession;
 use der::{Decode, Encode};
 use hex_literal::hex;
-use x509_cert::ext::pkix::name::GeneralName;
 use x509_cert::Certificate;
+use x509_cert::ext::pkix::name::GeneralName;
 
 #[test]
 fn ir_req_header_test() {
@@ -20,8 +20,8 @@ fn ir_req_header_test() {
     assert_eq!(header.pvno, Pvno::Cmp2000);
 
     let reencoded_header_01 = header.to_der().unwrap();
-    println!("Original : {:02X?}", header_01);
-    println!("Reencoded: {:02X?}", reencoded_header_01);
+    println!("Original : {header_01:02X?}");
+    println!("Reencoded: {reencoded_header_01:02X?}");
     assert_eq!(header_01, reencoded_header_01.as_slice());
 }
 
@@ -30,13 +30,13 @@ fn ir_req_body_test() {
     // read PkiBody cracked from request object used in ir_req_message_test
     let body_01 = include_bytes!("examples/ir_req_body_01.bin");
     let result = PkiBody::from_der(body_01);
-    println!("{:?}", result);
+    println!("{result:?}");
     assert!(result.is_ok());
     let body = result.unwrap();
 
     let reencoded_body_01 = body.to_der().unwrap();
-    println!("Original : {:02X?}", body_01);
-    println!("Reencoded: {:02X?}", reencoded_body_01);
+    println!("Original : {body_01:02X?}");
+    println!("Reencoded: {reencoded_body_01:02X?}");
     assert_eq!(body_01, reencoded_body_01.as_slice());
 }
 
@@ -54,7 +54,7 @@ fn ir_req_message_test() {
     //   - openssl cmp -cmd ir -server 127.0.0.1:8888 -path pkix/ -ref 1234 -secret pass:1234-5678-1234-5678 -recipient "/CN=CMPserver" -newkey ec384-key-pair.pem -subject "/CN=MyName" -cacertsout capubs.pem -certout cl_cert.pem -srv_cert ec384-server-key.crt -reqout req.bin -rspout rsp.bin
     let req_01 = include_bytes!("examples/ir_req_01.bin");
     let result = PkiMessage::from_der(req_01);
-    println!("{:?}", result);
+    println!("{result:?}");
     assert!(result.is_ok());
     let message = result.unwrap();
 
@@ -132,8 +132,8 @@ fn ir_req_message_test() {
     );
 
     let reencoded_req_01 = message.to_der().unwrap();
-    println!("Original : {:02X?}", req_01);
-    println!("Reencoded: {:02X?}", reencoded_req_01);
+    println!("Original : {req_01:02X?}");
+    println!("Reencoded: {reencoded_req_01:02X?}");
     assert_eq!(req_01, reencoded_req_01.as_slice());
 }
 
@@ -147,8 +147,8 @@ fn ir_rsp_header_test() {
     assert_eq!(header.pvno, Pvno::Cmp2000);
 
     let reencoded_header_01 = header.to_der().unwrap();
-    println!("Original : {:02X?}", header_01);
-    println!("Reencoded: {:02X?}", reencoded_header_01);
+    println!("Original : {header_01:02X?}");
+    println!("Reencoded: {reencoded_header_01:02X?}");
     assert_eq!(header_01, reencoded_header_01.as_slice());
 }
 
@@ -157,13 +157,13 @@ fn ir_rsp_body_test() {
     // read PkiBody cracked from request object used in ir_rsp_message_test
     let body_01 = &hex!("A10E300C300A30080201003003020100");
     let result = PkiBody::from_der(body_01);
-    println!("{:?}", result);
+    println!("{result:?}");
     assert!(result.is_ok());
     let body = result.unwrap();
 
     let reencoded_body_01 = body.to_der().unwrap();
-    println!("Original : {:02X?}", body_01);
-    println!("Reencoded: {:02X?}", reencoded_body_01);
+    println!("Original : {body_01:02X?}");
+    println!("Reencoded: {reencoded_body_01:02X?}");
     assert_eq!(body_01, reencoded_body_01.as_slice());
 }
 
@@ -172,13 +172,13 @@ fn ir_certrepmessage_test() {
     // read CertRepMessage cracked from request object used in ir_rsp_message_test
     let orig_cert_response = &hex!("300C300A30080201003003020100");
     let result = CertRepMessage::from_der(orig_cert_response);
-    println!("{:?}", result);
+    println!("{result:?}");
     assert!(result.is_ok());
     let cert_response = result.unwrap();
 
     let reencoded_cert_response = cert_response.to_der().unwrap();
-    println!("Original : {:02X?}", orig_cert_response);
-    println!("Reencoded: {:02X?}", reencoded_cert_response);
+    println!("Original : {orig_cert_response:02X?}");
+    println!("Reencoded: {reencoded_cert_response:02X?}");
     assert_eq!(orig_cert_response, reencoded_cert_response.as_slice());
 }
 
@@ -187,13 +187,13 @@ fn ir_cert_responses_test() {
     // read CertResponses cracked from request object used in ir_rsp_message_test
     let orig_cert_responses = &hex!("300A30080201003003020100");
     let result = CertResponses::from_der(orig_cert_responses);
-    println!("{:?}", result);
+    println!("{result:?}");
     assert!(result.is_ok());
     let cert_response = result.unwrap();
 
     let reencoded_cert_response = cert_response.to_der().unwrap();
-    println!("Original : {:02X?}", orig_cert_responses);
-    println!("Reencoded: {:02X?}", reencoded_cert_response);
+    println!("Original : {orig_cert_responses:02X?}");
+    println!("Reencoded: {reencoded_cert_response:02X?}");
     assert_eq!(orig_cert_responses, reencoded_cert_response.as_slice());
 }
 
@@ -202,13 +202,13 @@ fn ir_cert_response_test() {
     // read CertResponse cracked from request object used in ir_rsp_message_test
     let orig_cert_response = &hex!("30080201003003020100");
     let result = CertResponse::from_der(orig_cert_response);
-    println!("{:?}", result);
+    println!("{result:?}");
     assert!(result.is_ok());
     let cert_response = result.unwrap();
 
     let reencoded_cert_response = cert_response.to_der().unwrap();
-    println!("Original : {:02X?}", orig_cert_response);
-    println!("Reencoded: {:02X?}", reencoded_cert_response);
+    println!("Original : {orig_cert_response:02X?}");
+    println!("Reencoded: {reencoded_cert_response:02X?}");
     assert_eq!(orig_cert_response, reencoded_cert_response.as_slice());
 }
 
@@ -226,7 +226,7 @@ fn ir_rsp_message_test() {
     //   - openssl cmp -cmd ir -server 127.0.0.1:8888 -path pkix/ -ref 1234 -secret pass:1234-5678-1234-5678 -recipient "/CN=CMPserver" -newkey ec384-key-pair.pem -subject "/CN=MyName" -cacertsout capubs.pem -certout cl_cert.pem -srv_cert ec384-server-key.crt -reqout req.bin -rspout rsp.bin
     let req_01 = include_bytes!("examples/ir_rsp_01.bin");
     let result = PkiMessage::from_der(req_01);
-    println!("{:?}", result);
+    println!("{result:?}");
     assert!(result.is_ok());
     let message = result.unwrap();
 
@@ -282,7 +282,7 @@ fn ir_rsp_message_test() {
     assert_eq!(107u32, protection.encoded_len().unwrap().into());
 
     let reencoded_req_01 = message.to_der().unwrap();
-    println!("Original : {:02X?}", req_01);
-    println!("Reencoded: {:02X?}", reencoded_req_01);
+    println!("Original : {req_01:02X?}");
+    println!("Reencoded: {reencoded_req_01:02X?}");
     assert_eq!(req_01, reencoded_req_01.as_slice());
 }

@@ -2,11 +2,15 @@
 
 use super::{Alphabet, DecodeStep, EncodeStep};
 
-/// `crypt(3)` Base64 encoding for the following schemes.
-///  * sha1_crypt,
-///  * sha256_crypt,
-///  * sha512_crypt,
-///  * md5_crypt
+/// `crypt(3)` Base64 encoding.
+///
+/// This is the standard Base64 encoding used by password hashes for the following schemes:
+/// - MD5-Crypt
+/// - scrypt
+/// - SHA1-Crypt
+/// - SHA256-Crypt
+/// - SHA512-Crypt
+/// - yescrypt
 ///
 /// ```text
 /// [.-9]      [A-Z]      [a-z]

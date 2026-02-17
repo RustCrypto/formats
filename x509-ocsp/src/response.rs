@@ -3,8 +3,8 @@
 use const_oid::AssociatedOid;
 use core::option::Option;
 use der::{
-    asn1::{Null, ObjectIdentifier, OctetString},
     Enumerated, Sequence,
+    asn1::{Null, ObjectIdentifier, OctetString},
 };
 
 /// OcspNoCheck as defined in [RFC 6960 Section 4.2.2.2.1].

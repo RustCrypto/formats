@@ -266,7 +266,7 @@ impl<'a> ::der::Tagged for EncKeyWithIdChoice<'a> {
     fn tag(&self) -> ::der::Tag {
         match self {
             Self::String(_) => <Utf8StringRef<'a> as ::der::FixedTag>::TAG,
-            Self::GeneralName(_) => self.tag(),
+            Self::GeneralName(variant) => variant.tag(),
         }
     }
 }
@@ -297,4 +297,27 @@ pub struct PrivateKeyInfo {
         optional = "true"
     )]
     pub attrs: Option<Attributes>,
+}
+
+#[cfg(test)]
+mod tests {
+    use der::{Tag, TagNumber, asn1::Ia5String};
+    use x509_cert::ext::pkix::name::GeneralName;
+
+    use super::EncKeyWithIdChoice;
+
+    #[test]
+    fn enc_key_with_id_choice_tag() {
+        use der::Tagged;
+        let enc_key_choice = EncKeyWithIdChoice::GeneralName(GeneralName::DnsName(
+            Ia5String::new("test").expect("valid Ia5String"),
+        ));
+        assert_eq!(
+            enc_key_choice.tag(),
+            Tag::ContextSpecific {
+                constructed: false,
+                number: TagNumber(2)
+            }
+        );
+    }
 }

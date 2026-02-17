@@ -2,9 +2,9 @@
 
 use const_oid::db;
 use der::{
+    Encode,
     asn1::{AnyRef, ObjectIdentifier, OctetStringRef},
     oid::AssociatedOid,
-    Encode,
 };
 use hex_literal::hex;
 use pkcs1::{RsaOaepParams, RsaPssParams, TrailerField};
@@ -12,12 +12,16 @@ use pkcs1::{RsaOaepParams, RsaPssParams, TrailerField};
 /// Default PSS parameters using all default values (SHA1, MGF1)
 const RSA_PSS_PARAMETERS_DEFAULTS: &[u8] = &hex!("3000");
 /// Example PSS parameters using SHA256 instead of SHA1
-const RSA_PSS_PARAMETERS_SHA2_256: &[u8] = &hex!("3034a00f300d06096086480165030402010500a11c301a06092a864886f70d010108300d06096086480165030402010500a203020120");
+const RSA_PSS_PARAMETERS_SHA2_256: &[u8] = &hex!(
+    "3034a00f300d06096086480165030402010500a11c301a06092a864886f70d010108300d06096086480165030402010500a203020120"
+);
 
 /// Default OAEP parameters using all default values (SHA1, MGF1, Empty)
 const RSA_OAEP_PARAMETERS_DEFAULTS: &[u8] = &hex!("3000");
 /// Example OAEP parameters using SHA256 instead of SHA1
-const RSA_OAEP_PARAMETERS_SHA2_256: &[u8] = &hex!("302fa00f300d06096086480165030402010500a11c301a06092a864886f70d010108300d06096086480165030402010500");
+const RSA_OAEP_PARAMETERS_SHA2_256: &[u8] = &hex!(
+    "302fa00f300d06096086480165030402010500a11c301a06092a864886f70d010108300d06096086480165030402010500"
+);
 
 struct Sha1Mock {}
 impl AssociatedOid for Sha1Mock {
@@ -33,21 +37,27 @@ impl AssociatedOid for Sha256Mock {
 fn decode_pss_param() {
     let param = RsaPssParams::try_from(RSA_PSS_PARAMETERS_SHA2_256).unwrap();
 
-    assert!(param
-        .hash
-        .assert_algorithm_oid(db::rfc5912::ID_SHA_256)
-        .is_ok());
+    assert!(
+        param
+            .hash
+            .assert_algorithm_oid(db::rfc5912::ID_SHA_256)
+            .is_ok()
+    );
     assert_eq!(param.hash.parameters, Some(AnyRef::NULL));
-    assert!(param
-        .mask_gen
-        .assert_algorithm_oid(db::rfc5912::ID_MGF_1)
-        .is_ok());
-    assert!(param
-        .mask_gen
-        .parameters
-        .unwrap()
-        .assert_algorithm_oid(db::rfc5912::ID_SHA_256)
-        .is_ok());
+    assert!(
+        param
+            .mask_gen
+            .assert_algorithm_oid(db::rfc5912::ID_MGF_1)
+            .is_ok()
+    );
+    assert!(
+        param
+            .mask_gen
+            .parameters
+            .unwrap()
+            .assert_algorithm_oid(db::rfc5912::ID_SHA_256)
+            .is_ok()
+    );
     assert_eq!(param.salt_len, 32);
     assert_eq!(param.trailer_field, TrailerField::BC);
 }
@@ -66,21 +76,27 @@ fn encode_pss_param() {
 fn decode_pss_param_default() {
     let param = RsaPssParams::try_from(RSA_PSS_PARAMETERS_DEFAULTS).unwrap();
 
-    assert!(param
-        .hash
-        .assert_algorithm_oid(db::rfc5912::ID_SHA_1)
-        .is_ok());
+    assert!(
+        param
+            .hash
+            .assert_algorithm_oid(db::rfc5912::ID_SHA_1)
+            .is_ok()
+    );
     assert_eq!(param.hash.parameters, Some(AnyRef::NULL));
-    assert!(param
-        .mask_gen
-        .assert_algorithm_oid(db::rfc5912::ID_MGF_1)
-        .is_ok());
-    assert!(param
-        .mask_gen
-        .parameters
-        .unwrap()
-        .assert_algorithm_oid(db::rfc5912::ID_SHA_1)
-        .is_ok());
+    assert!(
+        param
+            .mask_gen
+            .assert_algorithm_oid(db::rfc5912::ID_MGF_1)
+            .is_ok()
+    );
+    assert!(
+        param
+            .mask_gen
+            .parameters
+            .unwrap()
+            .assert_algorithm_oid(db::rfc5912::ID_SHA_1)
+            .is_ok()
+    );
     assert_eq!(
         param.mask_gen.parameters.unwrap().parameters,
         Some(AnyRef::NULL)
@@ -120,32 +136,42 @@ fn new_pss_param() {
 fn decode_oaep_param() {
     let param = RsaOaepParams::try_from(RSA_OAEP_PARAMETERS_SHA2_256).unwrap();
 
-    assert!(param
-        .hash
-        .assert_algorithm_oid(db::rfc5912::ID_SHA_256)
-        .is_ok());
+    assert!(
+        param
+            .hash
+            .assert_algorithm_oid(db::rfc5912::ID_SHA_256)
+            .is_ok()
+    );
     assert_eq!(param.hash.parameters, Some(AnyRef::NULL));
-    assert!(param
-        .mask_gen
-        .assert_algorithm_oid(db::rfc5912::ID_MGF_1)
-        .is_ok());
-    assert!(param
-        .mask_gen
-        .parameters
-        .unwrap()
-        .assert_algorithm_oid(db::rfc5912::ID_SHA_256)
-        .is_ok());
-    assert!(param
-        .p_source
-        .assert_algorithm_oid(db::rfc5912::ID_P_SPECIFIED)
-        .is_ok());
-    assert!(param
-        .p_source
-        .parameters_any()
-        .unwrap()
-        .decode_as::<OctetStringRef<'_>>()
-        .unwrap()
-        .is_empty(),);
+    assert!(
+        param
+            .mask_gen
+            .assert_algorithm_oid(db::rfc5912::ID_MGF_1)
+            .is_ok()
+    );
+    assert!(
+        param
+            .mask_gen
+            .parameters
+            .unwrap()
+            .assert_algorithm_oid(db::rfc5912::ID_SHA_256)
+            .is_ok()
+    );
+    assert!(
+        param
+            .p_source
+            .assert_algorithm_oid(db::rfc5912::ID_P_SPECIFIED)
+            .is_ok()
+    );
+    assert!(
+        param
+            .p_source
+            .parameters_any()
+            .unwrap()
+            .decode_as::<&OctetStringRef>()
+            .unwrap()
+            .is_empty(),
+    );
 }
 
 #[test]
@@ -162,36 +188,46 @@ fn encode_oaep_param() {
 fn decode_oaep_param_default() {
     let param = RsaOaepParams::try_from(RSA_OAEP_PARAMETERS_DEFAULTS).unwrap();
 
-    assert!(param
-        .hash
-        .assert_algorithm_oid(db::rfc5912::ID_SHA_1)
-        .is_ok());
+    assert!(
+        param
+            .hash
+            .assert_algorithm_oid(db::rfc5912::ID_SHA_1)
+            .is_ok()
+    );
     assert_eq!(param.hash.parameters, Some(AnyRef::NULL));
-    assert!(param
-        .mask_gen
-        .assert_algorithm_oid(db::rfc5912::ID_MGF_1)
-        .is_ok());
-    assert!(param
-        .mask_gen
-        .parameters
-        .unwrap()
-        .assert_algorithm_oid(db::rfc5912::ID_SHA_1)
-        .is_ok());
+    assert!(
+        param
+            .mask_gen
+            .assert_algorithm_oid(db::rfc5912::ID_MGF_1)
+            .is_ok()
+    );
+    assert!(
+        param
+            .mask_gen
+            .parameters
+            .unwrap()
+            .assert_algorithm_oid(db::rfc5912::ID_SHA_1)
+            .is_ok()
+    );
     assert_eq!(
         param.mask_gen.parameters.unwrap().parameters,
         Some(AnyRef::NULL)
     );
-    assert!(param
-        .p_source
-        .assert_algorithm_oid(db::rfc5912::ID_P_SPECIFIED)
-        .is_ok());
-    assert!(param
-        .p_source
-        .parameters_any()
-        .unwrap()
-        .decode_as::<OctetStringRef<'_>>()
-        .unwrap()
-        .is_empty(),);
+    assert!(
+        param
+            .p_source
+            .assert_algorithm_oid(db::rfc5912::ID_P_SPECIFIED)
+            .is_ok()
+    );
+    assert!(
+        param
+            .p_source
+            .parameters_any()
+            .unwrap()
+            .decode_as::<&OctetStringRef>()
+            .unwrap()
+            .is_empty(),
+    );
     assert_eq!(param, Default::default())
 }
 

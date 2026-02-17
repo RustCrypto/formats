@@ -11,8 +11,8 @@
 //! [RFC 4648]: https://datatracker.ietf.org/doc/html/rfc4648
 
 use crate::{
-    grammar, Base64Decoder, Error, Result, BASE64_WRAP_WIDTH, POST_ENCAPSULATION_BOUNDARY,
-    PRE_ENCAPSULATION_BOUNDARY,
+    BASE64_WRAP_WIDTH, Base64Decoder, Error, POST_ENCAPSULATION_BOUNDARY,
+    PRE_ENCAPSULATION_BOUNDARY, Result, grammar,
 };
 use core::str;
 
@@ -265,8 +265,7 @@ impl<'a> TryFrom<&'a [u8]> for Encapsulation<'a> {
 ///
 /// Returns `Error::HeaderDisallowed` if headers are encountered.
 fn check_for_headers(pem: &[u8], err: Error) -> Error {
-    if err == Error::Base64(base64ct::Error::InvalidEncoding)
-        && pem.iter().any(|&b| b == grammar::CHAR_COLON)
+    if err == Error::Base64(base64ct::Error::InvalidEncoding) && pem.contains(&grammar::CHAR_COLON)
     {
         Error::HeaderDisallowed
     } else {

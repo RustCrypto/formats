@@ -2,8 +2,8 @@
 
 use alloc::boxed::Box;
 use alloc::vec::Vec;
-use der::asn1::GeneralizedTime;
 use der::Sequence;
+use der::asn1::GeneralizedTime;
 
 use crmf::controls::CertId;
 use x509_cert::{crl::CertificateList, ext::Extensions};

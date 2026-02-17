@@ -3,7 +3,7 @@
 use crate::header::PkiFreeText;
 use alloc::vec::Vec;
 use der::asn1::{Int, OctetString};
-use der::flagset::{flags, FlagSet};
+use der::flagset::{FlagSet, flags};
 use der::{Enumerated, Sequence};
 
 /// The `PKIStatus` type is defined in [RFC 4210 Section 5.2.3].
@@ -122,11 +122,11 @@ flags! {
     ///
     /// [RFC 4210 Section 5.2.3]: https://www.rfc-editor.org/rfc/rfc4210#section-5.2.3
     #[allow(missing_docs)]
-    pub enum PkiFailureInfoValues: u16 {
+    pub enum PkiFailureInfoValues: u32 {
         BadAlg = 0,
         BadMessageCheck = 1,
         BadRequest      = 2,
-        BadTime         = 2,
+        BadTime         = 3,
         BadCertId       = 4,
         BadDataFormat   = 5,
         WrongAuthority  = 6,

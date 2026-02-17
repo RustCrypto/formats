@@ -2,20 +2,20 @@
 
 use alloc::vec::Vec;
 use const_oid::db::{
+    DB, Database,
     rfc3280::EMAIL_ADDRESS,
     rfc4519::{COUNTRY_NAME, DOMAIN_COMPONENT, SERIAL_NUMBER},
-    Database, DB,
 };
 use core::{
     fmt::{self, Write},
     str::FromStr,
 };
 use der::{
+    Decode, Encode, Error, ErrorKind, Sequence, Tag, Tagged, ValueOrd,
     asn1::{
         Any, Ia5StringRef, ObjectIdentifier, PrintableStringRef, SetOfVec, TeletexStringRef,
         Utf8StringRef,
     },
-    Decode, Encode, Error, ErrorKind, Sequence, Tag, Tagged, ValueOrd,
 };
 
 /// X.501 `AttributeType` as defined in [RFC 5280 Appendix A.1].
@@ -85,7 +85,7 @@ pub type Attributes = SetOfVec<Attribute>;
 ///
 /// [RFC 5280 Appendix A.1]: https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
-#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Sequence, ValueOrd)]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Sequence, ValueOrd, Hash)]
 #[allow(missing_docs)]
 pub struct AttributeTypeAndValue {
     pub oid: AttributeType,
@@ -155,7 +155,7 @@ impl AttributeTypeAndValue {
         };
 
         // Decode der bytes from hex.
-        let mut bytes = Vec::with_capacity((val.len() + 1) / 2);
+        let mut bytes = Vec::with_capacity(val.len().div_ceil(2));
 
         while let (Some(h), Some(l)) = (iter.next(), iter.next()) {
             let mut byte = 0u8;
@@ -272,7 +272,7 @@ impl fmt::Display for AttributeTypeAndValue {
                 match c {
                     '#' if i == 0 => write!(f, "\\#")?,
                     ' ' if i == 0 || iter.peek().is_none() => write!(f, "\\ ")?,
-                    '"' | '+' | ',' | ';' | '<' | '>' | '\\' => write!(f, "\\{}", c)?,
+                    '"' | '+' | ',' | ';' | '<' | '>' | '\\' => write!(f, "\\{c}")?,
                     '\x00'..='\x1f' | '\x7f' => write!(f, "\\{:02x}", c as u8)?,
                     _ => f.write_char(c)?,
                 }
@@ -282,7 +282,7 @@ impl fmt::Display for AttributeTypeAndValue {
 
             write!(f, "{}=#", self.oid)?;
             for c in value {
-                write!(f, "{:02x}", c)?;
+                write!(f, "{c:02x}")?;
             }
         }
 

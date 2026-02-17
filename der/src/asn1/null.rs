@@ -1,8 +1,8 @@
 //! ASN.1 `NULL` support.
 
 use crate::{
-    asn1::AnyRef, ord::OrdIsValueOrd, BytesRef, DecodeValue, EncodeValue, Error, ErrorKind,
-    FixedTag, Header, Length, Reader, Result, Tag, Writer,
+    BytesRef, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader, Result,
+    Tag, Writer, asn1::AnyRef, ord::OrdIsValueOrd,
 };
 
 /// ASN.1 `NULL` type.
@@ -15,7 +15,7 @@ impl<'a> DecodeValue<'a> for Null {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self> {
-        if header.length.is_zero() {
+        if header.length().is_zero() {
             Ok(Null)
         } else {
             Err(reader.error(ErrorKind::Length { tag: Self::TAG }))
@@ -41,7 +41,7 @@ impl OrdIsValueOrd for Null {}
 
 impl<'a> From<Null> for AnyRef<'a> {
     fn from(_: Null) -> AnyRef<'a> {
-        AnyRef::from_tag_and_value(Tag::Null, BytesRef::default())
+        AnyRef::from_tag_and_value(Tag::Null, BytesRef::EMPTY)
     }
 }
 
@@ -103,5 +103,6 @@ mod tests {
     #[test]
     fn reject_non_canonical() {
         assert!(Null::from_der(&[0x05, 0x81, 0x00]).is_err());
+        assert!(Null::from_der(&[0x05, 0x01, 0xAA]).is_err());
     }
 }

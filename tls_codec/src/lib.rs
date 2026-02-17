@@ -1,5 +1,5 @@
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
 #![warn(
     clippy::mod_module_files,
@@ -42,14 +42,14 @@ mod tls_vec;
 mod varint;
 
 pub use tls_vec::{
-    SecretTlsVecU16, SecretTlsVecU24, SecretTlsVecU32, SecretTlsVecU8, TlsByteSliceU16,
-    TlsByteSliceU24, TlsByteSliceU32, TlsByteSliceU8, TlsByteVecU16, TlsByteVecU24, TlsByteVecU32,
-    TlsByteVecU8, TlsSliceU16, TlsSliceU24, TlsSliceU32, TlsSliceU8, TlsVecU16, TlsVecU24,
-    TlsVecU32, TlsVecU8,
+    SecretTlsVecU8, SecretTlsVecU16, SecretTlsVecU24, SecretTlsVecU32, TlsByteSliceU8,
+    TlsByteSliceU16, TlsByteSliceU24, TlsByteSliceU32, TlsByteVecU8, TlsByteVecU16, TlsByteVecU24,
+    TlsByteVecU32, TlsSliceU8, TlsSliceU16, TlsSliceU24, TlsSliceU32, TlsVecU8, TlsVecU16,
+    TlsVecU24, TlsVecU32,
 };
 
 #[cfg(feature = "std")]
-pub use quic_vec::{rw as vlen, SecretVLBytes};
+pub use quic_vec::{SecretVLBytes, rw as vlen};
 pub use quic_vec::{VLByteSlice, VLBytes};
 
 #[cfg(feature = "derive")]

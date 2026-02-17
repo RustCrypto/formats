@@ -8,7 +8,7 @@ This document lists the OIDs for
 - HashML-DSA-65 with SHA512, and
 - HashML-DSA-87 with SHA512.
 
-This file was manually created, as there exists no offical document that is easily parsable.
+This file was manually created, as there exists no official document that is easily parsable.
 The ML-DSA standard is specified in [FIPS 204](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.204.pdf).
 The OIDs are defined in [Computer Security Objects Register (CSOR)]
 (https://csrc.nist.gov/projects/computer-security-objects-register/algorithm-registration),
