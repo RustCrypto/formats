@@ -97,14 +97,15 @@ impl From<TlsVarInt> for u64 {
     }
 }
 
-fn check_min_len(value: u64, len: usize) -> Result<(), Error> {
-    if cfg!(feature = "mls") {
+fn check_min_len(_value: u64, _len: usize) -> Result<(), Error> {
+    #[cfg(feature = "mls")]
+    {
         // ensure that `len` is minimal for the given `value`
-        let min_len = TlsVarInt::try_new(value)?.bytes_len();
-        if min_len != len {
+        let min_len = TlsVarInt::try_new(_value)?.bytes_len();
+        if min_len != _len {
             return Err(Error::InvalidVectorLength);
         }
-    };
+    }
     Ok(())
 }
 
