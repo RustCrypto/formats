@@ -39,6 +39,7 @@ mod arrays;
 mod primitives;
 mod quic_vec;
 mod tls_vec;
+mod varint;
 
 pub use tls_vec::{
     SecretTlsVecU8, SecretTlsVecU16, SecretTlsVecU24, SecretTlsVecU32, TlsByteSliceU8,
@@ -58,6 +59,8 @@ pub use tls_codec_derive::{
 
 #[cfg(feature = "conditional_deserialization")]
 pub use tls_codec_derive::conditionally_deserializable;
+
+pub use varint::TlsVarInt;
 
 /// Errors that are thrown by this crate.
 #[derive(Debug, Eq, PartialEq, Clone)]

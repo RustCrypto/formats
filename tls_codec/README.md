@@ -19,7 +19,7 @@ derived.
 The crate also provides the following data structures that implement TLS
 serialization/deserialization
 
-- `u8`, `u16`, `u32`, `u64`
+- `u8`, `u16`, `u32`, `u64`, `TlsVarInt`
 - `TlsVecU8`, `TlsVecU16`, `TlsVecU32`
 - `SecretTlsVecU8`, `SecretTlsVecU16`, `SecretTlsVecU32`
   The same as the `TlsVec*` versions but it implements zeroize, requiring
