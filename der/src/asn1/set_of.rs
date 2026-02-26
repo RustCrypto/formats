@@ -11,10 +11,11 @@
 #![cfg(any(feature = "alloc", feature = "heapless"))]
 
 use crate::{
-    Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error, ErrorKind, FixedTag, Header, Length,
-    Reader, Tag, ValueOrd, Writer, ord::iter_cmp,
+    Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error, ErrorKind, FixedTag, Header,
+    Length, Reader, SliceReader, Tag, ValueOrd, Writer, ord::iter_cmp,
+    ord::iter_cmp_owned,
 };
-use core::cmp::Ordering;
+use core::{cmp::Ordering, ops::Not};
 
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
@@ -33,6 +34,27 @@ where
     T: DerOrd,
 {
     inner: heapless::Vec<T, N>,
+}
+
+// Inner reference of a SetOfRef
+//
+// An internal reference can either be bytes when constructed during decoding
+// or a slice of items of the generic type T.
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
+enum InnerRef<'a, T> {
+    BytesRef(&'a [u8]),
+    ObjectsRef(&'a [T]),
+}
+/// ASN.1 `SET OF` with a reference to an array.
+///
+/// This type implements a viewer in a `SET OF` type
+/// and does not depend on `alloc` support.
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
+pub struct SetOfRef<'a, T>
+where
+    T: DerOrd,
+{
+    inner: InnerRef<'a, T>,
 }
 
 #[cfg(feature = "heapless")]
@@ -125,6 +147,96 @@ where
     }
 }
 
+impl<'a, T> SetOfRef<'a, T>
+where
+    T: Decode<'a> + 'a,
+    T: Clone + DerOrd,
+{
+    /// Create a new [`SetOfRef`] from a byte slice
+    fn from_bytes(v: &'a [u8]) -> Result<Self, Error> {
+        // Make sure we can decode valid objects from the byes
+        let mut reader = SliceReader::new(v)?;
+
+        while !reader.is_finished() {
+            T::decode(&mut reader).map_err(|_| Error::from_kind(ErrorKind::Failed))?;
+        }
+
+        // Generate the set and check for ordering
+        let new_set = Self {
+            inner: InnerRef::BytesRef(v),
+        };
+
+        new_set
+            .iter()
+            .is_sorted_by(|a, b| matches!(a.der_cmp(b), Ok(Ordering::Less)))
+            .then_some(new_set)
+            .ok_or_else(|| Error::from_kind(ErrorKind::SetOrdering))
+    }
+
+    /// Get the nth element from this [`SetOfRef`].
+    #[must_use]
+    pub fn get(&self, index: usize) -> Option<T>
+    where
+        T: Decode<'a> + 'a,
+        T: Clone,
+    {
+        self.iter().nth(index)
+    }
+
+    /// Iterate over the elements of this [`SetOfRef`].
+    /// 
+    /// # Panics
+    ///
+    /// Panics if the inner byte slice contains invalid data that cannot be
+    /// parsed by [`SliceReader`].
+    #[must_use]
+    pub fn iter(&self) -> SetOfRefIter<'a, T>
+    where
+        T: Decode<'a> + 'a,
+    {
+        match self.inner {
+            InnerRef::BytesRef(inner) => {
+                let mut reader = SliceReader::new(inner).expect("Invalid data");
+
+                let length = core::iter::from_fn(|| {
+                    reader.is_finished().not().then_some(T::decode(&mut reader))
+                })
+                .count();
+
+                SetOfRefIter {
+                    inner: InnerIterRef::<'a, T>::BytesRef(
+                        SliceReader::new(inner).expect("Invalid data"),
+                    ),
+                    length,
+                }
+            }
+            InnerRef::ObjectsRef(inner) => SetOfRefIter {
+                inner: InnerIterRef::<'a, T>::ObjectsRef(inner),
+                length: inner.len(),
+            },
+        }
+    }
+
+    /// Is this [`SetOfRef`] empty?
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        match self.inner {
+            InnerRef::BytesRef(inner) => inner.is_empty(),
+            InnerRef::ObjectsRef(inner) => inner.is_empty(),
+        }
+    }
+
+    /// Number of elements in this [`SetOfRef`].
+    #[must_use]
+    pub fn len(&self) -> usize
+    where
+        T: Decode<'a> + 'a,
+        T: Clone,
+    {
+        self.iter().len()
+    }
+}
+
 #[cfg(feature = "heapless")]
 impl<T, const N: usize> Default for SetOf<T, N>
 where
@@ -158,6 +270,19 @@ where
     }
 }
 
+impl<'a, T> DecodeValue<'a> for SetOfRef<'a, T>
+where
+    T: Clone,
+    T: Decode<'a> + DerOrd,
+{
+    type Error = Error;
+
+    fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
+        let inner_slice: &'a [u8] = reader.read_slice(header.length())?;
+        SetOfRef::<'a, T>::from_bytes(inner_slice)
+    }
+}
+
 #[cfg(feature = "heapless")]
 impl<T, const N: usize> EncodeValue for SetOf<T, N>
 where
@@ -177,8 +302,34 @@ where
     }
 }
 
+impl<'a, T> EncodeValue for SetOfRef<'a, T>
+where
+    T: Decode<'a> + Encode + DerOrd,
+    T: Clone,
+{
+    fn value_len(&self) -> Result<Length, Error> {
+        self.iter()
+            .try_fold(Length::ZERO, |len, elem| len + elem.encoded_len()?)
+    }
+
+    fn encode_value(&self, writer: &mut impl Writer) -> Result<(), Error> {
+        for elem in self.iter() {
+            elem.encode(writer)?;
+        }
+
+        Ok(())
+    }
+}
+
 #[cfg(feature = "heapless")]
 impl<T, const N: usize> FixedTag for SetOf<T, N>
+where
+    T: DerOrd,
+{
+    const TAG: Tag = Tag::Set;
+}
+
+impl<'a, T> FixedTag for SetOfRef<'a, T>
 where
     T: DerOrd,
 {
@@ -205,6 +356,35 @@ where
     }
 }
 
+impl<'a, T> TryFrom<&'a [T]> for SetOfRef<'a, T>
+where
+    T: DerOrd,
+{
+    type Error = Error;
+
+    fn try_from(arr: &'a [T]) -> Result<SetOfRef<'a, T>, Error> {
+        arr.windows(2)
+            .try_for_each(|w| match w[0].der_cmp(&w[1]) {
+                Ok(Ordering::Less) => Ok(()),
+                Ok(Ordering::Equal) => Err(Error::from_kind(ErrorKind::SetDuplicate)),
+                Ok(Ordering::Greater) => Err(Error::from_kind(ErrorKind::SetOrdering)),
+                Err(e) => Err(e),
+            })
+            .map(|_| Self {
+                inner: InnerRef::ObjectsRef(arr),
+            })
+    }
+}
+
+impl<'a, T> From<&SetOfRef<'a, T>> for SetOfRef<'a, T>
+where
+    T: Clone + DerOrd,
+{
+    fn from(value: &SetOfRef<'a, T>) -> SetOfRef<'a, T> {
+        value.clone()
+    }
+}
+
 #[cfg(feature = "heapless")]
 impl<T, const N: usize> ValueOrd for SetOf<T, N>
 where
@@ -212,6 +392,16 @@ where
 {
     fn value_cmp(&self, other: &Self) -> Result<Ordering, Error> {
         iter_cmp(self.iter(), other.iter())
+    }
+}
+
+impl<'a, T> ValueOrd for SetOfRef<'a, T>
+where
+    T: Decode<'a> + DerOrd + 'a,
+    T: Clone,
+{
+    fn value_cmp(&self, other: &Self) -> Result<Ordering, Error> {
+        iter_cmp_owned(self.iter(), other.iter())
     }
 }
 
@@ -235,6 +425,67 @@ impl<'a, T: 'a> Iterator for SetOfIter<'a, T> {
 }
 
 impl<'a, T: 'a> ExactSizeIterator for SetOfIter<'a, T> {}
+
+// Inner reference of a SetOfRefIter
+//
+// An internal reference can either be a slice reader when constructed during decoding
+// or a slice of items of the generic type T.
+#[derive(Clone, Debug)]
+enum InnerIterRef<'a, T> {
+    BytesRef(SliceReader<'a>),
+    ObjectsRef(&'a [T]),
+}
+
+/// Iterator over the elements of an [`SetOfRef`].
+#[derive(Clone, Debug)]
+pub struct SetOfRefIter<'a, T>
+where
+    T: Decode<'a>,
+{
+    /// Inner iterator.
+    inner: InnerIterRef<'a, T>,
+    length: usize,
+}
+
+impl<'a, T> Iterator for SetOfRefIter<'a, T>
+where
+    T: Decode<'a> + 'a,
+    T: Clone,
+{
+    type Item = T;
+
+    fn next(&mut self) -> Option<T> {
+        match &mut self.inner {
+            InnerIterRef::BytesRef(inner_reader) => {
+                if inner_reader.is_finished() {
+                    return None;
+                }
+
+                let next_val = T::decode(inner_reader).ok()?;
+                self.length -= 1;
+                Some(next_val)
+            }
+            InnerIterRef::ObjectsRef(inner_slice) => {
+                let next_val = inner_slice.first()?;
+                self.inner = InnerIterRef::ObjectsRef(&inner_slice[1..]);
+                self.length -= 1;
+
+                Some(next_val.clone())
+            }
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.length, Some(self.length))
+    }
+}
+
+impl<'a, T> ExactSizeIterator for SetOfRefIter<'a, T>
+where
+    T: Decode<'a> + 'a,
+    T: Clone,
+{
+}
 
 /// ASN.1 `SET OF` backed by a [`Vec`].
 ///
@@ -544,14 +795,49 @@ fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<(), Error> {
     Ok(())
 }
 
+#[cfg(feature = "alloc")]
+mod allocating {
+    use super::*;
+    use crate::referenced::*;
+
+    impl<'a, T> RefToOwned<'a> for SetOfRef<'a, T>
+    where
+        T: Decode<'a> + EncodeValue + 'a,
+        T: DerOrd + FixedTag,
+        T: Clone,
+    {
+        type Owned = SetOfVec<T>;
+        fn ref_to_owned(&self) -> Self::Owned {
+            SetOfVec::from_iter(self.iter()).expect("SetOfVec: Could not sort inner slice")
+        }
+    }
+
+    impl<T> OwnedToRef for SetOfVec<T>
+    where
+        T: Encode,
+        T: DerOrd,
+    {
+        type Borrowed<'a> = SetOfRef<'a, T>
+        where
+            T: 'a;
+
+        fn owned_to_ref(&self) -> Self::Borrowed<'_> {
+            SetOfRef::<T>::try_from(self.inner.as_slice()).expect("Unsorted slice")
+        }
+    }
+}
+
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
+    
     #[cfg(feature = "alloc")]
     use super::SetOfVec;
     use crate::ErrorKind;
     #[cfg(feature = "heapless")]
-    use {super::SetOf, crate::DerOrd};
+    use {super::SetOf};
+    #[cfg(any(feature = "alloc", feature = "heapless"))]
+    use {super::SetOfRef, crate::DerOrd};
 
     #[cfg(feature = "heapless")]
     #[test]
@@ -596,6 +882,39 @@ mod tests {
         let set2 = SetOf::try_from(arr2).unwrap();
         assert_eq!(set1.der_cmp(&set2), Ok(Ordering::Greater));
     }
+
+    #[test]
+    fn setofref_tryfrom_array() {
+        let arr = [0u16, 1, 2, 3, 65535];
+        let set = SetOfRef::try_from(arr.as_ref()).unwrap();
+        assert!(set.iter().eq([0, 1, 2, 3, 65535]));
+    }
+
+    #[test]
+    fn setofref_tryfrom_array_reject_unsorted() {
+        let arr = [3u16, 2, 1, 65535, 0];
+        let err = SetOfRef::try_from(arr.as_ref()).err().unwrap();
+        assert_eq!(err.kind(), ErrorKind::SetOrdering);
+    }
+
+    #[test]
+    fn setofref_tryfrom_array_reject_duplicates() {
+        let arr = [1u16, 1];
+        let err = SetOfRef::try_from(arr.as_ref()).err().unwrap();
+        assert_eq!(err.kind(), ErrorKind::SetDuplicate);
+    }
+
+    #[test]
+    fn setofref_valueord_value_cmp() {
+        use core::cmp::Ordering;
+
+        let arr1 = [0u16, 1, 2, 3, 5];
+        let arr2 = [0u16, 1, 2, 3, 4];
+        let set1 = SetOfRef::try_from(arr1.as_ref()).unwrap();
+        let set2 = SetOfRef::try_from(arr2.as_ref()).unwrap();
+        assert_eq!(set1.der_cmp(&set2), Ok(Ordering::Greater));
+    }
+
 
     #[cfg(feature = "alloc")]
     #[test]
