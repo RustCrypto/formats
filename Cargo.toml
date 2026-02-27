@@ -61,8 +61,6 @@ x509-tsp = { path = "./x509-tsp" }
 x509-cert = { path = "./x509-cert" }
 x509-ocsp = { path = "./x509-ocsp" }
 
-cbc = { git = "https://github.com/RustCrypto/block-modes" }
-ctr = { git = "https://github.com/RustCrypto/block-modes" }
 rsa = { git = "https://github.com/RustCrypto/RSA" }
 universal-hash = { git = "https://github.com/RustCrypto/traits" }
 
