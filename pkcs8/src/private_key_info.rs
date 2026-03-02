@@ -3,16 +3,15 @@
 use crate::{Error, Result, Version};
 use core::fmt;
 use der::{
-    Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Sequence, TagMode,
-    TagNumber, Writer,
-    asn1::{AnyRef, BitStringRef, ContextSpecific, OctetStringRef, SequenceRef},
+    Decode, DecodeValue, DerOrd, Encode, EncodeValue, FixedTag, Header, Length, Reader, Sequence, TagMode, TagNumber, Writer, asn1::{AnyRef, BitStringRef, ContextSpecific, OctetStringRef, SetOfRef}
 };
 use spki::AlgorithmIdentifier;
+use x509_cert::attr::Attribute;
 
 #[cfg(feature = "alloc")]
 use der::{
     SecretDocument,
-    asn1::{Any, BitString, OctetString},
+    asn1::{Any, BitString, OctetString, SetOfVec},
 };
 
 #[cfg(feature = "encryption")]
@@ -94,7 +93,7 @@ const PUBLIC_KEY_TAG: TagNumber = TagNumber(1);
 /// [RFC 5208 Section 5]: https://tools.ietf.org/html/rfc5208#section-5
 /// [RFC 5958 Section 2]: https://datatracker.ietf.org/doc/html/rfc5958#section-2
 #[derive(Clone)]
-pub struct PrivateKeyInfo<Params, Key, PubKey> {
+pub struct PrivateKeyInfo<Params, Key, PubKey, Attr> {
     /// X.509 `AlgorithmIdentifier` for the private key type.
     pub algorithm: AlgorithmIdentifier<Params>,
 
@@ -103,9 +102,12 @@ pub struct PrivateKeyInfo<Params, Key, PubKey> {
 
     /// Public key data, optionally available if version is V2.
     pub public_key: Option<PubKey>,
+
+    /// Attributes
+    pub attributes: Option<Attr>,
 }
 
-impl<Params, Key, PubKey> PrivateKeyInfo<Params, Key, PubKey> {
+impl<Params, Key, PubKey, Attr> PrivateKeyInfo<Params, Key, PubKey, Attr> {
     /// Create a new PKCS#8 [`PrivateKeyInfo`] message.
     ///
     /// This is a helper method which initializes `attributes` and `public_key`
@@ -115,6 +117,7 @@ impl<Params, Key, PubKey> PrivateKeyInfo<Params, Key, PubKey> {
             algorithm,
             private_key,
             public_key: None,
+            attributes: None,
         }
     }
 
@@ -130,13 +133,15 @@ impl<Params, Key, PubKey> PrivateKeyInfo<Params, Key, PubKey> {
     }
 }
 
-impl<'a, Params, Key, PubKey> PrivateKeyInfo<Params, Key, PubKey>
+impl<'a, Params, Key, PubKey, Attr> PrivateKeyInfo<Params, Key, PubKey, Attr>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
     Key: DecodeValue<'a, Error = der::Error> + FixedTag + 'a,
     Key: EncodeValue,
     PubKey: DecodeValue<'a, Error = der::Error> + FixedTag + 'a,
     PubKey: BitStringLike,
+    Attr: DecodeValue<'a, Error = der::Error> + FixedTag + SetOfLike<'a> + 'a,
+    Attr::Item: Clone + Decode<'a> + DerOrd + Encode,
 {
     /// Encrypt this private key using a symmetric encryption key derived
     /// from the provided password.
@@ -170,7 +175,7 @@ where
     }
 }
 
-impl<'a, Params, Key, PubKey> PrivateKeyInfo<Params, Key, PubKey>
+impl<'a, Params, Key, PubKey, Attr> PrivateKeyInfo<Params, Key, PubKey, Attr>
 where
     Params: der::Choice<'a> + Encode,
     PubKey: BitStringLike,
@@ -188,11 +193,31 @@ where
     }
 }
 
-impl<'a, Params, Key, PubKey> DecodeValue<'a> for PrivateKeyInfo<Params, Key, PubKey>
+
+impl<'a, Params, Key, PubKey, Attr> PrivateKeyInfo<Params, Key, PubKey, Attr>
+where
+    Params: der::Choice<'a> + Encode,
+    Attr: SetOfLike<'a>,
+{
+    /// Get a `SET OF` representation of the attributes, if present.
+    fn attributes_string(&self) -> Option<ContextSpecific<SetOfRef<'a, Attr::Item>>> {
+        self.attributes.as_ref().map(|attributes| {
+            let value = attributes.as_set_of();
+            ContextSpecific {
+                tag_number: ATTRIBUTES_TAG,
+                tag_mode: TagMode::Implicit,
+                value,
+            }
+        })
+    }
+} 
+
+impl<'a, Params, Key, PubKey, Attr> DecodeValue<'a> for PrivateKeyInfo<Params, Key, PubKey, Attr>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
     Key: DecodeValue<'a, Error = der::Error> + FixedTag + 'a,
     PubKey: DecodeValue<'a, Error = der::Error> + FixedTag + 'a,
+    Attr: DecodeValue<'a, Error = der::Error> + FixedTag + 'a,
 {
     type Error = der::Error;
 
@@ -202,8 +227,7 @@ where
         let algorithm = reader.decode()?;
         let private_key = Key::decode(reader)?;
 
-        let _attributes =
-            reader.context_specific::<&SequenceRef>(ATTRIBUTES_TAG, TagMode::Implicit)?;
+        let attributes = reader.context_specific::<Attr>(ATTRIBUTES_TAG, TagMode::Implicit)?;
 
         let public_key = reader.context_specific::<PubKey>(PUBLIC_KEY_TAG, TagMode::Implicit)?;
 
@@ -226,20 +250,24 @@ where
             algorithm,
             private_key,
             public_key,
+            attributes,
         })
     }
 }
 
-impl<'a, Params, Key, PubKey> EncodeValue for PrivateKeyInfo<Params, Key, PubKey>
+impl<'a, Params, Key, PubKey, Attr> EncodeValue for PrivateKeyInfo<Params, Key, PubKey, Attr>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
     Key: EncodeValue + FixedTag,
     PubKey: BitStringLike,
+    Attr: SetOfLike<'a>,
+    Attr::Item: Clone + Decode<'a> + DerOrd + Encode,
 {
     fn value_len(&self) -> der::Result<Length> {
         self.version().encoded_len()?
             + self.algorithm.encoded_len()?
             + self.private_key.encoded_len()?
+            + self.attributes_string().encoded_len()?
             + self.public_key_bit_string().encoded_len()?
     }
 
@@ -247,28 +275,33 @@ where
         self.version().encode(writer)?;
         self.algorithm.encode(writer)?;
         self.private_key.encode(writer)?;
+        self.attributes_string().encode(writer)?;
         self.public_key_bit_string().encode(writer)?;
         Ok(())
     }
 }
 
-impl<'a, Params, Key, PubKey> Sequence<'a> for PrivateKeyInfo<Params, Key, PubKey>
+impl<'a, Params, Key, PubKey, Attr> Sequence<'a> for PrivateKeyInfo<Params, Key, PubKey, Attr>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
     Key: DecodeValue<'a, Error = der::Error> + FixedTag + 'a,
     Key: EncodeValue,
     PubKey: DecodeValue<'a, Error = der::Error> + FixedTag + 'a,
     PubKey: BitStringLike,
+    Attr: DecodeValue<'a, Error = der::Error> + FixedTag + SetOfLike<'a> + 'a,
+    Attr::Item: Clone + Decode<'a> + DerOrd + Encode,
 {
 }
 
-impl<'a, Params, Key, PubKey> TryFrom<&'a [u8]> for PrivateKeyInfo<Params, Key, PubKey>
+impl<'a, Params, Key, PubKey, Attr> TryFrom<&'a [u8]> for PrivateKeyInfo<Params, Key, PubKey, Attr>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
     Key: DecodeValue<'a, Error = der::Error> + FixedTag + 'a,
     Key: EncodeValue,
     PubKey: DecodeValue<'a, Error = der::Error> + FixedTag + 'a,
     PubKey: BitStringLike,
+    Attr: DecodeValue<'a, Error = der::Error> + FixedTag + SetOfLike<'a> + 'a,
+    Attr::Item: Clone + Decode<'a> + DerOrd + Encode,
 {
     type Error = Error;
 
@@ -277,63 +310,72 @@ where
     }
 }
 
-impl<Params, Key, PubKey> fmt::Debug for PrivateKeyInfo<Params, Key, PubKey>
+impl<Params, Key, PubKey, Attr> fmt::Debug for PrivateKeyInfo<Params, Key, PubKey, Attr>
 where
     Params: fmt::Debug,
     PubKey: fmt::Debug,
+    Attr: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("PrivateKeyInfo")
             .field("version", &self.version())
             .field("algorithm", &self.algorithm)
+            .field("Attributes", &self.attributes)
             .field("public_key", &self.public_key)
             .finish_non_exhaustive()
     }
 }
 
 #[cfg(feature = "alloc")]
-impl<'a, Params, Key, PubKey> TryFrom<PrivateKeyInfo<Params, Key, PubKey>> for SecretDocument
+impl<'a, Params, Key, PubKey, Attr> TryFrom<PrivateKeyInfo<Params, Key, PubKey, Attr>>
+    for SecretDocument
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
     Key: DecodeValue<'a, Error = der::Error> + FixedTag + 'a,
     Key: EncodeValue,
     PubKey: DecodeValue<'a, Error = der::Error> + FixedTag + 'a,
     PubKey: BitStringLike,
+    Attr: DecodeValue<'a, Error = der::Error> + FixedTag + SetOfLike<'a> + 'a,
+    Attr::Item: Clone + Decode<'a> + DerOrd + Encode,
 {
     type Error = Error;
 
-    fn try_from(private_key: PrivateKeyInfo<Params, Key, PubKey>) -> Result<SecretDocument> {
+    fn try_from(private_key: PrivateKeyInfo<Params, Key, PubKey, Attr>) -> Result<SecretDocument> {
         SecretDocument::try_from(&private_key)
     }
 }
 
 #[cfg(feature = "alloc")]
-impl<'a, Params, Key, PubKey> TryFrom<&PrivateKeyInfo<Params, Key, PubKey>> for SecretDocument
+impl<'a, Params, Key, PubKey, Attr> TryFrom<&PrivateKeyInfo<Params, Key, PubKey, Attr>>
+    for SecretDocument
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
     Key: DecodeValue<'a, Error = der::Error> + FixedTag + 'a,
     Key: EncodeValue,
     PubKey: DecodeValue<'a, Error = der::Error> + FixedTag + 'a,
     PubKey: BitStringLike,
+    Attr: DecodeValue<'a, Error = der::Error> + FixedTag + SetOfLike<'a> + 'a,
+    Attr::Item: Clone + Decode<'a> + DerOrd + Encode,
 {
     type Error = Error;
 
-    fn try_from(private_key: &PrivateKeyInfo<Params, Key, PubKey>) -> Result<SecretDocument> {
+    fn try_from(private_key: &PrivateKeyInfo<Params, Key, PubKey, Attr>) -> Result<SecretDocument> {
         Ok(Self::encode_msg(private_key)?)
     }
 }
 
 #[cfg(feature = "pem")]
-impl<Params, Key, PubKey> PemLabel for PrivateKeyInfo<Params, Key, PubKey> {
+impl<Params, Key, PubKey, Attr> PemLabel for PrivateKeyInfo<Params, Key, PubKey, Attr> {
     const PEM_LABEL: &'static str = "PRIVATE KEY";
 }
 
 #[cfg(feature = "subtle")]
-impl<Params, Key, PubKey> ConstantTimeEq for PrivateKeyInfo<Params, Key, PubKey>
+impl<Params, Key, PubKey, Attr> ConstantTimeEq for PrivateKeyInfo<Params, Key, PubKey, Attr>
 where
     Params: Eq,
     Key: PartialEq + AsRef<[u8]>,
     PubKey: PartialEq,
+    Attr: PartialEq,
 {
     fn ct_eq(&self, other: &Self) -> Choice {
         // NOTE: public fields are not compared in constant time
@@ -346,20 +388,22 @@ where
 }
 
 #[cfg(feature = "subtle")]
-impl<Params, Key, PubKey> Eq for PrivateKeyInfo<Params, Key, PubKey>
+impl<Params, Key, PubKey, Attr> Eq for PrivateKeyInfo<Params, Key, PubKey, Attr>
 where
     Params: Eq,
     Key: AsRef<[u8]> + Eq,
     PubKey: Eq,
+    Attr: Eq,
 {
 }
 
 #[cfg(feature = "subtle")]
-impl<Params, Key, PubKey> PartialEq for PrivateKeyInfo<Params, Key, PubKey>
+impl<Params, Key, PubKey, Attr> PartialEq for PrivateKeyInfo<Params, Key, PubKey, Attr>
 where
     Params: Eq,
     Key: PartialEq + AsRef<[u8]>,
     PubKey: PartialEq,
+    Attr: PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
         self.ct_eq(other).into()
@@ -367,11 +411,12 @@ where
 }
 
 /// [`PrivateKeyInfo`] with [`AnyRef`] algorithm parameters, and `&[u8]` key.
-pub type PrivateKeyInfoRef<'a> = PrivateKeyInfo<AnyRef<'a>, &'a OctetStringRef, BitStringRef<'a>>;
+pub type PrivateKeyInfoRef<'a> =
+    PrivateKeyInfo<AnyRef<'a>, &'a OctetStringRef, BitStringRef<'a>, SetOfRef<'a, Attribute>>;
 
 /// [`PrivateKeyInfo`] with [`Any`] algorithm parameters, and `Box<[u8]>` key.
 #[cfg(feature = "alloc")]
-pub type PrivateKeyInfoOwned = PrivateKeyInfo<Any, OctetString, BitString>;
+pub type PrivateKeyInfoOwned = PrivateKeyInfo<Any, OctetString, BitString, SetOfVec<Attribute>>;
 
 /// [`BitStringLike`] marks object that will act like a BitString.
 ///
@@ -383,6 +428,23 @@ pub trait BitStringLike {
 impl BitStringLike for BitStringRef<'_> {
     fn as_bit_string(&self) -> BitStringRef<'_> {
         BitStringRef::from(self)
+    }
+}
+
+pub trait SetOfLike <'a>
+{
+    type Item: Clone + DerOrd + Encode;
+    fn as_set_of(&self) -> SetOfRef<'a, Self::Item>;
+}
+
+impl<'a, T> SetOfLike<'a> for SetOfRef<'a, T> 
+where 
+    T: Clone + DerOrd + Encode,
+{
+    type Item = T;
+
+    fn as_set_of(&self) -> SetOfRef<'a, T> {
+        SetOfRef::from(self)
     }
 }
 
@@ -399,6 +461,17 @@ mod allocating {
         }
     }
 
+    impl<'a, T> SetOfLike<'a> for &'a SetOfVec<T> 
+    where 
+        T: Clone + DerOrd + Encode + 'a,
+    {
+        type Item = T;
+
+        fn as_set_of(&self) -> SetOfRef<'a, T> {
+            self.owned_to_ref()
+        }
+    }
+
     impl<'a> RefToOwned<'a> for PrivateKeyInfoRef<'a> {
         type Owned = PrivateKeyInfoOwned;
         fn ref_to_owned(&self) -> Self::Owned {
@@ -406,6 +479,7 @@ mod allocating {
                 algorithm: self.algorithm.ref_to_owned(),
                 private_key: self.private_key.to_owned(),
                 public_key: self.public_key.ref_to_owned(),
+                attributes: self.attributes.ref_to_owned(),
             }
         }
     }
@@ -417,6 +491,7 @@ mod allocating {
                 algorithm: self.algorithm.owned_to_ref(),
                 private_key: self.private_key.borrow(),
                 public_key: self.public_key.owned_to_ref(),
+                attributes: self.attributes.owned_to_ref(),
             }
         }
     }

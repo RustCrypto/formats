@@ -74,7 +74,7 @@ pub use self::{
 };
 
 #[cfg(any(feature = "alloc", feature = "heapless"))]
-pub use set_of::SetOfIter;
+pub use set_of::{SetOfIter, SetOfRef};
 
 #[cfg(feature = "oid")]
 pub use const_oid::ObjectIdentifier;
