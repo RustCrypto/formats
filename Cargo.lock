@@ -1038,9 +1038,9 @@ name = "phc"
 version = "0.6.0-rc.1"
 dependencies = [
  "base64ct",
+ "ctutils",
  "getrandom 0.4.1",
  "rand_core 0.10.0",
- "subtle",
 ]
 
 [[package]]
@@ -1727,7 +1727,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "82a72c767771b47409d2345987fda8628641887d5466101319899796367354a0"
 dependencies = [
  "fastrand",
- "getrandom 0.4.1",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix",
  "windows-sys",
@@ -2268,8 +2268,3 @@ name = "zmij"
 version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
-
-[[patch.unused]]
-name = "universal-hash"
-version = "0.6.0-rc.10"
-source = "git+https://github.com/RustCrypto/traits#b7a3bbfef1bea8fe765a9203c3956f997c9a43f9"

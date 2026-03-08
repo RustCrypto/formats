@@ -3,7 +3,7 @@
 use crate::{B64, Error, Result};
 use base64ct::Encoding;
 use core::{cmp::Ordering, fmt, str::FromStr};
-use subtle::{Choice, ConstantTimeEq};
+use ctutils::{Choice, CtEq};
 
 /// Output from password hashing functions, i.e. the "hash" or "digest"
 /// as raw bytes.
@@ -39,11 +39,11 @@ use subtle::{Choice, ConstantTimeEq};
 /// as a reasonable maximum, and recommends using 32-bytes.
 ///
 /// # Constant-time comparisons
-/// The [`Output`] type impls the [`ConstantTimeEq`] trait from the [`subtle`]
-/// crate and uses it to perform constant-time comparisons.
+/// The [`Output`] type impls the [`CtEq`] trait from the [`ctutils`] crate and uses it to perform
+/// constant-time comparisons.
 ///
-/// Additionally the [`PartialEq`] and [`Eq`] trait impls for [`Output`] use
-/// [`ConstantTimeEq`] when performing comparisons.
+/// Additionally, the [`PartialEq`] and [`Eq`] trait impls for [`Output`] use [`CtEq`] when
+/// performing comparisons.
 ///
 /// ## Attacks on non-constant-time password hash comparisons
 /// Comparing password hashes in constant-time is known to mitigate at least
@@ -222,7 +222,7 @@ impl AsRef<[u8]> for Output {
     }
 }
 
-impl ConstantTimeEq for Output {
+impl CtEq for Output {
     fn ct_eq(&self, other: &Self) -> Choice {
         self.as_ref().ct_eq(other.as_ref())
     }

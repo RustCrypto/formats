@@ -62,7 +62,6 @@ x509-cert = { path = "./x509-cert" }
 x509-ocsp = { path = "./x509-ocsp" }
 
 rsa = { git = "https://github.com/RustCrypto/RSA" }
-universal-hash = { git = "https://github.com/RustCrypto/traits" }
 
 [workspace.lints.clippy]
 borrow_as_ptr = "warn"
