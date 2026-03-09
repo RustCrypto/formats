@@ -1035,7 +1035,7 @@ dependencies = [
 
 [[package]]
 name = "phc"
-version = "0.6.0-rc.2"
+version = "0.6.0"
 dependencies = [
  "base64ct",
  "ctutils",
