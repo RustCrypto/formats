@@ -355,20 +355,16 @@ where
     }
 }
 
-// TODO(tarcieri): add `ctutils` support to `hybrid-array`
 #[cfg(feature = "ctutils")]
 impl<Size> CtSelect for EncodedPoint<Size>
 where
     Size: ModulusSize,
+    <Size::UncompressedPointSize as ArraySize>::ArrayType<u8>: CtSelect,
 {
     fn ct_select(&self, other: &Self, choice: Choice) -> Self {
-        let mut bytes = Array::default();
-
-        for (i, byte) in bytes.iter_mut().enumerate() {
-            *byte = self.bytes[i].ct_select(&other.bytes[i], choice);
+        Self {
+            bytes: self.bytes.ct_select(&other.bytes, choice),
         }
-
-        Self { bytes }
     }
 }
 
