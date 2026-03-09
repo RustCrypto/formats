@@ -27,3 +27,6 @@ default = ["rand_core"]
 alloc = ["base64ct/alloc"]
 getrandom = ["dep:getrandom"]
 rand_core = ["dep:rand_core"]
+
+[package.metadata.docs.rs]
+all-features = true
