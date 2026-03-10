@@ -1505,7 +1505,7 @@ dependencies = [
 
 [[package]]
 name = "sec1"
-version = "0.8.0-rc.13"
+version = "0.8.0"
 dependencies = [
  "base16ct",
  "ctutils",
@@ -1727,7 +1727,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "82a72c767771b47409d2345987fda8628641887d5466101319899796367354a0"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.1",
  "once_cell",
  "rustix",
  "windows-sys",
