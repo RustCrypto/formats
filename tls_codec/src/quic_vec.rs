@@ -232,7 +232,6 @@ macro_rules! impl_vl_bytes_generic {
 /// Use this struct if bytes are encoded.
 /// This is faster than the generic version.
 #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
-#[cfg_attr(feature = "std", derive(Zeroize))]
 #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct VLBytes {
     #[cfg_attr(feature = "serde", serde(serialize_with = "serde_bytes::serialize"))]
@@ -259,6 +258,13 @@ impl VLBytes {
 }
 
 impl_vl_bytes_generic!(VLBytes);
+
+#[cfg(feature = "std")]
+impl Zeroize for VLBytes {
+    fn zeroize(&mut self) {
+        self.vec.zeroize();
+    }
+}
 
 impl From<VLBytes> for Vec<u8> {
     fn from(b: VLBytes) -> Self {
@@ -578,7 +584,7 @@ mod secret_bytes {
     /// behaves just like [`VLBytes`], except that it doesn't allow conversion into
     /// a [`Vec<u8>`].
     #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
-    #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Zeroize, ZeroizeOnDrop)]
+    #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
     pub struct SecretVLBytes(VLBytes);
 
     impl SecretVLBytes {
@@ -598,6 +604,20 @@ mod secret_bytes {
     }
 
     impl_vl_bytes_generic!(SecretVLBytes);
+
+    impl Zeroize for SecretVLBytes {
+        fn zeroize(&mut self) {
+            self.0.zeroize();
+        }
+    }
+
+    impl Drop for SecretVLBytes {
+        fn drop(&mut self) {
+            self.zeroize();
+        }
+    }
+
+    impl ZeroizeOnDrop for SecretVLBytes {}
 
     impl Size for SecretVLBytes {
         fn tls_serialized_len(&self) -> usize {
