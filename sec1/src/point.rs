@@ -19,7 +19,7 @@ use hybrid_array::{Array, ArraySize, typenum::U1};
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
 #[cfg(feature = "ctutils")]
-use ctutils::{Choice, CtSelect};
+use ctutils::{Choice, CtAssign, CtAssignSlice, CtEq, CtEqSlice, CtSelect};
 #[cfg(feature = "serde")]
 use serdect::serde::{Deserialize, Serialize, de, ser};
 #[cfg(feature = "zeroize")]
@@ -355,7 +355,32 @@ where
     }
 }
 
-// TODO(tarcieri): add `ctutils` support to `hybrid-array`
+#[cfg(feature = "ctutils")]
+impl<Size> CtAssign for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    fn ct_assign(&mut self, other: &Self, choice: Choice) {
+        for (i, byte) in self.bytes.iter_mut().enumerate() {
+            byte.ct_assign(&other.bytes[i], choice);
+        }
+    }
+}
+#[cfg(feature = "ctutils")]
+impl<Size: ModulusSize> CtAssignSlice for EncodedPoint<Size> {}
+
+#[cfg(feature = "ctutils")]
+impl<Size> CtEq for EncodedPoint<Size>
+where
+    Size: ModulusSize,
+{
+    fn ct_eq(&self, other: &Self) -> Choice {
+        self.bytes.as_slice().ct_eq(other.bytes.as_slice())
+    }
+}
+#[cfg(feature = "ctutils")]
+impl<Size: ModulusSize> CtEqSlice for EncodedPoint<Size> {}
+
 #[cfg(feature = "ctutils")]
 impl<Size> CtSelect for EncodedPoint<Size>
 where
