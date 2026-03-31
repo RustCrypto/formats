@@ -280,7 +280,7 @@ impl From<VLBytes> for Vec<u8> {
 #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
 #[cfg_attr(feature = "serde", serde(transparent))]
 #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
-pub struct Bytes(
+pub struct VLBytesFlat(
     #[cfg_attr(feature = "serde", serde(serialize_with = "serde_bytes::serialize"))]
     #[cfg_attr(
         feature = "serde",
@@ -289,7 +289,7 @@ pub struct Bytes(
     Vec<u8>,
 );
 
-impl Bytes {
+impl VLBytesFlat {
     /// Generate a new variable-length byte vector.
     pub fn new(vec: Vec<u8>) -> Self {
         Self(vec)
@@ -304,29 +304,29 @@ impl Bytes {
     }
 }
 
-impl_vl_bytes_generic!(Bytes);
+impl_vl_bytes_generic!(VLBytesFlat);
 
 #[cfg(feature = "std")]
-impl Zeroize for Bytes {
+impl Zeroize for VLBytesFlat {
     fn zeroize(&mut self) {
         self.0.zeroize();
     }
 }
 
-impl From<Bytes> for Vec<u8> {
-    fn from(b: Bytes) -> Self {
+impl From<VLBytesFlat> for Vec<u8> {
+    fn from(b: VLBytesFlat) -> Self {
         b.0
     }
 }
 
-impl From<VLBytes> for Bytes {
+impl From<VLBytes> for VLBytesFlat {
     fn from(b: VLBytes) -> Self {
         Self(b.vec)
     }
 }
 
-impl From<Bytes> for VLBytes {
-    fn from(b: Bytes) -> Self {
+impl From<VLBytesFlat> for VLBytes {
+    fn from(b: VLBytesFlat) -> Self {
         Self { vec: b.0 }
     }
 }
@@ -386,14 +386,14 @@ impl Size for &VLBytes {
     }
 }
 
-impl Size for Bytes {
+impl Size for VLBytesFlat {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         tls_serialize_bytes_len(self.as_slice())
     }
 }
 
-impl DeserializeBytes for Bytes {
+impl DeserializeBytes for VLBytesFlat {
     #[inline(always)]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let (vl, remainder) = VLBytes::tls_deserialize_bytes(bytes)?;
@@ -401,7 +401,7 @@ impl DeserializeBytes for Bytes {
     }
 }
 
-impl Size for &Bytes {
+impl Size for &VLBytesFlat {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
         (*self).tls_serialized_len()
@@ -674,21 +674,21 @@ mod rw_bytes {
         }
     }
 
-    impl Serialize for Bytes {
+    impl Serialize for VLBytesFlat {
         #[inline(always)]
         fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
             tls_serialize_bytes(writer, self.as_slice())
         }
     }
 
-    impl Serialize for &Bytes {
+    impl Serialize for &VLBytesFlat {
         #[inline(always)]
         fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
             (*self).tls_serialize(writer)
         }
     }
 
-    impl Deserialize for Bytes {
+    impl Deserialize for VLBytesFlat {
         fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
             VLBytes::tls_deserialize(bytes).map(Self::from)
         }
@@ -789,7 +789,7 @@ impl<'a> Arbitrary<'a> for VLBytes {
 }
 
 #[cfg(feature = "arbitrary")]
-impl<'a> Arbitrary<'a> for Bytes {
+impl<'a> Arbitrary<'a> for VLBytesFlat {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let mut vec = Vec::arbitrary(u)?;
         vec.truncate(ContentLength::MAX as usize);
@@ -800,7 +800,7 @@ impl<'a> Arbitrary<'a> for Bytes {
 #[cfg(feature = "std")]
 #[cfg(test)]
 mod test {
-    use crate::{Bytes, SecretVLBytes, VLByteSlice, VLBytes};
+    use crate::{SecretVLBytes, VLByteSlice, VLBytes, VLBytesFlat};
     use std::println;
 
     #[test]
@@ -829,8 +829,8 @@ mod test {
             println!("{got}");
             assert_eq!(expected_vl_bytes, got);
 
-            let expected_bytes = format!("Bytes {{ {expected} }}");
-            let got = format!("{:?}", Bytes::new(test.clone()));
+            let expected_bytes = format!("VLBytesFlat {{ {expected} }}");
+            let got = format!("{:?}", VLBytesFlat::new(test.clone()));
             println!("{got}");
             assert_eq!(expected_bytes, got);
 

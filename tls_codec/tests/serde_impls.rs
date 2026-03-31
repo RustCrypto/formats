@@ -1,6 +1,6 @@
 #![cfg(feature = "serde")]
 
-use tls_codec::{Bytes, VLBytes};
+use tls_codec::{VLBytes, VLBytesFlat};
 
 // Old VLBytes without serde bytes serialization
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -35,9 +35,9 @@ fn serde_impls() {
 }
 
 #[test]
-fn bytes_is_transparent() {
+fn vlbytes_flat_is_transparent() {
     let data = vec![32; 128];
-    let bytes_value = Bytes::new(data.clone());
+    let bytes_value = VLBytesFlat::new(data.clone());
     let vlbytes_value = VLBytes::new(data);
 
     let mut bytes_serialized = Vec::new();
@@ -45,18 +45,18 @@ fn bytes_is_transparent() {
     let mut vlbytes_serialized = Vec::new();
     ciborium::into_writer(&vlbytes_value, &mut vlbytes_serialized).unwrap();
 
-    // Bytes (transparent) should produce smaller output than VLBytes (has field name)
+    // VLBytesFlat (transparent) should produce smaller output than VLBytes (has field name)
     assert!(bytes_serialized.len() < vlbytes_serialized.len());
 
-    // Bytes should roundtrip
-    let deserialized: Bytes = ciborium::from_reader(bytes_serialized.as_slice()).unwrap();
+    // VLBytesFlat should roundtrip
+    let deserialized: VLBytesFlat = ciborium::from_reader(bytes_serialized.as_slice()).unwrap();
     assert_eq!(deserialized, bytes_value);
 }
 
 #[test]
-fn bytes_vlbytes_cross_deserialization() {
+fn vlbytes_flat_vlbytes_cross_deserialization() {
     let data = vec![42; 64];
-    let bytes_value = Bytes::new(data.clone());
+    let bytes_value = VLBytesFlat::new(data.clone());
     let vlbytes_value = VLBytes::new(data);
 
     let mut bytes_serialized = Vec::new();
@@ -64,7 +64,7 @@ fn bytes_vlbytes_cross_deserialization() {
     let mut vlbytes_serialized = Vec::new();
     ciborium::into_writer(&vlbytes_value, &mut vlbytes_serialized).unwrap();
 
-    // Bytes can deserialize VLBytes-serialized data
-    let from_vlbytes: Bytes = ciborium::from_reader(vlbytes_serialized.as_slice()).unwrap();
+    // VLBytesFlat can deserialize VLBytes-serialized data
+    let from_vlbytes: VLBytesFlat = ciborium::from_reader(vlbytes_serialized.as_slice()).unwrap();
     assert_eq!(from_vlbytes, bytes_value);
 }
