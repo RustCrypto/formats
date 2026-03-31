@@ -1,10 +1,9 @@
 [package]
 name = "sec1"
-version = "0.8.0"
+version = "0.8.1"
 description = """
-Pure Rust implementation of SEC1: Elliptic Curve Cryptography encoding formats
-including ASN.1 DER-serialized private keys as well as the
-Elliptic-Curve-Point-to-Octet-String encoding
+Pure Rust implementation of SEC1: Elliptic Curve Cryptography encoding formats including ASN.1 DER
+encoded private keys as well as the Elliptic-Curve-Point-to-Octet-String encoding
 """
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
@@ -42,4 +41,3 @@ zeroize = ["dep:zeroize", "der?/zeroize"]
 
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
