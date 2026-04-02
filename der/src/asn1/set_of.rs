@@ -51,9 +51,8 @@ where
     /// Insert an item into this [`SetOf`].
     ///
     /// # Errors
-    /// If there's a duplicate or sorting error.
+    /// If there's a sorting error.
     pub fn insert(&mut self, item: T) -> Result<(), Error> {
-        check_duplicate(&item, self.iter())?;
         self.try_push(item)?;
         der_sort(self.inner.as_mut())
     }
@@ -304,9 +303,8 @@ where
     /// Insert an item into this [`SetOfVec`]. Must be unique.
     ///
     /// # Errors
-    /// If `item` is a duplicate or a sorting error occurred.
+    /// If a sorting error occurred.
     pub fn insert(&mut self, item: T) -> Result<(), Error> {
-        check_duplicate(&item, self.iter())?;
         self.inner.push(item);
         der_sort(&mut self.inner)
     }
@@ -488,29 +486,10 @@ where
     }
 }
 
-/// Check if the given item is a duplicate, given an iterator over sorted items (which we can
-/// short-circuit once we hit `Ordering::Less`.
-fn check_duplicate<'a, T, I>(item: &T, iter: I) -> Result<(), Error>
-where
-    T: DerOrd + 'a,
-    I: Iterator<Item = &'a T>,
-{
-    for item2 in iter {
-        match item.der_cmp(item2)? {
-            Ordering::Less => return Ok(()), // all remaining items are greater
-            Ordering::Equal => return Err(ErrorKind::SetDuplicate.into()),
-            Ordering::Greater => continue,
-        }
-    }
-
-    Ok(())
-}
-
 /// Ensure set elements are lexicographically ordered using [`DerOrd`].
 fn check_der_ordering<T: DerOrd>(a: &T, b: &T) -> Result<(), Error> {
     match a.der_cmp(b)? {
-        Ordering::Less => Ok(()),
-        Ordering::Equal => Err(ErrorKind::SetDuplicate.into()),
+        Ordering::Less | Ordering::Equal => Ok(()),
         Ordering::Greater => Err(ErrorKind::SetOrdering.into()),
     }
 }
@@ -531,8 +510,7 @@ fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<(), Error> {
 
         while j > 0 {
             match slice[j - 1].der_cmp(&slice[j])? {
-                Ordering::Less => break,
-                Ordering::Equal => return Err(ErrorKind::SetDuplicate.into()),
+                Ordering::Less | Ordering::Equal => break,
                 Ordering::Greater => {
                     slice.swap(j - 1, j);
                     j -= 1;
@@ -549,7 +527,6 @@ fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<(), Error> {
 mod tests {
     #[cfg(feature = "alloc")]
     use super::SetOfVec;
-    use crate::ErrorKind;
     #[cfg(feature = "heapless")]
     use {super::SetOf, crate::DerOrd};
 
@@ -560,13 +537,22 @@ mod tests {
         setof.insert(42).unwrap();
         assert_eq!(setof.len(), 1);
         assert_eq!(*setof.iter().next().unwrap(), 42);
+    }
 
-        // Ensure duplicates are disallowed
-        assert_eq!(
-            setof.insert(42).unwrap_err().kind(),
-            ErrorKind::SetDuplicate
-        );
+    #[cfg(feature = "heapless")]
+    #[test]
+    fn setof_insert_duplicate() {
+        let mut setof = SetOf::<u8, 10>::new();
+        setof.insert(42).unwrap();
         assert_eq!(setof.len(), 1);
+
+        setof.insert(42).unwrap();
+
+        let mut iter = setof.iter();
+
+        assert_eq!(setof.len(), 2);
+        assert_eq!(*iter.next().unwrap(), 42);
+        assert_eq!(*iter.next().unwrap(), 42);
     }
 
     #[cfg(feature = "heapless")]
@@ -575,14 +561,6 @@ mod tests {
         let arr = [3u16, 2, 1, 65535, 0];
         let set = SetOf::try_from(arr).unwrap();
         assert!(set.iter().copied().eq([0, 1, 2, 3, 65535]));
-    }
-
-    #[cfg(feature = "heapless")]
-    #[test]
-    fn setof_tryfrom_array_reject_duplicates() {
-        let arr = [1u16, 1];
-        let err = SetOf::try_from(arr).err().unwrap();
-        assert_eq!(err.kind(), ErrorKind::SetDuplicate);
     }
 
     #[cfg(feature = "heapless")]
@@ -603,14 +581,14 @@ mod tests {
         let mut setof = SetOfVec::new();
         setof.insert(42).unwrap();
         assert_eq!(setof.len(), 1);
-        assert_eq!(*setof.iter().next().unwrap(), 42);
 
-        // Ensure duplicates are disallowed
-        assert_eq!(
-            setof.insert(42).unwrap_err().kind(),
-            ErrorKind::SetDuplicate
-        );
-        assert_eq!(setof.len(), 1);
+        setof.insert(46).unwrap();
+
+        let mut iter = setof.iter();
+
+        assert_eq!(setof.len(), 2);
+        assert_eq!(*iter.next().unwrap(), 42);
+        assert_eq!(*iter.next().unwrap(), 46);
     }
 
     #[cfg(feature = "alloc")]
@@ -631,9 +609,9 @@ mod tests {
 
     #[cfg(feature = "alloc")]
     #[test]
-    fn setofvec_tryfrom_vec_reject_duplicates() {
+    fn setofvec_tryfrom_vec_allow_duplicates() {
         let vec = vec![1u16, 1];
-        let err = SetOfVec::try_from(vec).err().unwrap();
-        assert_eq!(err.kind(), ErrorKind::SetDuplicate);
+        let set = SetOfVec::try_from(vec).unwrap();
+        assert_eq!(set.as_ref(), &[1, 1]);
     }
 }
