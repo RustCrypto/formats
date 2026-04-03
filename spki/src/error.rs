@@ -32,6 +32,15 @@ pub enum Error {
     },
 }
 
+impl core::error::Error for Error {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Error::Asn1(err) => Some(err),
+            _ => None,
+        }
+    }
+}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -63,6 +72,3 @@ impl From<pem::Error> for Error {
         der::Error::from(err).into()
     }
 }
-
-#[cfg(feature = "std")]
-impl std::error::Error for Error {}
