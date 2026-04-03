@@ -31,8 +31,8 @@ hex-literal = "1"
 lazy_static = "1.5.0"
 rand = "0.10"
 rsa = { version = "0.10.0-rc.15", default-features = false, features = ["encoding", "sha2"] }
-sha1 = { version = "0.11.0-rc.5", default-features = false, features = ["oid"] }
-sha2 = { version = "0.11.0-rc.5", default-features = false, features = ["oid"] }
+sha1 = { version = "0.11", default-features = false, features = ["oid"] }
+sha2 = { version = "0.11", default-features = false, features = ["oid"] }
 
 [features]
 rand = ["rand_core"]
