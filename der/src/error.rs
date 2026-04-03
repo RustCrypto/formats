@@ -265,6 +265,11 @@ pub enum ErrorKind {
     },
 
     /// `SET` cannot contain duplicates.
+    // TODO(tarcieri): remove this in the next breaking release
+    #[deprecated(
+        since = "0.8.1",
+        note = "per X.680, 27.3 NOTE 3 duplicates are allowed"
+    )]
     SetDuplicate,
 
     /// `SET` ordering error: items not in canonical order.
@@ -376,6 +381,7 @@ impl fmt::Display for ErrorKind {
             ErrorKind::OidUnknown { oid } => {
                 write!(f, "unknown/unsupported OID: {oid}")
             }
+            #[allow(deprecated)]
             ErrorKind::SetDuplicate => write!(f, "SET OF contains duplicate"),
             ErrorKind::SetOrdering => write!(f, "SET OF ordering error"),
             ErrorKind::Overflow => write!(f, "integer overflow"),

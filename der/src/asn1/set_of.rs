@@ -488,10 +488,11 @@ where
 
 /// Ensure set elements are lexicographically ordered using [`DerOrd`].
 fn check_der_ordering<T: DerOrd>(a: &T, b: &T) -> Result<(), Error> {
-    match a.der_cmp(b)? {
-        Ordering::Less | Ordering::Equal => Ok(()),
-        Ordering::Greater => Err(ErrorKind::SetOrdering.into()),
+    if a.der_cmp(b)? == Ordering::Greater {
+        return Err(ErrorKind::SetOrdering.into());
     }
+
+    Ok(())
 }
 
 /// Sort a mut slice according to its [`DerOrd`], returning any errors which
@@ -509,12 +510,11 @@ fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<(), Error> {
         let mut j = i;
 
         while j > 0 {
-            match slice[j - 1].der_cmp(&slice[j])? {
-                Ordering::Less | Ordering::Equal => break,
-                Ordering::Greater => {
-                    slice.swap(j - 1, j);
-                    j -= 1;
-                }
+            if slice[j - 1].der_cmp(&slice[j])? == Ordering::Greater {
+                slice.swap(j - 1, j);
+                j -= 1;
+            } else {
+                break;
             }
         }
     }
