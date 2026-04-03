@@ -37,6 +37,8 @@ base64 = ["dep:base64ct"]
 fingerprint = ["digest", "sha2"]
 pem = ["alloc", "der/pem"]
 
+[lints]
+workspace = true
+
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--cfg", "docsrs"]

@@ -8,7 +8,7 @@
 [![Project Chat][chat-image]][chat-link]
 
 [X.509] Subject Public Key Info types describing public keys as well as their
-associated AlgorithmIdentifiers (i.e. OIDs).
+associated `AlgorithmIdentifier`s (i.e. OIDs).
 
 Specified in [RFC 5280 § 4.1].
 

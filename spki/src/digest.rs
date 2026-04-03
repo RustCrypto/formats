@@ -2,6 +2,7 @@ use der::{Result, Writer};
 use digest::Digest;
 
 /// Adapter object to write to a digest backend
+#[derive(Debug)]
 pub struct DigestWriter<'d, D>(pub &'d mut D);
 
 impl<D> Writer for DigestWriter<'_, D>

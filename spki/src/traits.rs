@@ -25,6 +25,9 @@ use crate::SubjectPublicKeyInfo;
 pub trait DecodePublicKey: Sized {
     /// Deserialize object from ASN.1 DER-encoded [`SubjectPublicKeyInfo`]
     /// (binary format).
+    ///
+    /// # Errors
+    /// Returns decoding errors specific to the concrete type which impls this trait.
     fn from_public_key_der(bytes: &[u8]) -> Result<Self>;
 
     /// Deserialize PEM-encoded [`SubjectPublicKeyInfo`].
@@ -34,6 +37,9 @@ pub trait DecodePublicKey: Sized {
     /// ```text
     /// -----BEGIN PUBLIC KEY-----
     /// ```
+    ///
+    /// # Errors
+    /// Returns decoding errors specific to the concrete type which impls this trait.
     #[cfg(feature = "pem")]
     fn from_public_key_pem(s: &str) -> Result<Self> {
         let (label, doc) = Document::from_pem(s)?;
@@ -43,6 +49,9 @@ pub trait DecodePublicKey: Sized {
 
     /// Load public key object from an ASN.1 DER-encoded file on the local
     /// filesystem (binary format).
+    ///
+    /// # Errors
+    /// Returns decoding errors specific to the concrete type which impls this trait.
     #[cfg(feature = "std")]
     fn read_public_key_der_file(path: impl AsRef<Path>) -> Result<Self> {
         let doc = Document::read_der_file(path)?;
@@ -50,6 +59,9 @@ pub trait DecodePublicKey: Sized {
     }
 
     /// Load public key object from a PEM-encoded file on the local filesystem.
+    ///
+    /// # Errors
+    /// Returns decoding errors specific to the concrete type which impls this trait.
     #[cfg(all(feature = "pem", feature = "std"))]
     fn read_public_key_pem_file(path: impl AsRef<Path>) -> Result<Self> {
         let (label, doc) = Document::read_pem_file(path)?;
@@ -71,22 +83,34 @@ where
 #[cfg(feature = "alloc")]
 pub trait EncodePublicKey {
     /// Serialize a [`Document`] containing a SPKI-encoded public key.
+    ///
+    /// # Errors
+    /// Returns encoding errors specific to the concrete type which impls this trait.
     fn to_public_key_der(&self) -> Result<Document>;
 
     /// Serialize this public key as PEM-encoded SPKI with the given [`LineEnding`].
+    ///
+    /// # Errors
+    /// Returns encoding errors specific to the concrete type which impls this trait.
     #[cfg(feature = "pem")]
     fn to_public_key_pem(&self, line_ending: LineEnding) -> Result<String> {
         let doc = self.to_public_key_der()?;
         Ok(doc.to_pem(SubjectPublicKeyInfoRef::PEM_LABEL, line_ending)?)
     }
 
-    /// Write ASN.1 DER-encoded public key to the given path
+    /// Write ASN.1 DER-encoded public key to the given path.
+    ///
+    /// # Errors
+    /// Returns encoding errors specific to the concrete type which impls this trait.
     #[cfg(feature = "std")]
     fn write_public_key_der_file(&self, path: impl AsRef<Path>) -> Result<()> {
         Ok(self.to_public_key_der()?.write_der_file(path)?)
     }
 
-    /// Write ASN.1 PEM-encoded public key to the given path
+    /// Write ASN.1 PEM-encoded public key to the given path.
+    ///
+    /// # Errors
+    /// Returns encoding errors specific to the concrete type which impls this trait.
     #[cfg(all(feature = "pem", feature = "std"))]
     fn write_public_key_pem_file(
         &self,
@@ -115,6 +139,9 @@ pub trait AssociatedAlgorithmIdentifier {
 #[cfg(feature = "alloc")]
 pub trait DynAssociatedAlgorithmIdentifier {
     /// `AlgorithmIdentifier` for this structure.
+    ///
+    /// # Errors
+    /// Returns errors specific to the concrete type which impls this trait.
     fn algorithm_identifier(&self) -> Result<AlgorithmIdentifierOwned>;
 }
 
@@ -135,9 +162,9 @@ where
     }
 }
 
-/// Returns `AlgorithmIdentifier` associated with the signature system.
+/// Returns [`AlgorithmIdentifier`] associated with the signature system.
 ///
-/// Unlike AssociatedAlgorithmIdentifier this is intended to be implemented for public and/or
+/// Unlike [`AssociatedAlgorithmIdentifier`] this is intended to be implemented for public and/or
 /// private keys.
 pub trait SignatureAlgorithmIdentifier {
     /// Algorithm parameters.
@@ -147,13 +174,16 @@ pub trait SignatureAlgorithmIdentifier {
     const SIGNATURE_ALGORITHM_IDENTIFIER: AlgorithmIdentifier<Self::Params>;
 }
 
-/// Returns `AlgorithmIdentifier` associated with the signature system.
+/// Returns [`AlgorithmIdentifierOwned`] associated with the signature system.
 ///
-/// Unlike AssociatedAlgorithmIdentifier this is intended to be implemented for public and/or
+/// Unlike [`AssociatedAlgorithmIdentifier`] this is intended to be implemented for public and/or
 /// private keys.
 #[cfg(feature = "alloc")]
 pub trait DynSignatureAlgorithmIdentifier {
     /// `AlgorithmIdentifier` for the corresponding signature system.
+    ///
+    /// # Errors
+    /// Returns errors specific to the concrete type which impls this trait.
     fn signature_algorithm_identifier(&self) -> Result<AlgorithmIdentifierOwned>;
 }
 
@@ -174,11 +204,14 @@ where
     }
 }
 
-/// Returns the `BitString` encoding of the signature.
+/// Returns the [`BitString`] encoding of the signature.
 ///
-/// X.509 and CSR structures require signatures to be BitString encoded.
+/// X.509 and CSR structures require signatures to be `BitString` encoded.
 #[cfg(feature = "alloc")]
 pub trait SignatureBitStringEncoding {
     /// `BitString` encoding for this signature.
+    ///
+    /// # Errors
+    /// Returns errors specific to the concrete type which impls this trait.
     fn to_bitstring(&self) -> der::Result<BitString>;
 }

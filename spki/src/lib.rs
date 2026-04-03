@@ -6,14 +6,7 @@
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg"
 )]
 #![forbid(unsafe_code)]
-#![warn(
-    clippy::mod_module_files,
-    clippy::unwrap_used,
-    missing_docs,
-    rust_2018_idioms,
-    unused_lifetimes,
-    unused_qualifications
-)]
+
 //! # Usage
 //! The following example demonstrates how to use an OID as the `parameters`
 //! of an [`AlgorithmIdentifier`].
