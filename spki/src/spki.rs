@@ -69,6 +69,9 @@ where
     ///
     /// See [RFC7469 § 2.1.1] for more information.
     ///
+    /// # Errors
+    /// Propagates errors that occur during encoding.
+    ///
     /// [RFC7469 § 2.1.1]: https://datatracker.ietf.org/doc/html/rfc7469#section-2.1.1
     #[cfg(all(feature = "fingerprint", feature = "alloc", feature = "base64"))]
     pub fn fingerprint_base64(&self) -> Result<alloc::string::String> {
@@ -80,6 +83,9 @@ where
     /// a raw byte array.
     ///
     /// See [RFC7469 § 2.1.1] for more information.
+    ///
+    /// # Errors
+    /// Propagates errors that occur during encoding.
     ///
     /// [RFC7469 § 2.1.1]: https://datatracker.ietf.org/doc/html/rfc7469#section-2.1.1
     #[cfg(feature = "fingerprint")]
@@ -215,10 +221,10 @@ mod allocating {
     impl SubjectPublicKeyInfoOwned {
         /// Create a [`SubjectPublicKeyInfoOwned`] from any object that implements
         /// [`EncodePublicKey`].
-        pub fn from_key<T>(source: &T) -> Result<Self>
-        where
-            T: EncodePublicKey,
-        {
+        ///
+        /// # Errors
+        /// Propagates encoding and decoding errors.
+        pub fn from_key<T: EncodePublicKey>(source: &T) -> Result<Self> {
             Ok(source.to_public_key_der()?.decode_msg::<Self>()?)
         }
     }

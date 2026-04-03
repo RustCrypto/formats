@@ -22,6 +22,7 @@ const ED25519_DER_EXAMPLE: &[u8] = include_bytes!("examples/ed25519-pub.der");
 const ED25519_PEM_EXAMPLE: &str = include_str!("examples/ed25519-pub.pem");
 
 /// Mock key type for testing trait impls against.
+#[derive(Debug)]
 pub struct MockKey(Vec<u8>);
 
 impl AsRef<[u8]> for MockKey {

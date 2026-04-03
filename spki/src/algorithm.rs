@@ -100,6 +100,9 @@ pub type AlgorithmIdentifierOwned = AlgorithmIdentifier<Any>;
 
 impl<Params> AlgorithmIdentifier<Params> {
     /// Assert the `algorithm` OID is an expected value.
+    ///
+    /// # Errors
+    /// Returns [`Error::OidUnknown`] if `self` does not match `expected_oid`.
     pub fn assert_algorithm_oid(&self, expected_oid: ObjectIdentifier) -> Result<ObjectIdentifier> {
         if self.oid == expected_oid {
             Ok(expected_oid)
@@ -111,6 +114,9 @@ impl<Params> AlgorithmIdentifier<Params> {
 
 impl<'a> AlgorithmIdentifierRef<'a> {
     /// Assert `parameters` is an OID and has the expected value.
+    ///
+    /// # Errors
+    /// Returns [`Error::OidUnknown`] if `self.parameters_oid()` doesn't match `expected_oid`.
     pub fn assert_parameters_oid(
         &self,
         expected_oid: ObjectIdentifier,
@@ -125,6 +131,9 @@ impl<'a> AlgorithmIdentifierRef<'a> {
     }
 
     /// Assert the values of the `algorithm` and `parameters` OIDs.
+    ///
+    /// # Errors
+    /// Returns [`Error::OidUnknown`] if `algorithm` and/or `parameters` aren't the expected values.
     pub fn assert_oids(
         &self,
         algorithm: ObjectIdentifier,
@@ -137,14 +146,17 @@ impl<'a> AlgorithmIdentifierRef<'a> {
 
     /// Get the `parameters` field as an [`AnyRef`].
     ///
-    /// Returns an error if `parameters` are `None`.
+    /// # Errors
+    /// Returns [`Error::AlgorithmParametersMissing`] error if `self.parameters` are `None`.
     pub fn parameters_any(&self) -> Result<AnyRef<'a>> {
         self.parameters.ok_or(Error::AlgorithmParametersMissing)
     }
 
     /// Get the `parameters` field as an [`ObjectIdentifier`].
     ///
-    /// Returns an error if it is absent or not an OID.
+    /// # Errors
+    /// - Returns [`Error::AlgorithmParametersMissing`] error if `self.parameters` are `None`.
+    /// - Returns [`Error::Asn1`] if `self.parameters` is not an OID.
     pub fn parameters_oid(&self) -> Result<ObjectIdentifier> {
         Ok(ObjectIdentifier::try_from(self.parameters_any()?)?)
     }
@@ -155,6 +167,7 @@ impl<'a> AlgorithmIdentifierRef<'a> {
     /// particular that `NULL` parameters are treated the same as missing
     /// parameters.
     ///
+    /// # Errors
     /// Returns an error if parameters are present but not an OID.
     pub fn oids(&self) -> der::Result<(ObjectIdentifier, Option<ObjectIdentifier>)> {
         Ok((
