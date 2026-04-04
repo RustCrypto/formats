@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.8.0 (2026-04-03)
+### Added
+- Implement `Hash` for `AlgorithmIdentifier` ([#1414])
+- `der::Writer` adapter for `Digest` ([#1769])
+- Implement `core::error::Error` for `Error` ([#2274])
+
+### Changed
+- Borrow the public key in `spki::from_key` ([#1290])
+- Upgrade to the 2024 edition; MSRV 1.85 ([#1670])
+- Bump `der` to v0.8 ([#2234])
+- Bump `digest` to v0.11 ([#2237])
+- Bump `sha2` dependency to v0.11 ([#2273])
+
+### Fixed
+- `OidUnknown` reporting ([#1378])
+
+[#1290]: https://github.com/RustCrypto/formats/pull/1290
+[#1378]: https://github.com/RustCrypto/formats/pull/1378
+[#1414]: https://github.com/RustCrypto/formats/pull/1414
+[#1670]: https://github.com/RustCrypto/formats/pull/1670
+[#2234]: https://github.com/RustCrypto/formats/pull/2234
+[#2237]: https://github.com/RustCrypto/formats/pull/2237
+[#2273]: https://github.com/RustCrypto/formats/pull/2273
+[#2274]: https://github.com/RustCrypto/formats/pull/2274
+
 ## 0.7.3 (2023-11-28)
 ### Added
 - public key to `SubjectPublicKeyInfoOwned` helper ([#1269])
@@ -11,7 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#1269]: https://github.com/RustCrypto/formats/pull/1269
 
 ## 0.7.2 (2023-05-04)
-
 ### Added
 - `AlgorithmIdentifierWithOid` trait ([#986])
 - `SignatureBitStringEncoding` trait ([#1047])
