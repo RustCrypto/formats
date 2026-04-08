@@ -85,6 +85,25 @@ where
     Ok(length_ord)
 }
 
+#[cfg(any(feature = "alloc", feature = "heapless"))]
+/// Compare the order of two iterators using [`DerCmp`] on the values.
+pub(crate) fn iter_cmp_owned<'a, I, T>(a: I, b: I) -> Result<Ordering>
+where
+    I: Iterator<Item = T> + ExactSizeIterator,
+    T: 'a + DerOrd,
+{
+    let length_ord = a.len().cmp(&b.len());
+
+    for (value1, value2) in a.zip(b) {
+        match value1.der_cmp(&value2)? {
+            Ordering::Equal => (),
+            other => return Ok(other),
+        }
+    }
+
+    Ok(length_ord)
+}
+
 /// Provide a no-op implementation for `PhantomData`
 impl<T> ValueOrd for PhantomData<T> {
     fn value_cmp(&self, _other: &Self) -> Result<Ordering> {
