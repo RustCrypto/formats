@@ -1,6 +1,6 @@
 //! PKCS#8 private key tests
 
-use der::asn1::{ObjectIdentifier, OctetStringRef};
+use der::asn1::{ObjectIdentifier, OctetStringRef, PrintableString};
 use hex_literal::hex;
 use pkcs8::{PrivateKeyInfoRef, Version};
 
@@ -12,6 +12,9 @@ use der::{EncodePem, pem::LineEnding};
 
 /// Elliptic Curve (P-256) PKCS#8 private key encoded as ASN.1 DER
 const EC_P256_DER_EXAMPLE: &[u8] = include_bytes!("examples/p256-priv.der");
+
+/// Elliptic Curve (P-256) PKCS#8 private key containing Attributes encoded as ASN.1 DER
+const EC_P256_ATTRIBUTES_DER_EXAMPLE: &[u8] = include_bytes!("examples/p256-priv-attributes.der");
 
 /// Elliptic Curve (Bign P-256) PKCS#8 private key encoded as ASN.1 DER
 const EC_BIGN_P256_DER_EXAMPLE: &[u8] = include_bytes!("examples/bign256-priv.der");
@@ -70,6 +73,72 @@ fn decode_ec_p256_der() {
         &hex!(
             "306B020101042069624171561A63340DE0E7D869F2A05492558E1A04868B6A9F854A866788188DA144034200041CACFFB55F2F2CEFD89D89EB374B2681152452802DEEA09916068137D839CF7FC481A44492304D7EF66AC117BEFE83A8D08F155F2B52F9F618DD447029048E0F"
         )[..]
+    );
+}
+
+#[test]
+fn decode_ec_p256_attr_der() {
+    let pk = PrivateKeyInfoRef::try_from(EC_P256_ATTRIBUTES_DER_EXAMPLE).unwrap();
+
+    assert_eq!(pk.version(), Version::V2);
+    assert_eq!(pk.algorithm.oid, "1.2.840.10045.2.1".parse().unwrap());
+
+    assert_eq!(
+        pk.algorithm
+            .parameters
+            .unwrap()
+            .decode_as::<ObjectIdentifier>()
+            .unwrap(),
+        "1.2.840.10045.3.1.7".parse().unwrap()
+    );
+
+    // Extracted with:
+    // $ openssl asn1parse -inform der -in tests/examples/p256-priv.der
+    assert_eq!(
+        pk.private_key.as_ref(),
+        &hex!("4BFAE55747FC35CA8F58CAD45B6C2827960007C790C25CD1662411EEDBDBA5F5")[..]
+    );
+
+    // Check for Common name OID
+    assert_eq!(
+        pk.attributes.as_ref().unwrap().get(0).unwrap().oid,
+        "2.5.4.3".parse().unwrap()
+    );
+
+    // Check for Organization OID
+    assert_eq!(
+        pk.attributes.as_ref().unwrap().get(1).unwrap().oid,
+        "2.5.4.10".parse().unwrap()
+    );
+
+    assert_eq!(
+        pk.attributes
+            .as_ref()
+            .unwrap()
+            .get(0)
+            .unwrap()
+            .values
+            .get(0)
+            .unwrap()
+            .decode_as::<PrintableString>()
+            .unwrap()
+            .as_bytes(),
+        b"TestCN"
+    );
+
+    assert_eq!(
+        pk.attributes
+            .as_ref()
+            .unwrap()
+            .get(1)
+            .unwrap()
+            .values
+            .get(0)
+            .unwrap()
+            .decode_as::<PrintableString>()
+            .unwrap()
+            .as_bytes(),
+        b"TestOrg"
     );
 }
 
