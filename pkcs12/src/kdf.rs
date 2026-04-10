@@ -22,6 +22,7 @@ use zeroize::{Zeroize, Zeroizing};
 /// Specify the usage type of the generated key
 /// This allows to derive distinct encryption keys, IVs and MAC from the same password or text
 /// string.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Pkcs12KeyType {
     /// Use key for encryption
     EncryptionKey = 1,
@@ -48,11 +49,24 @@ pub fn derive_key_utf8<D>(
 where
     D: Digest + FixedOutputReset + BlockSizeUser,
 {
+    // Validate before converting password: a non-positive round count is
+    // malformed (RFC 7292 §B.2 requires at least one iteration).  Without
+    // this guard, rounds <= 0 would silently produce single-hash output.
+    if rounds < 1 {
+        return Err(der::ErrorKind::Failed.into());
+    }
     let password_bmp = BmpString::from_utf8(password)?;
     Ok(derive_key_bmp::<D>(password_bmp, salt, id, rounds, key_len))
 }
 
-/// Derive
+/// Derives `key` of type `id` from a BMP-encoded `password` and `salt` with
+/// length `key_len` using `rounds` iterations of the RFC 7292 §B.2 algorithm.
+///
+/// Use this function when the password is already available as a [`BmpString`]
+/// (e.g. parsed directly from a DER `BMPString` field).  It appends the
+/// mandatory two-byte null terminator required by the PKCS#12 spec so the
+/// caller does not have to.  Use [`derive_key_utf8`] when the password is a
+/// plain UTF-8 `&str`.
 pub fn derive_key_bmp<D>(
     password: BmpString,
     salt: &[u8],
@@ -65,18 +79,29 @@ where
 {
     let mut password = Zeroizing::new(Vec::from(password.into_bytes()));
 
-    // Password is NULL terminated
+    // RFC 7292 §B.1: append two-byte UTF-16BE null terminator.
     password.extend([0u8; 2]);
 
     derive_key::<D>(&password, salt, id, rounds, key_len)
 }
 
 /// Derives `key` of type `id` from `pass` and `salt` with length `key_len` using `rounds`
-/// iterations of the algorithm
-/// `pass` must be a unicode (utf16) byte array in big endian order without order mark and with two
-/// terminating zero bytes.
+/// iterations of the algorithm.
+///
+/// `pass` must be a UTF-16 Big Endian byte array without a byte-order mark and with two
+/// terminating zero bytes (the mandatory PKCS#12 null terminator).
+///
+/// `rounds` must be `>= 1`.  A value of `0` or negative is not meaningful per RFC 7292 §B.2;
+/// prefer [`derive_key_utf8`] or [`derive_key_bmp`], which validate this for you.
+///
 /// ```rust
-/// let key = pkcs12::kdf::derive_key_utf8::<sha2::Sha256>("top-secret", &[0x1, 0x2, 0x3, 0x4],
+/// // "top-secret" as UTF-16BE with null terminator
+/// let pass_bmp: Vec<u8> = "top-secret".encode_utf16()
+///     .flat_map(|c| c.to_be_bytes())
+///     .chain([0u8, 0u8])
+///     .collect();
+/// let key = pkcs12::kdf::derive_key::<sha2::Sha256>(
+///     &pass_bmp, &[0x1, 0x2, 0x3, 0x4],
 ///     pkcs12::kdf::Pkcs12KeyType::EncryptionKey, 1000, 32);
 /// ```
 pub fn derive_key<D>(
@@ -89,6 +114,11 @@ pub fn derive_key<D>(
 where
     D: Digest + FixedOutputReset + BlockSizeUser,
 {
+    // rounds must be >= 1: the inner loop is `for _ in 1..rounds` which runs
+    // zero times for rounds <= 0, producing single-hash output regardless of
+    // the requested count. Validated by derive_key_utf8; asserted here as a
+    // defence-in-depth check for direct callers.
+    debug_assert!(rounds >= 1, "rounds must be positive (got {rounds})");
     let mut digest = D::new();
     let output_size = <D as OutputSizeUser>::output_size();
     let block_size = D::block_size();
@@ -146,7 +176,7 @@ where
             result = digest.finalize_fixed_reset();
         }
 
-        // 7. Concateate A_1, A_2, ..., A_c together to form a pseudorandom
+        // 7. Concatenate A_1, A_2, ..., A_c together to form a pseudorandom
         //     bit string, A.
         // [ Instead of storing all Ais and concatenating later, we concatenate
         // them immediately ]
@@ -160,7 +190,7 @@ where
 
         // 6. B. Concatenate copies of Ai to create a string B of length v
         //       bits (the final copy of Ai may be truncated to create B).
-        // [ we achieve this on thy fly with the expression `result[k % output_size]` below]
+        // [ we achieve this on the fly with the expression `result[k % output_size]` below]
 
         // 6. C. Treating I as a concatenation I_0, I_1, ..., I_(k-1) of v-bit
         //       blocks, where k=ceiling(s/v)+ceiling(p/v), modify I by

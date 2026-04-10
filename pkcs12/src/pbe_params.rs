@@ -15,7 +15,7 @@ use spki::AlgorithmIdentifierOwned;
 /// [RFC 7292 Appendix C]: https://www.rfc-editor.org/rfc/rfc7292#appendix-C
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 pub struct Pkcs12PbeParams {
-    /// the MAC digest info
+    /// the PBE salt
     pub salt: OctetString,
 
     /// the number of iterations
@@ -54,24 +54,39 @@ pub struct Pbkdf2Params {
     pub prf: AlgorithmIdentifierOwned,
 }
 
+/// Payload of a `pkcs8ShroudedKeyBag` as defined in [RFC 7292 §4.2.2] and
+/// [RFC 5958 §2].
+///
+/// ```text
 /// EncryptedPrivateKeyInfo ::= SEQUENCE {
 ///   encryptionAlgorithm  EncryptionAlgorithmIdentifier,
 ///   encryptedData        EncryptedData }
+/// ```
+///
+/// [RFC 7292 §4.2.2]: https://www.rfc-editor.org/rfc/rfc7292#section-4.2.2
+/// [RFC 5958 §2]: https://www.rfc-editor.org/rfc/rfc5958#section-2
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
-#[allow(missing_docs)]
 pub struct EncryptedPrivateKeyInfo {
+    /// Algorithm used to encrypt the private key (OID + parameters).
     pub encryption_algorithm: AlgorithmIdentifierOwned,
+    /// Ciphertext produced by applying `encryption_algorithm` to the
+    /// DER-encoded `PrivateKeyInfo`.
     pub encrypted_data: OctetString,
 }
 
-///```text
+/// PBES2 scheme parameters as defined in [RFC 8018 §A.4].
+///
+/// ```text
 /// PBES2-params ::= SEQUENCE {
-///      keyDerivationFunc AlgorithmIdentifier {{PBES2-KDFs}},
-///      encryptionScheme AlgorithmIdentifier {{PBES2-Encs}} }
-///```
+///     keyDerivationFunc AlgorithmIdentifier {{PBES2-KDFs}},
+///     encryptionScheme  AlgorithmIdentifier {{PBES2-Encs}} }
+/// ```
+///
+/// [RFC 8018 §A.4]: https://www.rfc-editor.org/rfc/rfc8018#appendix-A.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
-#[allow(missing_docs)]
 pub struct Pbes2Params {
+    /// Key derivation function (e.g. PBKDF2).
     pub kdf: AlgorithmIdentifierOwned,
+    /// Symmetric encryption scheme (e.g. AES-256-CBC).
     pub encryption: AlgorithmIdentifierOwned,
 }
