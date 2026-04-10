@@ -20,10 +20,10 @@ der = { version = "0.8", features = ["oid"] }
 spki = "0.8"
 
 # optional dependencies
-cbc = { version = "0.2.0-rc.4", optional = true }
+cbc = { version = "0.2", optional = true }
 aes = { version = "0.9", optional = true, default-features = false }
 aes-gcm = { version = "0.11.0-rc.3", optional = true, default-features = false, features = ["aes"] }
-des = { version = "0.9.0-rc.3", optional = true, default-features = false }
+des = { version = "0.9", optional = true, default-features = false }
 pbkdf2 = { version = "0.13.0-rc.9", optional = true, default-features = false, features = ["hmac"] }
 rand_core = { version = "0.10", optional = true, default-features = false }
 scrypt = { version = "0.12.0-rc.10", optional = true, default-features = false }
