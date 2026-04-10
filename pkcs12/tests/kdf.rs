@@ -209,7 +209,7 @@ fn pkcs12_key_derive_sha1_password_2048() {
 
 #[test]
 fn pkcs12_key_derive_sha1_hunter2_1024() {
-    // password="hunter2", salt=de ad be ef ca fe ba be, iter=1024
+    // password="hunter2", salt=0xdeadbeefcafebabe, iter=1024
     const SALT: [u8; 8] = [0xde, 0xad, 0xbe, 0xef, 0xca, 0xfe, 0xba, 0xbe];
 
     // ID=1 (EncryptionKey), 24 bytes
