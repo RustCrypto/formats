@@ -23,6 +23,9 @@ pub mod safe_bag;
 #[cfg(feature = "kdf")]
 pub mod kdf;
 
+#[cfg(feature = "encryption")]
+mod decrypt;
+
 mod authenticated_safe;
 mod bag_type;
 mod cert_type;
@@ -49,24 +52,24 @@ use const_oid::ObjectIdentifier;
 pub const PKCS_12_PBE_WITH_SHAAND128_BIT_RC4: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.1");
 
-/// `pbeWithSHAAnd128BitRC4` Object Identifier (OID).
+/// `pbeWithSHAAnd40BitRC4` Object Identifier (OID).
 pub const PKCS_12_PBE_WITH_SHAAND40_BIT_RC4: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.2");
 
-/// `pbeWithSHAAnd128BitRC4` Object Identifier (OID).
+/// `pbeWithSHAAnd3-KeyTripleDES-CBC` Object Identifier (OID).
 pub const PKCS_12_PBE_WITH_SHAAND3_KEY_TRIPLE_DES_CBC: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.3");
 
-/// `pbeWithSHAAnd128BitRC4` Object Identifier (OID).
+/// `pbeWithSHAAnd2-KeyTripleDES-CBC` Object Identifier (OID).
 pub const PKCS_12_PBE_WITH_SHAAND2_KEY_TRIPLE_DES_CBC: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.4");
 
-/// `pbeWithSHAAnd128BitRC4` Object Identifier (OID).
+/// `pbeWithSHAAnd128BitRC2-CBC` Object Identifier (OID).
 pub const PKCS_12_PBE_WITH_SHAAND128_BIT_RC2_CBC: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.5");
 
-/// `pbeWithSHAAnd128BitRC4` Object Identifier (OID).
-pub const PKCS_12_PBEWITH_SHAAND40_BIT_RC2_CBC: ObjectIdentifier =
+/// `pbeWithSHAAnd40BitRC2-CBC` Object Identifier (OID).
+pub const PKCS_12_PBE_WITH_SHAAND40_BIT_RC2_CBC: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.6");
 
 // bag types
@@ -103,9 +106,3 @@ pub const PKCS_12_X509_CERT_OID: ObjectIdentifier =
 pub const PKCS_12_SDSI_CERT_OID: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.22.2");
 
-// todo: return the friendly name if present? (minimally, defer until BMPString support is available)
-// todo: support separate mac and encryption passwords?
-// todo: add decryption support
-// todo: add more encryption tests
-// todo: add a builder
-// todo: add RC2 support

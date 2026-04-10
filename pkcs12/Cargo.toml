@@ -25,17 +25,24 @@ cms = { version = "=0.3.0-pre.2", default-features = false }
 # optional dependencies
 digest = { version = "0.11", features = ["alloc"], optional = true }
 zeroize = { version = "1.8.1", optional = true, default-features = false }
+sha1 = { version = "0.11.0", optional = true }
+des = { version = "0.9.0-rc.3", optional = true }
+cbc = { version = "0.2.0-rc.4", features = ["block-padding"], optional = true }
 
 [dev-dependencies]
 hex-literal = "1"
-pkcs8 = { version = "0.11.0-rc.10", features = ["pkcs5"] }
+pkcs8 = { version = "0.11.0-rc.10", features = ["alloc", "pkcs5"] }
 pkcs5 = { version = "0.8.0-rc.13", features = ["pbes2", "3des"] }
+sha1 = "0.11.0"
 sha2 = "0.11"
 whirlpool = "0.11"
 
 [features]
 default = ["pem"]
 kdf = ["dep:digest", "zeroize/alloc"]
+# Named "encryption" to match the convention used by pkcs8 in this monorepo,
+# which uses a single "encryption" feature for both encrypt and decrypt paths.
+encryption = ["kdf", "dep:sha1", "dep:des", "dep:cbc"]
 pem = ["der/pem", "x509-cert/pem"]
 
 [package.metadata.docs.rs]
