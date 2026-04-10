@@ -82,4 +82,3 @@ impl ::der::EncodeValue for SafeBag {
     }
 }
 impl ::der::Sequence<'_> for SafeBag {}
-

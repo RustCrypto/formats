@@ -11,7 +11,7 @@ use der::{
 };
 use hex_literal::hex;
 use pkcs12::{
-    AuthenticatedSafe, PKCS_12_PKCS8_KEY_BAG_OID, PKCS_12_PBE_WITH_SHAAND3_KEY_TRIPLE_DES_CBC,
+    AuthenticatedSafe, PKCS_12_PBE_WITH_SHAAND3_KEY_TRIPLE_DES_CBC, PKCS_12_PKCS8_KEY_BAG_OID,
     pbe_params::{EncryptedPrivateKeyInfo, Pkcs12PbeParams},
     pfx::Pfx,
     safe_bag::SafeContents,
@@ -127,8 +127,14 @@ fn decrypt_3des_all_iter_variants_agree() {
     let k1 = decrypt_key(include_bytes!("data/test-3des-iter1.p12"), "hunter2");
     let k2048 = decrypt_key(include_bytes!("data/test-3des-iter2048.p12"), "hunter2");
     let k100k = decrypt_key(include_bytes!("data/test-3des-iter100000.p12"), "hunter2");
-    assert_eq!(k1, k2048, "iter=1 and iter=2048 must decrypt to the same key");
-    assert_eq!(k1, k100k, "iter=1 and iter=100000 must decrypt to the same key");
+    assert_eq!(
+        k1, k2048,
+        "iter=1 and iter=2048 must decrypt to the same key"
+    );
+    assert_eq!(
+        k1, k100k,
+        "iter=1 and iter=100000 must decrypt to the same key"
+    );
 }
 
 // ── error-path tests ──────────────────────────────────────────────────────────
@@ -262,10 +268,8 @@ fn decrypt_3des_bouncy_castle_cipher_layer() {
     let params_any = Any::from_der(&params_der).expect("Any from Pkcs12PbeParams DER");
 
     let ciphertext =
-        OctetString::new(
-            hex!("9594495aa2cfc9a5bb210823454146a39cc584dab504ae1a").to_vec(),
-        )
-        .expect("ciphertext OctetString");
+        OctetString::new(hex!("9594495aa2cfc9a5bb210823454146a39cc584dab504ae1a").to_vec())
+            .expect("ciphertext OctetString");
 
     let epki = EncryptedPrivateKeyInfo {
         encryption_algorithm: AlgorithmIdentifierOwned {
