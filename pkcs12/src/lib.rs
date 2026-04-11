@@ -105,8 +105,3 @@ pub const PKCS_12_X509_CERT_OID: ObjectIdentifier =
 /// `pkcs-9 sdsiCertificate for pkcs-12` Object Identifier (OID).
 pub const PKCS_12_SDSI_CERT_OID: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.22.2");
-
-// todo: return the friendly name if present? (minimally, defer until BMPString support is available)
-// todo: support separate mac and encryption passwords?
-// todo: add more encryption tests
-// todo: add a builder

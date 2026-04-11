@@ -15,7 +15,7 @@ use cbc::cipher::{BlockModeDecrypt, KeyIvInit, block_padding::Pkcs7};
 use zeroize::Zeroizing;
 
 use crate::{
-    PKCS_12_PBE_WITH_SHAAND128_BIT_RC2_CBC, PKCS_12_PBE_WITH_SHAAND40_BIT_RC2_CBC,
+    PKCS_12_PBE_WITH_SHAAND40_BIT_RC2_CBC, PKCS_12_PBE_WITH_SHAAND128_BIT_RC2_CBC,
     kdf::{Pkcs12KeyType, derive_key_utf8},
     pbe_params::{EncryptedPrivateKeyInfo, Pkcs12PbeParams},
 };

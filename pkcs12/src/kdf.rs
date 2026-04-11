@@ -52,7 +52,12 @@ where
     Ok(derive_key_bmp::<D>(password_bmp, salt, id, rounds, key_len))
 }
 
-/// Derive
+/// Derives a key from a BMP (UTF-16 Big Endian) password.
+///
+/// Encodes `password` as UTF-16BE bytes and appends the two-byte null
+/// terminator required by [RFC 7292 §B.1], then delegates to [`derive_key`].
+///
+/// [RFC 7292 §B.1]: https://www.rfc-editor.org/rfc/rfc7292#appendix-B.1
 pub fn derive_key_bmp<D>(
     password: BmpString,
     salt: &[u8],

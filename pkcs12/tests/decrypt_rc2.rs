@@ -16,7 +16,7 @@ use hex_literal::hex;
 use pkcs8::PrivateKeyInfoOwned;
 use pkcs12::{
     AuthenticatedSafe, PKCS_12_PBE_WITH_SHAAND3_KEY_TRIPLE_DES_CBC,
-    PKCS_12_PBE_WITH_SHAAND128_BIT_RC2_CBC, PKCS_12_PBE_WITH_SHAAND40_BIT_RC2_CBC,
+    PKCS_12_PBE_WITH_SHAAND40_BIT_RC2_CBC, PKCS_12_PBE_WITH_SHAAND128_BIT_RC2_CBC,
     PKCS_12_PKCS8_KEY_BAG_OID,
     pbe_params::{EncryptedPrivateKeyInfo, Pkcs12PbeParams},
     pfx::Pfx,

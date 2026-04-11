@@ -15,7 +15,7 @@ use spki::AlgorithmIdentifierOwned;
 /// [RFC 7292 Appendix C]: https://www.rfc-editor.org/rfc/rfc7292#appendix-C
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 pub struct Pkcs12PbeParams {
-    /// the MAC digest info
+    /// PBE salt: random bytes used as input to the RFC 7292 §B.2 KDF.
     pub salt: OctetString,
 
     /// the number of iterations
