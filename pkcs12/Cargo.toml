@@ -23,7 +23,13 @@ const-oid = { version = "0.10", features = ["db"], default-features = false }
 cms = { version = "=0.3.0-pre.2", default-features = false }
 
 # optional dependencies
-digest = { version = "0.11", features = ["alloc"], optional = true }
+# "zeroize" feature enables zeroing of the digest's internal block buffer, which
+# holds input fragments of the id||salt||password data between Update calls.
+digest = { version = "0.11", features = ["alloc", "zeroize"], optional = true }
+# digest/zeroize does not propagate hybrid-array/zeroize, so Array<u8, OutputSize>: Zeroize
+# is not satisfied without this direct dep.  If digest ever adds hybrid-array/zeroize to
+# its own zeroize feature, this dep can be removed.
+hybrid-array = { version = "0.4", features = ["zeroize"], optional = true }
 zeroize = { version = "1.8.1", optional = true, default-features = false }
 
 [dev-dependencies]
@@ -35,7 +41,7 @@ whirlpool = "0.11"
 
 [features]
 default = ["pem"]
-kdf = ["dep:digest", "zeroize/alloc"]
+kdf = ["dep:digest", "dep:hybrid-array", "zeroize/alloc"]
 pem = ["der/pem", "x509-cert/pem"]
 
 [package.metadata.docs.rs]
