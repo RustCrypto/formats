@@ -195,7 +195,10 @@ fn decrypt_rc2(
     // plaintext *length* from decrypt_padded (dropping the borrow on buf),
     // then truncate buf to that length and return it directly.  This avoids
     // a second allocation and memcpy compared to calling plaintext.to_vec().
-    // The Zeroizing drop still zeroes the full buffer capacity on exit.
+    // `Zeroizing` calls `Vec::zeroize()` on drop; since zeroize v1.6+
+    // zeroes spare capacity in addition to [0..len], the PKCS#7 padding
+    // bytes at [pt_len..] are zeroed on drop even though they are not
+    // included in the returned slice.
     let mut buf = Zeroizing::new(ciphertext.to_vec());
     let pt_len = decryptor
         .decrypt_padded::<Pkcs7>(&mut buf)

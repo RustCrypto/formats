@@ -72,6 +72,17 @@ pub const PKCS_12_PBE_WITH_SHAAND128_BIT_RC2_CBC: ObjectIdentifier =
 pub const PKCS_12_PBE_WITH_SHAAND40_BIT_RC2_CBC: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.6");
 
+/// Deprecated: the previous name of [`PKCS_12_PBE_WITH_SHAAND40_BIT_RC2_CBC`].
+///
+/// The original constant name was missing an underscore between `PBE` and
+/// `WITH`.  Renamed in 0.2.0; this alias exists for backward compatibility.
+#[deprecated(
+    since = "0.2.0",
+    note = "renamed to PKCS_12_PBE_WITH_SHAAND40_BIT_RC2_CBC"
+)]
+pub const PKCS_12_PBEWITH_SHAAND40_BIT_RC2_CBC: ObjectIdentifier =
+    PKCS_12_PBE_WITH_SHAAND40_BIT_RC2_CBC;
+
 // bag types
 /// `pkcs-12 keyBag` Object Identifier (OID).
 pub const PKCS_12_KEY_BAG_OID: ObjectIdentifier =

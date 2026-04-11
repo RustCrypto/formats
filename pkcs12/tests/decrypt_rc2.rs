@@ -168,6 +168,34 @@ fn decrypt_rc2_40_iter2048() {
     assert!(!pki.private_key.as_bytes().is_empty());
 }
 
+// ── non-BMP password rejection ────────────────────────────────────────────────
+
+/// Password containing a non-BMP character (U+1F525 FIRE, above U+FFFF) must
+/// return `Err` from both decrypt methods.
+///
+/// RFC 7292 §B.1 requires the password to be encoded as BMP (UTF-16BE without
+/// surrogate pairs).  Code points above U+FFFF are not representable in BMP;
+/// `BmpString::from_utf8` rejects them, so both decrypt methods must return
+/// `Err` before any KDF work is done.
+#[test]
+fn decrypt_rc2_128_non_bmp_password_returns_err() {
+    let epki = find_shrouded_key(include_bytes!("data/test-rc2-128-iter2048.p12"));
+    assert!(
+        epki.decrypt_rc2_128_cbc("🔥").is_err(),
+        "decrypt_rc2_128_cbc must reject a non-BMP password"
+    );
+}
+
+/// RC2-40 variant of the non-BMP password rejection test.
+#[test]
+fn decrypt_rc2_40_non_bmp_password_returns_err() {
+    let epki = find_shrouded_key(include_bytes!("data/test-rc2-40-iter2048.p12"));
+    assert!(
+        epki.decrypt_rc2_40_cbc("🔥").is_err(),
+        "decrypt_rc2_40_cbc must reject a non-BMP password"
+    );
+}
+
 // ── RC2-40 error-path tests ────────────────────────────────────────────────────
 
 /// Wrong password for RC2-40.

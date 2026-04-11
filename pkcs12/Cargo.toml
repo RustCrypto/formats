@@ -37,7 +37,6 @@ cipher = "0.5"
 sha1 = "0.11.0"
 sha2 = "0.11"
 whirlpool = "0.11"
-rc2 = "0.9.0"
 
 [features]
 default = ["pem"]
