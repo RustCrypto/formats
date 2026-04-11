@@ -15,7 +15,7 @@
 //! [`argon2`](https://docs.rs/argon2) crate for a state-of-the-art password-based KDF.
 
 use alloc::{vec, vec::Vec};
-use der::asn1::BmpString;
+use der::{Tag, asn1::BmpString};
 use digest::{Digest, FixedOutputReset, OutputSizeUser, Update, block_api::BlockSizeUser};
 use zeroize::{Zeroize, Zeroizing};
 
@@ -32,8 +32,14 @@ pub enum Pkcs12KeyType {
 }
 
 /// Derives `key` of type `id` from `pass` and `salt` with length `key_len` using `rounds`
-/// iterations of the algorithm
-/// `pass` must be a utf8 string.
+/// iterations of the algorithm.
+///
+/// `pass` must be a UTF-8 string.  Characters outside the Unicode Basic Multilingual Plane
+/// (U+0000–U+FFFF) are rejected; BMP encoding is required by the PKCS#12 §B.2 KDF.
+///
+/// `rounds` must be ≥ 1 (RFC 7292 Appendix C defines `iterations INTEGER (1..MAX)`).
+/// An error is returned if `rounds < 1`.
+///
 /// ```rust
 /// let key = pkcs12::kdf::derive_key_utf8::<sha2::Sha256>("top-secret", &[0x1, 0x2, 0x3, 0x4],
 ///     pkcs12::kdf::Pkcs12KeyType::EncryptionKey, 1000, 32);
@@ -49,17 +55,21 @@ where
     D: Digest + FixedOutputReset + BlockSizeUser,
 {
     let password_bmp = BmpString::from_utf8(password)?;
-    Ok(derive_key_bmp::<D>(password_bmp, salt, id, rounds, key_len))
+    derive_key_bmp::<D>(password_bmp, salt, id, rounds, key_len)
 }
 
-/// Derive
+/// Derives `key` of type `id` from `pass` (as a [`BmpString`]) and `salt` with length `key_len`
+/// using `rounds` iterations of the algorithm.
+///
+/// `rounds` must be ≥ 1 (RFC 7292 Appendix C defines `iterations INTEGER (1..MAX)`).
+/// An error is returned if `rounds < 1`.
 pub fn derive_key_bmp<D>(
     password: BmpString,
     salt: &[u8],
     id: Pkcs12KeyType,
     rounds: i32,
     key_len: usize,
-) -> Vec<u8>
+) -> der::Result<Vec<u8>>
 where
     D: Digest + FixedOutputReset + BlockSizeUser,
 {
@@ -72,9 +82,14 @@ where
 }
 
 /// Derives `key` of type `id` from `pass` and `salt` with length `key_len` using `rounds`
-/// iterations of the algorithm
-/// `pass` must be a unicode (utf16) byte array in big endian order without order mark and with two
-/// terminating zero bytes.
+/// iterations of the algorithm.
+///
+/// `pass` must be a Unicode (UTF-16BE) byte array in big-endian order without a byte-order mark
+/// and with two terminating zero bytes.
+///
+/// `rounds` must be ≥ 1 (RFC 7292 Appendix C defines `iterations INTEGER (1..MAX)`).
+/// An error is returned if `rounds < 1`.
+///
 /// ```rust
 /// let key = pkcs12::kdf::derive_key_utf8::<sha2::Sha256>("top-secret", &[0x1, 0x2, 0x3, 0x4],
 ///     pkcs12::kdf::Pkcs12KeyType::EncryptionKey, 1000, 32);
@@ -85,10 +100,19 @@ pub fn derive_key<D>(
     id: Pkcs12KeyType,
     rounds: i32,
     key_len: usize,
-) -> Vec<u8>
+) -> der::Result<Vec<u8>>
 where
     D: Digest + FixedOutputReset + BlockSizeUser,
 {
+    // RFC 7292 Appendix C: `iterations INTEGER (1..MAX)`.  The iteration loop
+    // `for _ in 1..rounds` silently degenerates to a single hash application
+    // when rounds <= 0, producing wrong output without signalling failure.
+    if rounds < 1 {
+        return Err(der::Error::from(der::ErrorKind::Value {
+            tag: Tag::Integer,
+        }));
+    }
+
     let mut digest = D::new();
     let output_size = <D as OutputSizeUser>::output_size();
     let block_size = D::block_size();
@@ -183,5 +207,5 @@ where
     }
     init_key.zeroize();
     // 8. Use the first n bits of A as the output of this entire process.
-    out
+    Ok(out)
 }
