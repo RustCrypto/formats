@@ -61,6 +61,8 @@ Full key decryption is not yet tested; it requires 3DES decryption support
 (planned for a follow-up PR).
 
 SHA-256 of the EC PrivateKeyInfo DER blob (reserved oracle for 3DES PR):
-`c5eacb73dd8324007d050afcc807fccd09c1f752634eeafaffc0872b35da4383`
+`956890dd43249260db8b4a7edf87541070086c186f6a5e39e2eba2eec28f634c`
 
-(Confirmed with pyca `private_bytes(DER, PKCS8, NoEncryption)` on the extracted key.)
+(Confirmed independently by OpenSSL `pkcs12 -legacy -nodes | pkcs8 -nocrypt -topk8 -outform DER | sha256sum`
+and pyca/cryptography `private_bytes(DER, PKCS8, NoEncryption)` — both agree on this value.
+carl-wallace/pkcs12_builder also asserts this hash against the same fixture.)
