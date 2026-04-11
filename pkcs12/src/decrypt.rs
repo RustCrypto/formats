@@ -154,12 +154,19 @@ fn decrypt_rc2(
     let salt = params.salt.as_bytes();
 
     // Defensive: a zero-length salt produces a trivially weak KDF input.
+    // Salt length is bounded by the DER input size; no separate allocation
+    // cap is needed here.
     if salt.is_empty() {
         return Err(der::ErrorKind::Failed.into());
     }
 
     // Derive the RC2 key (ID=1, key_len bytes) and CBC IV (ID=2, 8 bytes)
     // using the RFC 7292 §B.2 KDF with SHA-1.
+    //
+    // Note: Zeroizing::new() wraps the Vec<u8> returned by derive_key_utf8 on
+    // this branch.  Once kdf PR #2283 lands (derive_key_utf8 returns
+    // Zeroizing<Vec<u8>> directly), these Zeroizing::new() wrappers should be
+    // removed to avoid redundant double-wrapping.
     let key = Zeroizing::new(derive_key_utf8::<sha1::Sha1>(
         password,
         salt,
