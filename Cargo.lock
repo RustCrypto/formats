@@ -1056,6 +1056,8 @@ dependencies = [
 name = "pkcs12"
 version = "0.2.0-pre.0"
 dependencies = [
+ "cbc",
+ "cipher",
  "cms",
  "const-oid",
  "der",
@@ -1063,6 +1065,8 @@ dependencies = [
  "hex-literal",
  "pkcs5",
  "pkcs8",
+ "rc2",
+ "sha1",
  "sha2",
  "spki",
  "whirlpool",
@@ -1290,6 +1294,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "513962919efc330f829edb2535844d1b912b0fbe2ca165d613e4e8788bb05a5a"
 dependencies = [
  "rand_core 0.9.5",
+]
+
+[[package]]
+name = "rc2"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ceda21af1ae61033b63175653a1af86cae399d79cd03ca80ba347eb3a6c4a7fe"
+dependencies = [
+ "cipher",
 ]
 
 [[package]]
