@@ -6,6 +6,49 @@
 use hex_literal::hex;
 use pkcs12::kdf::{Pkcs12KeyType, derive_key_utf8};
 
+/// rounds=1 is the minimum valid value per RFC 7292 Appendix C (`iterations INTEGER (1..MAX)`).
+/// Vectors generated with:
+///   openssl kdf -keylen 32 -kdfopt digest:SHA256 \
+///     -kdfopt hexpass:00670065004000e4006800650069006d0000 \
+///     -kdfopt hexsalt:0102030405060708 -kdfopt iter:1 -kdfopt id:<N> PKCS12KDF
+/// where hexpass is "ge@äheim" encoded as UTF-16BE with a 2-byte null terminator.
+#[test]
+fn pkcs12_key_derive_rounds_one_boundary() {
+    const PASS: &str = "ge@äheim";
+    const SALT: [u8; 8] = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08];
+
+    assert_eq!(
+        derive_key_utf8::<sha2::Sha256>(PASS, &SALT, Pkcs12KeyType::Mac, 1, 32).unwrap(),
+        hex!("6490c5afd22f24a9346308c25babe8446c632c5937685bebc88feda260bad102")
+    );
+
+    assert_eq!(
+        derive_key_utf8::<sha2::Sha256>(PASS, &SALT, Pkcs12KeyType::EncryptionKey, 1, 32).unwrap(),
+        hex!("637bbe1fe81bfc5abb031f335548d5dced0f0051c69cc2b9c28b2c66935085e5")
+    );
+}
+
+/// rounds <= 0 must return an error; silently producing wrong output (one hash application
+/// instead of the requested count) is a correctness failure.
+#[test]
+fn pkcs12_key_derive_zero_rounds_errors() {
+    const PASS: &str = "ge@äheim";
+    const SALT: [u8; 8] = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08];
+
+    assert!(
+        derive_key_utf8::<sha2::Sha256>(PASS, &SALT, Pkcs12KeyType::Mac, 0, 32).is_err(),
+        "rounds=0 must be rejected"
+    );
+    assert!(
+        derive_key_utf8::<sha2::Sha256>(PASS, &SALT, Pkcs12KeyType::Mac, -1, 32).is_err(),
+        "rounds=-1 must be rejected"
+    );
+    assert!(
+        derive_key_utf8::<sha2::Sha256>(PASS, &SALT, Pkcs12KeyType::Mac, i32::MIN, 32).is_err(),
+        "rounds=i32::MIN must be rejected"
+    );
+}
+
 #[test]
 fn pkcs12_key_derive_sha256() {
     const PASS_SHORT: &str = "ge@äheim";
