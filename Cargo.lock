@@ -1099,6 +1099,7 @@ dependencies = [
  "spki",
  "subtle",
  "tempfile",
+ "x509-cert",
 ]
 
 [[package]]
