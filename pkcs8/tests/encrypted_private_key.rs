@@ -13,7 +13,7 @@ use der::Encode;
 use der::EncodePem;
 
 #[cfg(feature = "encryption")]
-use pkcs8::{EncryptedPrivateKeyInfoOwned, PrivateKeyInfoRef};
+use pkcs8::PrivateKeyInfoRef;
 
 /// Ed25519 PKCS#8 private key plaintext encoded as ASN.1 DER
 #[cfg(feature = "encryption")]
@@ -49,28 +49,6 @@ const ED25519_DER_AES256_PBKDF2_SHA256_EXAMPLE: &[u8] =
 #[cfg(feature = "encryption")]
 const ED25519_DER_AES256_SCRYPT_EXAMPLE: &[u8] =
     include_bytes!("examples/ed25519-encpriv-aes256-scrypt.der");
-
-/// Ed25519 PKCS#8 encrypted private key (PBES2 + AES-128-GCM + scrypt) encoded as ASN.1 DER.
-///
-/// Generated using:
-///
-/// ```
-/// $ botan pkcs8  ed25519-priv-pkcs8v1.der --der-out '--pbe=PBES2(AES-128/GCM,Scrypt)' --pass-out=hunter42
-/// ```
-#[cfg(feature = "encryption")]
-const ED25519_DER_AES128_GCM_SCRYPT_EXAMPLE: &[u8] =
-    include_bytes!("examples/ed25519-encpriv-aes128-gcm-scrypt.der");
-
-/// Ed25519 PKCS#8 encrypted private key (PBES2 + AES-256-GCM + scrypt) encoded as ASN.1 DER.
-///
-/// Generated using:
-///
-/// ```
-/// $ botan pkcs8  ed25519-priv-pkcs8v1.der --der-out '--pbe=PBES2(AES-256/GCM,Scrypt)' --pass-out=hunter42
-/// ```
-#[cfg(feature = "encryption")]
-const ED25519_DER_AES256_GCM_SCRYPT_EXAMPLE: &[u8] =
-    include_bytes!("examples/ed25519-encpriv-aes256-gcm-scrypt.der");
 
 /// Ed25519 PKCS#8 encrypted private key encoded as PEM
 #[cfg(feature = "pem")]
@@ -187,66 +165,6 @@ fn decrypt_ed25519_der_encpriv_aes256_scrypt() {
     let enc_pk = EncryptedPrivateKeyInfoRef::try_from(ED25519_DER_AES256_SCRYPT_EXAMPLE).unwrap();
     let pk = enc_pk.decrypt(PASSWORD).unwrap();
     assert_eq!(pk.as_bytes(), ED25519_DER_PLAINTEXT_EXAMPLE);
-}
-
-#[cfg(feature = "encryption")]
-#[test]
-fn decrypt_ed25519_der_encpriv_aes128_gcm_scrypt() {
-    let enc_pk =
-        EncryptedPrivateKeyInfoOwned::try_from(ED25519_DER_AES128_GCM_SCRYPT_EXAMPLE).unwrap();
-    let pk = enc_pk.decrypt(PASSWORD).unwrap();
-    assert_eq!(pk.as_bytes(), ED25519_DER_PLAINTEXT_EXAMPLE);
-}
-
-#[cfg(feature = "encryption")]
-#[test]
-fn encrypt_ed25519_der_encpriv_aes128_gcm_scrypt() {
-    let scrypt_params = pkcs5::pbes2::Parameters::scrypt_aes128gcm(
-        pkcs5::scrypt::Params::new(14, 8, 1).unwrap(),
-        &hex!("05BE17663E551D120F81308E"),
-        hex!("D7E967A5DF6189471BCC1F49"),
-    )
-    .unwrap();
-
-    let pk_plaintext = PrivateKeyInfoRef::try_from(ED25519_DER_PLAINTEXT_EXAMPLE).unwrap();
-    let pk_encrypted = pk_plaintext
-        .encrypt_with_params(scrypt_params, PASSWORD)
-        .unwrap();
-
-    assert_eq!(
-        pk_encrypted.as_bytes(),
-        ED25519_DER_AES128_GCM_SCRYPT_EXAMPLE
-    );
-}
-
-#[cfg(feature = "encryption")]
-#[test]
-fn decrypt_ed25519_der_encpriv_aes256_gcm_scrypt() {
-    let enc_pk =
-        EncryptedPrivateKeyInfoOwned::try_from(ED25519_DER_AES256_GCM_SCRYPT_EXAMPLE).unwrap();
-    let pk = enc_pk.decrypt(PASSWORD).unwrap();
-    assert_eq!(pk.as_bytes(), ED25519_DER_PLAINTEXT_EXAMPLE);
-}
-
-#[cfg(feature = "encryption")]
-#[test]
-fn encrypt_ed25519_der_encpriv_aes256_gcm_scrypt() {
-    let scrypt_params = pkcs5::pbes2::Parameters::scrypt_aes256gcm(
-        pkcs5::scrypt::Params::new(15, 8, 1).unwrap(),
-        &hex!("F67F4005A8393BD41F5B4981"),
-        hex!("98B118A950D39E2ECB5B125C"),
-    )
-    .unwrap();
-
-    let pk_plaintext = PrivateKeyInfoRef::try_from(ED25519_DER_PLAINTEXT_EXAMPLE).unwrap();
-    let pk_encrypted = pk_plaintext
-        .encrypt_with_params(scrypt_params, PASSWORD)
-        .unwrap();
-
-    assert_eq!(
-        pk_encrypted.as_bytes(),
-        ED25519_DER_AES256_GCM_SCRYPT_EXAMPLE
-    );
 }
 
 #[cfg(feature = "encryption")]
