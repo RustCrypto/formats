@@ -69,7 +69,7 @@ where
         password: impl AsRef<[u8]>,
         doc: &[u8],
     ) -> Result<SecretDocument> {
-        let pbes2_params = pbes2::Parameters::recommended(rng);
+        let pbes2_params = pbes2::Parameters::generate_recommended(rng)?;
         EncryptedPrivateKeyInfoOwned::encrypt_with(pbes2_params, password, doc)
     }
 

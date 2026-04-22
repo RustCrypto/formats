@@ -19,7 +19,7 @@ use der::{
 };
 
 #[cfg(feature = "rand_core")]
-use rand_core::CryptoRng;
+use rand_core::TryCryptoRng;
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
 use alloc::vec::Vec;
@@ -89,11 +89,14 @@ impl Parameters {
     /// Generate PBES2 parameters using the recommended algorithm settings and
     /// a randomly generated salt and IV.
     ///
-    /// This is currently an alias for [`Parameters::scrypt`]. See that method
+    /// This is currently an alias for [`Parameters::generate_scrypt`]. See that method
     /// for more information.
+    ///
+    /// # Errors
+    /// Returns [`Error::Rng`] in the event the random number generator `R` fails.
     #[cfg(all(feature = "pbes2", feature = "rand_core"))]
-    pub fn recommended<R: CryptoRng>(rng: &mut R) -> Self {
-        Self::scrypt(rng)
+    pub fn generate_recommended<R: TryCryptoRng>(rng: &mut R) -> Result<Self> {
+        Self::generate_scrypt(rng)
     }
 
     /// Generate PBES2 parameters using PBKDF2 as the password hashing
@@ -103,29 +106,31 @@ impl Parameters {
     ///
     /// This will use AES-256-CBC as the encryption algorithm and SHA-256 as
     /// the hash function for PBKDF2.
+    ///
+    /// # Errors
+    /// Returns [`Error::Rng`] in the event the random number generator `R` fails.
     #[cfg(feature = "rand_core")]
-    #[allow(clippy::missing_panics_doc, reason = "params should be valid")]
-    pub fn pbkdf2<R: CryptoRng>(rng: &mut R) -> Self {
+    pub fn generate_pbkdf2<R: TryCryptoRng>(rng: &mut R) -> Result<Self> {
         let mut iv = [0u8; Self::DEFAULT_IV_LEN];
-        rng.fill_bytes(&mut iv);
+        rng.try_fill_bytes(&mut iv).map_err(|_| Error::Rng)?;
 
         let mut salt = [0u8; Self::DEFAULT_SALT_LEN];
-        rng.fill_bytes(&mut salt);
+        rng.try_fill_bytes(&mut salt).map_err(|_| Error::Rng)?;
 
-        Self::pbkdf2_sha256_aes256cbc(600_000, &salt, iv).expect("invalid PBKDF2 parameters")
+        Self::generate_pbkdf2_sha256_aes256cbc(Pbkdf2Params::DEFAULT_SHA256_ITERATIONS, &salt, iv)
     }
 
     /// Initialize PBES2 parameters using PBKDF2-SHA256 as the password-based
     /// key derivation function and AES-128-CBC as the symmetric cipher.
     ///
     /// # Errors
-    /// Propagates errors from [`Pbkdf2Params::hmac_with_sha256`].
-    pub fn pbkdf2_sha256_aes128cbc(
+    /// Propagates errors from [`Pbkdf2Params::hmac_sha256`].
+    pub fn generate_pbkdf2_sha256_aes128cbc(
         pbkdf2_iterations: u32,
         pbkdf2_salt: &[u8],
         aes_iv: [u8; AES_BLOCK_SIZE],
     ) -> Result<Self> {
-        let kdf = Pbkdf2Params::hmac_with_sha256(pbkdf2_iterations, pbkdf2_salt)?.into();
+        let kdf = Pbkdf2Params::hmac_sha256(pbkdf2_iterations, pbkdf2_salt)?.into();
         let encryption = EncryptionScheme::Aes128Cbc { iv: aes_iv };
         Ok(Self { kdf, encryption })
     }
@@ -134,13 +139,13 @@ impl Parameters {
     /// key derivation function and AES-256-CBC as the symmetric cipher.
     ///
     /// # Errors
-    /// Propagates errors from [`Pbkdf2Params::hmac_with_sha256`].
-    pub fn pbkdf2_sha256_aes256cbc(
+    /// Propagates errors from [`Pbkdf2Params::hmac_sha256`].
+    pub fn generate_pbkdf2_sha256_aes256cbc(
         pbkdf2_iterations: u32,
         pbkdf2_salt: &[u8],
         aes_iv: [u8; AES_BLOCK_SIZE],
     ) -> Result<Self> {
-        let kdf = Pbkdf2Params::hmac_with_sha256(pbkdf2_iterations, pbkdf2_salt)?.into();
+        let kdf = Pbkdf2Params::hmac_sha256(pbkdf2_iterations, pbkdf2_salt)?.into();
         let encryption = EncryptionScheme::Aes256Cbc { iv: aes_iv };
         Ok(Self { kdf, encryption })
     }
@@ -161,20 +166,26 @@ impl Parameters {
     /// - salt length: 16
     ///
     /// [RustCrypto/formats#1205]: https://github.com/RustCrypto/formats/issues/1205
+    ///
+    /// # Errors
+    /// Returns [`Error::Rng`] in the event the random number generator `R` fails.
     #[cfg(all(feature = "pbes2", feature = "rand_core"))]
     #[cfg(feature = "rand_core")]
-    #[allow(clippy::missing_panics_doc, reason = "params should be valid")]
-    pub fn scrypt<R: CryptoRng>(rng: &mut R) -> Self {
+    pub fn generate_scrypt<R: TryCryptoRng>(rng: &mut R) -> Result<Self> {
         let mut iv = [0u8; Self::DEFAULT_IV_LEN];
-        rng.fill_bytes(&mut iv);
+        rng.try_fill_bytes(&mut iv).map_err(|_| Error::Rng)?;
 
         let mut salt = [0u8; Self::DEFAULT_SALT_LEN];
-        rng.fill_bytes(&mut salt);
+        rng.try_fill_bytes(&mut salt).map_err(|_| Error::Rng)?;
 
-        scrypt::Params::new(14, 8, 1)
-            .ok()
-            .and_then(|params| Self::scrypt_aes256cbc(params, &salt, iv).ok())
-            .expect("invalid scrypt parameters")
+        let params = scrypt::Params::new(
+            ScryptParams::DEFAULT_LOG_N,
+            ScryptParams::DEFAULT_R,
+            ScryptParams::DEFAULT_P,
+        )
+        .map_err(|_| Error::AlgorithmParametersInvalid { oid: SCRYPT_OID })?;
+
+        Self::generate_scrypt_aes256cbc(params, &salt, iv)
     }
 
     /// Initialize PBES2 parameters using scrypt as the password-based
@@ -187,7 +198,7 @@ impl Parameters {
     /// Propagates errors from [`ScryptParams::from_params_and_salt`].
     // TODO(tarcieri): encapsulate `scrypt::Params`?
     #[cfg(feature = "pbes2")]
-    pub fn scrypt_aes128cbc(
+    pub fn generate_scrypt_aes128cbc(
         params: scrypt::Params,
         salt: &[u8],
         aes_iv: [u8; AES_BLOCK_SIZE],
@@ -210,7 +221,7 @@ impl Parameters {
     /// Propagates errors from [`ScryptParams::from_params_and_salt`].
     // TODO(tarcieri): encapsulate `scrypt::Params`?
     #[cfg(feature = "pbes2")]
-    pub fn scrypt_aes256cbc(
+    pub fn generate_scrypt_aes256cbc(
         params: scrypt::Params,
         salt: &[u8],
         aes_iv: [u8; AES_BLOCK_SIZE],

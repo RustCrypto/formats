@@ -697,7 +697,7 @@ fn test_create_password_recipient_info() {
             Aes128CbcPwriEncryptor {
                 challenge_password,
                 key_encryption_iv,
-                key_derivation_params: pkcs5::pbes2::Pbkdf2Params::hmac_with_sha256(
+                key_derivation_params: pkcs5::pbes2::Pbkdf2Params::hmac_sha256(
                     60_000, // use >=600_000 in real world applications
                     b"salz",
                 )

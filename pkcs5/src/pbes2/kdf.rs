@@ -213,14 +213,18 @@ impl Pbkdf2Params {
     /// and [RFC 8018, §A.2](https://datatracker.ietf.org/doc/html/rfc8018#appendix-A.2)
     pub const MAX_ITERATION_COUNT: u32 = 100_000_000;
 
+    /// OWASP recommended number of iterations for PBKDF2-HMAC-SHA256.
+    #[cfg(all(feature = "pbes2", feature = "rand_core"))]
+    pub(super) const DEFAULT_SHA256_ITERATIONS: u32 = 600_000;
+
     const INVALID_ERR: Error = Error::AlgorithmParametersInvalid { oid: PBKDF2_OID };
 
-    /// Initialize PBKDF2-SHA256 with the given iteration count and salt.
+    /// Initialize PBKDF2-HMAC-SHA256 with the given iteration count and salt.
     ///
     /// # Errors
     /// Returns [`Error::AlgorithmParametersInvalid`] if `iteration_count` exceeds
     /// [`Pbkdf2Params::MAX_ITERATION_COUNT`] or `salt` exceeds [`Salt::MAX_LEN`].
-    pub fn hmac_with_sha256(iteration_count: u32, salt: &[u8]) -> Result<Self> {
+    pub fn hmac_sha256(iteration_count: u32, salt: &[u8]) -> Result<Self> {
         if iteration_count > Self::MAX_ITERATION_COUNT {
             return Err(Self::INVALID_ERR);
         }
@@ -412,6 +416,15 @@ pub struct ScryptParams {
 }
 
 impl ScryptParams {
+    // NOTE: scrypt parameters are deliberately chosen to retain compatibility with OpenSSL v3.
+    // See RustCrypto/formats#1205 for more information.
+    #[cfg(all(feature = "pbes2", feature = "rand_core"))]
+    pub(super) const DEFAULT_LOG_N: u8 = 14;
+    #[cfg(all(feature = "pbes2", feature = "rand_core"))]
+    pub(super) const DEFAULT_R: u32 = 8;
+    #[cfg(all(feature = "pbes2", feature = "rand_core"))]
+    pub(super) const DEFAULT_P: u32 = 1;
+
     #[cfg(feature = "pbes2")]
     const INVALID_ERR: Error = Error::AlgorithmParametersInvalid { oid: SCRYPT_OID };
 
