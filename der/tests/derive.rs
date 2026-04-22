@@ -466,6 +466,7 @@ mod sequence {
     }
 
     /// Default value of the `critical` bit
+    #[allow(dead_code)]
     fn critical_default() -> bool {
         false
     }
