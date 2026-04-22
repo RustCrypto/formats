@@ -34,7 +34,6 @@ hex-literal = "1"
 
 [features]
 alloc = []
-std = []
 
 3des = ["dep:des", "pbes2"]
 des-insecure = ["dep:des", "pbes2"]
