@@ -104,6 +104,7 @@ impl Parameters {
     /// This will use AES-256-CBC as the encryption algorithm and SHA-256 as
     /// the hash function for PBKDF2.
     #[cfg(feature = "rand_core")]
+    #[allow(clippy::missing_panics_doc, reason = "params should be valid")]
     pub fn pbkdf2<R: CryptoRng>(rng: &mut R) -> Self {
         let mut iv = [0u8; Self::DEFAULT_IV_LEN];
         rng.fill_bytes(&mut iv);
@@ -116,6 +117,9 @@ impl Parameters {
 
     /// Initialize PBES2 parameters using PBKDF2-SHA256 as the password-based
     /// key derivation function and AES-128-CBC as the symmetric cipher.
+    ///
+    /// # Errors
+    /// Propagates errors from [`Pbkdf2Params::hmac_with_sha256`].
     pub fn pbkdf2_sha256_aes128cbc(
         pbkdf2_iterations: u32,
         pbkdf2_salt: &[u8],
@@ -128,6 +132,9 @@ impl Parameters {
 
     /// Initialize PBES2 parameters using PBKDF2-SHA256 as the password-based
     /// key derivation function and AES-256-CBC as the symmetric cipher.
+    ///
+    /// # Errors
+    /// Propagates errors from [`Pbkdf2Params::hmac_with_sha256`].
     pub fn pbkdf2_sha256_aes256cbc(
         pbkdf2_iterations: u32,
         pbkdf2_salt: &[u8],
@@ -155,6 +162,8 @@ impl Parameters {
     ///
     /// [RustCrypto/formats#1205]: https://github.com/RustCrypto/formats/issues/1205
     #[cfg(all(feature = "pbes2", feature = "rand_core"))]
+    #[cfg(feature = "rand_core")]
+    #[allow(clippy::missing_panics_doc, reason = "params should be valid")]
     pub fn scrypt<R: CryptoRng>(rng: &mut R) -> Self {
         let mut iv = [0u8; Self::DEFAULT_IV_LEN];
         rng.fill_bytes(&mut iv);
@@ -173,6 +182,9 @@ impl Parameters {
     ///
     /// For more information on scrypt parameters, see documentation for the
     /// [`scrypt::Params`] struct.
+    ///
+    /// # Errors
+    /// Propagates errors from [`ScryptParams::from_params_and_salt`].
     // TODO(tarcieri): encapsulate `scrypt::Params`?
     #[cfg(feature = "pbes2")]
     pub fn scrypt_aes128cbc(
@@ -193,6 +205,9 @@ impl Parameters {
     ///
     /// When in doubt, use `Default::default()` as the [`scrypt::Params`].
     /// This also avoids the need to import the type from the `scrypt` crate.
+    ///
+    /// # Errors
+    /// Propagates errors from [`ScryptParams::from_params_and_salt`].
     // TODO(tarcieri): encapsulate `scrypt::Params`?
     #[cfg(feature = "pbes2")]
     pub fn scrypt_aes256cbc(
@@ -207,6 +222,10 @@ impl Parameters {
 
     /// Attempt to decrypt the given ciphertext, allocating and returning a
     /// byte vector containing the plaintext.
+    ///
+    /// # Errors
+    /// Returns [`Error::UnsupportedAlgorithm`] if support for the requested algorithm has not been
+    /// enabled in this crate's features.
     #[cfg(all(feature = "alloc", feature = "pbes2"))]
     pub fn decrypt(&self, password: impl AsRef<[u8]>, ciphertext: &[u8]) -> Result<Vec<u8>> {
         let mut buffer = ciphertext.to_vec();
@@ -220,7 +239,11 @@ impl Parameters {
     ///
     /// Returns an error if the algorithm specified in this scheme's parameters
     /// is unsupported, or if the ciphertext is malformed (e.g. not a multiple
-    /// of a block mode's padding)
+    /// of a block mode's padding).
+    ///
+    /// # Errors
+    /// Returns [`Error::UnsupportedAlgorithm`] if support for the requested algorithm has not been
+    /// enabled in this crate's features.
     #[cfg(feature = "pbes2")]
     pub fn decrypt_in_place<'a>(
         &self,
@@ -232,6 +255,10 @@ impl Parameters {
 
     /// Encrypt the given plaintext, allocating and returning a vector
     /// containing the ciphertext.
+    ///
+    /// # Errors
+    /// Returns [`Error::UnsupportedAlgorithm`] if support for the requested algorithm has not been
+    /// enabled in this crate's features.
     #[cfg(all(feature = "alloc", feature = "pbes2"))]
     pub fn encrypt(&self, password: impl AsRef<[u8]>, plaintext: &[u8]) -> Result<Vec<u8>> {
         // TODO(tarcieri): support non-AES ciphers?
@@ -250,6 +277,10 @@ impl Parameters {
     /// Encrypt the given plaintext in-place using a key derived from the
     /// provided password and this scheme's parameters, writing the ciphertext
     /// into the same buffer.
+    ///
+    /// # Errors
+    /// Returns [`Error::UnsupportedAlgorithm`] if support for the requested algorithm has not been
+    /// enabled in this crate's features.
     #[cfg(feature = "pbes2")]
     pub fn encrypt_in_place<'a>(
         &self,
@@ -338,6 +369,7 @@ pub enum EncryptionScheme {
 
 impl EncryptionScheme {
     /// Get the size of a key used by this algorithm in bytes.
+    #[must_use]
     pub fn key_size(&self) -> usize {
         match self {
             Self::Aes128Cbc { .. } => 16,
@@ -351,6 +383,7 @@ impl EncryptionScheme {
     }
 
     /// Get the [`ObjectIdentifier`] (a.k.a OID) for this algorithm.
+    #[must_use]
     pub fn oid(&self) -> ObjectIdentifier {
         match self {
             Self::Aes128Cbc { .. } => AES_128_CBC_OID,
@@ -366,6 +399,7 @@ impl EncryptionScheme {
     /// Convenience function to turn the OID (see [`oid`](Self::oid))
     /// of this [`EncryptionScheme`] into error case
     /// [`Error::AlgorithmParametersInvalid`]
+    #[must_use]
     pub fn to_alg_params_invalid(&self) -> Error {
         Error::AlgorithmParametersInvalid { oid: self.oid() }
     }

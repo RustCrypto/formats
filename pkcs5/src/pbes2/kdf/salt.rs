@@ -1,11 +1,11 @@
-//! Salt storage buffer which works on heapless `no_std` targets.
-// TODO(tarcieri): use `ArrayVec` when it's available in `core`.
+//! Stack-allocated salt storage buffer which works on `no_alloc` targets.
+// TODO(tarcieri): replace this with an `ArrayVec`-like type?
 
 use core::fmt;
 use der::{DecodeValue, EncodeValue, Error, FixedTag, Header, Length, Reader, Result, Tag, Writer};
 
 /// Salt as used by the PBES2 KDF.
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub struct Salt {
     inner: [u8; Self::MAX_LEN],
     length: Length,
@@ -16,12 +16,12 @@ impl Salt {
     pub const MAX_LEN: usize = 32;
 
     /// Create a new salt from the given byte slice.
+    ///
+    /// # Errors
+    /// Returns [`Error`] in the event the length of `slice` exceeds [`Salt::MAX_LEN`].
     pub fn new(slice: impl AsRef<[u8]>) -> Result<Self> {
         let slice = slice.as_ref();
-
-        if slice.len() > Self::MAX_LEN {
-            return Err(Self::TAG.length_error().into());
-        }
+        let length = Length::new(u32::try_from(slice.len()).map_err(|_| Self::TAG.length_error())?);
 
         let mut inner = [0u8; Self::MAX_LEN];
         let mut i = 0;
@@ -31,19 +31,19 @@ impl Salt {
             i += 1;
         }
 
-        Ok(Self {
-            inner,
-            length: Length::new(slice.len() as u32),
-        })
+        Ok(Self { inner, length })
     }
 
     /// Borrow the salt data as a byte slice.
+    #[must_use]
+    #[allow(clippy::missing_panics_doc, reason = "invariant should hold")]
     pub fn as_bytes(&self) -> &[u8] {
         let length = usize::try_from(self.length).expect("should be less than Self::MAX_LEN");
         &self.inner[..length]
     }
 
     /// Get the length of the salt data.
+    #[must_use]
     pub fn len(&self) -> Length {
         self.length
     }

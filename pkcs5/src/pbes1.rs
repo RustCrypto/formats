@@ -50,7 +50,7 @@ pub const SALT_LENGTH: usize = 8;
 /// ```
 ///
 /// [RFC 8018 Appendix A.C]: https://datatracker.ietf.org/doc/html/rfc8018#appendix-C
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Algorithm {
     /// Encryption scheme.
     pub encryption: EncryptionScheme,
@@ -61,6 +61,7 @@ pub struct Algorithm {
 
 impl Algorithm {
     /// Get the [`ObjectIdentifier`] (a.k.a OID) for this algorithm.
+    #[must_use]
     pub fn oid(&self) -> ObjectIdentifier {
         self.encryption.oid()
     }
@@ -117,7 +118,7 @@ impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for Algorithm {
 /// ```
 ///
 /// [RFC 8018 Appendix A.3]: https://tools.ietf.org/html/rfc8018#appendix-A.3
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Parameters {
     /// Salt value
     pub salt: [u8; SALT_LENGTH],
@@ -206,6 +207,7 @@ impl TryFrom<ObjectIdentifier> for EncryptionScheme {
 
 impl EncryptionScheme {
     /// Get the [`SymmetricCipher`] to be used.
+    #[must_use]
     pub fn cipher(self) -> SymmetricCipher {
         match self {
             Self::PbeWithMd2AndDesCbc => SymmetricCipher::DesCbc,
@@ -218,6 +220,7 @@ impl EncryptionScheme {
     }
 
     /// Get the [`DigestAlgorithm`] to be used.
+    #[must_use]
     pub fn digest(self) -> DigestAlgorithm {
         match self {
             Self::PbeWithMd2AndDesCbc => DigestAlgorithm::Md2,
@@ -230,6 +233,7 @@ impl EncryptionScheme {
     }
 
     /// Get the [`ObjectIdentifier`] (a.k.a OID) for this algorithm.
+    #[must_use]
     pub fn oid(self) -> ObjectIdentifier {
         match self {
             Self::PbeWithMd2AndDesCbc => PBE_WITH_MD2_AND_DES_CBC_OID,
