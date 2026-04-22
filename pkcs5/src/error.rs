@@ -22,9 +22,13 @@ pub enum Error {
     /// Encryption Failed
     EncryptFailed,
 
-    /// Pbes1 support is limited to parsing; encryption/decryption is not supported (won't fix)
+    /// PBES1 support is limited to parsing; encryption/decryption is not supported (won't fix)
     #[cfg(feature = "pbes2")]
     NoPbes1CryptSupport,
+
+    /// Random number generation failure.
+    #[cfg(feature = "rand_core")]
+    Rng,
 
     /// Algorithm is not supported
     ///
@@ -50,6 +54,8 @@ impl fmt::Display for Error {
             Error::NoPbes1CryptSupport => {
                 f.write_str("PKCS#5 encryption/decryption unsupported for PBES1 (won't fix)")
             }
+            #[cfg(feature = "rand_core")]
+            Error::Rng => f.write_str("random number generation failure"),
             Error::UnsupportedAlgorithm { oid } => {
                 write!(f, "PKCS#5 algorithm {oid} is unsupported")
             }
