@@ -6,14 +6,6 @@
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg"
 )]
 #![forbid(unsafe_code)]
-#![warn(
-    clippy::mod_module_files,
-    clippy::unwrap_used,
-    missing_docs,
-    rust_2018_idioms,
-    unused_lifetimes,
-    unused_qualifications
-)]
 
 //! # Usage
 //!
@@ -65,8 +57,13 @@ pub enum EncryptionScheme {
 }
 
 impl EncryptionScheme {
-    /// Attempt to decrypt the given ciphertext, allocating and returning a
-    /// byte vector containing the plaintext.
+    /// Attempt to decrypt the given ciphertext, allocating and returning a byte vector containing
+    /// the plaintext.
+    ///
+    /// # Errors
+    /// Returns an error if the algorithm specified in this scheme's parameters is unsupported
+    /// (e.g. PBES1 is completely unsupported), or if the ciphertext is malformed (e.g. not a
+    /// multiple of a block mode's padding).
     #[cfg(all(feature = "alloc", feature = "pbes2"))]
     pub fn decrypt(&self, password: impl AsRef<[u8]>, ciphertext: &[u8]) -> Result<Vec<u8>> {
         match self {
@@ -75,12 +72,13 @@ impl EncryptionScheme {
         }
     }
 
-    /// Attempt to decrypt the given ciphertext in-place using a key derived
-    /// from the provided password and this scheme's parameters.
+    /// Attempt to decrypt the given ciphertext in-place using a key derived from the provided
+    /// password and this scheme's parameters.
     ///
-    /// Returns an error if the algorithm specified in this scheme's parameters
-    /// is unsupported, or if the ciphertext is malformed (e.g. not a multiple
-    /// of a block mode's padding)
+    /// # Errors
+    /// Returns an error if the algorithm specified in this scheme's parameters is unsupported
+    /// (e.g. PBES1 is completely unsupported), or if the ciphertext is malformed (e.g. not a
+    /// multiple of a block mode's padding).
     #[cfg(feature = "pbes2")]
     pub fn decrypt_in_place<'a>(
         &self,
@@ -93,8 +91,12 @@ impl EncryptionScheme {
         }
     }
 
-    /// Encrypt the given plaintext, allocating and returning a vector
-    /// containing the ciphertext.
+    /// Encrypt the given plaintext, allocating and returning a vector containing the ciphertext.
+    ///
+    /// # Errors
+    /// - For PBES1, simply returns [`Error::NoPbes1CryptSupport`] unconditionally.
+    /// - Returns [`Error::UnsupportedAlgorithm`] if support for the requested algorithm has not
+    ///   been enabled in this crate's features.
     #[cfg(all(feature = "alloc", feature = "pbes2"))]
     pub fn encrypt(&self, password: impl AsRef<[u8]>, plaintext: &[u8]) -> Result<Vec<u8>> {
         match self {
@@ -103,8 +105,13 @@ impl EncryptionScheme {
         }
     }
 
-    /// Encrypt the given ciphertext in-place using a key derived from the
-    /// provided password and this scheme's parameters.
+    /// Encrypt the given ciphertext in-place using a key derived from the provided password and
+    /// this scheme's parameters.
+    ///
+    /// # Errors
+    /// - For PBES1, simply returns [`Error::NoPbes1CryptSupport`] unconditionally.
+    /// - Returns [`Error::UnsupportedAlgorithm`] if support for the requested algorithm has not
+    ///   been enabled in this crate's features.
     #[cfg(feature = "pbes2")]
     pub fn encrypt_in_place<'a>(
         &self,
@@ -119,6 +126,7 @@ impl EncryptionScheme {
     }
 
     /// Get the [`ObjectIdentifier`] (a.k.a OID) for this algorithm.
+    #[must_use]
     pub fn oid(&self) -> ObjectIdentifier {
         match self {
             Self::Pbes1(params) => params.oid(),
@@ -127,6 +135,7 @@ impl EncryptionScheme {
     }
 
     /// Get [`pbes1::Parameters`] if it is the selected algorithm.
+    #[must_use]
     pub fn pbes1(&self) -> Option<&pbes1::Algorithm> {
         match self {
             Self::Pbes1(alg) => Some(alg),
@@ -135,6 +144,7 @@ impl EncryptionScheme {
     }
 
     /// Get [`pbes2::Parameters`] if it is the selected algorithm.
+    #[must_use]
     pub fn pbes2(&self) -> Option<&pbes2::Parameters> {
         match self {
             Self::Pbes2(params) => Some(params),

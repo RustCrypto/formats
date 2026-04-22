@@ -11,9 +11,6 @@ use der::{
     asn1::{AnyRef, ObjectIdentifier},
 };
 
-#[cfg(feature = "pbes2")]
-use core::mem::size_of;
-
 /// Password-Based Key Derivation Function (PBKDF2) OID.
 pub const PBKDF2_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.12");
 
@@ -58,6 +55,7 @@ pub enum Kdf {
 impl Kdf {
     /// Get derived key length in bytes, if defined.
     // TODO(tarcieri): rename to `key_size` to match `EncryptionScheme::key_size`?
+    #[must_use]
     pub fn key_length(&self) -> Option<u16> {
         match self {
             Self::Pbkdf2(params) => params.key_length,
@@ -66,6 +64,7 @@ impl Kdf {
     }
 
     /// Get the [`ObjectIdentifier`] (a.k.a OID) for this algorithm.
+    #[must_use]
     pub fn oid(&self) -> ObjectIdentifier {
         match self {
             Self::Pbkdf2(_) => PBKDF2_OID,
@@ -74,6 +73,7 @@ impl Kdf {
     }
 
     /// Get [`Pbkdf2Params`] if it is the selected algorithm.
+    #[must_use]
     pub fn pbkdf2(&self) -> Option<&Pbkdf2Params> {
         match self {
             Self::Pbkdf2(params) => Some(params),
@@ -82,6 +82,7 @@ impl Kdf {
     }
 
     /// Get [`ScryptParams`] if it is the selected algorithm.
+    #[must_use]
     pub fn scrypt(&self) -> Option<&ScryptParams> {
         match self {
             Self::Scrypt(params) => Some(params),
@@ -90,17 +91,20 @@ impl Kdf {
     }
 
     /// Is the selected KDF PBKDF2?
+    #[must_use]
     pub fn is_pbkdf2(&self) -> bool {
         self.pbkdf2().is_some()
     }
 
     /// Is the selected KDF scrypt?
+    #[must_use]
     pub fn is_scrypt(&self) -> bool {
         self.scrypt().is_some()
     }
 
     /// Convenience function to turn the OID (see [`oid`](Self::oid))
     /// of this [`Kdf`] into error case [`Error::AlgorithmParametersInvalid`]
+    #[must_use]
     pub fn to_alg_params_invalid(&self) -> Error {
         Error::AlgorithmParametersInvalid { oid: self.oid() }
     }
@@ -181,7 +185,7 @@ impl TryFrom<AlgorithmIdentifierRef<'_>> for Kdf {
 /// ```
 ///
 /// [RFC 8018 Appendix A.2]: https://tools.ietf.org/html/rfc8018#appendix-A.2
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Pbkdf2Params {
     /// PBKDF2 salt
     // TODO(tarcieri): support `CHOICE` with `otherSource`
@@ -211,7 +215,11 @@ impl Pbkdf2Params {
 
     const INVALID_ERR: Error = Error::AlgorithmParametersInvalid { oid: PBKDF2_OID };
 
-    /// Initialize PBKDF2-SHA256 with the given iteration count and salt
+    /// Initialize PBKDF2-SHA256 with the given iteration count and salt.
+    ///
+    /// # Errors
+    /// Returns [`Error::AlgorithmParametersInvalid`] if `iteration_count` exceeds
+    /// [`Pbkdf2Params::MAX_ITERATION_COUNT`] or `salt` exceeds [`Salt::MAX_LEN`].
     pub fn hmac_with_sha256(iteration_count: u32, salt: &[u8]) -> Result<Self> {
         if iteration_count > Self::MAX_ITERATION_COUNT {
             return Err(Self::INVALID_ERR);
@@ -302,6 +310,7 @@ pub enum Pbkdf2Prf {
 
 impl Pbkdf2Prf {
     /// Get the [`ObjectIdentifier`] (a.k.a OID) for this algorithm.
+    #[must_use]
     pub fn oid(self) -> ObjectIdentifier {
         match self {
             Self::HmacWithSha1 => HMAC_WITH_SHA1_OID,
@@ -384,7 +393,7 @@ impl Encode for Pbkdf2Prf {
 /// ```
 ///
 /// [RFC 7914 Section 7.1]: https://datatracker.ietf.org/doc/html/rfc7914#section-7.1
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct ScryptParams {
     /// scrypt salt
     pub salt: Salt,
@@ -408,6 +417,9 @@ impl ScryptParams {
 
     /// Get the [`ScryptParams`] for the provided upstream [`scrypt::Params`]
     /// and a provided salt string.
+    ///
+    /// # Errors
+    /// Returns [`Error::AlgorithmParametersInvalid`] if the parameters are invalid.
     // TODO(tarcieri): encapsulate `scrypt::Params`?
     #[cfg(feature = "pbes2")]
     pub fn from_params_and_salt(params: scrypt::Params, salt: &[u8]) -> Result<Self> {
@@ -479,11 +491,12 @@ impl TryFrom<ScryptParams> for scrypt::Params {
 impl TryFrom<&ScryptParams> for scrypt::Params {
     type Error = Error;
 
+    #[allow(clippy::unwrap_in_result, reason = "invariant should hold")]
     fn try_from(params: &ScryptParams) -> Result<scrypt::Params> {
-        let n = params.cost_parameter;
-
         // Compute log2 and verify its correctness
-        let log_n = ((8 * size_of::<ScryptCost>() as u32) - n.leading_zeros() - 1) as u8;
+        let n = params.cost_parameter;
+        let log_n =
+            u8::try_from(ScryptCost::BITS - n.leading_zeros() - 1).expect("should always fit");
 
         if 1 << log_n != n {
             return Err(ScryptParams::INVALID_ERR);

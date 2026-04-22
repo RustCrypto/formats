@@ -40,6 +40,8 @@ des-insecure = ["dep:des", "pbes2"]
 pbes2 = ["dep:aes", "dep:cbc", "dep:pbkdf2", "dep:scrypt", "dep:sha2"]
 sha1-insecure = ["dep:sha1", "pbes2"]
 
+[lints]
+workspace = true
+
 [package.metadata.docs.rs]
-all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
