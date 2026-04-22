@@ -40,7 +40,15 @@ pub use scrypt;
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
 use alloc::vec::Vec;
 
-/// Supported PKCS#5 password-based encryption schemes.
+/// Configuration for supported PKCS#5 password-based encryption schemes.
+///
+/// <div class="warning">
+/// <strong>Security Warning</strong>
+///
+/// This type should not be used to encrypt multiple plaintexts under the same IV/salt values.
+///
+/// Instead, new values should be randomly generated for every usage.
+/// </div>
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 #[allow(clippy::large_enum_variant)]
@@ -57,13 +65,25 @@ pub enum EncryptionScheme {
 }
 
 impl EncryptionScheme {
+    /// Generate PBES2 parameters using recommended algorithm settings and parameters (salt/IV)
+    /// generated using the system's secure random number generator.
+    ///
+    /// # Panics
+    /// In the event the system's secure random generator experiences an internal failure.
+    #[cfg(all(feature = "pbes2", feature = "getrandom"))]
+    #[must_use]
+    #[track_caller]
+    pub fn generate() -> Self {
+        Self::Pbes2(pbes2::Parameters::generate())
+    }
+
     /// Attempt to decrypt the given ciphertext, allocating and returning a byte vector containing
     /// the plaintext.
     ///
     /// # Errors
     /// Returns an error if the algorithm specified in this scheme's parameters is unsupported
-    /// (e.g. PBES1 is completely unsupported), or if the ciphertext is malformed (e.g. not a
-    /// multiple of a block mode's padding).
+    /// (e.g. PBES1 is completely unsupported), or if the ciphertext is malformed (e.g. ciphertext
+    /// length is not a multiple of a block mode's padding).
     #[cfg(all(feature = "alloc", feature = "pbes2"))]
     pub fn decrypt(&self, password: impl AsRef<[u8]>, ciphertext: &[u8]) -> Result<Vec<u8>> {
         match self {

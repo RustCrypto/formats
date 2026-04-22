@@ -18,7 +18,7 @@ use der::{
     asn1::{AnyRef, ObjectIdentifier, OctetStringRef},
 };
 
-#[cfg(feature = "rand_core")]
+#[cfg(all(feature = "pbes2", feature = "rand_core"))]
 use rand_core::TryCryptoRng;
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
@@ -67,6 +67,18 @@ const DES_BLOCK_SIZE: usize = 8;
 ///       encryptionScheme AlgorithmIdentifier {{PBES2-Encs}} }
 /// ```
 ///
+/// These define a set of algorithms for password-based key derivation, as well as a salt value
+/// (typically randomly generated) to provide to the KDF algorithm, along with an encryption
+/// algorithm and its associated IV/nonce (typically randomly generated).
+///
+/// <div class="warning">
+/// <strong>Security Warning</strong>
+///
+/// This type should not be used to encrypt multiple plaintexts under the same IV/salt values.
+///
+/// Instead, new values should be randomly generated for every usage.
+/// </div>
+///
 /// [RFC 8018 Appendix A.4]: https://tools.ietf.org/html/rfc8018#appendix-A.4
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Parameters {
@@ -79,15 +91,27 @@ pub struct Parameters {
 
 impl Parameters {
     /// Default length of an initialization vector.
-    #[cfg(feature = "rand_core")]
+    #[cfg(all(feature = "pbes2", feature = "rand_core"))]
     const DEFAULT_IV_LEN: usize = AES_BLOCK_SIZE;
 
     /// Default length of a salt for password hashing.
-    #[cfg(feature = "rand_core")]
+    #[cfg(all(feature = "pbes2", feature = "rand_core"))]
     const DEFAULT_SALT_LEN: usize = 16;
 
-    /// Generate PBES2 parameters using the recommended algorithm settings and
-    /// a randomly generated salt and IV.
+    /// Generate PBES2 parameters using recommended algorithm settings and parameters (salt/IV)
+    /// generated using the system's secure random number generator.
+    ///
+    /// # Panics
+    /// In the event the system's secure random generator experiences an internal failure.
+    #[cfg(all(feature = "pbes2", feature = "getrandom"))]
+    #[must_use]
+    #[track_caller]
+    pub fn generate() -> Self {
+        Self::generate_recommended(&mut getrandom::SysRng).expect("random generation failure")
+    }
+
+    /// Generate PBES2 parameters using the recommended algorithm settings and a randomly generated
+    /// salt and IV.
     ///
     /// This is currently an alias for [`Parameters::generate_scrypt`]. See that method
     /// for more information.
@@ -109,7 +133,7 @@ impl Parameters {
     ///
     /// # Errors
     /// Returns [`Error::Rng`] in the event the random number generator `R` fails.
-    #[cfg(feature = "rand_core")]
+    #[cfg(all(feature = "pbes2", feature = "rand_core"))]
     pub fn generate_pbkdf2<R: TryCryptoRng>(rng: &mut R) -> Result<Self> {
         let mut iv = [0u8; Self::DEFAULT_IV_LEN];
         rng.try_fill_bytes(&mut iv).map_err(|_| Error::Rng)?;

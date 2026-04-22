@@ -1036,6 +1036,7 @@ dependencies = [
  "cbc",
  "der",
  "des",
+ "getrandom 0.4.2",
  "hex-literal",
  "pbkdf2",
  "rand_core 0.10.1",
