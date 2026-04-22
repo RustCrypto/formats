@@ -4,6 +4,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.8.0 (2026-04-24)
+### Added
+- `pbes2::Params` constructors ([#1207])
+- `EncryptionScheme::generate` method gated on `getrandom` feature ([#2297])
+- `pbes2::Parameters::generate` method gated on `getrandom` feature ([#2297])
+
+### Changed
+- All types now own rather than borrow their data ([#1195])
+- Upgrade to the 2024 edition; MSRV 1.85 ([#1670])
+- Bump `rand_core` to v0.10 ([#2198])
+- Bump `getrandom` to v0.4 ([#2198])
+- Bump `der` to v0.8 ([#2234])
+- Bump `sha2` to v0.11 ([#2273])
+- Bump `aes` to v0.9 ([#2281])
+- Bump `cbc` to v0.2 ([#2282])
+- Bump `des` to v0.9 ([#2282])
+- Bump `pbkdf2` to v0.13 ([#2291])
+- Bump `scrypt` to v0.12 ([#2291])
+
+### Fixed
+- Allow empty `algId` PRF parameter for PBES2 params ([#1521])
+- Incorrect error was being returned from CBC decryption ([#1678])
+
+### Removed
+- `std` feature ([#2294])
+
+[#1195]: https://github.com/RustCrypto/formats/pull/1195
+[#1207]: https://github.com/RustCrypto/formats/pull/1207
+[#1521]: https://github.com/RustCrypto/formats/pull/1521
+[#1670]: https://github.com/RustCrypto/formats/pull/1670
+[#1678]: https://github.com/RustCrypto/formats/pull/1678
+[#2198]: https://github.com/RustCrypto/formats/pull/2198
+[#2234]: https://github.com/RustCrypto/formats/pull/2234
+[#2273]: https://github.com/RustCrypto/formats/pull/2273
+[#2281]: https://github.com/RustCrypto/formats/pull/2281
+[#2282]: https://github.com/RustCrypto/formats/pull/2282
+[#2291]: https://github.com/RustCrypto/formats/pull/2291
+[#2294]: https://github.com/RustCrypto/formats/pull/2294
+[#2297]: https://github.com/RustCrypto/formats/pull/2297
+
 ## 0.7.1 (2023-03-05)
 ### Changed
 - Bump `pbkdf2` to v0.12 ([#913])

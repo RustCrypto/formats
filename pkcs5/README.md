@@ -12,6 +12,13 @@ Password-Based Cryptography Specification Version 2.1 ([RFC 8018]).
 
 [Documentation][docs-link]
 
+## About
+
+PKCS#5 is a standard for deriving cryptographic keys from a password using a variety of supported
+algorithms, and then encrypting/decrypting data (e.g. PKCS#8 private keys) using that derived key.
+
+This crate supports deriving keys from passwords using either the `scrypt` or `pbkdf2` algorithms.
+
 ## Minimum Supported Rust Version (MSRV) Policy
 
 MSRV increases are not considered breaking changes and can happen in patch releases.
