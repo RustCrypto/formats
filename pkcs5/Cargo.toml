@@ -24,6 +24,7 @@ aes = { version = "0.9", optional = true, default-features = false }
 cbc = { version = "0.2", optional = true }
 des = { version = "0.9", optional = true, default-features = false }
 pbkdf2 = { version = "0.13", optional = true, default-features = false, features = ["hmac"] }
+getrandom = { version = "0.4", optional = true, features = ["sys_rng"] }
 rand_core = { version = "0.10", optional = true, default-features = false }
 scrypt = { version = "0.12", optional = true, default-features = false }
 sha1 = { version = "0.11", optional = true, default-features = false }
@@ -37,7 +38,9 @@ alloc = []
 
 3des = ["dep:des", "pbes2"]
 des-insecure = ["dep:des", "pbes2"]
+getrandom = ["dep:getrandom", "rand_core"]
 pbes2 = ["dep:aes", "dep:cbc", "dep:pbkdf2", "dep:scrypt", "dep:sha2"]
+rand_core = ["dep:rand_core"]
 sha1-insecure = ["dep:sha1", "pbes2"]
 
 [lints]
