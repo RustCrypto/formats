@@ -7,6 +7,7 @@ mod internal_macros;
 mod any;
 mod application;
 pub(crate) mod bit_string;
+mod bit_string2;
 #[cfg(feature = "alloc")]
 mod bmp_string;
 mod boolean;
@@ -37,6 +38,7 @@ pub use self::{
     any::AnyRef,
     application::{Application, ApplicationRef},
     bit_string::{BitStringIter, BitStringRef},
+    bit_string2::BitStringRef2,
     choice::Choice,
     context_specific::{ContextSpecific, ContextSpecificRef},
     general_string::GeneralStringRef,

@@ -157,7 +157,7 @@ jobs:
   test-miri:
     runs-on: ubuntu-latest
     env:
-      MIRIFLAGS: "-Zmiri-symbolic-alignment-check -Zmiri-strict-provenance"
+      MIRIFLAGS: "-Zmiri-backtrace=full -Zmiri-symbolic-alignment-check -Zmiri-strict-provenance"
     strategy:
       matrix:
         target:
