@@ -69,7 +69,6 @@ builder = [
     "dep:rand_core",
     "dep:subtle",
     "zeroize/alloc",
-    "cms/builder",
 ]
 legacy = [
     "builder",
