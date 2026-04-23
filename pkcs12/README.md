@@ -39,8 +39,7 @@ pkcs12 = { version = "0.2", features = ["builder"] }
 ### `legacy` feature
 
 Enable the `legacy` feature to support legacy PKCS #12 PBE algorithms (SHA-1/3DES-CBC,
-SHA-1/RC2-CBC) and HMAC-SHA-1 MAC. These are required for interoperability with iOS
-`SecPKCS12Import` and other implementations that do not support PBES2.
+SHA-1/RC2-CBC) and HMAC-SHA-1 MAC. 
 
 ```toml
 [dependencies]
