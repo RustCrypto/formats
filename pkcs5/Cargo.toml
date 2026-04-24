@@ -47,4 +47,4 @@ sha1-insecure = ["dep:sha1", "pbes2"]
 workspace = true
 
 [package.metadata.docs.rs]
-rustdoc-args = ["--cfg", "docsrs"]
+all-features = true
