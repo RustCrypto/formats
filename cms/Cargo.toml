@@ -40,7 +40,7 @@ aes = "0.9"
 getrandom = "0.4"
 hex-literal = "1"
 pem-rfc7468 = "1"
-pkcs5 = "0.8.0-rc.13"
+pkcs5 = "0.8"
 pbkdf2 = "0.13.0-rc.9"
 rand = "0.10"
 rsa = { version = "0.10.0-rc.17", features = ["sha2"] }
