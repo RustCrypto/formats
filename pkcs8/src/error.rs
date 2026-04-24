@@ -47,8 +47,17 @@ impl fmt::Display for Error {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for Error {}
+impl core::error::Error for Error {
+    fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
+        match self {
+            Error::Asn1(err) => Some(err),
+            #[cfg(feature = "pkcs5")]
+            Error::EncryptedPrivateKey(err) => Some(err),
+            Error::PublicKey(err) => Some(err),
+            _ => None,
+        }
+    }
+}
 
 impl From<der::Error> for Error {
     fn from(err: der::Error) -> Error {
