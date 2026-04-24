@@ -153,11 +153,11 @@ jobs:
           toolchain: 1.87
       - run: cargo test --features heapless
 
-  # Test using `cargo miri`
+  # Test using `cargo miri` (tree borrows)
   test-miri:
     runs-on: ubuntu-latest
     env:
-      MIRIFLAGS: "-Zmiri-backtrace=full -Zmiri-symbolic-alignment-check -Zmiri-strict-provenance"
+      MIRIFLAGS: "-Zmiri-backtrace=full -Zmiri-symbolic-alignment-check -Zmiri-strict-provenance -Zmiri-tree-borrows"
     strategy:
       matrix:
         target:
