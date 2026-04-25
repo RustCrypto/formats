@@ -53,6 +53,10 @@ where
 {
     /// Attempt to decrypt this encrypted private key using the provided
     /// password to derive an encryption key.
+    ///
+    /// # Errors
+    /// - Returns errors in the event the file could not be decrypted successfully.
+    /// - Returns errors if the file decrypted but the resulting plaintext failed to decode.
     #[cfg(feature = "encryption")]
     pub fn decrypt(&self, password: impl AsRef<[u8]>) -> Result<SecretDocument> {
         Ok(self

@@ -17,6 +17,7 @@ pub enum Version {
 
 impl Version {
     /// Is this version expected to have a public key?
+    #[must_use]
     pub fn has_public_key(self) -> bool {
         match self {
             Version::V1 => false,

@@ -170,7 +170,7 @@ fn decrypt_ed25519_der_encpriv_aes256_scrypt() {
 #[cfg(feature = "encryption")]
 #[test]
 fn encrypt_ed25519_der_encpriv_aes256_pbkdf2_sha256() {
-    let pbes2_params = pkcs5::pbes2::Parameters::generate_pbkdf2_sha256_aes256cbc(
+    let pbes2_params = pbes2::Parameters::generate_pbkdf2_sha256_aes256cbc(
         2048,
         &hex!("79d982e70df91a88"),
         hex!("b2d02d78b2efd9dff694cf8e0af40925"),
@@ -191,7 +191,7 @@ fn encrypt_ed25519_der_encpriv_aes256_pbkdf2_sha256() {
 #[cfg(feature = "encryption")]
 #[test]
 fn encrypt_ed25519_der_encpriv_aes256_scrypt() {
-    let scrypt_params = pkcs5::pbes2::Parameters::generate_scrypt_aes256cbc(
+    let scrypt_params = pbes2::Parameters::generate_scrypt_aes256cbc(
         pkcs5::scrypt::Params::new(15, 8, 1).unwrap(),
         &hex!("E6211E2348AD69E0"),
         hex!("9BD0A6251F2254F9FD5963887C27CF01"),

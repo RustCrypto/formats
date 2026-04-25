@@ -6,14 +6,6 @@
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg"
 )]
 #![forbid(unsafe_code)]
-#![warn(
-    clippy::mod_module_files,
-    clippy::unwrap_used,
-    missing_docs,
-    rust_2018_idioms,
-    unused_lifetimes,
-    unused_qualifications
-)]
 
 //! ## About this crate
 //! This library provides generalized PKCS#8 support designed to work with a
@@ -54,15 +46,16 @@
 //! private keys encrypted with DES-CBC and DES-EDE3-CBC (3DES or Triple DES) symmetric
 //! encryption, respectively.
 //!
-//! ⚠️ WARNING ⚠️
+//! <div class="warning">
+//! <b>Security Warning</b>
 //!
-//! DES support (gated behind the `des-insecure` feature) is implemented to
-//! allow for decryption of legacy PKCS#8 files only.
+//! DES support (gated behind the `des-insecure` feature) is implemented to allow for decryption of
+//! legacy PKCS#8 files only.
 //!
-//! Such PKCS#8 documents should be considered *INSECURE* due to the short
-//! 56-bit key size of DES.
+//! Such PKCS#8 documents should be considered *INSECURE* due to the short 56-bit key size of DES.
 //!
 //! New keys should use AES instead.
+//! </div>
 //!
 //! [RFC 5208]: https://tools.ietf.org/html/rfc5208
 //! [RFC 5958]: https://tools.ietf.org/html/rfc5958
