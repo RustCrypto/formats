@@ -377,10 +377,6 @@ where
 /// [`PrivateKeyInfo`] with [`AnyRef`] algorithm parameters, and `&[u8]` key.
 pub type PrivateKeyInfoRef<'a> = PrivateKeyInfo<AnyRef<'a>, &'a OctetStringRef, BitStringRef<'a>>;
 
-/// [`PrivateKeyInfo`] with [`Any`] algorithm parameters, and `Box<[u8]>` key.
-#[cfg(feature = "alloc")]
-pub type PrivateKeyInfoOwned = PrivateKeyInfo<Any, OctetString, BitString>;
-
 /// [`BitStringLike`] marks object that will act like a `BitString`.
 ///
 /// It will allow to get a [`BitStringRef`] that points back to the underlying bytes.
@@ -396,15 +392,39 @@ impl BitStringLike for BitStringRef<'_> {
 }
 
 #[cfg(feature = "alloc")]
-mod allocating {
+pub(crate) mod allocating {
     use super::*;
+    use crate::{DecodePrivateKey, EncodePrivateKey};
     use alloc::borrow::ToOwned;
     use core::borrow::Borrow;
     use der::referenced::*;
 
-    impl BitStringLike for BitString {
-        fn as_bit_string(&self) -> BitStringRef<'_> {
-            BitStringRef::from(self)
+    #[cfg(feature = "pem")]
+    use der::DecodePem;
+
+    /// [`PrivateKeyInfo`] with [`Any`] algorithm parameters, and `Box<[u8]>` key.
+    pub type PrivateKeyInfoOwned = PrivateKeyInfo<Any, OctetString, BitString>;
+
+    impl DecodePrivateKey for PrivateKeyInfoOwned {
+        fn from_pkcs8_der(bytes: &[u8]) -> Result<Self> {
+            Ok(Self::from_der(bytes)?)
+        }
+
+        #[cfg(feature = "pem")]
+        fn from_pkcs8_pem(pem: &str) -> Result<Self> {
+            Ok(Self::from_pem(pem)?)
+        }
+    }
+
+    impl EncodePrivateKey for PrivateKeyInfoOwned {
+        fn to_pkcs8_der(&self) -> Result<SecretDocument> {
+            self.try_into()
+        }
+    }
+
+    impl EncodePrivateKey for PrivateKeyInfoRef<'_> {
+        fn to_pkcs8_der(&self) -> Result<SecretDocument> {
+            self.try_into()
         }
     }
 
@@ -427,6 +447,12 @@ mod allocating {
                 private_key: self.private_key.borrow(),
                 public_key: self.public_key.owned_to_ref(),
             }
+        }
+    }
+
+    impl BitStringLike for BitString {
+        fn as_bit_string(&self) -> BitStringRef<'_> {
+            BitStringRef::from(self)
         }
     }
 }
