@@ -24,7 +24,7 @@ pub enum Error {
     /// This is intended for relaying errors related to the raw data contained
     /// within [`PrivateKeyInfo::private_key`][`crate::PrivateKeyInfo::private_key`]
     /// or [`SubjectPublicKeyInfo::subject_public_key`][`crate::SubjectPublicKeyInfo::subject_public_key`].
-    KeyMalformed,
+    KeyMalformed(KeyError),
 
     /// [`AlgorithmIdentifier::parameters`][`crate::AlgorithmIdentifierRef::parameters`]
     /// is malformed or otherwise encoded in an unexpected manner.
@@ -40,8 +40,8 @@ impl fmt::Display for Error {
             Error::Asn1(err) => write!(f, "PKCS#8 ASN.1 error: {err}"),
             #[cfg(feature = "pkcs5")]
             Error::EncryptedPrivateKey(err) => write!(f, "{err}"),
-            Error::KeyMalformed => f.write_str("PKCS#8 cryptographic key data malformed"),
-            Error::ParametersMalformed => f.write_str("PKCS#8 algorithm parameters malformed"),
+            Error::KeyMalformed(err) => write!(f, "PKCS#8 key malformed: {err}"),
+            Error::ParametersMalformed => write!(f, "PKCS#8 algorithm parameters malformed"),
             Error::PublicKey(err) => write!(f, "public key error: {err}"),
         }
     }
@@ -53,9 +53,16 @@ impl core::error::Error for Error {
             Error::Asn1(err) => Some(err),
             #[cfg(feature = "pkcs5")]
             Error::EncryptedPrivateKey(err) => Some(err),
+            Error::KeyMalformed(err) => Some(err),
             Error::PublicKey(err) => Some(err),
             _ => None,
         }
+    }
+}
+
+impl From<KeyError> for Error {
+    fn from(err: KeyError) -> Error {
+        Error::KeyMalformed(err)
     }
 }
 
@@ -100,3 +107,29 @@ impl From<Error> for spki::Error {
         }
     }
 }
+
+/// Key-related errors.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
+pub enum KeyError {
+    /// Key is not valid for this algorithm.
+    Invalid,
+
+    /// Key is too short.
+    TooShort,
+
+    /// Key is too long.
+    TooLong,
+}
+
+impl fmt::Display for KeyError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            KeyError::Invalid => f.write_str("key invalid"),
+            KeyError::TooShort => f.write_str("key too short"),
+            KeyError::TooLong => f.write_str("key too long"),
+        }
+    }
+}
+
+impl core::error::Error for KeyError {}
