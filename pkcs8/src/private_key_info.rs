@@ -147,6 +147,10 @@ where
     ///   - r: 8
     ///   - p: 1
     /// - Cipher: AES-256-CBC (best available option for PKCS#5 encryption)
+    ///
+    /// # Errors
+    /// - Propagates errors from calling [`Encode::to_der`] on `Self`.
+    /// - Returns errors in the event encryption failed.
     #[cfg(feature = "encryption")]
     pub fn encrypt<R: CryptoRng>(
         &self,
@@ -159,6 +163,10 @@ where
 
     /// Encrypt this private key using a symmetric encryption key derived
     /// from the provided password and [`pbes2::Parameters`].
+    ///
+    /// # Errors
+    /// - Propagates errors from calling [`Encode::to_der`] on `Self`.
+    /// - Returns errors in the event encryption failed.
     #[cfg(feature = "encryption")]
     pub fn encrypt_with_params(
         &self,
@@ -341,7 +349,7 @@ where
             self.algorithm == other.algorithm && self.public_key == other.public_key;
 
         self.private_key.as_ref().ct_eq(other.private_key.as_ref())
-            & Choice::from(public_fields_eq as u8)
+            & Choice::from(u8::from(public_fields_eq))
     }
 }
 
@@ -373,9 +381,10 @@ pub type PrivateKeyInfoRef<'a> = PrivateKeyInfo<AnyRef<'a>, &'a OctetStringRef, 
 #[cfg(feature = "alloc")]
 pub type PrivateKeyInfoOwned = PrivateKeyInfo<Any, OctetString, BitString>;
 
-/// [`BitStringLike`] marks object that will act like a BitString.
+/// [`BitStringLike`] marks object that will act like a `BitString`.
 ///
 /// It will allow to get a [`BitStringRef`] that points back to the underlying bytes.
+// TODO(tarcieri): replace this with `AsRef<BitStringRef>` when we can have `&BitStringRef`.
 pub trait BitStringLike {
     fn as_bit_string(&self) -> BitStringRef<'_>;
 }

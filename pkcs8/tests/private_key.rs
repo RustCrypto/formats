@@ -99,7 +99,7 @@ fn decode_ec_bignp256_der() {
             "1F66B5B84B7339674533F0329C74F21834281FED0732429E0C79235FC273E269"
         ))
         .unwrap()
-    )
+    );
 }
 
 // Test vector from RFC8410 Section 10.3:
