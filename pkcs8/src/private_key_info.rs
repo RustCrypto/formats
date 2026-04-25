@@ -9,22 +9,19 @@ use der::{
 };
 use spki::AlgorithmIdentifier;
 
+#[cfg(feature = "ctutils")]
+use ctutils::{Choice, CtEq};
+#[cfg(feature = "pem")]
+use der::pem::PemLabel;
 #[cfg(feature = "alloc")]
 use der::{
     SecretDocument,
     asn1::{Any, BitString, OctetString},
 };
-
 #[cfg(feature = "encryption")]
 use {
     crate::EncryptedPrivateKeyInfoRef, der::zeroize::Zeroizing, pkcs5::pbes2, rand_core::CryptoRng,
 };
-
-#[cfg(feature = "pem")]
-use der::pem::PemLabel;
-
-#[cfg(feature = "subtle")]
-use subtle::{Choice, ConstantTimeEq};
 
 /// Context-specific tag number for attributes.
 const ATTRIBUTES_TAG: TagNumber = TagNumber(0);
@@ -336,8 +333,8 @@ impl<Params, Key, PubKey> PemLabel for PrivateKeyInfo<Params, Key, PubKey> {
     const PEM_LABEL: &'static str = "PRIVATE KEY";
 }
 
-#[cfg(feature = "subtle")]
-impl<Params, Key, PubKey> ConstantTimeEq for PrivateKeyInfo<Params, Key, PubKey>
+#[cfg(feature = "ctutils")]
+impl<Params, Key, PubKey> CtEq for PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: Eq,
     Key: PartialEq + AsRef<[u8]>,
@@ -353,7 +350,7 @@ where
     }
 }
 
-#[cfg(feature = "subtle")]
+#[cfg(feature = "ctutils")]
 impl<Params, Key, PubKey> Eq for PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: Eq,
@@ -362,7 +359,7 @@ where
 {
 }
 
-#[cfg(feature = "subtle")]
+#[cfg(feature = "ctutils")]
 impl<Params, Key, PubKey> PartialEq for PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: Eq,

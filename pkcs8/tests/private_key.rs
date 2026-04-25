@@ -194,7 +194,7 @@ fn encode_ed25519_der_v1() {
 }
 
 #[test]
-#[cfg(all(feature = "alloc", feature = "subtle"))]
+#[cfg(all(feature = "alloc", feature = "ctutils"))]
 fn encode_ed25519_der_v2() {
     let private_key = PrivateKeyInfoRef::try_from(ED25519_DER_V2_EXAMPLE).unwrap();
     let private_der = private_key.to_der().unwrap();
