@@ -67,20 +67,27 @@ where
 
     /// Encrypt the given ASN.1 DER document using a symmetric encryption key
     /// derived from the provided password.
+    #[cfg(feature = "getrandom")]
+    pub(crate) fn encrypt(password: impl AsRef<[u8]>, doc: &[u8]) -> Result<SecretDocument> {
+        Self::encrypt_with_rng(&mut getrandom::SysRng, password, doc)
+    }
+
+    /// Encrypt the given ASN.1 DER document using a symmetric encryption key
+    /// derived from the provided password.
     #[cfg(feature = "encryption")]
-    pub(crate) fn encrypt<R: TryCryptoRng>(
+    pub(crate) fn encrypt_with_rng<R: TryCryptoRng>(
         rng: &mut R,
         password: impl AsRef<[u8]>,
         doc: &[u8],
     ) -> Result<SecretDocument> {
         let pbes2_params = pbes2::Parameters::generate_recommended(rng)?;
-        EncryptedPrivateKeyInfoOwned::encrypt_with(pbes2_params, password, doc)
+        EncryptedPrivateKeyInfoOwned::encrypt_with_params(pbes2_params, password, doc)
     }
 
     /// Encrypt this private key using a symmetric encryption key derived
     /// from the provided password and [`pbes2::Parameters`].
     #[cfg(feature = "encryption")]
-    pub(crate) fn encrypt_with(
+    pub(crate) fn encrypt_with_params(
         pbes2_params: pbes2::Parameters,
         password: impl AsRef<[u8]>,
         doc: &[u8],

@@ -1052,6 +1052,7 @@ version = "0.11.0-rc.11"
 dependencies = [
  "ctutils",
  "der",
+ "getrandom 0.4.2",
  "hex-literal",
  "pkcs5",
  "rand_core 0.10.1",

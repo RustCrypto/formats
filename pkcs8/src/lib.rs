@@ -87,23 +87,20 @@ pub use spki::{
     self, AlgorithmIdentifierRef, DecodePublicKey, SubjectPublicKeyInfo, SubjectPublicKeyInfoRef,
 };
 
+#[cfg(feature = "pem")]
+pub use der::pem::LineEnding;
+#[cfg(all(feature = "alloc", feature = "pkcs5"))]
+pub use encrypted_private_key_info::EncryptedPrivateKeyInfoOwned;
+#[cfg(feature = "encryption")]
+pub use rand_core;
 #[cfg(feature = "alloc")]
 pub use {
     crate::{private_key_info::allocating::PrivateKeyInfoOwned, traits::EncodePrivateKey},
     der::{Document, SecretDocument},
     spki::EncodePublicKey,
 };
-
-#[cfg(feature = "pem")]
-pub use der::pem::LineEnding;
-
-#[cfg(all(feature = "alloc", feature = "pkcs5"))]
-pub use encrypted_private_key_info::EncryptedPrivateKeyInfoOwned;
 #[cfg(feature = "pkcs5")]
 pub use {
     encrypted_private_key_info::{EncryptedPrivateKeyInfo, EncryptedPrivateKeyInfoRef},
     pkcs5,
 };
-
-#[cfg(feature = "rand_core")]
-pub use rand_core;

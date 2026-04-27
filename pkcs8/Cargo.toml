@@ -22,6 +22,7 @@ spki = "0.8"
 
 # optional dependencies
 ctutils = { version = "0.4", optional = true }
+getrandom = { version = "0.4", optional = true, features = ["sys_rng"] }
 pkcs5 = { version = "0.8", optional = true, features = ["rand_core"] }
 rand_core = { version = "0.10", optional = true, default-features = false }
 
@@ -35,7 +36,8 @@ std = ["alloc", "der/std", "spki/std"]
 
 3des = ["encryption", "pkcs5/3des"]
 des-insecure = ["encryption", "pkcs5/des-insecure"]
-encryption = ["alloc", "pkcs5/alloc", "pkcs5/pbes2", "rand_core"]
+encryption = ["alloc", "pkcs5/alloc", "pkcs5/pbes2", "dep:rand_core"]
+getrandom = ["encryption", "pkcs5/getrandom", "dep:getrandom"]
 pem = ["alloc", "der/pem", "spki/pem"]
 sha1-insecure = ["encryption", "pkcs5/sha1-insecure"]
 

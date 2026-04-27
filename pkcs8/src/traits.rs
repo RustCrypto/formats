@@ -6,7 +6,7 @@ use crate::{Error, PrivateKeyInfoRef, Result};
 use der::SecretDocument;
 
 #[cfg(feature = "encryption")]
-use {crate::EncryptedPrivateKeyInfoRef, rand_core::TryCryptoRng};
+use crate::EncryptedPrivateKeyInfoRef;
 
 #[cfg(feature = "pem")]
 use {
@@ -130,13 +130,9 @@ pub trait EncodePrivateKey {
     /// # Errors
     /// - Returns format-specific errors in the event the document failed to serialize.
     /// - Returns algorithm-specific errors in the event the document couldn't be encrypted.
-    #[cfg(feature = "encryption")]
-    fn to_pkcs8_encrypted_der<R: TryCryptoRng>(
-        &self,
-        rng: &mut R,
-        password: impl AsRef<[u8]>,
-    ) -> Result<SecretDocument> {
-        EncryptedPrivateKeyInfoRef::encrypt(rng, password, self.to_pkcs8_der()?.as_bytes())
+    #[cfg(feature = "getrandom")]
+    fn to_pkcs8_encrypted_der(&self, password: impl AsRef<[u8]>) -> Result<SecretDocument> {
+        EncryptedPrivateKeyInfoRef::encrypt(password, self.to_pkcs8_der()?.as_bytes())
     }
 
     /// Serialize this private key as PEM-encoded PKCS#8 with the given [`LineEnding`].
@@ -150,20 +146,19 @@ pub trait EncodePrivateKey {
         Ok(doc.to_pem(PrivateKeyInfoRef::PEM_LABEL, line_ending)?)
     }
 
-    /// Serialize this private key as an encrypted PEM-encoded PKCS#8 private
-    /// key using the `provided` to derive an encryption key.
+    /// Serialize this private key as an encrypted PEM-encoded PKCS#8 private key using the
+    /// `provided` to derive an encryption key.
     ///
     /// # Errors
     /// - Returns the same errors as [`EncodePrivateKey::to_pkcs8_encrypted_der`].
     /// - Returns the same errors as [`SecretDocument::to_pem`].
-    #[cfg(all(feature = "encryption", feature = "pem"))]
-    fn to_pkcs8_encrypted_pem<R: TryCryptoRng>(
+    #[cfg(all(feature = "getrandom", feature = "pem"))]
+    fn to_pkcs8_encrypted_pem(
         &self,
-        rng: &mut R,
         password: impl AsRef<[u8]>,
         line_ending: LineEnding,
     ) -> Result<Zeroizing<String>> {
-        let doc = self.to_pkcs8_encrypted_der(rng, password)?;
+        let doc = self.to_pkcs8_encrypted_der(password)?;
         Ok(doc.to_pem(EncryptedPrivateKeyInfoRef::PEM_LABEL, line_ending)?)
     }
 
