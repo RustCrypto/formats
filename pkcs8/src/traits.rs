@@ -6,7 +6,7 @@ use crate::{Error, PrivateKeyInfoRef, Result};
 use der::SecretDocument;
 
 #[cfg(feature = "encryption")]
-use {crate::EncryptedPrivateKeyInfoRef, rand_core::CryptoRng};
+use {crate::EncryptedPrivateKeyInfoRef, rand_core::TryCryptoRng};
 
 #[cfg(feature = "pem")]
 use {
@@ -131,7 +131,7 @@ pub trait EncodePrivateKey {
     /// - Returns format-specific errors in the event the document failed to serialize.
     /// - Returns algorithm-specific errors in the event the document couldn't be encrypted.
     #[cfg(feature = "encryption")]
-    fn to_pkcs8_encrypted_der<R: CryptoRng>(
+    fn to_pkcs8_encrypted_der<R: TryCryptoRng>(
         &self,
         rng: &mut R,
         password: impl AsRef<[u8]>,
@@ -157,7 +157,7 @@ pub trait EncodePrivateKey {
     /// - Returns the same errors as [`EncodePrivateKey::to_pkcs8_encrypted_der`].
     /// - Returns the same errors as [`SecretDocument::to_pem`].
     #[cfg(all(feature = "encryption", feature = "pem"))]
-    fn to_pkcs8_encrypted_pem<R: CryptoRng>(
+    fn to_pkcs8_encrypted_pem<R: TryCryptoRng>(
         &self,
         rng: &mut R,
         password: impl AsRef<[u8]>,
