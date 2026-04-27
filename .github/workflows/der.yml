@@ -172,18 +172,19 @@ jobs:
       - run: cargo miri test --target ${{ matrix.target }} --no-default-features --lib
 
   # Test WASM using `wasmtime`
-  test-wasm:
-    runs-on: ubuntu-latest
-    env:
-      CARGO_TARGET_WASM32_WASIP1_RUNNER: "wasmtime"
-    steps:
-      - uses: actions/checkout@v6
-      - uses: bytecodealliance/actions/wasmtime/setup@v1
-      - uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
-          targets: wasm32-wasip1
-      - run: cargo test --target wasm32-wasip1 --no-default-features
-      - run: cargo test --target wasm32-wasip1
-      - run: cargo test --target wasm32-wasip1 --all-features
-      - run: cargo test --target wasm32-wasip1 --all-features --release
+  # TODO(tarcieri): re-enable when bytecodealliance/actions#21 is resolved
+  #  test-wasm:
+  #    runs-on: ubuntu-latest
+  #    env:
+  #      CARGO_TARGET_WASM32_WASIP1_RUNNER: "wasmtime"
+  #    steps:
+  #      - uses: actions/checkout@v6
+  #      - uses: bytecodealliance/actions/wasmtime/setup@v1
+  #      - uses: dtolnay/rust-toolchain@master
+  #        with:
+  #          toolchain: stable
+  #          targets: wasm32-wasip1
+  #      - run: cargo test --target wasm32-wasip1 --no-default-features
+  #      - run: cargo test --target wasm32-wasip1
+  #      - run: cargo test --target wasm32-wasip1 --all-features
+  #      - run: cargo test --target wasm32-wasip1 --all-features --release
