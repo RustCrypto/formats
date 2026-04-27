@@ -20,7 +20,8 @@ use der::{
 };
 #[cfg(feature = "encryption")]
 use {
-    crate::EncryptedPrivateKeyInfoRef, der::zeroize::Zeroizing, pkcs5::pbes2, rand_core::CryptoRng,
+    crate::EncryptedPrivateKeyInfoRef, der::zeroize::Zeroizing, pkcs5::pbes2,
+    rand_core::TryCryptoRng,
 };
 
 /// Context-specific tag number for attributes.
@@ -149,7 +150,7 @@ where
     /// - Propagates errors from calling [`Encode::to_der`] on `Self`.
     /// - Returns errors in the event encryption failed.
     #[cfg(feature = "encryption")]
-    pub fn encrypt<R: CryptoRng>(
+    pub fn encrypt<R: TryCryptoRng>(
         &self,
         rng: &mut R,
         password: impl AsRef<[u8]>,
