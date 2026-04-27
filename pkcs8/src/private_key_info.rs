@@ -136,8 +136,7 @@ where
     PubKey: DecodeValue<'a, Error = der::Error> + FixedTag + 'a,
     PubKey: BitStringLike,
 {
-    /// Encrypt this private key using a symmetric encryption key derived
-    /// from the provided password.
+    /// Encrypt this private key using an encryption key derived from the provided password.
     ///
     /// Uses the following algorithms for encryption:
     /// - PBKDF: scrypt with default parameters:
@@ -149,18 +148,31 @@ where
     /// # Errors
     /// - Propagates errors from calling [`Encode::to_der`] on `Self`.
     /// - Returns errors in the event encryption failed.
+    #[cfg(feature = "getrandom")]
+    pub fn encrypt(&self, password: impl AsRef<[u8]>) -> Result<SecretDocument> {
+        let der = Zeroizing::new(self.to_der()?);
+        EncryptedPrivateKeyInfoRef::encrypt(password, der.as_ref())
+    }
+
+    /// Encrypt this private key using an encryption key derived from the provided password.
+    ///
+    /// This function allows the RNG used to derive the salt/IV to be specified directly.
+    ///
+    /// # Errors
+    /// - Propagates errors from calling [`Encode::to_der`] on `Self`.
+    /// - Returns errors in the event encryption failed.
     #[cfg(feature = "encryption")]
-    pub fn encrypt<R: TryCryptoRng>(
+    pub fn encrypt_with_rng<R: TryCryptoRng>(
         &self,
         rng: &mut R,
         password: impl AsRef<[u8]>,
     ) -> Result<SecretDocument> {
         let der = Zeroizing::new(self.to_der()?);
-        EncryptedPrivateKeyInfoRef::encrypt(rng, password, der.as_ref())
+        EncryptedPrivateKeyInfoRef::encrypt_with_rng(rng, password, der.as_ref())
     }
 
-    /// Encrypt this private key using a symmetric encryption key derived
-    /// from the provided password and [`pbes2::Parameters`].
+    /// Encrypt this private key using a symmetric encryption key derived from the provided password
+    /// and [`pbes2::Parameters`].
     ///
     /// # Errors
     /// - Propagates errors from calling [`Encode::to_der`] on `Self`.
@@ -172,7 +184,7 @@ where
         password: impl AsRef<[u8]>,
     ) -> Result<SecretDocument> {
         let der = Zeroizing::new(self.to_der()?);
-        EncryptedPrivateKeyInfoRef::encrypt_with(pbes2_params, password, der.as_ref())
+        EncryptedPrivateKeyInfoRef::encrypt_with_params(pbes2_params, password, der.as_ref())
     }
 }
 
