@@ -4,17 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.11.0 (UNRELEASED)
+## 0.11.0 (2026-04-27)
+### Added
+- Custom error types support to the `Decode` and `DecodeValue` traits ([#1055])
+- `PrivateKeyInfoRef` / `PrivateKeyInfoOwned` type aliases ([#1483])
+- Implement `core::error::Error` trait for `Error` ([#2302])
+- Implement `Decode`/`EncodePrivateKey` trait for `PrivateKeyInfoOwned` ([#2306])
+- `KeyError` enum ([#2305])
+- `ctutils` feature ([#2308])
+- `getrandom` feature ([#2311])
 
 ### Changed
-- eagerly decode PEM labels ([#1163])
-- use `pbes2::Parameters::recommended` ([#1430])
+- Eagerly decode PEM labels for better error messages ([#1163])
+- Use `pbes2::Parameters::generate_recommended` ([#1430], [#2296])
+- Make `PrivateKeyInfo` generic around its backing storage ([#1483])
 - Bump `rand_core` to `0.9` ([#1658])
-- Use 2024 edition, bump MSRV to 1.85 ([#1670])
+- Use 2024 edition; bump MSRV to 1.85 ([#1670])
+- Bump `rand_core` to v0.10 ([#2198])
+- `Error::KeyMalformed` now wraps an inner `KeyError` for providing more detail ([#2305])
+- Use `TryCryptoRng` instead of `CryptoRng` ([#2309])
 
-### Added
-- custom error types support to the Decode and DecodeValue traits. ([#1055])
--  PrivateKeyInfoRef/PrivateKeyInfoOwned ([#1483])
+### Removed
+- `subtle` feature ([#2308])
 
 [#1055]: https://github.com/RustCrypto/formats/pull/1055
 [#1163]: https://github.com/RustCrypto/formats/pull/1163
@@ -22,6 +33,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#1483]: https://github.com/RustCrypto/formats/pull/1483
 [#1658]: https://github.com/RustCrypto/formats/pull/1658
 [#1670]: https://github.com/RustCrypto/formats/pull/1670
+[#2198]: https://github.com/RustCrypto/formats/pull/2198
+[#2296]: https://github.com/RustCrypto/formats/pull/2296
+[#2302]: https://github.com/RustCrypto/formats/pull/2302
+[#2305]: https://github.com/RustCrypto/formats/pull/2305
+[#2306]: https://github.com/RustCrypto/formats/pull/2306
+[#2308]: https://github.com/RustCrypto/formats/pull/2308
+[#2309]: https://github.com/RustCrypto/formats/pull/2309
+[#2311]: https://github.com/RustCrypto/formats/pull/2311
 
 ## 0.10.2 (2023-04-04)
 ### Changed

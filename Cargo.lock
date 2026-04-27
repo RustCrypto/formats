@@ -1048,7 +1048,7 @@ dependencies = [
 
 [[package]]
 name = "pkcs8"
-version = "0.11.0-rc.12"
+version = "0.11.0"
 dependencies = [
  "ctutils",
  "der",

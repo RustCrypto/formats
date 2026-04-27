@@ -29,7 +29,7 @@ zeroize = { version = "1.8.1", optional = true, default-features = false }
 [dev-dependencies]
 hex-literal = "1"
 pkcs5 = { version = "0.8", features = ["pbes2", "3des"] }
-pkcs8 = { version = "0.11.0-rc.10", features = ["pkcs5"] }
+pkcs8 = { version = "0.11", features = ["pkcs5"] }
 sha2 = "0.11"
 whirlpool = "0.11"
 
