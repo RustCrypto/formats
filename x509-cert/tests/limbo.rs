@@ -10,9 +10,9 @@ use std::{
 use serde::Deserialize;
 use serde_json::Value;
 use x509_cert::{
+    Certificate,
     der::{Decode, Document, Encode},
     ext::pkix::{BasicConstraints, ExtendedKeyUsage, KeyUsage, NameConstraints, SubjectAltName},
-    Certificate,
 };
 
 #[derive(Debug, Deserialize)]
