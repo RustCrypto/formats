@@ -34,6 +34,8 @@ rsa = { version = "0.10.0-rc.18", features = ["sha2"] }
 ecdsa = { version = "0.17.0-rc.16", features = ["digest", "pem"] }
 p256 = "0.14.0-rc.7"
 rstest = "0.26"
+serde = { version = "1.0.184", features = ["derive"] }
+serde_json = "1"
 sha2 = { version = "0.11", features = ["oid"] }
 tempfile = "3.5"
 tokio = { version = "1.45", features = ["macros", "rt"] }

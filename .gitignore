@@ -1,5 +1,6 @@
 target/
 **/*.rs.bk
+x509-cert/tests/limbo/limbo.json
 
 # CLion IDE
 .idea

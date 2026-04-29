@@ -2132,6 +2132,8 @@ dependencies = [
  "rand 0.10.1",
  "rsa",
  "rstest",
+ "serde",
+ "serde_json",
  "sha1",
  "sha2",
  "signature",
