@@ -98,11 +98,7 @@ fn vlbytevec_deserializes_legacy_vlbytes_format() {
 fn secret_vlbytevec_deserializes_legacy_secret_vlbytes_format() {
     use tls_codec::SecretVLBytes;
 
-    for payload in [
-        Vec::<u8>::new(),
-        vec![0u8, 1, 2, 3],
-        vec![0xAA; 1024],
-    ] {
+    for payload in [Vec::<u8>::new(), vec![0u8, 1, 2, 3], vec![0xAA; 1024]] {
         let secret_vl_bytes = SecretVLBytes::new(payload.clone());
 
         // CBOR

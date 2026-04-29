@@ -449,9 +449,7 @@ mod serde_compat {
     ///
     /// Uses `Deserializer::deserialize_any`, so it requires a self-describing
     /// `serde` format.
-    pub(super) fn deserialize_vlbytes_compat<'de, D>(
-        deserializer: D,
-    ) -> Result<Vec<u8>, D::Error>
+    pub(super) fn deserialize_vlbytes_compat<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
     where
         D: Deserializer<'de>,
     {
