@@ -49,8 +49,13 @@ pub use tls_vec::{
 };
 
 #[cfg(feature = "std")]
-pub use quic_vec::{SecretVLBytes, rw as vlen};
-pub use quic_vec::{VLByteSlice, VLBytes};
+pub use quic_vec::{SecretVLByteVec, rw as vlen};
+#[cfg(feature = "std")]
+#[allow(deprecated)]
+pub use quic_vec::SecretVLBytes;
+pub use quic_vec::{VLByteSlice, VLByteVec};
+#[allow(deprecated)]
+pub use quic_vec::VLBytes;
 
 #[cfg(feature = "derive")]
 pub use tls_codec_derive::{

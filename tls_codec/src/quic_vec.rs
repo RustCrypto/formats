@@ -11,6 +11,13 @@
 //! to 30-bit values.
 //! This is in contrast to the default behaviour defined by RFC 9000 that allows
 //! up to 62-bit length values.
+
+// `VLBytes` and `SecretVLBytes` are kept around as deprecated types. The
+// internal trait impls for them and their use as building blocks for other
+// items in this module would otherwise emit deprecation warnings at every call
+// site within the crate.
+#![allow(deprecated)]
+
 use super::alloc::vec::Vec;
 use core::fmt;
 
@@ -233,12 +240,12 @@ macro_rules! impl_vl_bytes_generic {
 /// This is faster than the generic version.
 #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
 #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
+#[deprecated(
+    since = "0.4.3",
+    note = "Use `VLByteVec` instead. `VLBytes` does not produce a compact serde representation \
+            of byte vectors. The serde format of `VLByteVec` is not compatible with `VLBytes`."
+)]
 pub struct VLBytes {
-    #[cfg_attr(feature = "serde", serde(serialize_with = "serde_bytes::serialize"))]
-    #[cfg_attr(
-        feature = "serde",
-        serde(deserialize_with = "serde_impl::de_vec_bytes_compat")
-    )]
     vec: Vec<u8>,
 }
 
@@ -327,56 +334,181 @@ impl Size for &VLBytes {
     }
 }
 
-#[cfg(feature = "serde")]
-mod serde_impl {
-    use std::{fmt, vec::Vec};
+/// Variable-length encoded byte vector.
+///
+/// Functionally equivalent to [`VLBytes`], but its `serde` representation uses
+/// `serde_bytes` to serialize the contained byte vector as a byte blob via
+/// `#[serde(transparent)]`. This produces a much more compact encoding for
+/// `serde` formats that distinguish byte arrays from sequences of `u8` (e.g.
+/// CBOR, MessagePack, bincode).
+///
+/// While the `serde` format produced by `VLByteVec` is **not** compatible with
+/// the format produced by [`VLBytes`], `VLByteVec`'s custom `Deserialize` impl
+/// is backwards-compatible: it accepts both its own native bytes encoding and
+/// the legacy [`VLBytes`] encoding (a struct with a `vec` field containing a
+/// sequence of `u8`). This lets callers transparently migrate persisted
+/// [`VLBytes`] data to `VLByteVec` for self-describing formats such as CBOR,
+/// JSON or MessagePack.
+#[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
+pub struct VLByteVec {
+    #[cfg_attr(feature = "serde", serde(serialize_with = "serde_bytes::serialize"))]
+    #[cfg_attr(
+        feature = "serde",
+        serde(deserialize_with = "serde_compat::deserialize_vlbytes_compat")
+    )]
+    vec: Vec<u8>,
+}
 
+impl VLByteVec {
+    /// Generate a new variable-length byte vector.
+    pub fn new(vec: Vec<u8>) -> Self {
+        Self { vec }
+    }
+
+    fn vec(&self) -> &[u8] {
+        &self.vec
+    }
+
+    fn vec_mut(&mut self) -> &mut Vec<u8> {
+        &mut self.vec
+    }
+}
+
+impl_vl_bytes_generic!(VLByteVec);
+
+#[cfg(feature = "std")]
+impl Zeroize for VLByteVec {
+    fn zeroize(&mut self) {
+        self.vec.zeroize();
+    }
+}
+
+impl From<VLByteVec> for Vec<u8> {
+    fn from(b: VLByteVec) -> Self {
+        b.vec
+    }
+}
+
+impl Size for VLByteVec {
+    #[inline(always)]
+    fn tls_serialized_len(&self) -> usize {
+        tls_serialize_bytes_len(self.as_slice())
+    }
+}
+
+impl DeserializeBytes for VLByteVec {
+    #[inline(always)]
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+        let (length, remainder) = ContentLength::tls_deserialize_bytes(bytes)?;
+        let length: usize = length.0.value().try_into()?;
+
+        if length == 0 {
+            return Ok((Self::new(vec![]), remainder));
+        }
+
+        match remainder.get(..length).ok_or(Error::EndOfStream) {
+            Ok(vec) => Ok((Self { vec: vec.to_vec() }, &remainder[length..])),
+            Err(_e) => {
+                let remaining_len = remainder.len();
+                if !cfg!(fuzzing) {
+                    debug_assert_eq!(
+                        remaining_len, length,
+                        "Expected to read {length} bytes but {remaining_len} were read.",
+                    );
+                }
+                Err(Error::DecodingError(format!(
+                    "{remaining_len} bytes were read but {length} were expected",
+                )))
+            }
+        }
+    }
+}
+
+impl Size for &VLByteVec {
+    #[inline(always)]
+    fn tls_serialized_len(&self) -> usize {
+        (*self).tls_serialized_len()
+    }
+}
+
+#[cfg(feature = "serde")]
+mod serde_compat {
+    use super::Vec;
+    use crate::alloc::string::String;
+    use core::fmt;
     use serde::{Deserializer, de};
 
-    pub(super) fn de_vec_bytes_compat<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
+    /// Deserialize a `Vec<u8>` from either:
+    /// * a native byte blob (`VLByteVec`'s native encoding), or
+    /// * a sequence of `u8` (`VLByteVec`'s native encoding in `serde` formats
+    ///   without a distinct byte type, e.g. JSON), or
+    /// * a `VLBytes`-shaped struct: a map with a `vec` field containing a
+    ///   sequence of `u8` (the legacy [`super::VLBytes`] encoding).
+    ///
+    /// Uses `Deserializer::deserialize_any`, so it requires a self-describing
+    /// `serde` format.
+    pub(super) fn deserialize_vlbytes_compat<'de, D>(
+        deserializer: D,
+    ) -> Result<Vec<u8>, D::Error>
     where
         D: Deserializer<'de>,
     {
-        struct BytesOrSeq;
+        struct CompatVisitor;
 
-        impl<'de> de::Visitor<'de> for BytesOrSeq {
+        impl<'de> de::Visitor<'de> for CompatVisitor {
             type Value = Vec<u8>;
 
             fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                f.write_str("either a byte blob or a sequence of u8")
+                f.write_str(
+                    "a byte blob, a sequence of `u8`, or a struct with a `vec` field \
+                     containing a sequence of `u8`",
+                )
             }
 
-            // New format (native bytes; e.g., CBOR/Bincode/Msgpack)
-            fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-            where
-                E: de::Error,
-            {
+            fn visit_bytes<E: de::Error>(self, v: &[u8]) -> Result<Self::Value, E> {
                 Ok(v.to_vec())
             }
 
-            fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
-            where
-                E: de::Error,
-            {
+            fn visit_byte_buf<E: de::Error>(self, v: Vec<u8>) -> Result<Self::Value, E> {
                 Ok(v)
             }
 
-            // Old format (seq of u8)
             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
             where
                 A: de::SeqAccess<'de>,
             {
-                let mut out = Vec::new();
+                let mut out = Vec::with_capacity(seq.size_hint().unwrap_or(0));
                 while let Some(b) = seq.next_element::<u8>()? {
                     out.push(b);
                 }
                 Ok(out)
             }
+
+            fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+            where
+                A: de::MapAccess<'de>,
+            {
+                let mut vec: Option<Vec<u8>> = None;
+                while let Some(key) = map.next_key::<String>()? {
+                    if key == "vec" {
+                        if vec.is_some() {
+                            return Err(de::Error::duplicate_field("vec"));
+                        }
+                        vec = Some(map.next_value::<Vec<u8>>()?);
+                    } else {
+                        let _: de::IgnoredAny = map.next_value()?;
+                    }
+                }
+                vec.ok_or_else(|| de::Error::missing_field("vec"))
+            }
         }
 
-        deserializer.deserialize_any(BytesOrSeq)
+        deserializer.deserialize_any(CompatVisitor)
     }
 }
+
 pub struct VLByteSlice<'a>(pub &'a [u8]);
 
 impl fmt::Debug for VLByteSlice<'_> {
@@ -562,6 +694,36 @@ mod rw_bytes {
         }
     }
 
+    impl Serialize for VLByteVec {
+        #[inline(always)]
+        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
+            tls_serialize_bytes(writer, self.as_slice())
+        }
+    }
+
+    impl Serialize for &VLByteVec {
+        #[inline(always)]
+        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
+            (*self).tls_serialize(writer)
+        }
+    }
+
+    impl Deserialize for VLByteVec {
+        fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
+            let length = ContentLength::tls_deserialize(bytes)?;
+
+            if length.0.value() == 0 {
+                return Ok(Self::new(vec![]));
+            }
+
+            let mut result = Self {
+                vec: vec![0u8; length.0.value().try_into()?],
+            };
+            bytes.read_exact(result.vec.as_mut_slice())?;
+            Ok(result)
+        }
+    }
+
     impl Serialize for &VLByteSlice<'_> {
         fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
             tls_serialize_bytes(writer, self.0)
@@ -585,6 +747,11 @@ mod secret_bytes {
     /// a [`Vec<u8>`].
     #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
     #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
+    #[deprecated(
+        since = "0.4.3",
+        note = "Use `SecretVLByteVec` instead. The serde format of `SecretVLByteVec` is not \
+                compatible with `SecretVLBytes`."
+    )]
     pub struct SecretVLBytes(VLBytes);
 
     impl SecretVLBytes {
@@ -654,6 +821,92 @@ mod secret_bytes {
 #[cfg(feature = "std")]
 pub use secret_bytes::SecretVLBytes;
 
+#[cfg(feature = "std")]
+mod secret_byte_vec {
+    use super::*;
+    use crate::{Deserialize, Serialize};
+
+    /// A wrapper struct around [`VLByteVec`] that implements [`ZeroizeOnDrop`].
+    /// It behaves just like [`VLByteVec`], except that it doesn't allow
+    /// conversion into a [`Vec<u8>`].
+    ///
+    /// Like [`VLByteVec`], `SecretVLByteVec` produces a different `serde` format
+    /// than the deprecated [`SecretVLBytes`], but its `Deserialize` impl is
+    /// backwards-compatible: it accepts both its own native encoding and the
+    /// legacy [`SecretVLBytes`] encoding (a struct with a `vec` field
+    /// containing a sequence of `u8`) for self-describing `serde` formats.
+    #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
+    #[cfg_attr(feature = "serde", serde(transparent))]
+    #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
+    pub struct SecretVLByteVec(VLByteVec);
+
+    impl SecretVLByteVec {
+        /// Generate a new variable-length byte vector that implements
+        /// [`ZeroizeOnDrop`].
+        pub fn new(vec: Vec<u8>) -> Self {
+            Self(VLByteVec { vec })
+        }
+
+        fn vec(&self) -> &[u8] {
+            &self.0.vec
+        }
+
+        fn vec_mut(&mut self) -> &mut Vec<u8> {
+            &mut self.0.vec
+        }
+    }
+
+    impl_vl_bytes_generic!(SecretVLByteVec);
+
+    impl Zeroize for SecretVLByteVec {
+        fn zeroize(&mut self) {
+            self.0.zeroize();
+        }
+    }
+
+    impl Drop for SecretVLByteVec {
+        fn drop(&mut self) {
+            self.zeroize();
+        }
+    }
+
+    impl ZeroizeOnDrop for SecretVLByteVec {}
+
+    impl Size for SecretVLByteVec {
+        fn tls_serialized_len(&self) -> usize {
+            self.0.tls_serialized_len()
+        }
+    }
+
+    impl DeserializeBytes for SecretVLByteVec {
+        fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
+        where
+            Self: Sized,
+        {
+            let (bytes, remainder) = VLByteVec::tls_deserialize_bytes(bytes)?;
+            Ok((Self(bytes), remainder))
+        }
+    }
+
+    impl Serialize for SecretVLByteVec {
+        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
+            self.0.tls_serialize(writer)
+        }
+    }
+
+    impl Deserialize for SecretVLByteVec {
+        fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error>
+        where
+            Self: Sized,
+        {
+            Ok(Self(VLByteVec::tls_deserialize(bytes)?))
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+pub use secret_byte_vec::SecretVLByteVec;
+
 #[cfg(feature = "arbitrary")]
 impl<'a> Arbitrary<'a> for VLBytes {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
@@ -664,6 +917,15 @@ impl<'a> Arbitrary<'a> for VLBytes {
         // We probably won't exceed `MAX_LEN` in practice, e.g., during fuzzing,
         // but better make sure that we generate valid instances.
 
+        Ok(Self { vec })
+    }
+}
+
+#[cfg(feature = "arbitrary")]
+impl<'a> Arbitrary<'a> for VLByteVec {
+    fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
+        let mut vec = Vec::arbitrary(u)?;
+        vec.truncate(ContentLength::MAX as usize);
         Ok(Self { vec })
     }
 }

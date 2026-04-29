@@ -1,4 +1,7 @@
 #![cfg(feature = "std")]
+// These tests intentionally exercise the deprecated `VLBytes` for backward
+// compatibility coverage.
+#![allow(deprecated)]
 
 use tls_codec::{
     Error, Serialize, Size, TlsByteSliceU16, TlsByteVecU8, TlsByteVecU16, TlsSliceU16, TlsVecU8,
