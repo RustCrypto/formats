@@ -359,17 +359,18 @@ fn is_pad_ct(input: u8) -> i16 {
     ((((PAD as i16 - 1) - input as i16) & (input as i16 - (PAD as i16 + 1))) >> 8) & 1
 }
 
-// TODO(tarcieri): explicitly checked/wrapped arithmetic
-#[allow(clippy::arithmetic_side_effects)]
-#[inline(always)]
+/// Compute the encoded length for an `n`-byte input and whether the output is `padded`.
+#[inline]
 const fn encoded_len_inner(n: usize, padded: bool) -> Option<usize> {
-    match n.checked_mul(4) {
-        Some(q) => {
-            if padded {
-                Some(((q / 3) + 3) & !3)
+    match n.div_ceil(3).checked_mul(4) {
+        Some(len) if padded => Some(len),
+        Some(len) => {
+            let rem = n % 3;
+            len.checked_sub(if rem == 0 {
+                0
             } else {
-                Some((q / 3) + (q % 3 != 0) as usize)
-            }
+                3usize.checked_sub(rem).expect("should be in range")
+            })
         }
         None => None,
     }
