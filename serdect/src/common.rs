@@ -1,16 +1,13 @@
+use base16ct::HexDisplay;
 use core::fmt;
 use core::marker::PhantomData;
-
 use serde::{
     Serializer,
     de::{Error, Unexpected, Visitor},
 };
 
 #[cfg(feature = "alloc")]
-use {alloc::vec::Vec, serde::Serialize};
-
-#[cfg(not(feature = "alloc"))]
-use serde::ser::Error as SerError;
+use alloc::vec::Vec;
 
 pub(crate) fn serialize_hex<S, T, const UPPERCASE: bool>(
     value: &T,
@@ -20,19 +17,12 @@ where
     S: Serializer,
     T: AsRef<[u8]>,
 {
-    #[cfg(feature = "alloc")]
+    let hex = HexDisplay(value.as_ref());
+
     if UPPERCASE {
-        base16ct::upper::encode_string(value.as_ref()).serialize(serializer)
+        serializer.collect_str(&format_args!("{:X}", hex))
     } else {
-        base16ct::lower::encode_string(value.as_ref()).serialize(serializer)
-    }
-    #[cfg(not(feature = "alloc"))]
-    {
-        let _ = value;
-        let _ = serializer;
-        Err(S::Error::custom(
-            "serializer is human readable, which requires the `alloc` crate feature",
-        ))
+        serializer.collect_str(&format_args!("{:x}", hex))
     }
 }
 
