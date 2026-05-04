@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.4.3 (2026-05-03)
+### Added
+- `no_alloc` implementation of `serialize_hex` ([#2327])
+
+[#2327]: https://github.com/RustCrypto/formats/pull/2327
+
 ## 0.4.2 (2026-01-03)
 ### Changed
 - Bump `base16ct` to v1 ([#2145])
