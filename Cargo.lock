@@ -1746,6 +1746,7 @@ dependencies = [
  "criterion",
  "serde",
  "serde_bytes",
+ "serde_json",
  "tls_codec_derive",
  "zeroize",
 ]
