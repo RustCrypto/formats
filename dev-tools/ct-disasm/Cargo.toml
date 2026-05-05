@@ -1,0 +1,27 @@
+[package]
+name = "ct-disasm"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+# This crate exists only to anchor the constant-time-regression disassembly
+# check (`./check.sh`). It is NOT part of the public API surface and is not
+# published.
+
+[lib]
+# rlib so we don't need a panic_handler / std runtime; we only consume the
+# emitted asm, never link a final image.
+crate-type = ["lib"]
+
+[dependencies]
+base16ct = { path = "../../base16ct", default-features = false }
+base32ct = { path = "../../base32ct", default-features = false }
+base64ct = { path = "../../base64ct", default-features = false }
+
+[profile.release]
+# Match the profile downstream consumers actually ship.
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+debug = 1
+overflow-checks = false

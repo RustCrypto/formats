@@ -440,6 +440,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ct-disasm"
+version = "0.0.0"
+dependencies = [
+ "base16ct",
+ "base32ct",
+ "base64ct",
+]
+
+[[package]]
 name = "ctutils"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2093,6 +2102,8 @@ dependencies = [
  "rand 0.10.1",
  "rsa",
  "rstest",
+ "serde",
+ "serde_json",
  "sha1",
  "sha2",
  "signature",

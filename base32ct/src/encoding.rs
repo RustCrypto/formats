@@ -242,20 +242,33 @@ fn decoded_len(input_len: usize) -> usize {
 }
 
 /// Remove padding from the provided input.
-fn remove_padding(mut input: &[u8]) -> Result<&[u8]> {
-    // TODO(tarcieri): properly validate padding
+fn remove_padding(input: &[u8]) -> Result<&[u8]> {
     if input.len() % 8 != 0 {
         return Err(Error::InvalidEncoding);
     }
 
-    for _ in 0..6 {
-        match input.split_last() {
-            Some((b'=', rest)) => input = rest,
-            _ => break,
-        }
+    let n = input.len();
+    if n == 0 {
+        return Ok(input);
     }
 
-    Ok(input)
+    // Count trailing `=` over a fixed six-byte window without short-circuiting
+    // on the first non-`=` byte. `all_pad` stays 0xFF only while every byte
+    // walked so far (from the right) has been `=`; once a non-`=` is seen it
+    // flips to 0 and contributes nothing to `pad_count` for the remainder of
+    // the loop. This avoids leaking, via timing on malformed input, *which*
+    // of the trailing positions held the first non-`=` byte.
+    let tail = &input[n - 6..];
+    let mut all_pad: u8 = 0xff;
+    let mut pad_count: u8 = 0;
+    for &b in tail.iter().rev() {
+        let is_eq = u8::from(b == b'=');
+        let mask = 0u8.wrapping_sub(is_eq); // 0xff if `=`, 0 otherwise
+        all_pad &= mask;
+        pad_count = pad_count.wrapping_add(all_pad & 1);
+    }
+
+    Ok(&input[..n - pad_count as usize])
 }
 
 /// Get the length of Base32 produced by encoding the given amount of bytes.
