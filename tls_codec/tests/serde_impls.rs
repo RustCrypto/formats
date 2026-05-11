@@ -1,6 +1,6 @@
 #![cfg(feature = "serde")]
 
-use tls_codec::VLBytes;
+use tls_codec::{VLBytes, VLBytesFlat};
 
 // Old VLBytes without serde bytes serialization
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -32,4 +32,39 @@ fn serde_impls() {
     let old_deserialized: VLBytes = ciborium::from_reader(old_serialized.as_slice()).unwrap();
 
     assert_eq!(deserialized, old_deserialized);
+}
+
+#[test]
+fn vlbytes_flat_is_transparent() {
+    let data = vec![32; 128];
+    let bytes_value = VLBytesFlat::new(data.clone());
+    let vlbytes_value = VLBytes::new(data);
+
+    let mut bytes_serialized = Vec::new();
+    ciborium::into_writer(&bytes_value, &mut bytes_serialized).unwrap();
+    let mut vlbytes_serialized = Vec::new();
+    ciborium::into_writer(&vlbytes_value, &mut vlbytes_serialized).unwrap();
+
+    // VLBytesFlat (transparent) should produce smaller output than VLBytes (has field name)
+    assert!(bytes_serialized.len() < vlbytes_serialized.len());
+
+    // VLBytesFlat should roundtrip
+    let deserialized: VLBytesFlat = ciborium::from_reader(bytes_serialized.as_slice()).unwrap();
+    assert_eq!(deserialized, bytes_value);
+}
+
+#[test]
+fn vlbytes_flat_vlbytes_cross_deserialization() {
+    let data = vec![42; 64];
+    let bytes_value = VLBytesFlat::new(data.clone());
+    let vlbytes_value = VLBytes::new(data);
+
+    let mut bytes_serialized = Vec::new();
+    ciborium::into_writer(&bytes_value, &mut bytes_serialized).unwrap();
+    let mut vlbytes_serialized = Vec::new();
+    ciborium::into_writer(&vlbytes_value, &mut vlbytes_serialized).unwrap();
+
+    // VLBytesFlat can deserialize VLBytes-serialized data
+    let from_vlbytes: VLBytesFlat = ciborium::from_reader(vlbytes_serialized.as_slice()).unwrap();
+    assert_eq!(from_vlbytes, bytes_value);
 }

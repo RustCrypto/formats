@@ -272,6 +272,65 @@ impl From<VLBytes> for Vec<u8> {
     }
 }
 
+/// Variable-length encoded byte vectors with transparent serde serialization.
+///
+/// This is equivalent to [`VLBytes`] for TLS codec (de)serialization, but uses
+/// `#[serde(transparent)]` so that formats like CBOR serialize the bytes
+/// directly instead of wrapping them in a map with a field name.
+#[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
+#[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
+pub struct VLBytesFlat(
+    #[cfg_attr(feature = "serde", serde(serialize_with = "serde_bytes::serialize"))]
+    #[cfg_attr(
+        feature = "serde",
+        serde(deserialize_with = "serde_impl::de_vec_bytes_compat")
+    )]
+    Vec<u8>,
+);
+
+impl VLBytesFlat {
+    /// Generate a new variable-length byte vector.
+    pub fn new(vec: Vec<u8>) -> Self {
+        Self(vec)
+    }
+
+    fn vec(&self) -> &[u8] {
+        &self.0
+    }
+
+    fn vec_mut(&mut self) -> &mut Vec<u8> {
+        &mut self.0
+    }
+}
+
+impl_vl_bytes_generic!(VLBytesFlat);
+
+#[cfg(feature = "std")]
+impl Zeroize for VLBytesFlat {
+    fn zeroize(&mut self) {
+        self.0.zeroize();
+    }
+}
+
+impl From<VLBytesFlat> for Vec<u8> {
+    fn from(b: VLBytesFlat) -> Self {
+        b.0
+    }
+}
+
+impl From<VLBytes> for VLBytesFlat {
+    fn from(b: VLBytes) -> Self {
+        Self(b.vec)
+    }
+}
+
+impl From<VLBytesFlat> for VLBytes {
+    fn from(b: VLBytesFlat) -> Self {
+        Self { vec: b.0 }
+    }
+}
+
 #[inline(always)]
 fn tls_serialize_bytes_len(bytes: &[u8]) -> usize {
     let content_length = bytes.len();
@@ -327,9 +386,31 @@ impl Size for &VLBytes {
     }
 }
 
+impl Size for VLBytesFlat {
+    #[inline(always)]
+    fn tls_serialized_len(&self) -> usize {
+        tls_serialize_bytes_len(self.as_slice())
+    }
+}
+
+impl DeserializeBytes for VLBytesFlat {
+    #[inline(always)]
+    fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+        let (vl, remainder) = VLBytes::tls_deserialize_bytes(bytes)?;
+        Ok((Self::from(vl), remainder))
+    }
+}
+
+impl Size for &VLBytesFlat {
+    #[inline(always)]
+    fn tls_serialized_len(&self) -> usize {
+        (*self).tls_serialized_len()
+    }
+}
+
 #[cfg(feature = "serde")]
 mod serde_impl {
-    use std::{fmt, vec::Vec};
+    use std::{fmt, string::String, vec::Vec};
 
     use serde::{Deserializer, de};
 
@@ -343,7 +424,7 @@ mod serde_impl {
             type Value = Vec<u8>;
 
             fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                f.write_str("either a byte blob or a sequence of u8")
+                f.write_str("a byte blob, a sequence of u8, or a map with a \"vec\" key")
             }
 
             // New format (native bytes; e.g., CBOR/Bincode/Msgpack)
@@ -371,6 +452,25 @@ mod serde_impl {
                     out.push(b);
                 }
                 Ok(out)
+            }
+
+            // Legacy VLBytes format (map with "vec" key)
+            fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+            where
+                A: de::MapAccess<'de>,
+            {
+                let mut value: Option<Vec<u8>> = None;
+                while let Some(key) = map.next_key::<String>()? {
+                    if key == "vec" {
+                        if value.is_some() {
+                            return Err(de::Error::duplicate_field("vec"));
+                        }
+                        value = Some(map.next_value()?);
+                    } else {
+                        return Err(de::Error::unknown_field(&key, &["vec"]));
+                    }
+                }
+                value.ok_or_else(|| de::Error::missing_field("vec"))
             }
         }
 
@@ -573,6 +673,26 @@ mod rw_bytes {
             tls_serialize_bytes(writer, self.0)
         }
     }
+
+    impl Serialize for VLBytesFlat {
+        #[inline(always)]
+        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
+            tls_serialize_bytes(writer, self.as_slice())
+        }
+    }
+
+    impl Serialize for &VLBytesFlat {
+        #[inline(always)]
+        fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
+            (*self).tls_serialize(writer)
+        }
+    }
+
+    impl Deserialize for VLBytesFlat {
+        fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
+            VLBytes::tls_deserialize(bytes).map(Self::from)
+        }
+    }
 }
 
 #[cfg(feature = "std")]
@@ -668,10 +788,19 @@ impl<'a> Arbitrary<'a> for VLBytes {
     }
 }
 
+#[cfg(feature = "arbitrary")]
+impl<'a> Arbitrary<'a> for VLBytesFlat {
+    fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
+        let mut vec = Vec::arbitrary(u)?;
+        vec.truncate(ContentLength::MAX as usize);
+        Ok(Self(vec))
+    }
+}
+
 #[cfg(feature = "std")]
 #[cfg(test)]
 mod test {
-    use crate::{SecretVLBytes, VLByteSlice, VLBytes};
+    use crate::{SecretVLBytes, VLByteSlice, VLBytes, VLBytesFlat};
     use std::println;
 
     #[test]
@@ -699,6 +828,11 @@ mod test {
             let got = format!("{:?}", VLBytes::new(test.clone()));
             println!("{got}");
             assert_eq!(expected_vl_bytes, got);
+
+            let expected_bytes = format!("VLBytesFlat {{ {expected} }}");
+            let got = format!("{:?}", VLBytesFlat::new(test.clone()));
+            println!("{got}");
+            assert_eq!(expected_bytes, got);
 
             let expected_secret_vl_bytes = format!("SecretVLBytes {{ {expected} }}");
             let got = format!("{:?}", SecretVLBytes::new(test.clone()));
