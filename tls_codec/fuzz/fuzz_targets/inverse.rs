@@ -1,4 +1,5 @@
 #![no_main]
+#![allow(deprecated)]
 
 use libfuzzer_sys::fuzz_target;
 use tls_codec::{Deserialize, Serialize, Size, VLBytes};

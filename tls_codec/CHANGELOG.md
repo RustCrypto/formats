@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- [#2022](https://github.com/RustCrypto/formats/pull/2022) Optimize serde serialization of byte vectors using `serde_bytes`. Deserialization of the old serialized format will still work, but newly serialized instances of `VLBytes` will have the new format.
+- [#2322](https://github.com/RustCrypto/formats/pull/2322): Add `VLByteVec` and `SecretVLByteVec`, which are `#[serde(transparent)]` wrappers serializing via `serde_bytes`. They produce a much more compact representation in `serde` formats that distinguish byte arrays from sequences of `u8` (e.g. CBOR, MessagePack, bincode). Their `serde` output is not compatible with `VLBytes` / `SecretVLBytes`, but their `Deserialize` impls are backwards-compatible: in self-describing `serde` formats they also accept the legacy `VLBytes` / `SecretVLBytes` encoding (a struct with a `vec` field containing a sequence of `u8`). Deprecate `VLBytes` and `SecretVLBytes` in favour of `VLByteVec` and `SecretVLByteVec`.
 - [#1656](https://github.com/RustCrypto/formats/pull/1656) Add `TlsVarInt` type for variable-length integers.
 
 ## 0.4.2
