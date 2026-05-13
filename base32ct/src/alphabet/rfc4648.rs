@@ -37,7 +37,7 @@ impl Alphabet for Base32Unpadded {
 /// Lower-case Base32 decoder.
 const DECODE_LOWER: &[DecodeStep] = &[DecodeStep(b'a'..=b'z', -96), DecodeStep(b'2'..=b'7', -23)];
 
-/// Standard Base64 encoder
+/// Lower-case Base32 encoder
 const ENCODE_LOWER: &[EncodeStep] = &[EncodeStep(25, 73)];
 
 /// RFC4648 upper case Base32 encoding with `=` padding.
@@ -51,9 +51,8 @@ pub struct Base32Upper;
 
 impl Alphabet for Base32Upper {
     const BASE: u8 = b'A';
-    const DECODER: &'static [DecodeStep] =
-        &[DecodeStep(b'A'..=b'Z', -64), DecodeStep(b'2'..=b'7', -23)];
-    const ENCODER: &'static [EncodeStep] = &[EncodeStep(25, 41)];
+    const DECODER: &'static [DecodeStep] = DECODE_UPPER;
+    const ENCODER: &'static [EncodeStep] = ENCODE_UPPER;
     const PADDED: bool = true;
 }
 
@@ -68,8 +67,13 @@ pub struct Base32UpperUnpadded;
 
 impl Alphabet for Base32UpperUnpadded {
     const BASE: u8 = b'A';
-    const DECODER: &'static [DecodeStep] =
-        &[DecodeStep(b'A'..=b'Z', -64), DecodeStep(b'2'..=b'7', -23)];
-    const ENCODER: &'static [EncodeStep] = &[EncodeStep(25, 41)];
+    const DECODER: &'static [DecodeStep] = DECODE_UPPER;
+    const ENCODER: &'static [EncodeStep] = ENCODE_UPPER;
     const PADDED: bool = false;
 }
+
+/// Lower-case Base32 decoder.
+const DECODE_UPPER: &[DecodeStep] = &[DecodeStep(b'A'..=b'Z', -64), DecodeStep(b'2'..=b'7', -23)];
+
+/// Upper-case Base32 encoder
+const ENCODE_UPPER: &[EncodeStep] = &[EncodeStep(25, 41)];

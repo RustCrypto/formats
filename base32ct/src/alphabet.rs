@@ -4,9 +4,9 @@ pub(crate) mod rfc4648;
 
 use core::{fmt::Debug, ops::RangeInclusive};
 
-/// Core encoder/decoder functions for a particular Base64 alphabet
+/// Core encoder/decoder functions for a particular Base32 alphabet
 pub trait Alphabet: 'static + Copy + Debug + Eq + Send + Sized + Sync {
-    /// First character in this Base64 alphabet
+    /// First character in this Base32 alphabet
     const BASE: u8;
 
     /// Decoder passes
