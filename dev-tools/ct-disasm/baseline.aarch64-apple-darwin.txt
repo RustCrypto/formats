@@ -1,0 +1,11 @@
+ct_disasm_base16_lower_decode	0	164
+ct_disasm_base16_lower_encode	0	43
+ct_disasm_base16_upper_decode	0	164
+ct_disasm_base16_upper_encode	0	43
+ct_disasm_base16_mixed_decode	0	225
+ct_disasm_base32_lower_decode	20	426
+ct_disasm_base32_lower_encode	0	252
+ct_disasm_base32_upper_decode	20	426
+ct_disasm_base64_padded_decode	14	369
+ct_disasm_base64_padded_encode	0	30
+ct_disasm_base64_unpadded_decode	3	516

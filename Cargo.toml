@@ -27,7 +27,8 @@ members = [
     "x509-tsp",
     "x509-cert",
     "x509-cert/test-support",
-    "x509-ocsp"
+    "x509-ocsp",
+    "dev-tools/ct-disasm"
 ]
 
 [profile.dev]
