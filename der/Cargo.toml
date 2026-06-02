@@ -17,7 +17,8 @@ edition = "2024"
 rust-version = "1.85"
 
 [dependencies]
-arbitrary = { version = "1.4", features = ["derive"], optional = true }
+arbitrary = { version = "1.4.2", features = ["derive"], optional = true }
+derive_arbitrary = { version = "1.4.2", optional = true } # Fixup for minimal-versions
 bytes = { version = "1", optional = true, default-features = false }
 const-oid = { version = "0.10", optional = true }
 der_derive = { version = "0.8", optional = true }
@@ -36,7 +37,7 @@ proptest = "1.10"
 alloc = ["zeroize?/alloc"]
 std = ["alloc"]
 
-arbitrary = ["dep:arbitrary", "const-oid?/arbitrary", "std"]
+arbitrary = ["dep:arbitrary", "dep:derive_arbitrary", "const-oid?/arbitrary", "std"]
 ber = []
 bytes = ["dep:bytes", "alloc"]
 derive = ["dep:der_derive"]

@@ -457,6 +457,7 @@ dependencies = [
  "bytes",
  "const-oid",
  "der_derive",
+ "derive_arbitrary",
  "flagset",
  "heapless 0.9.3",
  "hex-literal",
