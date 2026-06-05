@@ -740,28 +740,33 @@ fn check_der_ordering<T: DerOrd>(a: &T, b: &T) -> Result<(), Error> {
 /// Sort a mut slice according to its [`DerOrd`], returning any errors which
 /// might occur during the comparison.
 ///
-/// The algorithm is insertion sort, which should perform well when the input
-/// is mostly sorted to begin with.
+/// Uses [`slice::sort_unstable_by`] (an O(n log n) introsort) rather than the
+/// stable [`slice::sort_by`] because the latter requires `alloc`, while this
+/// function must also work on heapless `no_std` targets where only `core` is
+/// available. Sorting unstably is fine here: two elements that compare
+/// [`Ordering::Equal`] under [`DerOrd`] have identical DER encodings, so their
+/// relative order does not affect the serialized output.
 ///
-/// This function is used rather than Rust's built-in `[T]::sort_by` in order
-/// to support heapless `no_std` targets as well as to enable bubbling up
-/// sorting errors.
-#[allow(clippy::arithmetic_side_effects)]
+/// A previous implementation used a hand-rolled insertion sort. On adversarial
+/// reverse-sorted input that degrades to O(n^2), which let a crafted `SET OF`
+/// turn a single decode into a quadratic-time denial of service (see
+/// <https://github.com/RustCrypto/formats/issues/2319>).
+///
+/// `DerOrd::der_cmp` is fallible. Since the standard sort comparator must
+/// return [`Ordering`] rather than a `Result`, the first comparison error is
+/// captured and returned after the sort completes; on error the slice is left
+/// in an unspecified (but valid) order.
 fn der_sort<T: DerOrd>(slice: &mut [T]) -> Result<(), Error> {
-    for i in 0..slice.len() {
-        let mut j = i;
+    let mut first_err: Option<Error> = None;
 
-        while j > 0 {
-            if slice[j - 1].der_cmp(&slice[j])? == Ordering::Greater {
-                slice.swap(j - 1, j);
-                j -= 1;
-            } else {
-                break;
-            }
-        }
-    }
+    slice.sort_unstable_by(|a, b| {
+        a.der_cmp(b).unwrap_or_else(|err| {
+            first_err.get_or_insert(err);
+            Ordering::Equal
+        })
+    });
 
-    Ok(())
+    first_err.map_or(Ok(()), Err)
 }
 
 #[cfg(feature = "alloc")]
@@ -954,5 +959,155 @@ mod tests {
         let vec = vec![1u16, 1];
         let set = SetOfVec::try_from(vec).unwrap();
         assert_eq!(set.as_ref(), &[1, 1]);
+    }
+
+    // Regression tests for #2319: `der_sort` was a hand-rolled O(n^2) insertion
+    // sort, which a crafted reverse-sorted `SET OF` could exploit for a
+    // quadratic-time denial of service. The fix swaps in `sort_unstable_by`
+    // (O(n log n)). These tests pin the externally observable contract so the
+    // algorithm swap cannot silently change behavior: the resulting order, the
+    // DER `SET OF` ordering invariant, and duplicate preservation.
+
+    #[cfg(feature = "alloc")]
+    use alloc::vec::Vec;
+
+    /// Reference implementation: the original insertion sort that `der_sort`
+    /// replaced. Used to confirm the new sort yields a byte-identical ordering.
+    #[cfg(feature = "alloc")]
+    fn insertion_sort_reference<T: DerOrd>(slice: &mut [T]) {
+        for i in 0..slice.len() {
+            let mut j = i;
+            while j > 0 {
+                if slice[j - 1].der_cmp(&slice[j]).unwrap() == core::cmp::Ordering::Greater {
+                    slice.swap(j - 1, j);
+                    j -= 1;
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    /// Assert the slice obeys the DER `SET OF` ordering invariant: each element
+    /// is less-than-or-equal to its successor under `DerOrd`. Equal neighbors
+    /// (duplicates / encoding ties) are allowed, matching the decoder.
+    #[cfg(feature = "alloc")]
+    fn assert_der_sorted<T: DerOrd>(slice: &[T]) {
+        for pair in slice.windows(2) {
+            assert_ne!(
+                pair[0].der_cmp(&pair[1]).unwrap(),
+                core::cmp::Ordering::Greater,
+                "der_sort left an out-of-order pair"
+            );
+        }
+    }
+
+    /// A small deterministic LCG so the test is reproducible without a `rand`
+    /// dependency (the crate has none in dev-deps for this path).
+    #[cfg(feature = "alloc")]
+    fn lcg_next(state: &mut u64) -> u16 {
+        *state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        (*state >> 33) as u16
+    }
+
+    /// The fix must not change which ordering `der_sort` produces. Cross-check
+    /// it against the original insertion sort on many inputs: fully randomized
+    /// (with intentional duplicates from a narrow value range), the adversarial
+    /// reverse-sorted case from the issue, already-sorted, and constant.
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn der_sort_matches_reference_ordering() {
+        let mut state = 0x2319_u64;
+
+        // Randomized inputs of varied sizes. The narrow value range forces
+        // frequent duplicates so duplicate handling is exercised.
+        for &len in &[0usize, 1, 2, 5, 17, 64, 257, 1000] {
+            let original: Vec<u16> = (0..len).map(|_| lcg_next(&mut state) % 50).collect();
+
+            let mut via_new = original.clone();
+            super::der_sort(&mut via_new).unwrap();
+
+            let mut via_reference = original.clone();
+            insertion_sort_reference(&mut via_reference);
+
+            assert_eq!(via_new, via_reference, "ordering diverged at len={len}");
+            assert_der_sorted(&via_new);
+            // Multiset is preserved (nothing dropped or duplicated by the sort).
+            let mut a = original.clone();
+            let mut b = via_new.clone();
+            a.sort_unstable();
+            b.sort_unstable();
+            assert_eq!(a, b, "der_sort changed the multiset at len={len}");
+        }
+
+        // Adversarial worst case for insertion sort: strictly reverse-sorted.
+        let reversed: Vec<u16> = (0..2000u16).rev().collect();
+        let mut via_new = reversed.clone();
+        super::der_sort(&mut via_new).unwrap();
+        let mut via_reference = reversed;
+        insertion_sort_reference(&mut via_reference);
+        assert_eq!(via_new, via_reference);
+        assert_der_sorted(&via_new);
+        assert!(via_new.iter().copied().eq(0..2000u16));
+    }
+
+    /// Decoding a large reverse-sorted DER `SET OF` must succeed, sort
+    /// correctly, and re-encode to canonical (sorted) DER. This is the decode
+    /// path that the DoS in #2319 targeted. With the O(n^2) sort this input
+    /// took seconds; with O(n log n) it is effectively instant, but the
+    /// assertion here is on correctness, not timing.
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn setofvec_decodes_large_reverse_sorted_der() {
+        // Build non-canonical (reverse-sorted) DER for a SET OF INTEGER.
+        let n = 4000u16;
+        let elements: Vec<u16> = (0..n).rev().collect();
+
+        let mut body = Vec::new();
+        for v in &elements {
+            let mut buf = vec![0u8; v.encoded_len().unwrap().try_into().unwrap()];
+            let mut w = SliceWriter::new(&mut buf);
+            v.encode(&mut w).unwrap();
+            body.extend_from_slice(w.finish().unwrap());
+        }
+
+        // SET tag (0x31) + definite length + reverse-sorted body.
+        let mut der = Vec::new();
+        der.push(0x31);
+        let body_len = body.len();
+        if body_len < 0x80 {
+            der.push(body_len as u8);
+        } else {
+            let len_bytes = body_len.to_be_bytes();
+            let first = len_bytes.iter().position(|&b| b != 0).unwrap();
+            let trimmed = &len_bytes[first..];
+            der.push(0x80 | trimmed.len() as u8);
+            der.extend_from_slice(trimmed);
+        }
+        der.extend_from_slice(&body);
+
+        // Decoder accepts the non-canonical input and sorts it at decode time.
+        let set = SetOfVec::<u16>::from_der(&der).unwrap();
+        assert_eq!(set.len(), n as usize);
+        assert!(set.iter().copied().eq(0..n));
+        assert_der_sorted(set.as_ref());
+
+        // Re-encoding yields canonical (sorted) DER, distinct from the input.
+        let reencoded = set.to_der().unwrap();
+        assert_ne!(reencoded, der, "expected canonicalization on re-encode");
+        // And the canonical form round-trips unchanged.
+        let reparsed = SetOfVec::<u16>::from_der(&reencoded).unwrap();
+        assert!(reparsed.iter().copied().eq(0..n));
+    }
+
+    /// Duplicate elements (allowed since #2272) must survive the sort: equal
+    /// encodings are kept, not deduplicated, and end up adjacent.
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn der_sort_preserves_duplicates() {
+        let vec = vec![5u16, 1, 5, 1, 3, 1, 5];
+        let set = SetOfVec::try_from(vec).unwrap();
+        assert_eq!(set.as_ref(), &[1, 1, 1, 3, 5, 5, 5]);
+        assert_eq!(set.len(), 7);
     }
 }
