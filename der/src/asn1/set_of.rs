@@ -1006,8 +1006,12 @@ mod tests {
     /// dependency (the crate has none in dev-deps for this path).
     #[cfg(feature = "alloc")]
     fn lcg_next(state: &mut u64) -> u16 {
-        *state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
-        (*state >> 33) as u16
+        *state = state
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
+        // Intentionally take the low 16 bits of the high word as the output;
+        // the mask makes the truncation explicit rather than a lossy `as` cast.
+        ((*state >> 33) & 0xFFFF) as u16
     }
 
     /// The fix must not change which ordering `der_sort` produces. Cross-check
@@ -1053,7 +1057,7 @@ mod tests {
 
     /// Decoding a large reverse-sorted DER `SET OF` must succeed, sort
     /// correctly, and re-encode to canonical (sorted) DER. This is the decode
-    /// path that the DoS in #2319 targeted. With the O(n^2) sort this input
+    /// path that the `DoS` in #2319 targeted. With the O(n^2) sort this input
     /// took seconds; with O(n log n) it is effectively instant, but the
     /// assertion here is on correctness, not timing.
     #[cfg(feature = "alloc")]
@@ -1076,12 +1080,15 @@ mod tests {
         der.push(0x31);
         let body_len = body.len();
         if body_len < 0x80 {
-            der.push(body_len as u8);
+            // Guarded by `< 0x80`, so this always fits in a u8.
+            der.push(u8::try_from(body_len).expect("short form length < 0x80"));
         } else {
             let len_bytes = body_len.to_be_bytes();
             let first = len_bytes.iter().position(|&b| b != 0).unwrap();
             let trimmed = &len_bytes[first..];
-            der.push(0x80 | trimmed.len() as u8);
+            // `trimmed.len()` is the count of significant length bytes (<= 8),
+            // so the conversion cannot truncate.
+            der.push(0x80 | u8::try_from(trimmed.len()).expect("length byte count <= 8"));
             der.extend_from_slice(trimmed);
         }
         der.extend_from_slice(&body);
