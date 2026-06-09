@@ -99,3 +99,30 @@ fn test_matching_vl_bytes_serialization() {
         SerializeBytes::tls_serialize(&byte_vec).expect("Error encoding byte vector")
     );
 }
+
+struct SingleByteWriter<W>(W);
+
+impl<W: std::io::Write> std::io::Write for SingleByteWriter<W> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        if buf.is_empty() {
+            return Ok(0);
+        }
+
+        self.0.write(&buf[..1])
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.0.flush()
+    }
+}
+
+#[test]
+fn serialize_into_short_writer() {
+    let mut short_writer = SingleByteWriter(vec![0u8; 32]);
+
+    let first = [0u8, 1, 2];
+
+    first.tls_serialize(&mut short_writer).unwrap();
+    assert_eq!(short_writer.0.len(), 35);
+    assert_eq!(&short_writer.0[short_writer.0.len() - 3..], &[0, 1, 2])
+}
