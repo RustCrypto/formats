@@ -1,4 +1,4 @@
-use crate::{Deserialize, DeserializeBytes, Error, Serialize, Size};
+use crate::{Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size};
 
 /// Variable-length encoded unsigned integer as defined in [RFC 9000].
 ///
@@ -168,6 +168,16 @@ impl Serialize for TlsVarInt {
     }
 }
 
+impl SerializeBytes for TlsVarInt {
+    #[inline]
+    fn tls_serialize(&self) -> Result<alloc::vec::Vec<u8>, Error> {
+        let len = self.bytes_len();
+        let mut bytes = alloc::vec![0u8; len];
+        self.write_bytes(&mut bytes)?;
+        Ok(bytes)
+    }
+}
+
 impl Size for TlsVarInt {
     #[inline]
     fn tls_serialized_len(&self) -> usize {
@@ -237,10 +247,11 @@ mod tests {
 
         for (value, len, bytes) in TESTS {
             let mut buf = Vec::new();
-            let written = TlsVarInt::try_from(value)
-                .expect("value too large")
-                .tls_serialize(&mut buf)
-                .expect("tls serialize failed");
+            let written = Serialize::tls_serialize(
+                &TlsVarInt::try_from(value).expect("value too large"),
+                &mut buf,
+            )
+            .expect("tls serialize failed");
             assert_eq!(written, len, "{value}");
             assert_eq!(buf.len(), len, "{value}");
             assert_eq!(&buf[..], bytes, "{value}");
