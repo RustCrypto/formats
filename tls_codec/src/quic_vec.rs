@@ -672,7 +672,23 @@ mod rw_bytes {
     impl Serialize for &VLBytes {
         #[inline(always)]
         fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
-            (*self).tls_serialize(writer)
+            Serialize::tls_serialize(*self, writer)
+        }
+    }
+
+    impl SerializeBytes for VLBytes {
+        #[inline(always)]
+        fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+            let mut bytes = Vec::with_capacity(self.tls_serialized_len());
+            Serialize::tls_serialize(&self, &mut bytes).map(|_| bytes)
+        }
+    }
+
+    impl SerializeBytes for &VLBytes {
+        #[inline(always)]
+        fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+            let mut bytes = Vec::with_capacity(self.tls_serialized_len());
+            Serialize::tls_serialize(self, &mut bytes).map(|_| bytes)
         }
     }
 
@@ -802,7 +818,7 @@ mod secret_bytes {
 
     impl Serialize for SecretVLBytes {
         fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
-            self.0.tls_serialize(writer)
+            Serialize::tls_serialize(&self.0, writer)
         }
     }
 
