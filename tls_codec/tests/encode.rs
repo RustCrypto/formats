@@ -87,3 +87,15 @@ fn serialize_var_len_boundaries() {
     let serialized = v.tls_serialize_detached().expect("Error encoding vector");
     assert_eq!(&serialized[0..5], &[0x80, 0, 0x40, 0, 99]);
 }
+
+#[test]
+/// Test that serializations of [`VLBytes`] match for [`tls_codec::Serialize`]
+/// and [`tls_codec::SerializeBytes`].
+fn test_matching_vl_bytes_serialization() {
+    use tls_codec::SerializeBytes;
+    let byte_vec = VLBytes::new(vec![99u8; 16384]);
+    assert_eq!(
+        Serialize::tls_serialize_detached(&byte_vec).expect("Error encoding vector"),
+        SerializeBytes::tls_serialize(&byte_vec).expect("Error encoding byte vector")
+    );
+}
