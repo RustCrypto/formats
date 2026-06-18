@@ -1,4 +1,8 @@
-use tls_codec::{SerializeBytes, TlsByteVecU8, TlsByteVecU16, TlsByteVecU24, TlsByteVecU32, U24};
+#![allow(deprecated)]
+
+use tls_codec::{
+    SerializeBytes, TlsByteVecU8, TlsByteVecU16, TlsByteVecU24, TlsByteVecU32, U24, VLBytes,
+};
 
 #[test]
 fn serialize_primitives() {
@@ -81,4 +85,13 @@ fn serialize_tls_byte_vec_u32() {
         .tls_serialize()
         .expect("Error encoding byte vector");
     assert_eq!(actual_result, vec![0, 0, 0, 3, 1, 2, 3]);
+}
+
+#[test]
+fn serialize_vlbytes() {
+    let byte_vec = VLBytes::new(vec![1, 2, 3]);
+    let actual_result = byte_vec
+        .tls_serialize()
+        .expect("Error encoding byte vector");
+    assert_eq!(actual_result, vec![3, 1, 2, 3]);
 }
