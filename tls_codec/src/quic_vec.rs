@@ -112,6 +112,36 @@ impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
     }
 }
 
+impl SerializeBytes for VLBytes {
+    #[inline(always)]
+    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+        let content_length = self.as_slice().len();
+        let length = ContentLength::from_usize(content_length)?;
+        let len_len = length.0.bytes_len();
+
+        let mut out = Vec::with_capacity(content_length + len_len);
+        out.resize(len_len, 0);
+        length.0.write_bytes(&mut out)?;
+
+        // Extend with the data
+        out.extend(self.as_slice());
+
+        #[cfg(debug_assertions)]
+        if out.len() - len_len != content_length {
+            return Err(Error::LibraryError);
+        }
+
+        Ok(out)
+    }
+}
+
+impl SerializeBytes for &VLBytes {
+    #[inline(always)]
+    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+        (*self).tls_serialize()
+    }
+}
+
 impl<T: SerializeBytes> SerializeBytes for &[T] {
     #[inline(always)]
     fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
@@ -673,22 +703,6 @@ mod rw_bytes {
         #[inline(always)]
         fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
             Serialize::tls_serialize(*self, writer)
-        }
-    }
-
-    impl SerializeBytes for VLBytes {
-        #[inline(always)]
-        fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
-            let mut bytes = Vec::with_capacity(self.tls_serialized_len());
-            Serialize::tls_serialize(&self, &mut bytes).map(|_| bytes)
-        }
-    }
-
-    impl SerializeBytes for &VLBytes {
-        #[inline(always)]
-        fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
-            let mut bytes = Vec::with_capacity(self.tls_serialized_len());
-            Serialize::tls_serialize(self, &mut bytes).map(|_| bytes)
         }
     }
 
