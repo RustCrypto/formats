@@ -118,3 +118,39 @@ impl TryFrom<PkiPath> for ContentInfo {
         })
     }
 }
+
+#[cfg(feature = "pem")]
+impl der::pem::PemLabel for ContentInfo {
+    /// Per [RFC7468], ContentInfo can be encoded into PEM with a label of "CMS".
+    ///
+    /// [RFC7468]: https://www.rfc-editor.org/info/rfc7468/#section-9
+    const PEM_LABEL: &'static str = "CMS";
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ContentInfo;
+    use der::Any;
+
+    #[cfg(feature = "pem")]
+    #[test]
+    fn test_pem_encode_decode() {
+        let content_info = ContentInfo {
+            content_type: const_oid::db::rfc5911::ID_SIGNED_DATA,
+            content: Any::null(),
+        };
+
+        // Encode to PEM and check that it's come out looking plausible
+        use der::EncodePem;
+        let pem_encoding = content_info
+            .to_pem(der::pem::LineEnding::LF)
+            .expect("Failed to encode ContentInfo as PEM");
+        assert!(pem_encoding.starts_with("-----BEGIN CMS-----\n"));
+        assert!(pem_encoding.ends_with("\n-----END CMS-----\n"));
+
+        // Parse back into ContentInfo, and check we end up with what we started with.
+        use der::DecodePem;
+        let parsed = ContentInfo::from_pem(pem_encoding).expect("Failed to decode ContentInfo PEM");
+        assert_eq!(parsed, content_info);
+    }
+}
