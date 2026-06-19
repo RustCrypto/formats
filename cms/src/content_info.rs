@@ -129,15 +129,15 @@ impl der::pem::PemLabel for ContentInfo {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(feature = "pem")]
     use super::ContentInfo;
-    use der::Any;
 
     #[cfg(feature = "pem")]
     #[test]
     fn test_pem_encode_decode() {
         let content_info = ContentInfo {
             content_type: const_oid::db::rfc5911::ID_SIGNED_DATA,
-            content: Any::null(),
+            content: der::Any::null(),
         };
 
         // Encode to PEM and check that it's come out looking plausible
