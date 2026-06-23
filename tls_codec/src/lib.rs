@@ -77,6 +77,9 @@ pub enum Error {
     InvalidVectorLength,
 
     /// Error writing everything out.
+    ///
+    /// **Deprecated:** This error variant is not returned anymore and only kept to avoid breaking
+    /// existing code.
     InvalidWriteLength(String),
 
     /// Invalid input when trying to decode a primitive integer.

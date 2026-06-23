@@ -32,8 +32,7 @@ impl<T: Serialize> Serialize for Option<T> {
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
         match self {
             Some(e) => {
-                let written = writer.write(&[1])?;
-                debug_assert_eq!(written, 1);
+                writer.write_all(&[1])?;
                 e.tls_serialize(writer).map(|l| l + 1)
             }
             None => {
@@ -156,9 +155,9 @@ macro_rules! impl_unsigned {
             #[cfg(feature = "std")]
             #[inline]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
-                let written = writer.write(&self.to_be_bytes())?;
-                debug_assert_eq!(written, $bytes);
-                Ok(written)
+                let bytes = &self.to_be_bytes();
+                writer.write_all(bytes)?;
+                Ok($bytes)
             }
         }
 
