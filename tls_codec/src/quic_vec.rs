@@ -569,6 +569,34 @@ impl Size for VLByteSlice<'_> {
     }
 }
 
+impl SerializeBytes for ContentLength {
+    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+        SerializeBytes::tls_serialize(&self.0)
+    }
+}
+
+impl SerializeBytes for VLByteSlice<'_> {
+    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+        // Get the byte length of the content and make sure it's not too
+        // large (requires `mls` feature, so we also do it explicitly below).
+        let content_len = self.0.len();
+        let content_length = ContentLength::from_usize(content_len)?;
+
+        let len_len = content_length.tls_serialized_len();
+        let total_len = content_len + len_len;
+
+        if total_len > isize::MAX as usize {
+            return Err(Error::InvalidVectorLength);
+        }
+
+        let mut out = alloc::vec::Vec::with_capacity(total_len);
+        out.append(&mut SerializeBytes::tls_serialize(&content_length)?);
+        out.extend(self.0);
+
+        Ok(out)
+    }
+}
+
 #[cfg(feature = "std")]
 pub mod rw {
     use super::*;
@@ -584,7 +612,7 @@ pub mod rw {
     impl Serialize for ContentLength {
         #[inline(always)]
         fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
-            self.0.tls_serialize(writer)
+            Serialize::tls_serialize(&self.0, writer)
         }
     }
 
@@ -628,7 +656,7 @@ pub mod rw {
         writer: &mut W,
         content_length: usize,
     ) -> Result<usize, Error> {
-        ContentLength::from_usize(content_length)?.tls_serialize(writer)
+        Serialize::tls_serialize(&ContentLength::from_usize(content_length)?, writer)
     }
 
     impl<T: Serialize + std::fmt::Debug> Serialize for Vec<T> {
@@ -684,7 +712,8 @@ mod rw_bytes {
         // large and write it out.
         let content_length = bytes.len();
 
-        let len_len = ContentLength::from_usize(content_length)?.tls_serialize(writer)?;
+        let len_len =
+            Serialize::tls_serialize(&ContentLength::from_usize(content_length)?, writer)?;
 
         // Now serialize the elements
         writer.write_all(bytes)?;

@@ -57,7 +57,7 @@ fn byte_slice(c: &mut Criterion) {
     c.bench_function("TLS Serialize VL Byte Slice", |b| {
         b.iter_batched_ref(
             || (vec![77u8; N], Vec::with_capacity(8 + N)),
-            |(long_vec, buf)| VLByteSlice(long_vec).tls_serialize(buf).unwrap(),
+            |(long_vec, buf)| Serialize::tls_serialize(&VLByteSlice(long_vec), buf).unwrap(),
             BatchSize::SmallInput,
         )
     });

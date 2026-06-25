@@ -26,3 +26,9 @@ name = "inverse"
 path = "fuzz_targets/inverse.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "string"
+path = "fuzz_targets/string.rs"
+test = false
+doc = false
