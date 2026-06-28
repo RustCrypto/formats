@@ -38,6 +38,7 @@ use std::io::{Read, Write};
 mod arrays;
 mod primitives;
 mod quic_vec;
+mod string;
 mod tls_vec;
 mod varint;
 
@@ -77,6 +78,9 @@ pub enum Error {
     InvalidVectorLength,
 
     /// Error writing everything out.
+    ///
+    /// **Deprecated:** This error variant is not returned anymore and only kept to avoid breaking
+    /// existing code.
     InvalidWriteLength(String),
 
     /// Invalid input when trying to decode a primitive integer.

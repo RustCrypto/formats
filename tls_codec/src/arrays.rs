@@ -11,14 +11,8 @@ impl<const LEN: usize> Serialize for [u8; LEN] {
     #[cfg(feature = "std")]
     #[inline]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
-        let written = writer.write(self)?;
-        if written == LEN {
-            Ok(written)
-        } else {
-            Err(Error::InvalidWriteLength(format!(
-                "Expected to write {LEN} bytes but only {written} were written."
-            )))
-        }
+        writer.write_all(self)?;
+        Ok(LEN)
     }
 }
 

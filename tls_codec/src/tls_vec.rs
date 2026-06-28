@@ -155,7 +155,9 @@ macro_rules! impl_byte_serialize {
             let mut written = <$size as Serialize>::tls_serialize(&<$size>::try_from(byte_length).unwrap(), writer)?;
 
             // Now serialize the elements
-            written += writer.write($self.as_slice())?;
+            let bytes = $self.as_slice();
+            writer.write_all(bytes)?;
+            written += bytes.len();
 
             $self.assert_written_bytes(tls_serialized_len, written)?;
             Ok(written)
