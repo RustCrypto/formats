@@ -63,10 +63,7 @@ pub const PBES2_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.11
 /// AES cipher block size
 const AES_BLOCK_SIZE: usize = 16;
 
-/// GCM nonce size
-///
-/// We could use any value here but GCM is most efficient
-/// with 96 bit nonces
+/// Recommended GCM nonce size.
 const GCM_NONCE_SIZE: usize = 12;
 
 /// DES / Triple DES block size
