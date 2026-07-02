@@ -123,6 +123,88 @@ impl From<std::io::Error> for Error {
     }
 }
 
+/// Read exactly `len` bytes from `reader` into a freshly allocated vector.
+///
+/// Unlike `vec![0u8; len]` followed by `read_exact`, this does **not** eagerly
+/// allocate `len` bytes up front: the initial allocation is capped so that a
+/// bogus (large) length field in untrusted input can't trigger a huge
+/// allocation before any bytes are read. The vector grows as data actually
+/// arrives.
+///
+/// Returns [`Error::EndOfStream`] if the reader is exhausted before `len` bytes
+/// are read.
+#[cfg(feature = "std")]
+fn read_bytes_bounded<R: std::io::Read>(reader: &mut R, len: usize) -> Result<Vec<u8>, Error> {
+    /// Upper bound on the up-front allocation, so that a bogus (large) length
+    /// field in untrusted input can't trigger a huge allocation before any
+    /// bytes are read.
+    const MAX_PREALLOC: usize = 4096;
+
+    // Cap the initial allocation. `read_to_end` grows the vector as data
+    // actually arrives, and `Take` bounds the reader to `len` so growth can
+    // never exceed the request.
+    let mut result = Vec::with_capacity(core::cmp::min(len, MAX_PREALLOC));
+
+    // `read_to_end` reads directly into the vector's spare capacity and retries
+    // `ErrorKind::Interrupted` internally, unlike a bare `read` loop.
+    reader.take(len as u64).read_to_end(&mut result)?;
+
+    // `Take` caps output at `len`, so a short read means the stream was
+    // exhausted early.
+    if result.len() != len {
+        return Err(Error::EndOfStream);
+    }
+    Ok(result)
+}
+
+/// Adds two serialized-length components, guarding against `usize` overflow
+/// only on platforms where it can actually occur.
+///
+/// On 64-bit targets every length is bounded by the amount of addressable
+/// memory (`isize::MAX`), so a sum of serialized lengths can never overflow
+/// `usize`. There this compiles down to a plain addition with no branch,
+/// keeping the serialization hot path free of overflow checks.
+///
+/// On narrower targets (32-bit, 16-bit is not officially supported)
+/// the serialized form of a large in-memory structure can carry enough
+/// length-prefix / discriminant overhead to exceed `usize::MAX`.
+/// There we saturate at `usize::MAX` rather than silently wrapping to a small
+/// value, so the oversized length is subsequently rejected by the
+/// length-encoding bounds checks instead of producing a truncated, mismatched
+/// length prefix on the wire.
+///
+/// `tls_codec_derive` emits the equivalent logic inline, so this helper does not
+/// need to be part of the public API.
+#[inline(always)]
+#[cfg(target_pointer_width = "64")]
+pub(crate) const fn len_add(a: usize, b: usize) -> usize {
+    a + b
+}
+
+#[inline(always)]
+#[cfg(not(target_pointer_width = "64"))]
+pub(crate) const fn len_add(a: usize, b: usize) -> usize {
+    a.saturating_add(b)
+}
+
+/// Like [`len_add`], but for contexts that can surface an error.
+///
+/// On 64-bit targets this is a plain, branch-free addition (see [`len_add`] for
+/// why it can't overflow). On narrower targets an overflow becomes
+/// [`Error::InvalidVectorLength`] so a wrapped, too-small length is never
+/// written to the wire.
+#[inline(always)]
+#[cfg(target_pointer_width = "64")]
+pub(crate) fn checked_len_add(a: usize, b: usize) -> Result<usize, Error> {
+    Ok(a + b)
+}
+
+#[inline(always)]
+#[cfg(not(target_pointer_width = "64"))]
+pub(crate) fn checked_len_add(a: usize, b: usize) -> Result<usize, Error> {
+    a.checked_add(b).ok_or(Error::InvalidVectorLength)
+}
+
 /// The `Size` trait needs to be implemented by any struct that should be
 /// efficiently serialized.
 /// This allows to collect the length of a serialized structure before allocating

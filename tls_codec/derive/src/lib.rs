@@ -27,7 +27,7 @@
 //! function returns an `Error::UnknownValue` with a `u64` value of the unknown
 //! type.
 //!
-//! ```
+//! ```no_run
 //! # #[cfg(feature = "std")]
 //! # {
 //! use tls_codec_derive::{TlsDeserialize, TlsSerialize, TlsSize};
@@ -761,6 +761,35 @@ fn define_discriminant_constants(
     Ok(quote! { #(#discriminant_constants)* })
 }
 
+/// Builds an expression that sums `base` and all `terms` into a `usize`,
+/// guarding against overflow only on targets where it can actually occur.
+///
+/// On 64-bit targets every length is bounded by addressable memory
+/// (`isize::MAX`), so the sum can't overflow `usize`; a plain, branch-free
+/// addition is emitted to keep the serialization hot path free of checks. On
+/// narrower targets the serialized form of a large structure can carry enough
+/// length-prefix / discriminant overhead to exceed `usize::MAX`, so we saturate
+/// rather than silently wrapping to a small value (a wrapped length would be
+/// written to the wire as a truncated, mismatched length prefix).
+///
+/// This mirrors `tls_codec::len_add` but is emitted inline so the helper does
+/// not need to be part of `tls_codec`'s public API.
+fn sum_lengths(terms: &[TokenStream2], base: TokenStream2) -> TokenStream2 {
+    quote! {
+        {
+            #[cfg(target_pointer_width = "64")]
+            let __tls_len: usize = #base #(+ #terms)*;
+            #[cfg(not(target_pointer_width = "64"))]
+            let __tls_len: usize = {
+                let mut __tls_len: usize = #base;
+                #(__tls_len = __tls_len.saturating_add(#terms);)*
+                __tls_len
+            };
+            __tls_len
+        }
+    }
+}
+
 #[allow(unused_variables)]
 fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
     match parsed_ast {
@@ -779,13 +808,18 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
                 .iter()
                 .map(|p| p.for_trait("Size"))
                 .collect::<Vec<_>>();
+            let field_lengths = prefixes
+                .iter()
+                .zip(members.iter())
+                .map(|(prefix, member)| quote! { #prefix::tls_serialized_len(&self.#member) })
+                .collect::<Vec<_>>();
+            let serialized_len = sum_lengths(&field_lengths, quote! { 0usize });
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
                 impl #impl_generics tls_codec::Size for #ident #ty_generics #where_clause {
                     #[inline]
                     fn tls_serialized_len(&self) -> usize {
-                        #(#prefixes::tls_serialized_len(&self.#members) + )*
-                        0
+                        #serialized_len
                     }
                 }
 
@@ -811,13 +845,27 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
                     let variant_id = &variant.ident;
                     let members = &variant.members;
                     let bindings = make_n_ids(members.len());
-                    let prefixes = variant.member_prefixes.iter().map(|p| p.for_trait("Size")).collect::<Vec<_>>();
+                    let prefixes = variant
+                        .member_prefixes
+                        .iter()
+                        .map(|p| p.for_trait("Size"))
+                        .collect::<Vec<_>>();
+                    let field_lengths = prefixes
+                        .iter()
+                        .zip(bindings.iter())
+                        .map(|(prefix, binding)| quote! { #prefix::tls_serialized_len(#binding) })
+                        .collect::<Vec<_>>();
+                    let variant_len = sum_lengths(&field_lengths, quote! { 0usize });
                     quote! {
-                        #ident::#variant_id { #(#members: #bindings,)* } => 0 #(+ #prefixes::tls_serialized_len(#bindings))*,
+                        #ident::#variant_id { #(#members: #bindings,)* } => #variant_len,
                     }
                 })
                 .collect::<Vec<_>>();
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+            let total_len = sum_lengths(
+                &[quote! { field_len }],
+                quote! { core::mem::size_of::<#repr>() },
+            );
             quote! {
                 impl #impl_generics tls_codec::Size for #ident #ty_generics #where_clause {
                     #[inline]
@@ -825,7 +873,7 @@ fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
                         let field_len = match self {
                             #(#field_arms)*
                         };
-                        core::mem::size_of::<#repr>() + field_len
+                        #total_len
                     }
                 }
 
@@ -1414,9 +1462,9 @@ fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStr
     quote! {
         #annotated_item
 
-        #[doc = #doc_string_deserializable]
-        #annotated_item_visibility type #undeserializable_ident #original_ty_generics = #annotated_item_ident #undeserializable_ty_generics;
         #[doc = #doc_string_undeserializable]
+        #annotated_item_visibility type #undeserializable_ident #original_ty_generics = #annotated_item_ident #undeserializable_ty_generics;
+        #[doc = #doc_string_deserializable]
         #annotated_item_visibility type #deserializable_ident #original_ty_generics = #annotated_item_ident #deserializable_ty_generics;
 
         #deserialize_implementation

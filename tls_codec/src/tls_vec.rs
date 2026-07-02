@@ -22,7 +22,7 @@ macro_rules! impl_size {
         fn tls_serialized_length(&$self) -> usize {
             $self.as_slice()
                 .iter()
-                .fold($len_len, |acc, e| acc + e.tls_serialized_len())
+                .fold($len_len, |acc, e| crate::len_add(acc, e.tls_serialized_len()))
         }
     }
 }
@@ -53,17 +53,17 @@ macro_rules! impl_byte_deserialize {
                     u16::MAX
                 )));
             }
-            let mut result = Self {
-                vec: vec![0u8; len],
-            };
-            bytes.read_exact(result.vec.as_mut_slice())?;
-            Ok(result)
+            // Read into a bounded buffer rather than allocating `len` bytes up
+            // front, so an oversized length field can't trigger a huge
+            // allocation before any bytes are read.
+            let vec = crate::read_bytes_bounded(bytes, len)?;
+            Ok(Self { vec })
         }
 
         #[inline(always)]
         fn deserialize_bytes_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
             let (type_len, remainder) = <$size>::tls_deserialize_bytes(bytes)?;
-            let len = type_len.try_into().unwrap();
+            let len: usize = type_len.try_into().unwrap();
             // When fuzzing we limit the maximum size to allocate.
             // XXX: We should think about a configurable limit for the allocation
             //      here.
@@ -74,9 +74,12 @@ macro_rules! impl_byte_deserialize {
                     u16::MAX
                 )));
             }
-            let vec = bytes
-                .get($len_len..len + $len_len)
-                .ok_or(Error::EndOfStream)?;
+            // Use `checked_add` to avoid overflowing `usize` on targets where
+            // the length field is as wide as (or wider than) the pointer width.
+            let end = len
+                .checked_add($len_len)
+                .ok_or(Error::InvalidVectorLength)?;
+            let vec = bytes.get($len_len..end).ok_or(Error::EndOfStream)?;
             let result = Self { vec: vec.to_vec() };
             Ok((result, &remainder.get(len..).ok_or(Error::EndOfStream)?))
         }
@@ -90,11 +93,24 @@ macro_rules! impl_deserialize {
         fn deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
             let mut result = Self { vec: Vec::new() };
             let len = <$size>::tls_deserialize(bytes)?;
-            let mut read = len.tls_serialized_len();
-            let len_len = read;
-            while (read - len_len) < len.try_into().unwrap() {
-                let element = T::tls_deserialize(bytes)?;
-                read += element.tls_serialized_len();
+            let length: usize = len.try_into().unwrap();
+            // The declared length is authoritative and delimits the vector's
+            // content. Bound the reader to exactly `length` bytes and decode
+            // elements until it is exhausted. This measures actual consumption
+            // instead of trusting `tls_serialized_len()`, keeping this in sync
+            // with the `DeserializeBytes` implementation for non-canonical
+            // encodings (e.g. non-minimal varint lengths).
+            let mut sub = Read::take(bytes, length as u64);
+            while sub.limit() > 0 {
+                let before = sub.limit();
+                let element = T::tls_deserialize(&mut sub)?;
+                // A zero-length element would never advance the reader, causing
+                // an infinite loop that keeps allocating. Reject such input.
+                if sub.limit() == before {
+                    return Err(Error::DecodingError(format!(
+                        "Vector element consumed 0 bytes; refusing to loop"
+                    )));
+                }
                 result.push(element);
             }
             Ok(result)
@@ -108,13 +124,30 @@ macro_rules! impl_deserialize_bytes {
         fn deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
             let mut result = Self { vec: Vec::new() };
             let (len, mut remainder) = <$size>::tls_deserialize_bytes(bytes)?;
-            let mut read = len.tls_serialized_len();
-            let len_len = read;
-            while (read - len_len) < len.try_into().unwrap() {
+            let length: usize = len.try_into().unwrap();
+            let mut read = 0usize;
+            while read < length {
                 let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
+                // Measure how many bytes the element actually consumed from the
+                // input rather than trusting `tls_serialized_len`.
+                let consumed = remainder.len() - next_remainder.len();
                 remainder = next_remainder;
-                read += element.tls_serialized_len();
                 result.push(element);
+                // A zero-length element would never advance `read`, causing an
+                // infinite loop that keeps allocating. Reject such input.
+                if consumed == 0 {
+                    return Err(Error::DecodingError(alloc::format!(
+                        "Vector element consumed 0 bytes; refusing to loop"
+                    )));
+                }
+                read += consumed;
+            }
+            // The declared length is authoritative: the elements must consume
+            // exactly `length` bytes, not overshoot it.
+            if read != length {
+                return Err(Error::DecodingError(alloc::format!(
+                    "Vector length mismatch: declared {length} bytes but elements consumed {read}"
+                )));
             }
             Ok((result, remainder))
         }
@@ -169,8 +202,16 @@ macro_rules! impl_serialize_common {
     ($self:ident, $size:ty, $name:ident, $len_len:literal $(,#[$std_enabled:meta])?) => {
         $(#[$std_enabled])?
         fn get_content_lengths(&$self) -> Result<(usize, usize), Error> {
-            let tls_serialized_len = $self.tls_serialized_len();
-            let byte_length = tls_serialized_len - $len_len;
+            // Sum the element lengths with an overflow check on platforms where
+            // `usize` is narrow enough for it to matter (see `crate::len_add`).
+            // Computing `byte_length` directly (rather than deriving it from
+            // `tls_serialized_len()`) lets us reject a true overflow instead of
+            // trusting a possibly-saturated value from the `Size` impl.
+            let byte_length = $self
+                .as_slice()
+                .iter()
+                .try_fold(0usize, |acc, e| crate::checked_len_add(acc, e.tls_serialized_len()))?;
+            let tls_serialized_len = crate::checked_len_add(byte_length, $len_len)?;
 
             let max_len = <$size>::MAX.try_into().unwrap();
             debug_assert!(
