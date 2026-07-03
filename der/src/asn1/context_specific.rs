@@ -24,7 +24,7 @@ impl_custom_class_ref!(
     "0b10000000"
 );
 
-/// ContextSpecific class, EXPLICIT
+/// `ContextSpecific` class, EXPLICIT
 pub type ContextSpecificExplicit<const NUMBER: u32, T> =
     ClassTaggedExplicit<NUMBER, T, CLASS_CONTEXT_SPECIFIC>;
 

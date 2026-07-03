@@ -273,6 +273,7 @@ impl Tag {
     /// - `PRIVATE` [`Class::Private`],
     ///
     /// Returns [`Tag::Null`] otherwise.
+    #[must_use]
     pub const fn new_non_universal(class: Class, number: TagNumber, constructed: bool) -> Tag {
         match class {
             Class::Application => Tag::Application {

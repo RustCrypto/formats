@@ -14,6 +14,6 @@ use crate::ErrorKind;
 impl_custom_class!(Application, Application, "APPLICATION", "0b01000000");
 impl_custom_class_ref!(ApplicationRef, Application, "APPLICATION", "0b01000000");
 
-/// Application class, EXPLICIT
+/// `Application` class, EXPLICIT
 pub type ApplicationExplicit<const NUMBER: u32, T> =
     ClassTaggedExplicit<NUMBER, T, CLASS_APPLICATION>;
