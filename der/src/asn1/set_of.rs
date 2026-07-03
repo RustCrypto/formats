@@ -1021,12 +1021,12 @@ mod tests {
     #[cfg(feature = "alloc")]
     #[test]
     fn der_sort_matches_reference_ordering() {
-        let mut state = 0x2319_u64;
+        let mut rng_state = 0x2319_u64;
 
         // Randomized inputs of varied sizes. The narrow value range forces
         // frequent duplicates so duplicate handling is exercised.
         for &len in &[0usize, 1, 2, 5, 17, 64, 257, 1000] {
-            let original: Vec<u16> = (0..len).map(|_| lcg_next(&mut state) % 50).collect();
+            let original: Vec<u16> = (0..len).map(|_| lcg_next(&mut rng_state) % 50).collect();
 
             let mut via_new = original.clone();
             super::der_sort(&mut via_new).unwrap();
@@ -1067,41 +1067,19 @@ mod tests {
         let n = 4000u16;
         let elements: Vec<u16> = (0..n).rev().collect();
 
-        let mut body = Vec::new();
-        for v in &elements {
-            let mut buf = vec![0u8; v.encoded_len().unwrap().try_into().unwrap()];
-            let mut w = SliceWriter::new(&mut buf);
-            v.encode(&mut w).unwrap();
-            body.extend_from_slice(w.finish().unwrap());
-        }
-
-        // SET tag (0x31) + definite length + reverse-sorted body.
-        let mut der = Vec::new();
-        der.push(0x31);
-        let body_len = body.len();
-        if body_len < 0x80 {
-            // Guarded by `< 0x80`, so this always fits in a u8.
-            der.push(u8::try_from(body_len).expect("short form length < 0x80"));
-        } else {
-            let len_bytes = body_len.to_be_bytes();
-            let first = len_bytes.iter().position(|&b| b != 0).unwrap();
-            let trimmed = &len_bytes[first..];
-            // `trimmed.len()` is the count of significant length bytes (<= 8),
-            // so the conversion cannot truncate.
-            der.push(0x80 | u8::try_from(trimmed.len()).expect("length byte count <= 8"));
-            der.extend_from_slice(trimmed);
-        }
-        der.extend_from_slice(&body);
+        let mut encoded = elements.to_der().unwrap();
+        // Trick: change SEQUENCE tag 0x30 to SET 0x31
+        encoded[0] = 0x31;
 
         // Decoder accepts the non-canonical input and sorts it at decode time.
-        let set = SetOfVec::<u16>::from_der(&der).unwrap();
+        let set = SetOfVec::<u16>::from_der(&encoded).unwrap();
         assert_eq!(set.len(), n as usize);
         assert!(set.iter().copied().eq(0..n));
         assert_der_sorted(set.as_ref());
 
         // Re-encoding yields canonical (sorted) DER, distinct from the input.
         let reencoded = set.to_der().unwrap();
-        assert_ne!(reencoded, der, "expected canonicalization on re-encode");
+        assert_ne!(reencoded, encoded, "expected canonicalization on re-encode");
         // And the canonical form round-trips unchanged.
         let reparsed = SetOfVec::<u16>::from_der(&reencoded).unwrap();
         assert!(reparsed.iter().copied().eq(0..n));
