@@ -1,6 +1,6 @@
 [package]
 name = "tls_codec"
-version = "0.4.2"
+version = "0.4.3-pre.1"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 documentation = "https://docs.rs/tls_codec/"
@@ -12,13 +12,13 @@ edition = "2024"
 rust-version = "1.85"
 
 [dependencies]
-zeroize = { version = "1.8", default-features = false, features = ["alloc"] }
+zeroize = { version = "1.9", default-features = false, features = ["alloc"] }
 
 # optional dependencies
 arbitrary = { version = "1.4", features = ["derive"], optional = true }
-tls_codec_derive = { version = "=0.4.2", path = "./derive", optional = true }
-serde = { version = "1.0.184", features = ["derive"], optional = true }
-serde_bytes = { version = "0.11.17", optional = true }
+tls_codec_derive = { version = "=0.4.3-pre.1", path = "./derive", optional = true }
+serde = { version = "1.0.228", features = ["derive"], optional = true }
+serde_bytes = { version = "0.11.19", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.6", default-features = false }

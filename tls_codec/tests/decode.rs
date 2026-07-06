@@ -4,9 +4,14 @@
 #![allow(deprecated)]
 
 use tls_codec::{
-    Error, Serialize, Size, TlsByteSliceU16, TlsByteVecU8, TlsByteVecU16, TlsSliceU16, TlsVecU8,
-    TlsVecU16, TlsVecU32, U24, VLByteSlice, VLBytes,
+    Error, Serialize, Size, TlsByteSliceU16, TlsByteVecU8, TlsByteVecU16, TlsByteVecU32,
+    TlsSliceU16, TlsVecU8, TlsVecU16, TlsVecU32, U24, VLByteSlice, VLBytes,
 };
+
+/// A `VLBytes` element encoded with a *non-minimal* 2-byte varint length prefix
+/// (`0x40 0x01`) for a single payload byte (`0xAA`). Actual wire size is 3, but
+/// `tls_serialized_len()` reports the canonical size of 2.
+const NON_MINIMAL_ELEMENT: &[u8] = &[0x40, 0x01, 0xAA];
 
 #[test]
 fn deserialize_primitives() {
@@ -327,4 +332,115 @@ fn deserialize_bytes_empty_vl_bytes() {
 
     let b: &[u8] = &[];
     VLBytes::tls_deserialize_bytes(b).expect_err("Empty bytes were parsed successfully");
+}
+
+// The `Deserialize` (Read) and `DeserializeBytes` paths for element vectors must
+// agree, even for non-canonical inner encodings. The Read path bounds the reader
+// to the declared length and measures actual consumption instead of trusting
+// `tls_serialized_len()`.
+#[test]
+fn read_and_bytes_paths_agree_on_non_minimal_inner_length() {
+    use tls_codec::{Deserialize, DeserializeBytes};
+    // `Vec<VLBytes>` uses a varint outer length. Declared content length = 3,
+    // followed by the single (non-minimally encoded) 3-byte element.
+    let mut input = vec![0x03];
+    input.extend_from_slice(NON_MINIMAL_ELEMENT);
+
+    let bytes_res = Vec::<VLBytes>::tls_deserialize_exact_bytes(&input);
+
+    let mut read_input = input.as_slice();
+    let read_res = Vec::<VLBytes>::tls_deserialize(&mut read_input);
+
+    if cfg!(feature = "mls") {
+        // MLS requires minimum-size length encoding, so both paths reject it.
+        assert!(bytes_res.is_err());
+        assert!(read_res.is_err());
+    } else {
+        // Both paths must accept it and produce the identical result.
+        let expected = vec![VLBytes::new(vec![0xAA])];
+        assert_eq!(bytes_res.as_ref().unwrap(), &expected);
+        assert_eq!(read_res.as_ref().unwrap(), &expected);
+        // And the Read path must have consumed the whole input.
+        assert!(read_input.is_empty());
+    }
+}
+
+#[test]
+fn read_and_bytes_paths_agree_on_non_minimal_inner_length_fixed_len_vec() {
+    use tls_codec::{Deserialize, DeserializeBytes};
+    // Same as above but with a fixed-size (u8) outer length field.
+    let mut input = vec![0x03];
+    input.extend_from_slice(NON_MINIMAL_ELEMENT);
+
+    let bytes_res = TlsVecU8::<VLBytes>::tls_deserialize_exact_bytes(&input);
+
+    let mut read_input = input.as_slice();
+    let read_res = TlsVecU8::<VLBytes>::tls_deserialize(&mut read_input);
+
+    if cfg!(feature = "mls") {
+        assert!(bytes_res.is_err());
+        assert!(read_res.is_err());
+    } else {
+        let expected = TlsVecU8::from(vec![VLBytes::new(vec![0xAA])]);
+        assert_eq!(bytes_res.as_ref().unwrap(), &expected);
+        assert_eq!(read_res.as_ref().unwrap(), &expected);
+        assert!(read_input.is_empty());
+    }
+}
+
+#[test]
+fn canonical_element_vec_still_round_trips() {
+    use tls_codec::{Deserialize, DeserializeBytes};
+    // Guard against a regression in the bounded-reader loop for canonical input.
+    let original: Vec<VLBytes> = vec![
+        VLBytes::new(vec![1, 2, 3]),
+        VLBytes::new(vec![]),
+        VLBytes::new(vec![4]),
+    ];
+    let serialized = original.tls_serialize_detached().unwrap();
+
+    let mut read_input = serialized.as_slice();
+    let read = Vec::<VLBytes>::tls_deserialize(&mut read_input).unwrap();
+    assert_eq!(read, original);
+    assert!(read_input.is_empty());
+
+    let (bytes, remainder) = Vec::<VLBytes>::tls_deserialize_bytes(&serialized).unwrap();
+    assert_eq!(bytes, original);
+    assert!(remainder.is_empty());
+}
+
+// Read-based byte-vector deserialization must not eagerly allocate based on an
+// untrusted length field.
+#[test]
+fn oversized_length_field_does_not_over_allocate() {
+    use tls_codec::Deserialize;
+    // TlsByteVecU32 declares ~4 GiB of content but only 3 bytes are present.
+    // The bounded reader must return an error promptly instead of allocating
+    // 4 GiB up front.
+    let input = &[0xFF, 0xFF, 0xFF, 0xFF, 1, 2, 3];
+    let mut read_input = input.as_slice();
+    let res = TlsByteVecU32::tls_deserialize(&mut read_input);
+    assert!(res.is_err());
+
+    // Same for the varint-length VLBytes: an 8-byte varint declaring a huge
+    // length with only one trailing byte.
+    let input = &[0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00];
+    let mut read_input = input.as_slice();
+    let res = VLBytes::tls_deserialize(&mut read_input);
+    assert!(res.is_err());
+}
+
+#[test]
+fn byte_vec_round_trips_beyond_prealloc_cap() {
+    use tls_codec::Deserialize;
+    // Larger than the internal MAX_PREALLOC (4096) so the bounded reader has to
+    // loop across multiple chunks and grow the vector.
+    let payload = vec![0x5Au8; 10_000];
+    let original = TlsByteVecU32::from(payload.clone());
+    let serialized = original.tls_serialize_detached().unwrap();
+
+    let mut read_input = serialized.as_slice();
+    let read = TlsByteVecU32::tls_deserialize(&mut read_input).unwrap();
+    assert_eq!(read.as_slice(), payload.as_slice());
+    assert!(read_input.is_empty());
 }

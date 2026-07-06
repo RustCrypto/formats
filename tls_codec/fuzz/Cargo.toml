@@ -32,3 +32,15 @@ name = "string"
 path = "fuzz_targets/string.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "deserialize"
+path = "fuzz_targets/deserialize.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "bytes_inverse"
+path = "fuzz_targets/bytes_inverse.rs"
+test = false
+doc = false

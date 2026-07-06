@@ -123,6 +123,119 @@ impl From<std::io::Error> for Error {
     }
 }
 
+/// Upper bound on an up-front allocation sized from an untrusted length hint, so
+/// that a bogus (large) length field can't trigger a huge allocation before any
+/// data is read. Callers cap the initial capacity at this value and let the
+/// vector grow as data actually arrives.
+#[cfg(any(feature = "std", feature = "serde"))]
+pub(crate) const MAX_PREALLOC: usize = 4096;
+
+/// Read exactly `len` bytes from `reader` into a freshly allocated vector.
+///
+/// Unlike `vec![0u8; len]` followed by `read_exact`, this does **not** eagerly
+/// allocate `len` bytes up front: the initial allocation is capped so that a
+/// bogus (large) length field in untrusted input can't trigger a huge
+/// allocation before any bytes are read. The vector grows as data actually
+/// arrives.
+///
+/// Returns [`Error::EndOfStream`] if the reader is exhausted before `len` bytes
+/// are read.
+#[cfg(feature = "std")]
+fn read_bytes_bounded<R: std::io::Read>(reader: &mut R, len: usize) -> Result<Vec<u8>, Error> {
+    if len > isize::MAX as usize {
+        return Err(Error::InvalidVectorLength);
+    }
+
+    // Cap the initial allocation. `read_to_end` grows the vector as data
+    // actually arrives, and `Take` bounds the reader to `len` so growth can
+    // never exceed the request.
+    let mut result = Vec::with_capacity(core::cmp::min(len, MAX_PREALLOC));
+
+    // `read_to_end` reads directly into the vector's spare capacity and retries
+    // `ErrorKind::Interrupted` internally, unlike a bare `read` loop.
+    reader.take(len as u64).read_to_end(&mut result)?;
+
+    // `Take` caps output at `len`, so a short read means the stream was
+    // exhausted early.
+    if result.len() != len {
+        return Err(Error::EndOfStream);
+    }
+    Ok(result)
+}
+
+/// Adds two serialized-length components, guarding against `usize` overflow
+/// only on platforms where it can actually occur.
+///
+/// On 64-bit targets every length is bounded by the amount of addressable
+/// memory (`isize::MAX`), so a sum of serialized lengths can never overflow
+/// `usize`. There this compiles down to a plain addition with no branch,
+/// keeping the serialization hot path free of overflow checks.
+///
+/// On narrower targets (32-bit, 16-bit is not officially supported)
+/// the serialized form of a large in-memory structure can carry enough
+/// length-prefix / discriminant overhead to exceed `usize::MAX`.
+/// There we saturate at `usize::MAX` rather than silently wrapping to a small
+/// value, so the oversized length is subsequently rejected by the
+/// length-encoding bounds checks instead of producing a truncated, mismatched
+/// length prefix on the wire.
+///
+/// `tls_codec_derive` emits the equivalent logic inline, so this helper does not
+/// need to be part of the public API.
+#[inline(always)]
+#[cfg(target_pointer_width = "64")]
+pub(crate) const fn len_add(a: usize, b: usize) -> usize {
+    a + b
+}
+
+#[inline(always)]
+#[cfg(not(target_pointer_width = "64"))]
+pub(crate) const fn len_add(a: usize, b: usize) -> usize {
+    a.saturating_add(b)
+}
+
+/// Like [`len_add`], but for contexts that can surface an error.
+///
+/// On 64-bit targets this is a plain, branch-free addition (see [`len_add`] for
+/// why it can't overflow). On narrower targets an overflow becomes
+/// [`Error::InvalidVectorLength`] so a wrapped, too-small length is never
+/// written to the wire.
+#[inline(always)]
+#[cfg(target_pointer_width = "64")]
+pub(crate) fn checked_len_add(a: usize, b: usize) -> Result<usize, Error> {
+    Ok(a + b)
+}
+
+#[inline(always)]
+#[cfg(not(target_pointer_width = "64"))]
+pub(crate) fn checked_len_add(a: usize, b: usize) -> Result<usize, Error> {
+    a.checked_add(b).ok_or(Error::InvalidVectorLength)
+}
+
+/// Validates `len` as a [`Vec`] capacity.
+///
+/// [`Vec::with_capacity`] *panics* when the requested capacity exceeds
+/// `isize::MAX`, so anything larger becomes [`Error::InvalidVectorLength`]
+/// instead of a panic. Call this at allocation sites — not in the per-element
+/// length folds, which use the cheaper [`checked_len_add`].
+#[inline(always)]
+pub(crate) fn checked_capacity(len: usize) -> Result<usize, Error> {
+    if len > isize::MAX as usize {
+        return Err(Error::InvalidVectorLength);
+    }
+    Ok(len)
+}
+
+/// Adds two length components and validates the result as a [`Vec`] capacity
+/// (see [`checked_capacity`]).
+///
+/// The `saturating_add` collapses a `usize` wrap (possible on narrow targets)
+/// into a value the `isize::MAX` check then rejects, so both failure modes are
+/// covered by a single check.
+#[inline(always)]
+pub(crate) fn checked_alloc_len(a: usize, b: usize) -> Result<usize, Error> {
+    checked_capacity(a.saturating_add(b))
+}
+
 /// The `Size` trait needs to be implemented by any struct that should be
 /// efficiently serialized.
 /// This allows to collect the length of a serialized structure before allocating
@@ -145,7 +258,7 @@ pub trait Serialize: Size {
     /// Serialize `self` and return it as a byte vector.
     #[cfg(feature = "std")]
     fn tls_serialize_detached(&self) -> Result<Vec<u8>, Error> {
-        let mut buffer = Vec::with_capacity(self.tls_serialized_len());
+        let mut buffer = Vec::with_capacity(checked_capacity(self.tls_serialized_len())?);
         let written = self.tls_serialize(&mut buffer)?;
         debug_assert_eq!(
             written,
