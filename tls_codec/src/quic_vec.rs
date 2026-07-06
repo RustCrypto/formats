@@ -135,7 +135,7 @@ impl SerializeBytes for VLBytes {
         let length = ContentLength::from_usize(content_length)?;
         let len_len = length.0.bytes_len();
 
-        let mut out = Vec::with_capacity(content_length + len_len);
+        let mut out = Vec::with_capacity(crate::checked_alloc_len(content_length, len_len)?);
         out.resize(len_len, 0);
         length.0.write_bytes(&mut out)?;
 
@@ -170,7 +170,7 @@ impl<T: SerializeBytes> SerializeBytes for &[T] {
         let length = ContentLength::from_usize(content_length)?;
         let len_len = length.0.bytes_len();
 
-        let mut out = Vec::with_capacity(crate::checked_len_add(content_length, len_len)?);
+        let mut out = Vec::with_capacity(crate::checked_alloc_len(content_length, len_len)?);
         out.resize(len_len, 0);
         length.0.write_bytes(&mut out)?;
 
@@ -527,7 +527,12 @@ mod serde_compat {
             where
                 A: de::SeqAccess<'de>,
             {
-                let mut out = Vec::with_capacity(seq.size_hint().unwrap_or(0));
+                // The size hint comes from untrusted, self-describing input
+                // (e.g. a CBOR/MessagePack array header can claim a huge
+                // length). Cap the up-front allocation and let the vector grow
+                // as elements actually arrive.
+                let cap = core::cmp::min(seq.size_hint().unwrap_or(0), crate::MAX_PREALLOC);
+                let mut out = Vec::with_capacity(cap);
                 while let Some(b) = seq.next_element::<u8>()? {
                     out.push(b);
                 }
@@ -603,11 +608,7 @@ impl SerializeBytes for VLByteSlice<'_> {
         let content_length = ContentLength::from_usize(content_len)?;
 
         let len_len = content_length.tls_serialized_len();
-        let total_len = content_len + len_len;
-
-        if total_len > isize::MAX as usize {
-            return Err(Error::InvalidVectorLength);
-        }
+        let total_len = crate::checked_alloc_len(content_len, len_len)?;
 
         let mut out = alloc::vec::Vec::with_capacity(total_len);
         out.append(&mut SerializeBytes::tls_serialize(&content_length)?);

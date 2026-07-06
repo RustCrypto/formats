@@ -249,7 +249,7 @@ macro_rules! impl_serialize_bytes_bytes {
         fn serialize_bytes_bytes(&$self) -> Result<Vec<u8>, Error> {
             let (tls_serialized_len, byte_length) = $self.get_content_lengths()?;
 
-            let mut vec = Vec::<u8>::with_capacity(tls_serialized_len);
+            let mut vec = Vec::<u8>::with_capacity(crate::checked_alloc_len(byte_length, $len_len)?);
             let length_vec = <$size as SerializeBytes>::tls_serialize(&byte_length.try_into().unwrap())?;
             let mut written = length_vec.len();
             vec.extend_from_slice(&length_vec);

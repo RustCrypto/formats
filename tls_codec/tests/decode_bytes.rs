@@ -98,6 +98,22 @@ fn zero_sized_element_does_not_hang_quic_vec() {
     );
 }
 
+#[cfg(feature = "std")]
+#[test]
+fn zero_sized_element_does_not_hang_quic_vec_read() {
+    // The QUIC-style `Vec<T>` Read path has its own bounded-reader loop that
+    // fuzzing can never reach (no real type consumes 0 bytes), so a unit test is
+    // its only possible coverage. Varint length prefix of 1, `Zero` consumes
+    // nothing.
+    use tls_codec::Deserialize;
+    let input = [1u8];
+    let res = Vec::<Zero>::tls_deserialize(&mut input.as_slice());
+    assert!(
+        matches!(res, Err(Error::DecodingError(_))),
+        "expected a decoding error, got {res:?}"
+    );
+}
+
 // declared length must be enforced exactly (no overshoot)
 #[test]
 fn overshooting_declared_length_is_rejected_bytes() {
@@ -137,6 +153,22 @@ fn overshooting_declared_length_is_rejected_read() {
     );
 }
 
+#[cfg(feature = "std")]
+#[test]
+fn overshooting_declared_length_is_rejected_quic_vec_read() {
+    // Same as above, but for the QUIC-style `Vec<T>` Read path: varint length
+    // prefix = 3, followed by two `u16` (4 bytes). The reader is bounded to the
+    // declared 3 bytes, so the second element cannot fit and yields
+    // `EndOfStream`.
+    use tls_codec::Deserialize;
+    let input = [3u8, 0x00, 0x01, 0x00, 0x02, 0xAA];
+    let res = Vec::<u16>::tls_deserialize(&mut input.as_slice());
+    assert!(
+        matches!(res, Err(Error::EndOfStream)),
+        "expected end of stream, got {res:?}"
+    );
+}
+
 // An exactly-fitting vector still round-trips
 #[test]
 fn exact_length_still_decodes() {
@@ -162,4 +194,51 @@ fn truncated_byte_vec_reports_end_of_stream() {
         ),
         "expected EndOfStream/InvalidVectorLength, got {res:?}"
     );
+}
+
+// The length-summing overflow/saturation branches only exist on non-64-bit
+// targets (on 64-bit, lengths are bounded by `isize::MAX` and can't overflow
+// `usize`). This test therefore only compiles and runs on 32-bit — e.g. the
+// i686 CI target. It uses a mock element whose reported serialized length is
+// `usize::MAX` so that summing two of them exercises the saturating/overflow
+// path.
+#[cfg(target_pointer_width = "32")]
+mod overflow_32bit {
+    use tls_codec::{SerializeBytes, Size};
+
+    struct HugeLen;
+
+    impl Size for HugeLen {
+        fn tls_serialized_len(&self) -> usize {
+            usize::MAX
+        }
+    }
+
+    impl SerializeBytes for HugeLen {
+        fn tls_serialize(&self) -> Result<Vec<u8>, tls_codec::Error> {
+            // Never actually reached: the length sum overflows before any
+            // element is serialized.
+            Ok(Vec::new())
+        }
+    }
+
+    // The checked length-summing path must reject an overflowing sum instead of
+    // wrapping `usize` and writing a truncated length prefix.
+    #[test]
+    fn serializing_overflowing_length_is_rejected() {
+        let v = vec![HugeLen, HugeLen];
+        let res = v.tls_serialize();
+        assert!(
+            matches!(res, Err(tls_codec::Error::InvalidVectorLength)),
+            "expected InvalidVectorLength, got {res:?}"
+        );
+    }
+
+    // The infallible `Size` path must saturate (not panic on overflow) so that
+    // the oversized length is subsequently rejected rather than wrapping.
+    #[test]
+    fn size_saturates_instead_of_panicking() {
+        let v = vec![HugeLen, HugeLen];
+        assert_eq!(v.tls_serialized_len(), usize::MAX);
+    }
 }

@@ -790,6 +790,28 @@ fn sum_lengths(terms: &[TokenStream2], base: TokenStream2) -> TokenStream2 {
     }
 }
 
+/// Emits a guard for the top of a `tls_serialize` body that keeps the running
+/// byte count cheap while still refusing to write a truncated length.
+///
+/// The `Size::tls_serialized_len` impl saturates on narrow targets (see
+/// [`sum_lengths`]), so a serialized form larger than `usize::MAX` collapses to
+/// exactly `usize::MAX`. A genuine length of `usize::MAX` is physically
+/// impossible (it would need to exceed all addressable memory *plus* the object
+/// holding it), so that value is an unambiguous overflow sentinel: we check it
+/// once up front and bail with [`Error::InvalidVectorLength`], which lets the
+/// per-field additions below stay plain and unchecked. On 64-bit targets the
+/// length can't overflow at all, so this expands to nothing.
+fn serialize_len_guard() -> TokenStream2 {
+    quote! {
+        #[cfg(not(target_pointer_width = "64"))]
+        {
+            if tls_codec::Size::tls_serialized_len(self) == usize::MAX {
+                return core::result::Result::Err(tls_codec::Error::InvalidVectorLength);
+            }
+        }
+    }
+}
+
 #[allow(unused_variables)]
 fn impl_tls_size(parsed_ast: TlsStruct) -> TokenStream2 {
     match parsed_ast {
@@ -910,6 +932,7 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                 })
                 .collect::<Vec<_>>();
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+            let len_guard = serialize_len_guard();
 
             match svariant {
                 SerializeVariant::Write => {
@@ -917,6 +940,7 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                         quote! {
                             impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {
                                 fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
+                                    #len_guard
                                     let mut written = 0usize;
                                     #(
                                         written += #prefixes::tls_serialize(&self.#members, writer)?;
@@ -953,6 +977,13 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                         impl #impl_generics tls_codec::SerializeBytes for #ident #ty_generics #where_clause {
                             fn tls_serialize(&self) -> core::result::Result<Vec<u8>, tls_codec::Error> {
                                 let expected_out = tls_codec::Size::tls_serialized_len(&self);
+                                // On narrow targets `expected_out` saturates when the serialized
+                                // form exceeds `usize::MAX`; reject it before it reaches
+                                // `Vec::with_capacity` (which would panic on such a request).
+                                #[cfg(not(target_pointer_width = "64"))]
+                                if expected_out == usize::MAX {
+                                    return core::result::Result::Err(tls_codec::Error::InvalidVectorLength);
+                                }
                                 let mut out = Vec::with_capacity(expected_out);
 
                                 #(
@@ -1027,6 +1058,7 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                 })
                 .collect();
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+            let len_guard = serialize_len_guard();
 
             match svariant {
                 SerializeVariant::Write => {
@@ -1034,6 +1066,7 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                         quote! {
                             impl #impl_generics tls_codec::Serialize for #ident #ty_generics #where_clause {
                                 fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> core::result::Result<usize, tls_codec::Error> {
+                                    #len_guard
                                     #discriminant_constants
                                     match self {
                                         #(#arms)*

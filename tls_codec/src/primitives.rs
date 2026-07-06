@@ -48,7 +48,8 @@ impl<T: SerializeBytes> SerializeBytes for Option<T> {
     fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
         match self {
             Some(e) => {
-                let mut out = Vec::with_capacity(e.tls_serialized_len() + 1);
+                let mut out =
+                    Vec::with_capacity(crate::checked_alloc_len(e.tls_serialized_len(), 1)?);
                 out.push(1);
                 out.append(&mut e.tls_serialize()?);
                 Ok(out)
