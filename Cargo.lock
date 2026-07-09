@@ -1976,7 +1976,7 @@ dependencies = [
 
 [[package]]
 name = "x509-cert"
-version = "0.3.0-rc.4"
+version = "0.3.0"
 dependencies = [
  "arbitrary",
  "const-oid",
