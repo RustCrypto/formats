@@ -48,7 +48,7 @@ impl<'a> SliceReader<'a> {
     /// error occurred.
     pub fn error(&mut self, kind: ErrorKind) -> Error {
         self.failed = true;
-        kind.at(self.position.current())
+        self.position.error(kind)
     }
 
     /// Did the decoding operation fail due to an error?
