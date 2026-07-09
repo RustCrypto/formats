@@ -21,21 +21,9 @@ impl Position {
         }
     }
 
-    /// Get the input length.
-    pub(super) fn input_len(&self) -> Length {
-        self.input_len
-    }
-
-    /// Get the current position.
-    pub(super) fn current(&self) -> Length {
-        self.position
-    }
-
     /// Advance the current position by the given amount.
     ///
-    /// # Returns
-    ///
-    /// The new current position.
+    /// Returns the new current position.
     pub(super) fn advance(&mut self, amount: Length) -> Result<Length> {
         let new_position = (self.position + amount)?;
 
@@ -49,6 +37,22 @@ impl Position {
 
         self.position = new_position;
         Ok(new_position)
+    }
+
+    /// Get the current position.
+    pub(super) fn current(&self) -> Length {
+        self.position
+    }
+
+    /// Get the input length.
+    pub(super) fn input_len(&self) -> Length {
+        self.input_len
+    }
+
+    /// Get the remaining length.
+    pub(super) fn remaining_len(&self) -> Length {
+        debug_assert!(self.position <= self.input_len());
+        self.input_len.saturating_sub(self.position)
     }
 
     /// Split a nested position tracker of the given size.

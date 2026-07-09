@@ -4,7 +4,6 @@
 pub(crate) mod pem;
 pub(crate) mod slice;
 
-#[cfg(feature = "pem")]
 mod position;
 
 use crate::{
