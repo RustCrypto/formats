@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.8.1 (2026-07-08)
+### Added
+- `SetOfRef` struct ([#2247])
+
+### Changed
+- Deprecate `ErrorKind::SetDuplicate` ([#2276])
+- Improve `SetOf*` sorting performance ([#2345])
+- Cap maximum number of nested messages at `64` ([#2379])
+
+### Fixed
+- `SET OF` is not supposed to disallow duplicates ([#2272])
+
+[#2247]: https://github.com/RustCrypto/formats/pull/2247
+[#2272]: https://github.com/RustCrypto/formats/pull/2272
+[#2276]: https://github.com/RustCrypto/formats/pull/2276
+[#2345]: https://github.com/RustCrypto/formats/pull/2345
+[#2379]: https://github.com/RustCrypto/formats/pull/2379
+
 ## 0.8.0 (2026-02-13)
 ### Added
 - Custom error types support to the `Decode` and `DecodeValue` traits ([#1055])
