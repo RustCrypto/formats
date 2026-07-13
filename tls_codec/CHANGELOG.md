@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## 0.4.3
+## 0.5.0
 
+- BREAKING: Rename `SerializeBytes::tls_serialize` to `SerializeBytes::tls_serialize_bytes` to resolve a method-name collision with `Serialize::tls_serialize` (this matches the existing `DeserializeBytes::tls_deserialize_bytes` convention). Any type using `#[tls_codec(with = "...")]` together with `TlsSerializeBytes` must rename its module's `tls_serialize` function to `tls_serialize_bytes` accordingly.
 - [#2351](https://github.com/RustCrypto/formats/pull/2351): Implement `Size`, `SerializeBytes`, and `DeserializeBytes` for `String` (and `Size`/`SerializeBytes` for `str` / `&str`), encoding the UTF-8 bytes as a `VLByteVec`. Also implement `SerializeBytes` for `ContentLength` and `VLByteSlice`.
-- [#2322](https://github.com/RustCrypto/formats/pull/2322): Add `VLByteVec` and `SecretVLByteVec`, which are `#[serde(transparent)]` wrappers serializing via `serde_bytes`. They produce a much more compact representation in `serde` formats that distinguish byte arrays from sequences of `u8` (e.g. CBOR, MessagePack, bincode). Their `serde` output is not compatible with `VLBytes` / `SecretVLBytes`, but their `Deserialize` impls are backwards-compatible: in self-describing `serde` formats they also accept the legacy `VLBytes` / `SecretVLBytes` encoding (a struct with a `vec` field containing a sequence of `u8`). Deprecate `VLBytes` and `SecretVLBytes` in favour of `VLByteVec` and `SecretVLByteVec`.
+- [#2322](https://github.com/RustCrypto/formats/pull/2322): Add `VLByteVec` and `SecretVLByteVec`, which are `#[serde(transparent)]` wrappers serializing via `serde_bytes`. They produce a much more compact representation in `serde` formats that distinguish byte arrays from sequences of `u8` (e.g. CBOR, MessagePack, bincode). Their `serde` output is not compatible with `VLBytes` / `SecretVLBytes`, but their `Deserialize` impls are backwards-compatible: in self-describing `serde` formats they also accept the legacy `VLBytes` / `SecretVLBytes` encoding (a struct with a `vec` field containing a sequence of `u8`). `VLBytes` and `SecretVLBytes` will be deprecated in future in favour of `VLByteVec` and `SecretVLByteVec`.
 - [#1656](https://github.com/RustCrypto/formats/pull/1656) Add `TlsVarInt` type for variable-length integers.
 
 ### Changed

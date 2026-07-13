@@ -250,7 +250,7 @@ macro_rules! impl_serialize_bytes_bytes {
             let (tls_serialized_len, byte_length) = $self.get_content_lengths()?;
 
             let mut vec = Vec::<u8>::with_capacity(crate::checked_alloc_len(byte_length, $len_len)?);
-            let length_vec = <$size as SerializeBytes>::tls_serialize(&byte_length.try_into().unwrap())?;
+            let length_vec = <$size as SerializeBytes>::tls_serialize_bytes(&byte_length.try_into().unwrap())?;
             let mut written = length_vec.len();
             vec.extend_from_slice(&length_vec);
 
@@ -354,7 +354,7 @@ macro_rules! impl_tls_vec_codec_bytes {
         }
 
         impl SerializeBytes for $name {
-            fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+            fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
                 self.serialize_bytes_bytes()
             }
         }

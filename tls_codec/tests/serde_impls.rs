@@ -1,5 +1,5 @@
 #![cfg(feature = "serde")]
-#![allow(deprecated)]
+#![cfg_attr(feature = "future_deprecations", allow(deprecated))]
 
 use tls_codec::{SecretVLByteVec, VLByteVec, VLBytes};
 

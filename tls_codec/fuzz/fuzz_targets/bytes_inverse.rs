@@ -1,5 +1,5 @@
 #![no_main]
-#![allow(deprecated)]
+#![cfg_attr(feature = "future_deprecations", allow(deprecated))]
 
 //! Round-trip fuzzing of the slice-based [`DeserializeBytes`] path.
 //!

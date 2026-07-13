@@ -1,7 +1,5 @@
 #![cfg(feature = "std")]
-// These tests intentionally exercise the deprecated `VLBytes` for backward
-// compatibility coverage.
-#![allow(deprecated)]
+#![cfg_attr(feature = "future_deprecations", allow(deprecated))]
 
 use tls_codec::{Serialize, TlsVecU16, TlsVecU24, U24, VLByteSlice, VLBytes};
 
@@ -96,7 +94,7 @@ fn test_matching_vl_bytes_serialization() {
     let byte_vec = VLBytes::new(vec![99u8; 16384]);
     assert_eq!(
         Serialize::tls_serialize_detached(&byte_vec).expect("Error encoding vector"),
-        SerializeBytes::tls_serialize(&byte_vec).expect("Error encoding byte vector")
+        SerializeBytes::tls_serialize_bytes(&byte_vec).expect("Error encoding byte vector")
     );
 }
 

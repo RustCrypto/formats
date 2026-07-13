@@ -215,7 +215,7 @@ mod overflow_32bit {
     }
 
     impl SerializeBytes for HugeLen {
-        fn tls_serialize(&self) -> Result<Vec<u8>, tls_codec::Error> {
+        fn tls_serialize_bytes(&self) -> Result<Vec<u8>, tls_codec::Error> {
             // Never actually reached: the length sum overflows before any
             // element is serialized.
             Ok(Vec::new())
@@ -227,7 +227,7 @@ mod overflow_32bit {
     #[test]
     fn serializing_overflowing_length_is_rejected() {
         let v = vec![HugeLen, HugeLen];
-        let res = v.tls_serialize();
+        let res = v.tls_serialize_bytes();
         assert!(
             matches!(res, Err(tls_codec::Error::InvalidVectorLength)),
             "expected InvalidVectorLength, got {res:?}"

@@ -14,6 +14,11 @@ libfuzzer-sys = "0.4"
 path = ".."
 features = ["arbitrary"]
 
+[features]
+# Mirror `tls_codec`'s `future_deprecations` so the fuzz targets can gate their
+# `allow(deprecated)` on the same feature.
+future_deprecations = ["tls_codec/future_deprecations"]
+
 # Prevent this from interfering with workspaces
 [workspace]
 members = ["."]

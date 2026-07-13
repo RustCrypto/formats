@@ -1738,7 +1738,7 @@ dependencies = [
 
 [[package]]
 name = "tls_codec"
-version = "0.4.3-pre.1"
+version = "0.5.0-pre.1"
 dependencies = [
  "arbitrary",
  "ciborium",
@@ -1746,7 +1746,7 @@ dependencies = [
  "serde",
  "serde_bytes",
  "serde_json",
- "tls_codec_derive 0.4.3-pre.1",
+ "tls_codec_derive 0.5.0-pre.1",
  "zeroize",
 ]
 
@@ -1763,12 +1763,12 @@ dependencies = [
 
 [[package]]
 name = "tls_codec_derive"
-version = "0.4.3-pre.1"
+version = "0.5.0-pre.1"
 dependencies = [
  "proc-macro2",
  "quote",
  "syn",
- "tls_codec 0.4.3-pre.1",
+ "tls_codec 0.5.0-pre.1",
  "trybuild",
 ]
 
