@@ -1,6 +1,6 @@
 [package]
 name = "tls_codec_derive"
-version = "0.4.3-pre.1"
+version = "0.5.0-pre.1"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 documentation = "https://docs.rs/tls_codec_derive/"
@@ -27,3 +27,9 @@ trybuild = "1"
 default = ["std"]
 conditional_deserialization = ["syn/full"]
 std = []
+# Declared only so the derive tests can gate their `allow(deprecated)` on
+# `#[cfg_attr(feature = "future_deprecations", ...)]` without tripping the
+# `unexpected_cfgs` lint. It intentionally does not forward to `tls_codec`
+# (which is only a dev-dependency here, so it cannot be forwarded to under
+# `cargo hack --no-dev-deps`).
+future_deprecations = []

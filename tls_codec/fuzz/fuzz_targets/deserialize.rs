@@ -1,5 +1,5 @@
 #![no_main]
-#![allow(deprecated)]
+#![cfg_attr(feature = "future_deprecations", allow(deprecated))]
 
 //! Robustness + differential fuzzing of the deserializers.
 //!

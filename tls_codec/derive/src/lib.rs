@@ -975,7 +975,7 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                 SerializeVariant::Bytes => {
                     quote! {
                         impl #impl_generics tls_codec::SerializeBytes for #ident #ty_generics #where_clause {
-                            fn tls_serialize(&self) -> core::result::Result<Vec<u8>, tls_codec::Error> {
+                            fn tls_serialize_bytes(&self) -> core::result::Result<Vec<u8>, tls_codec::Error> {
                                 let expected_out = tls_codec::Size::tls_serialized_len(&self);
                                 // On narrow targets `expected_out` saturates when the serialized
                                 // form exceeds `usize::MAX`; reject it before it reaches
@@ -987,7 +987,7 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                                 let mut out = Vec::with_capacity(expected_out);
 
                                 #(
-                                    out.append(&mut #prefixes::tls_serialize(&self.#members)?);
+                                    out.append(&mut #prefixes::tls_serialize_bytes(&self.#members)?);
                                 )*
                                 if cfg!(debug_assertions) {
                                     debug_assert_eq!(out.len(), expected_out, "Expected to serialize {} bytes but only {} were generated.", expected_out, out.len());
@@ -1003,8 +1003,8 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                         }
 
                         impl #impl_generics tls_codec::SerializeBytes for &#ident #ty_generics #where_clause {
-                            fn tls_serialize(&self) -> core::result::Result<Vec<u8>, tls_codec::Error> {
-                                tls_codec::SerializeBytes::tls_serialize(*self)
+                            fn tls_serialize_bytes(&self) -> core::result::Result<Vec<u8>, tls_codec::Error> {
+                                tls_codec::SerializeBytes::tls_serialize_bytes(*self)
                             }
                         }
                     }
@@ -1048,8 +1048,8 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                                 .collect::<Vec<_>>();
                             quote! {
                                 #ident::#variant_id { #(#members: #bindings,)* } => {
-                                    let mut discriminant_out = tls_codec::SerializeBytes::tls_serialize(&#discriminant)?;
-                                    #(discriminant_out.append(&mut #prefixes::tls_serialize(#bindings)?);)*
+                                    let mut discriminant_out = tls_codec::SerializeBytes::tls_serialize_bytes(&#discriminant)?;
+                                    #(discriminant_out.append(&mut #prefixes::tls_serialize_bytes(#bindings)?);)*
                                     Ok(discriminant_out)
                                 },
                             }
@@ -1090,7 +1090,7 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                 SerializeVariant::Bytes => {
                     quote! {
                         impl #impl_generics tls_codec::SerializeBytes for #ident #ty_generics #where_clause {
-                            fn tls_serialize(&self) -> core::result::Result<Vec<u8>, tls_codec::Error> {
+                            fn tls_serialize_bytes(&self) -> core::result::Result<Vec<u8>, tls_codec::Error> {
                                 #discriminant_constants
                                 match self {
                                     #(#arms)*
@@ -1099,8 +1099,8 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                         }
 
                         impl #impl_generics tls_codec::SerializeBytes for &#ident #ty_generics #where_clause {
-                            fn tls_serialize(&self) -> core::result::Result<Vec<u8>, tls_codec::Error> {
-                                tls_codec::SerializeBytes::tls_serialize(*self)
+                            fn tls_serialize_bytes(&self) -> core::result::Result<Vec<u8>, tls_codec::Error> {
+                                tls_codec::SerializeBytes::tls_serialize_bytes(*self)
                             }
                         }
                     }

@@ -12,11 +12,12 @@
 //! This is in contrast to the default behaviour defined by RFC 9000 that allows
 //! up to 62-bit length values.
 
-// `VLBytes` and `SecretVLBytes` are kept around as deprecated types. The
-// internal trait impls for them and their use as building blocks for other
-// items in this module would otherwise emit deprecation warnings at every call
-// site within the crate.
-#![allow(deprecated)]
+// `VLBytes` and `SecretVLBytes` are only deprecated when the
+// `future_deprecations` feature is enabled. In that configuration, the internal
+// trait impls for them and their use as building blocks for other items in this
+// module would otherwise emit deprecation warnings at every call site within
+// the crate.
+#![cfg_attr(feature = "future_deprecations", allow(deprecated))]
 
 use super::alloc::vec::Vec;
 use core::fmt;
@@ -130,7 +131,7 @@ impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
 
 impl SerializeBytes for VLBytes {
     #[inline(always)]
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         let content_length = self.as_slice().len();
         let length = ContentLength::from_usize(content_length)?;
         let len_len = length.0.bytes_len();
@@ -153,14 +154,14 @@ impl SerializeBytes for VLBytes {
 
 impl SerializeBytes for &VLBytes {
     #[inline(always)]
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
-        (*self).tls_serialize()
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
+        (*self).tls_serialize_bytes()
     }
 }
 
 impl<T: SerializeBytes> SerializeBytes for &[T] {
     #[inline(always)]
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         // We need to pre-compute the length of the content.
         // This requires more computations but the other option would be to buffer
         // the entire content, which can end up requiring a lot of memory.
@@ -176,7 +177,7 @@ impl<T: SerializeBytes> SerializeBytes for &[T] {
 
         // Serialize the elements
         for e in self.iter() {
-            out.append(&mut e.tls_serialize()?);
+            out.append(&mut e.tls_serialize_bytes()?);
         }
         #[cfg(debug_assertions)]
         if out.len() - len_len != content_length {
@@ -189,14 +190,14 @@ impl<T: SerializeBytes> SerializeBytes for &[T] {
 
 impl<T: SerializeBytes> SerializeBytes for &Vec<T> {
     #[inline(always)]
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
-        self.as_slice().tls_serialize()
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
+        self.as_slice().tls_serialize_bytes()
     }
 }
 
 impl<T: SerializeBytes> SerializeBytes for Vec<T> {
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
-        self.as_slice().tls_serialize()
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
+        self.as_slice().tls_serialize_bytes()
     }
 }
 
@@ -290,10 +291,12 @@ macro_rules! impl_vl_bytes_generic {
 /// This is faster than the generic version.
 #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
 #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
-#[deprecated(
-    since = "0.4.3",
-    note = "Use `VLByteVec` instead. `VLBytes` does not produce a compact serde representation \
+#[cfg_attr(
+    feature = "future_deprecations",
+    deprecated(
+        note = "Use `VLByteVec` instead. `VLBytes` does not produce a compact serde representation \
             of byte vectors. The serde format of `VLByteVec` is not compatible with `VLBytes`."
+    )
 )]
 pub struct VLBytes {
     vec: Vec<u8>,
@@ -595,13 +598,13 @@ impl Size for VLByteSlice<'_> {
 }
 
 impl SerializeBytes for ContentLength {
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
-        SerializeBytes::tls_serialize(&self.0)
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
+        SerializeBytes::tls_serialize_bytes(&self.0)
     }
 }
 
 impl SerializeBytes for VLByteSlice<'_> {
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         // Get the byte length of the content and make sure it's not too
         // large (requires `mls` feature, so we also do it explicitly below).
         let content_len = self.0.len();
@@ -611,7 +614,7 @@ impl SerializeBytes for VLByteSlice<'_> {
         let total_len = crate::checked_alloc_len(content_len, len_len)?;
 
         let mut out = alloc::vec::Vec::with_capacity(total_len);
-        out.append(&mut SerializeBytes::tls_serialize(&content_length)?);
+        out.append(&mut SerializeBytes::tls_serialize_bytes(&content_length)?);
         out.extend(self.0);
 
         Ok(out)
@@ -836,10 +839,12 @@ mod secret_bytes {
     /// a [`Vec<u8>`].
     #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
     #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
-    #[deprecated(
-        since = "0.4.3",
-        note = "Use `SecretVLByteVec` instead. The serde format of `SecretVLByteVec` is not \
+    #[cfg_attr(
+        feature = "future_deprecations",
+        deprecated(
+            note = "Use `SecretVLByteVec` instead. The serde format of `SecretVLByteVec` is not \
                 compatible with `SecretVLBytes`."
+        )
     )]
     pub struct SecretVLBytes(VLBytes);
 

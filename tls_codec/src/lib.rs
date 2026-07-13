@@ -50,9 +50,9 @@ pub use tls_vec::{
 };
 
 #[cfg(feature = "std")]
-#[allow(deprecated)]
+#[cfg_attr(feature = "future_deprecations", allow(deprecated))]
 pub use quic_vec::SecretVLBytes;
-#[allow(deprecated)]
+#[cfg_attr(feature = "future_deprecations", allow(deprecated))]
 pub use quic_vec::VLBytes;
 #[cfg(feature = "std")]
 pub use quic_vec::{SecretVLByteVec, rw as vlen};
@@ -282,10 +282,10 @@ pub trait Serialize: Size {
 /// The `SerializeBytes` trait provides a function to serialize a struct or enum.
 ///
 /// The trait provides one function:
-/// * `tls_serialize` that returns a byte vector
+/// * `tls_serialize_bytes` that returns a byte vector
 pub trait SerializeBytes: Size {
     /// Serialize `self` and return it as a byte vector.
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error>;
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error>;
 }
 
 /// The `Deserialize` trait defines functions to deserialize a byte slice to a
