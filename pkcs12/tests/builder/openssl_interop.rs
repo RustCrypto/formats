@@ -41,7 +41,6 @@ fn generate_credentials() -> (Vec<u8>, Vec<u8>) {
     let ok = Command::new("openssl")
         .args([
             "genpkey",
-            "-quiet",
             "-algorithm",
             "RSA",
             "-pkeyopt",
@@ -56,7 +55,6 @@ fn generate_credentials() -> (Vec<u8>, Vec<u8>) {
     let ok = Command::new("openssl")
         .args([
             "req",
-            "-quiet",
             "-new",
             "-x509",
             "-key",
@@ -274,7 +272,6 @@ fn rust_chain_openssl_reads() {
     let ok = Command::new("openssl")
         .args([
             "genpkey",
-            "-quiet",
             "-algorithm",
             "RSA",
             "-pkeyopt",
@@ -289,7 +286,6 @@ fn rust_chain_openssl_reads() {
     let ok = Command::new("openssl")
         .args([
             "req",
-            "-quiet",
             "-new",
             "-x509",
             "-key",
@@ -309,7 +305,6 @@ fn rust_chain_openssl_reads() {
     let ok = Command::new("openssl")
         .args([
             "genpkey",
-            "-quiet",
             "-algorithm",
             "RSA",
             "-pkeyopt",
@@ -324,7 +319,6 @@ fn rust_chain_openssl_reads() {
     let ok = Command::new("openssl")
         .args([
             "req",
-            "-quiet",
             "-new",
             "-key",
             ee_key_pem.to_str().unwrap(),
@@ -501,7 +495,6 @@ fn openssl_builds_rust_reads() {
     let ok = Command::new("openssl")
         .args([
             "genpkey",
-            "-quiet",
             "-algorithm",
             "RSA",
             "-pkeyopt",
