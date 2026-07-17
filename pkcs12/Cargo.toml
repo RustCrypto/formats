@@ -27,15 +27,14 @@ digest = { version = "0.11", features = ["alloc"], optional = true }
 zeroize = { version = "1.8.1", optional = true, default-features = false }
 
 # optional dependencies (builder)
-pkcs5 = { version = "0.8", optional = true }
-pkcs8 = { version = "0.11", features = ["encryption"], optional = true }
-crypto-common = { version = "0.2", optional = true }
-hmac = { version = "0.13", optional = true }
-sha2 = { version = "0.11", optional = true }
+pkcs5 = { version = "0.8", default-features = false, features = ["pbes2"], optional = true }
+pkcs8 = { version = "0.11", default-features = false, features = ["encryption"], optional = true }
+crypto-common = { version = "0.2", default-features = false, optional = true }
+hmac = { version = "0.13", default-features = false, optional = true }
+sha2 = { version = "0.11", default-features = false, optional = true }
 log = { version = "0.4", optional = true }
-rand = { version = "0.10", optional = true }
-rand_core = { version = "0.10", optional = true }
-subtle = { version = "2.6", optional = true }
+rand_core = { version = "0.10", default-features = false, optional = true }
+subtle = { version = "2.6", default-features = false, optional = true }
 
 # optional dependencies (legacy)
 sha1 = { version = "0.11", optional = true }
@@ -45,6 +44,7 @@ rc2 = { version = "0.9", optional = true }
 
 [dev-dependencies]
 hex-literal = "1"
+rand = "0.10"
 pkcs5 = { version = "0.8", features = ["pbes2", "3des"] }
 pkcs8 = { version = "0.11", features = ["pkcs5"] }
 sha2 = "0.11"
@@ -65,7 +65,6 @@ builder = [
     "dep:hmac",
     "dep:sha2",
     "dep:log",
-    "dep:rand",
     "dep:rand_core",
     "dep:subtle",
     "zeroize/alloc",
