@@ -15,7 +15,7 @@
 //! - Configurable MAC algorithm and iteration count
 //! - Optional additional certificates (CA/intermediate chain)
 //! - `localKeyID` and `friendlyName` attribute helpers
-//! - Parsing and decryption of existing PKCS #12 files via [`parse_pkcs12`](asn1_utils::parse_pkcs12)
+//! - Parsing and decryption of existing PKCS #12 files via [`parse_pkcs12`]
 //! - Per-bag attribute preservation (key ID, friendly name, and arbitrary attributes are retained for each certificate and the key bag)
 //! - Legacy PKCS #12 PBE support (SHA-1/3DES-CBC, SHA-1/RC2-CBC) with the `legacy` feature
 
