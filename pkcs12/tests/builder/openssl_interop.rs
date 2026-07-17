@@ -72,7 +72,7 @@ fn generate_credentials() -> (Vec<u8>, Vec<u8>) {
 
     // Convert key to PKCS #8 DER
     let key_out = Command::new("openssl")
-        .args(["pkey", "-in", key_pem.to_str().unwrap(), "-outform", "DER"])
+        .args(["pkcs8", "-topk8", "-nocrypt", "-in", key_pem.to_str().unwrap(), "-outform", "DER"])
         .output()
         .expect("spawn openssl pkey");
     assert!(key_out.status.success(), "openssl pkey -outform DER failed");
@@ -355,8 +355,9 @@ fn rust_chain_openssl_reads() {
     // Convert EE key to PKCS #8 DER
     let key_out = Command::new("openssl")
         .args([
-            "pkey",
-            "-in",
+            "pkcs8",
+            "-topk8",
+            "-nocrypt",            "-in",
             ee_key_pem.to_str().unwrap(),
             "-outform",
             "DER",

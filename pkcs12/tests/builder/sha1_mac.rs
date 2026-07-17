@@ -54,7 +54,7 @@ fn generate_credentials() -> (String, String, Vec<u8>, Vec<u8>, TempDir) {
     assert!(ok.success(), "openssl req -x509 failed");
 
     let key_der = Command::new("openssl")
-        .args(["pkey", "-in", key_pem.to_str().unwrap(), "-outform", "DER"])
+        .args(["pkcs8", "-topk8", "-nocrypt", "-in", key_pem.to_str().unwrap(), "-outform", "DER"])
         .output()
         .expect("openssl pkey");
     assert!(key_der.status.success());
