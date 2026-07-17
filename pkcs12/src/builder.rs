@@ -197,9 +197,7 @@ impl Pkcs12Builder {
         &mut self,
         alg: Option<AlgorithmIdentifierOwned>,
     ) -> &mut Self {
-        if let Some(alg) = &alg
-            && let Some(params) = &alg.parameters
-        {
+        if let Some(params) = alg.as_ref().and_then(|a| a.parameters.as_ref()) {
             match params.to_der() {
                 Ok(der_params) => match Pbkdf2Params::from_der(&der_params) {
                     Ok(kdf_params) => {
@@ -268,9 +266,7 @@ impl Pkcs12Builder {
         &mut self,
         alg: Option<AlgorithmIdentifierOwned>,
     ) -> &mut Self {
-        if let Some(alg) = &alg
-            && let Some(params) = &alg.parameters
-        {
+        if let Some(params) = alg.as_ref().and_then(|a| a.parameters.as_ref()) {
             match params.to_der() {
                 Ok(der_params) => match Pbkdf2Params::from_der(&der_params) {
                     Ok(kdf_params) => {
@@ -554,12 +550,12 @@ impl Pkcs12Builder {
                 self.iterations.unwrap_or(600000),
             )?);
         }
-        if let Some(mdb) = &mut self.mac_data_builder
-            && !mdb.has_salt()
-        {
-            let mut salt = vec![0_u8; 16];
-            rng.fill_bytes(salt.as_mut_slice());
-            mdb.salt(Some(salt));
+        if let Some(mdb) = &mut self.mac_data_builder {
+            if !mdb.has_salt() {
+                let mut salt = vec![0_u8; 16];
+                rng.fill_bytes(salt.as_mut_slice());
+                mdb.salt(Some(salt));
+            }
         }
         #[cfg(feature = "legacy")]
         {

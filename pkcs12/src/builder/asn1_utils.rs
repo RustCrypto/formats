@@ -525,8 +525,8 @@ pub fn parse_pkcs12(der_p12: &[u8], password: &str) -> Result<Pkcs12Contents> {
             recovered_key_and_key_id = Some(get_key(&auth_safe.content, password)?);
         }
     }
-    if let Some(cert_contents) = recovered_cert_data
-        && let Some((recovered_key, key_attrs)) = recovered_key_and_key_id
+    if let (Some(cert_contents), Some((recovered_key, key_attrs))) =
+        (recovered_cert_data, recovered_key_and_key_id)
     {
         let key_id = if key_attrs.local_key_id.is_some() {
             key_attrs.local_key_id
