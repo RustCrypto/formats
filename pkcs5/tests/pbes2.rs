@@ -194,6 +194,47 @@ fn decode_pbes2_pbkdf2_sha256_descbc() {
     }
 }
 
+/// A bare DES-EDE3-CBC `AlgorithmIdentifier` whose IV octet string is only 3
+/// bytes long (shorter than the 8-byte DES block). This must decode to an
+/// error rather than panicking.
+#[cfg(feature = "3des")]
+const DESEDE3CBC_SHORT_IV_ALG_ID: &[u8] = &hex!("300f06082a864886f70d03070403010203");
+
+/// A bare DES-CBC `AlgorithmIdentifier` with a 3-byte IV octet string.
+#[cfg(feature = "des-insecure")]
+const DESCBC_SHORT_IV_ALG_ID: &[u8] = &hex!("300c06052b0e0302070403010203");
+
+/// A well-formed DES-EDE3-CBC `AlgorithmIdentifier` with a full 8-byte IV.
+#[cfg(feature = "3des")]
+const DESEDE3CBC_VALID_IV_ALG_ID: &[u8] = &hex!("301406082a864886f70d030704080102030405060708");
+
+#[cfg(feature = "3des")]
+#[test]
+fn desede3cbc_short_iv_is_error_not_panic() {
+    use der::Decode;
+    assert!(pbes2::EncryptionScheme::from_der(DESEDE3CBC_SHORT_IV_ALG_ID).is_err());
+}
+
+#[cfg(feature = "des-insecure")]
+#[test]
+fn descbc_short_iv_is_error_not_panic() {
+    use der::Decode;
+    assert!(pbes2::EncryptionScheme::from_der(DESCBC_SHORT_IV_ALG_ID).is_err());
+}
+
+#[cfg(feature = "3des")]
+#[test]
+fn desede3cbc_valid_iv_still_decodes() {
+    use der::Decode;
+    let scheme = pbes2::EncryptionScheme::from_der(DESEDE3CBC_VALID_IV_ALG_ID).unwrap();
+    match scheme {
+        pbes2::EncryptionScheme::DesEde3Cbc { iv } => {
+            assert_eq!(iv, hex!("0102030405060708"));
+        }
+        other => panic!("unexpected encryption scheme: {other:?}"),
+    }
+}
+
 /// Encoding test for PBES2 + PBKDF2-SHA1 + AES-128-CBC `AlgorithmIdentifier`
 #[test]
 fn encode_pbes2_pbkdf2_sha1_aes128cbc() {

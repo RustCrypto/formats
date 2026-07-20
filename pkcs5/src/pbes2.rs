@@ -543,15 +543,11 @@ impl TryFrom<AlgorithmIdentifierRef<'_>> for EncryptionScheme {
             }),
             #[cfg(feature = "des-insecure")]
             DES_CBC_OID => Ok(Self::DesCbc {
-                iv: iv[0..DES_BLOCK_SIZE]
-                    .try_into()
-                    .map_err(|_| Tag::OctetString.value_error())?,
+                iv: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
             }),
             #[cfg(feature = "3des")]
             DES_EDE3_CBC_OID => Ok(Self::DesEde3Cbc {
-                iv: iv[0..DES_BLOCK_SIZE]
-                    .try_into()
-                    .map_err(|_| Tag::OctetString.value_error())?,
+                iv: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
             }),
             oid => Err(ErrorKind::OidUnknown { oid }.into()),
         }
