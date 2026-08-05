@@ -1,4 +1,5 @@
 //! Revocation-related types
+use alloc::vec;
 use core::cmp::Ordering;
 
 use der::asn1::SetOfVec;
@@ -47,11 +48,10 @@ impl ValueOrd for RevocationInfoChoice {
     }
 }
 
-#[cfg(feature = "std")]
-impl TryFrom<std::vec::Vec<RevocationInfoChoice>> for RevocationInfoChoices {
+impl TryFrom<vec::Vec<RevocationInfoChoice>> for RevocationInfoChoices {
     type Error = der::Error;
 
-    fn try_from(vec: std::vec::Vec<RevocationInfoChoice>) -> der::Result<RevocationInfoChoices> {
+    fn try_from(vec: vec::Vec<RevocationInfoChoice>) -> der::Result<RevocationInfoChoices> {
         Ok(RevocationInfoChoices(SetOfVec::try_from(vec)?))
     }
 }

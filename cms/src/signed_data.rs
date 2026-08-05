@@ -4,6 +4,7 @@ use crate::cert::{CertificateChoices, IssuerAndSerialNumber};
 use crate::content_info::CmsVersion;
 use crate::revocation::RevocationInfoChoices;
 
+use alloc::vec;
 use core::cmp::Ordering;
 use der::asn1::{ObjectIdentifier, OctetString, SetOfVec};
 use der::{Any, Choice, DerOrd, Sequence, ValueOrd};
@@ -59,11 +60,10 @@ pub type DigestAlgorithmIdentifiers = SetOfVec<AlgorithmIdentifierOwned>;
 pub struct CertificateSet(pub SetOfVec<CertificateChoices>);
 impl_newtype!(CertificateSet, SetOfVec<CertificateChoices>);
 
-#[cfg(feature = "std")]
-impl TryFrom<std::vec::Vec<CertificateChoices>> for CertificateSet {
+impl TryFrom<vec::Vec<CertificateChoices>> for CertificateSet {
     type Error = der::Error;
 
-    fn try_from(vec: std::vec::Vec<CertificateChoices>) -> der::Result<CertificateSet> {
+    fn try_from(vec: vec::Vec<CertificateChoices>) -> der::Result<CertificateSet> {
         Ok(CertificateSet(SetOfVec::try_from(vec)?))
     }
 }
@@ -79,11 +79,10 @@ impl TryFrom<std::vec::Vec<CertificateChoices>> for CertificateSet {
 pub struct SignerInfos(pub SetOfVec<SignerInfo>);
 impl_newtype!(SignerInfos, SetOfVec<SignerInfo>);
 
-#[cfg(feature = "std")]
-impl TryFrom<std::vec::Vec<SignerInfo>> for SignerInfos {
+impl TryFrom<vec::Vec<SignerInfo>> for SignerInfos {
     type Error = der::Error;
 
-    fn try_from(vec: std::vec::Vec<SignerInfo>) -> der::Result<SignerInfos> {
+    fn try_from(vec: vec::Vec<SignerInfo>) -> der::Result<SignerInfos> {
         Ok(SignerInfos(SetOfVec::try_from(vec)?))
     }
 }
