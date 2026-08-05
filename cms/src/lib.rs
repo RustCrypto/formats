@@ -24,9 +24,6 @@
 
 extern crate alloc;
 
-#[cfg(feature = "std")]
-extern crate std;
-
 pub mod attr;
 pub mod authenticated_data;
 pub mod authenveloped_data;

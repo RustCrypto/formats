@@ -395,6 +395,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    extern crate std;
+
     use std::eprintln;
 
     use super::*;
