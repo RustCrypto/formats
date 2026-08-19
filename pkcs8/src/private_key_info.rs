@@ -89,7 +89,7 @@ const PUBLIC_KEY_TAG: TagNumber = TagNumber(1);
 ///
 /// # Example usage
 ///
-/// As of `pkcs8-0.11.0`, PrivateKeyInfo was split into [`PrivateKeyInfoRef`] and
+/// As of `pkcs8-0.11.0`, `PrivateKeyInfo` was split into [`PrivateKeyInfoRef`] and
 #[cfg_attr(
     feature = "alloc",
     doc = "[`PrivateKeyInfoOwned`][`crate::PrivateKeyInfoOwned`]."
