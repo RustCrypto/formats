@@ -101,7 +101,7 @@ const PUBLIC_KEY_TAG: TagNumber = TagNumber(1);
 /// use der::{Decode, oid::ObjectIdentifier};
 /// use hex_literal::hex;
 ///
-/// // Example private key.
+/// // Example private key
 /// let der_bytes = &hex!(
 ///     "30 27" // PrivateKeyInfo
 ///         "02 01 00" // Version
@@ -424,7 +424,7 @@ where
 /// use der::{Decode, oid::ObjectIdentifier};
 /// use hex_literal::hex;
 ///
-/// // Example private key.
+/// // Example private key
 /// let der_bytes = &hex!(
 ///     "30 27" // PrivateKeyInfo
 ///         "02 01 00" // Version
@@ -469,24 +469,37 @@ pub(crate) mod allocating {
 
     /// [`PrivateKeyInfo`] with [`Any`] algorithm parameters, and `Box<[u8]>` key.
     ///
-    /// ## Example usage
+    #[cfg_attr(feature = "pem", doc = "## Example usage")]
+    #[cfg_attr(feature = "pem", doc = "")]
+    #[cfg_attr(feature = "pem", doc = "```")]
+    #[cfg_attr(feature = "pem", doc = "use pkcs8::PrivateKeyInfoOwned;")]
+    #[cfg_attr(feature = "pem", doc = "use der::{DecodePem, oid::ObjectIdentifier};")]
+    #[cfg_attr(feature = "pem", doc = "use hex_literal::hex;")]
+    #[cfg_attr(feature = "pem", doc = "")]
+    #[cfg_attr(feature = "pem", doc = "// Example private key")]
+    #[cfg_attr(feature = "pem", doc = "let pem_str = r#\"-----BEGIN PRIVATE KEY-----")]
+    #[cfg_attr(
+        feature = "pem",
+        doc = "MCcCAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEDVByaXZrZXkgYnl0ZXM="
+    )]
+    #[cfg_attr(feature = "pem", doc = "-----END PRIVATE KEY-----\"#;")]
+    #[cfg_attr(feature = "pem", doc = "")]
+    #[cfg_attr(
+        feature = "pem",
+        doc = "let key = PrivateKeyInfoOwned::from_pem(&pem_str).unwrap();"
+    )]
+    #[cfg_attr(feature = "pem", doc = "")]
+    #[cfg_attr(
+        feature = "pem",
+        doc = "assert_eq!(key.algorithm.oid, ObjectIdentifier::new_unwrap(\"1.2.840.10045.2.1\"));"
+    )]
+    #[cfg_attr(
+        feature = "pem",
+        doc = "assert_eq!(key.private_key.as_bytes(), \"Privkey bytes\".as_bytes());"
+    )]
+    #[cfg_attr(feature = "pem", doc = "assert_eq!(key.public_key, None);")]
+    #[cfg_attr(feature = "pem", doc = "```")]
     ///
-    /// ```
-    /// use pkcs8::PrivateKeyInfoOwned;
-    /// use der::{DecodePem, oid::ObjectIdentifier};
-    /// use hex_literal::hex;
-    ///
-    /// // Example private key.
-    /// let pem_str = r#"-----BEGIN PRIVATE KEY-----
-    /// MCcCAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEDVByaXZrZXkgYnl0ZXM=
-    /// -----END PRIVATE KEY-----"#;
-    ///
-    /// let key = PrivateKeyInfoOwned::from_pem(&pem_str).unwrap();
-    ///
-    /// assert_eq!(key.algorithm.oid, ObjectIdentifier::new_unwrap("1.2.840.10045.2.1"));
-    /// assert_eq!(key.private_key.as_bytes(), "Privkey bytes".as_bytes());
-    /// assert_eq!(key.public_key, None);
-    /// ```
     pub type PrivateKeyInfoOwned = PrivateKeyInfo<Any, OctetString, BitString>;
 
     impl DecodePrivateKey for PrivateKeyInfoOwned {
