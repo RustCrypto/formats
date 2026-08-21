@@ -1,13 +1,17 @@
 #![cfg(feature = "builder")]
 //! ocsp builder tests
 
+use const_oid::AssociatedOid;
 use der::{DateTime, Decode, Encode};
 use hex_literal::hex;
 use lazy_static::lazy_static;
 use rsa::{RsaPrivateKey, pkcs1v15::SigningKey, pkcs8::DecodePrivateKey};
 use sha1::Sha1;
 use sha2::{Sha224, Sha256, Sha384, Sha512};
-use x509_cert::{Certificate, name::Name, serial_number::SerialNumber};
+use x509_cert::{
+    Certificate, crl::CertificateList, ext::pkix::CrlReason, name::Name,
+    serial_number::SerialNumber,
+};
 use x509_ocsp::builder::*;
 use x509_ocsp::{ext::*, *};
 
@@ -433,4 +437,131 @@ fn encode_ocsp_resp_revoked_delegated() {
         )
         .unwrap();
     assert_eq!(&resp.to_der().unwrap(), &resp_der);
+}
+
+/// Use an Actalis CRL to test `SingleResponse::from_crl`, including: entries with a reason code,
+/// entries without one, and serials it does not list.
+mod from_crl {
+    use super::*;
+
+    fn actalis() -> (Certificate, CertificateList) {
+        let ca = Certificate::from_der(&std::fs::read("tests/examples/actalis-ca.der").unwrap())
+            .unwrap();
+        let crl =
+            CertificateList::from_der(&std::fs::read("tests/examples/actalis-ca-crl.der").unwrap())
+                .unwrap();
+        (ca, crl)
+    }
+
+    /// The `thisUpdate` and `nextUpdate` of every response built this way come from the CRL, not
+    /// from the clock: the assertion a response can make is only as fresh as the list it was read
+    /// from, and saying otherwise would overstate it.
+    fn crl_validity() -> (OcspGeneralizedTime, OcspGeneralizedTime) {
+        (
+            OcspGeneralizedTime::from(DateTime::new(2026, 8, 20, 21, 41, 55).unwrap()),
+            OcspGeneralizedTime::from(DateTime::new(2026, 8, 21, 21, 41, 54).unwrap()),
+        )
+    }
+
+    #[test]
+    fn a_revoked_serial_carries_its_reason() {
+        let (ca, crl) = actalis();
+        let serial = SerialNumber::new(&hex!("7E2DFAE636120B5FA416DE66F16D1F85")).unwrap();
+        let res = SingleResponse::from_crl::<Sha1>(&ca, &crl, serial.clone()).unwrap();
+
+        let CertStatus::Revoked(info) = res.cert_status else {
+            panic!("expected revoked, got {:?}", res.cert_status);
+        };
+        assert_eq!(
+            info.revocation_time,
+            OcspGeneralizedTime::from(DateTime::new(2025, 9, 15, 14, 2, 17).unwrap())
+        );
+        assert_eq!(info.revocation_reason, Some(CrlReason::Superseded));
+
+        // The CertID is built from the issuer rather than copied from anywhere, so the serial asked
+        // about is the serial answered about.
+        assert_eq!(res.cert_id.serial_number, serial);
+        assert_eq!(res.cert_id.hash_algorithm.oid, Sha1::OID);
+
+        let (this_update, next_update) = crl_validity();
+        assert_eq!(res.this_update, this_update);
+        assert_eq!(res.next_update, Some(next_update));
+    }
+
+    /// A `reasonCode` entry extension is optional, test an entry that carries no extensions at all.
+    /// The other way it can be absent -- extensions present with no `reasonCode` among them -- is
+    /// not reachable here: of this CRL's 132 entries, the 45 with extensions all carry a reason.
+    #[test]
+    fn a_revoked_serial_with_no_entry_extensions_reports_no_reason() {
+        let (ca, crl) = actalis();
+        let serial = SerialNumber::new(&hex!("54912434F3363EB4082BB15FF928104A")).unwrap();
+        let res = SingleResponse::from_crl::<Sha1>(&ca, &crl, serial.clone()).unwrap();
+
+        // The premise, stated rather than assumed.
+        let entry = crl
+            .tbs_cert_list
+            .revoked_certificates
+            .as_ref()
+            .unwrap()
+            .iter()
+            .find(|rc| rc.serial_number == serial)
+            .unwrap();
+        assert!(entry.crl_entry_extensions.is_none());
+
+        let CertStatus::Revoked(info) = res.cert_status else {
+            panic!("expected revoked, got {:?}", res.cert_status);
+        };
+        assert_eq!(
+            info.revocation_time,
+            OcspGeneralizedTime::from(DateTime::new(2026, 4, 16, 7, 41, 20).unwrap())
+        );
+        assert_eq!(info.revocation_reason, None);
+    }
+
+    /// Absent from the list means `good`, per [RFC 2560] but not [RFC 6960]. The
+    /// serial below was never issued by this CA, and a CRL cannot distinguish that from one it
+    /// issued and has not revoked. The method's own documentation says so; this pins the behavior
+    /// that documentation describes.
+    ///
+    /// [RFC 2560]: https://datatracker.ietf.org/doc/html/rfc2560#section-2.2
+    /// [RFC 6960]: https://datatracker.ietf.org/doc/html/rfc6960#section-2.2
+    #[test]
+    fn a_serial_the_crl_does_not_list_is_good() {
+        let (ca, crl) = actalis();
+        let serial = SerialNumber::new(&hex!("7FDEADBEEF7FDEADBEEF7FDEADBEEF7F")).unwrap();
+        let res = SingleResponse::from_crl::<Sha1>(&ca, &crl, serial).unwrap();
+        assert_eq!(res.cert_status, CertStatus::good());
+    }
+
+    /// Test a CRL that revokes nothing, i.e., it omits `revokedCertificates`.
+    #[test]
+    fn a_crl_that_lists_nothing_is_good() {
+        let ca = Certificate::from_der(&std::fs::read("tests/examples/isrg-root-ye.der").unwrap())
+            .unwrap();
+        let crl = CertificateList::from_der(
+            &std::fs::read("tests/examples/isrg-root-ye-crl.der").unwrap(),
+        )
+        .unwrap();
+        assert!(
+            crl.tbs_cert_list.revoked_certificates.is_none(),
+            "this CRL is expected to have no entries"
+        );
+
+        let serial = SerialNumber::new(&hex!("7FDEADBEEF7FDEADBEEF7FDEADBEEF7F")).unwrap();
+        let res = SingleResponse::from_crl::<Sha1>(&ca, &crl, serial).unwrap();
+        assert_eq!(res.cert_status, CertStatus::good());
+
+        // Both times reduce from the CRL's `UTCTime`, which is the conversion `OcspGeneralizedTime`
+        // exists for: OCSP has no UTCTime, and every other X.509 structure still uses it.
+        assert_eq!(
+            res.this_update,
+            OcspGeneralizedTime::from(DateTime::new(2026, 5, 13, 18, 0, 0).unwrap())
+        );
+        assert_eq!(
+            res.next_update,
+            Some(OcspGeneralizedTime::from(
+                DateTime::new(2027, 5, 11, 23, 59, 59).unwrap()
+            ))
+        );
+    }
 }

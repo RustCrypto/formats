@@ -24,6 +24,8 @@ const ID_PKIX_OCSP_ARCHIVE_CUTOFF: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("1.3.6.1.5.5.7.48.1.6");
 const SHA_256_WITH_RSA_ENCRYPTION: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.11");
+const ECDSA_WITH_SHA_384: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.10045.4.3.3");
+const ID_EC_PUBLIC_KEY: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.10045.2.1");
 
 lazy_static! {
     // PrintableString: CN = rsa-2048-sha256-ocsp-crt
@@ -565,4 +567,140 @@ fn decode_ocsp_resp_revoked_response() {
             _ => panic!("should be revoked"),
         },
     }
+}
+
+/// Test a response with an `unknown` status.
+#[test]
+fn decode_ocsp_resp_unknown_status() {
+    let data = std::fs::read("tests/examples/actalis-unknown-res.der").unwrap();
+    let res = OcspResponse::from_der(&data[..]).unwrap();
+    let res = assert_ocsp_response(&res);
+
+    let data = &res.tbs_response_data;
+    assert_eq!(data.version, Version::V1);
+    assert!(matches!(data.responder_id, ResponderId::ByName(_)));
+    assert_eq!(
+        data.produced_at,
+        OcspGeneralizedTime::from(DateTime::new(2026, 8, 21, 14, 28, 19).unwrap())
+    );
+    assert_eq!(data.responses.len(), 1);
+
+    let single = &data.responses[0];
+    assert_eq!(
+        single.cert_id,
+        CertId {
+            hash_algorithm: AlgorithmIdentifierOwned {
+                oid: ID_SHA1,
+                parameters: None,
+            },
+            issuer_name_hash: OctetString::new(
+                &hex!("B22C736151182FB02D1C254C449D4F57552A5955")[..]
+            )
+            .unwrap(),
+            issuer_key_hash: OctetString::new(
+                &hex!("AF2CA406CBF08A03146513A88D60F9C8D31B414C")[..]
+            )
+            .unwrap(),
+            serial_number: SerialNumber::new(&hex!("7FDEADBEEF7FDEADBEEF7FDEADBEEF7F")[..])
+                .unwrap(),
+        }
+    );
+    assert_single_response(
+        single,
+        CertStatus::unknown(),
+        &OcspGeneralizedTime::from(DateTime::new(2026, 8, 21, 14, 11, 55).unwrap()),
+        Some(&OcspGeneralizedTime::from(
+            DateTime::new(2026, 8, 22, 14, 11, 54).unwrap(),
+        )),
+    );
+
+    // A responder answering `unknown` still signs, and still delivers the certificates that let the
+    // answer be checked -- an unknown status is an assertion, not a refusal to make one.
+    assert_eq!(res.signature_algorithm.oid, SHA_256_WITH_RSA_ENCRYPTION);
+    assert_eq!(res.certs.as_ref().unwrap().len(), 2);
+}
+
+/// Every other response here is RSA-signed, so nothing exercised an ECDSA `AlgorithmIdentifier` --
+/// which differs from the RSA one in a way that a decoder can get wrong without any test noticing:
+/// its `parameters` are **absent** where RSA's carry an explicit NULL.
+#[test]
+fn decode_ocsp_resp_ecdsa_signature() {
+    let data = std::fs::read("tests/examples/globalsign-ecdsa-res.der").unwrap();
+    let res = OcspResponse::from_der(&data[..]).unwrap();
+    let res = assert_ocsp_response(&res);
+
+    assert_eq!(res.signature_algorithm.oid, ECDSA_WITH_SHA_384);
+    assert_eq!(res.signature_algorithm.parameters, None);
+
+    // A delegated responder, named by the hash of its key rather than by its name, and carrying the
+    // certificate that key belongs to.
+    let data = &res.tbs_response_data;
+    let ResponderId::ByKey(key_hash) = &data.responder_id else {
+        panic!("expected byKey, got {:?}", data.responder_id);
+    };
+    assert_eq!(
+        key_hash.as_bytes(),
+        &hex!("3524B43B9D81571C570182FF8721FC51E033FA73")[..]
+    );
+    let certs = res.certs.as_ref().unwrap();
+    assert_eq!(certs.len(), 1);
+    assert_eq!(
+        certs[0]
+            .tbs_certificate()
+            .subject_public_key_info()
+            .algorithm
+            .oid,
+        ID_EC_PUBLIC_KEY
+    );
+
+    // The CertID is SHA-1 whatever the signature is: the two choices are unrelated, and a responder
+    // signing with P-384 still answers about a certificate identified the way the request asked.
+    let single = &data.responses[0];
+    assert_eq!(single.cert_id.hash_algorithm.oid, ID_SHA1);
+    assert_eq!(single.cert_id.hash_algorithm.parameters, None);
+    assert_eq!(
+        single.cert_id.serial_number,
+        SerialNumber::new(&hex!("1C93F561EB7BD2391D393423")[..]).unwrap()
+    );
+    assert_single_response(
+        single,
+        CertStatus::good(),
+        &OcspGeneralizedTime::from(DateTime::new(2026, 8, 21, 13, 3, 13).unwrap()),
+        Some(&OcspGeneralizedTime::from(
+            DateTime::new(2026, 8, 25, 13, 3, 12).unwrap(),
+        )),
+    );
+}
+
+/// Test invalidate `OCSPResponseStatus` value.
+#[test]
+fn decode_ocsp_resp_rejects_a_status_outside_the_enumeration() {
+    let data = std::fs::read("tests/examples/ocsp-try-later.der").unwrap();
+    let last = data.len() - 1;
+    assert_eq!(data[last], 3, "expected tryLater(3)");
+
+    for reserved in [4u8, 7u8] {
+        let mut broken = data.clone();
+        broken[last] = reserved;
+        assert!(
+            OcspResponse::from_der(&broken[..]).is_err(),
+            "responseStatus {reserved} decoded, and it has no meaning"
+        );
+    }
+}
+
+/// Truncation and trailing data are the two ways a caller's buffer can be the wrong length, and
+/// they are different faults: one is a message that was cut off, the other a message with something
+/// after it. Both must be refused -- accepting either would let a response be read from a buffer
+/// nobody has established the bounds of.
+#[test]
+fn decode_ocsp_resp_rejects_truncation_and_trailing_data() {
+    let data = std::fs::read("tests/examples/sha1-certid-ocsp-res.der").unwrap();
+    assert!(OcspResponse::from_der(&data[..]).is_ok());
+
+    assert!(OcspResponse::from_der(&data[..data.len() - 1]).is_err());
+
+    let mut with_trailer = data.clone();
+    with_trailer.push(0);
+    assert!(OcspResponse::from_der(&with_trailer[..]).is_err());
 }
