@@ -240,7 +240,7 @@ mod tests {
                 reader.read_slice(1u8.into())?;
                 Ok(())
             })
-            .unwrap_err();
+            .expect_err("read_nested should return Err when the callback did not consume the complete contents of the nested value");
 
         assert_eq!(Length::ONE, err.position().unwrap());
         assert_eq!(
