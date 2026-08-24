@@ -55,6 +55,11 @@ pub const DES_CBC_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.14.3
 #[cfg(feature = "3des")]
 pub const DES_EDE3_CBC_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.3.7");
 
+/// `belt-kwp256` key wrap algorithm as defined in STB 34.101.31 Section 7.2.
+#[cfg(feature = "belt")]
+pub const BELT_KWP_OID: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.112.0.2.0.34.101.31.73");
+
 /// Password-Based Encryption Scheme 2 (PBES2) OID.
 ///
 /// <https://tools.ietf.org/html/rfc8018#section-6.2>
@@ -182,6 +187,19 @@ impl Parameters {
     ) -> Result<Self> {
         let kdf = Pbkdf2Params::hmac_sha256(pbkdf2_iterations, pbkdf2_salt)?.into();
         let encryption = EncryptionScheme::Aes256Cbc { iv: aes_iv };
+        Ok(Self { kdf, encryption })
+    }
+
+    /// Initialize PBES2 parameters using PBKDF2-HMAC-HBELT as the
+    /// password-based key derivation function and `belt-kwp256` as the key wrap
+    /// algorithm, as used by the STB 34.101.78 (`bpki`) private key container.
+    ///
+    /// # Errors
+    /// Propagates errors from [`Pbkdf2Params::hmac_hbelt`].
+    #[cfg(feature = "belt")]
+    pub fn pbkdf2_hmac_hbelt_belt_kwp(pbkdf2_iterations: u32, pbkdf2_salt: &[u8]) -> Result<Self> {
+        let kdf = Pbkdf2Params::hmac_hbelt(pbkdf2_iterations, pbkdf2_salt)?.into();
+        let encryption = EncryptionScheme::BeltKwp;
         Ok(Self { kdf, encryption })
     }
 
@@ -463,6 +481,10 @@ pub enum EncryptionScheme {
         /// Initialisation vector
         iv: [u8; DES_BLOCK_SIZE],
     },
+
+    /// BELT-KWP
+    #[cfg(feature = "belt")]
+    BeltKwp,
 }
 
 impl EncryptionScheme {
@@ -479,6 +501,8 @@ impl EncryptionScheme {
             Self::DesCbc { .. } => 8,
             #[cfg(feature = "3des")]
             Self::DesEde3Cbc { .. } => 24,
+            #[cfg(feature = "belt")]
+            Self::BeltKwp => 32,
         }
     }
 
@@ -495,6 +519,8 @@ impl EncryptionScheme {
             Self::DesCbc { .. } => DES_CBC_OID,
             #[cfg(feature = "3des")]
             Self::DesEde3Cbc { .. } => DES_EDE3_CBC_OID,
+            #[cfg(feature = "belt")]
+            Self::BeltKwp => BELT_KWP_OID,
         }
     }
 
@@ -515,40 +541,55 @@ impl<'a> Decode<'a> for EncryptionScheme {
     }
 }
 
+/// Decode an IV/nonce of exactly `N` bytes from an `AlgorithmIdentifier`'s
+/// OCTET STRING parameters.
+fn decode_iv<const N: usize>(params: Option<AnyRef<'_>>) -> der::Result<[u8; N]> {
+    params
+        .ok_or_else(|| Tag::OctetString.value_error())?
+        .decode_as::<&OctetStringRef>()?
+        .as_bytes()
+        .try_into()
+        .map_err(|_| Tag::OctetString.value_error().into())
+}
+
 impl TryFrom<AlgorithmIdentifierRef<'_>> for EncryptionScheme {
     type Error = der::Error;
 
     fn try_from(alg: AlgorithmIdentifierRef<'_>) -> der::Result<Self> {
         // TODO(tarcieri): support for non-AES algorithms?
-        let iv = match alg.parameters {
-            Some(params) => params.decode_as::<&OctetStringRef>()?.as_bytes(),
-            None => return Err(Tag::OctetString.value_error().into()),
-        };
-
         match alg.oid {
             AES_128_CBC_OID => Ok(Self::Aes128Cbc {
-                iv: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
+                iv: decode_iv(alg.parameters)?,
             }),
             AES_192_CBC_OID => Ok(Self::Aes192Cbc {
-                iv: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
+                iv: decode_iv(alg.parameters)?,
             }),
             AES_256_CBC_OID => Ok(Self::Aes256Cbc {
-                iv: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
+                iv: decode_iv(alg.parameters)?,
             }),
             AES_128_GCM_OID => Ok(Self::Aes128Gcm {
-                nonce: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
+                nonce: decode_iv(alg.parameters)?,
             }),
             AES_256_GCM_OID => Ok(Self::Aes256Gcm {
-                nonce: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
+                nonce: decode_iv(alg.parameters)?,
             }),
             #[cfg(feature = "des-insecure")]
             DES_CBC_OID => Ok(Self::DesCbc {
-                iv: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
+                iv: decode_iv(alg.parameters)?,
             }),
             #[cfg(feature = "3des")]
             DES_EDE3_CBC_OID => Ok(Self::DesEde3Cbc {
-                iv: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
+                iv: decode_iv(alg.parameters)?,
             }),
+            // `belt-kwp` has no IV: STB 34.101.78 encodes NULL parameters.
+            #[cfg(feature = "belt")]
+            BELT_KWP_OID => {
+                if let Some(params) = alg.parameters {
+                    params.decode_as::<()>()?;
+                }
+
+                Ok(Self::BeltKwp)
+            }
             oid => Err(ErrorKind::OidUnknown { oid }.into()),
         }
     }
@@ -558,21 +599,24 @@ impl<'a> TryFrom<&'a EncryptionScheme> for AlgorithmIdentifierRef<'a> {
     type Error = der::Error;
 
     fn try_from(scheme: &'a EncryptionScheme) -> der::Result<Self> {
-        let parameters = OctetStringRef::new(match scheme {
-            EncryptionScheme::Aes128Cbc { iv } => iv.as_slice(),
-            EncryptionScheme::Aes192Cbc { iv } => iv.as_slice(),
-            EncryptionScheme::Aes256Cbc { iv } => iv.as_slice(),
-            EncryptionScheme::Aes128Gcm { nonce } => nonce.as_slice(),
-            EncryptionScheme::Aes256Gcm { nonce } => nonce.as_slice(),
+        let parameters = match scheme {
+            EncryptionScheme::Aes128Cbc { iv } => OctetStringRef::new(iv)?.into(),
+            EncryptionScheme::Aes192Cbc { iv } => OctetStringRef::new(iv)?.into(),
+            EncryptionScheme::Aes256Cbc { iv } => OctetStringRef::new(iv)?.into(),
+            EncryptionScheme::Aes128Gcm { nonce } => OctetStringRef::new(nonce)?.into(),
+            EncryptionScheme::Aes256Gcm { nonce } => OctetStringRef::new(nonce)?.into(),
             #[cfg(feature = "des-insecure")]
-            EncryptionScheme::DesCbc { iv } => iv.as_slice(),
+            EncryptionScheme::DesCbc { iv } => OctetStringRef::new(iv)?.into(),
             #[cfg(feature = "3des")]
-            EncryptionScheme::DesEde3Cbc { iv } => iv.as_slice(),
-        })?;
+            EncryptionScheme::DesEde3Cbc { iv } => OctetStringRef::new(iv)?.into(),
+            // `belt-kwp` has no IV and encodes NULL parameters (STB 34.101.78).
+            #[cfg(feature = "belt")]
+            EncryptionScheme::BeltKwp => AnyRef::NULL,
+        };
 
         Ok(AlgorithmIdentifierRef {
             oid: scheme.oid(),
-            parameters: Some(parameters.into()),
+            parameters: Some(parameters),
         })
     }
 }

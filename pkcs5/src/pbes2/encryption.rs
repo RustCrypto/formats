@@ -3,6 +3,8 @@
 use super::{EncryptionScheme, Kdf, Parameters, Pbkdf2Params, Pbkdf2Prf, ScryptParams};
 use crate::{Error, Result};
 use aes_gcm::{KeyInit as GcmKeyInit, Nonce, Tag, aead::AeadInOut};
+#[cfg(feature = "belt")]
+use belt_hash::BeltHash;
 use cbc::cipher::{
     BlockCipherDecrypt, BlockCipherEncrypt, BlockModeDecrypt, BlockModeEncrypt, KeyInit, KeyIvInit,
     block_padding::Pkcs7,
@@ -136,6 +138,10 @@ pub fn encrypt_in_place<'b>(
         EncryptionScheme::DesCbc { .. } => Err(Error::UnsupportedAlgorithm {
             oid: super::DES_CBC_OID,
         }),
+        #[cfg(feature = "belt")]
+        EncryptionScheme::BeltKwp => belt_kwp(&key)?
+            .wrap_key_in_place(buf, pos, &BELT_KWP_HEADER)
+            .map_err(|_| Error::EncryptFailed),
     }
 }
 
@@ -162,7 +168,22 @@ pub fn decrypt_in_place<'a>(
         EncryptionScheme::DesEde3Cbc { iv } => cbc_decrypt::<des::TdesEde3>(es, key, &iv, buf),
         #[cfg(feature = "des-insecure")]
         EncryptionScheme::DesCbc { iv } => cbc_decrypt::<des::Des>(es, key, &iv, buf),
+        #[cfg(feature = "belt")]
+        EncryptionScheme::BeltKwp => belt_kwp(&key)?
+            .unwrap_key_in_place(buf, &BELT_KWP_HEADER)
+            .map_err(|_| Error::DecryptFailed),
     }
+}
+
+/// The `belt-kwp` header `I`, which STB 34.101.78 fixes to `0^128`.
+#[cfg(feature = "belt")]
+const BELT_KWP_HEADER: [u8; belt_kwp::IV_LEN] = [0u8; belt_kwp::IV_LEN];
+
+/// Build a `belt-kwp` instance from the derived key.
+#[cfg(feature = "belt")]
+fn belt_kwp(key: &EncryptionKey) -> Result<belt_kwp::BeltKwp> {
+    belt_kwp::BeltKwp::new_from_slice(key.as_slice())
+        .map_err(|_| EncryptionScheme::BeltKwp.to_alg_params_invalid())
 }
 
 /// Encryption key as derived by PBKDF2
@@ -213,6 +234,12 @@ impl EncryptionKey {
                         key_size,
                     ),
                     Pbkdf2Prf::HmacWithSha512 => EncryptionKey::derive_with_pbkdf2::<sha2::Sha512>(
+                        password,
+                        pbkdf2_params,
+                        key_size,
+                    ),
+                    #[cfg(feature = "belt")]
+                    Pbkdf2Prf::HmacHbelt => EncryptionKey::derive_with_pbkdf2::<BeltHash>(
                         password,
                         pbkdf2_params,
                         key_size,
