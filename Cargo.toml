@@ -61,6 +61,10 @@ x509-tsp = { path = "./x509-tsp" }
 x509-cert = { path = "./x509-cert" }
 x509-ocsp = { path = "./x509-ocsp" }
 
+# RSA: refactor: use *Ref (or *Owned) der types from RustCrypto/formats - #706
+rsa = { git = "https://github.com/dishmaker/RSA.git", rev = "96c97ec3e8b2bedde44f5954334618bec87a19c3" }
+
+
 [workspace.lints.clippy]
 borrow_as_ptr = "warn"
 cast_lossless = "warn"
