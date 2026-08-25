@@ -16,6 +16,7 @@ edition = "2024"
 rust-version = "1.85"
 
 [dependencies]
+aead = { version = "0.6", default-features = false }
 der = { version = "0.8", features = ["oid"] }
 spki = "0.8"
 

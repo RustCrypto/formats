@@ -1036,6 +1036,7 @@ dependencies = [
 name = "pkcs5"
 version = "0.8.1"
 dependencies = [
+ "aead",
  "aes",
  "aes-gcm",
  "cbc",
