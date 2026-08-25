@@ -16,11 +16,11 @@ edition = "2024"
 rust-version = "1.85"
 
 [dependencies]
-aead = { version = "0.6", default-features = false, optional = true }
 der = { version = "0.8", features = ["oid"] }
 spki = "0.8"
 
 # optional dependencies
+aead = { version = "0.6", default-features = false, optional = true }
 cbc = { version = "0.2", optional = true }
 aes = { version = "0.9", optional = true, default-features = false }
 aes-gcm = { version = "0.11", optional = true, default-features = false, features = ["aes"] }
