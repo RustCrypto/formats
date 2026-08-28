@@ -1,6 +1,7 @@
+#![cfg_attr(feature = "future_deprecations", allow(deprecated))]
 use tls_codec::{
     DeserializeBytes, Error, Size, TlsByteVecU8, TlsByteVecU16, TlsByteVecU24, TlsByteVecU32,
-    TlsVecU8,
+    TlsVecU8, VLByteVec, VLBytes,
 };
 
 #[test]
@@ -193,6 +194,28 @@ fn truncated_byte_vec_reports_end_of_stream() {
             Err(Error::EndOfStream) | Err(Error::InvalidVectorLength)
         ),
         "expected EndOfStream/InvalidVectorLength, got {res:?}"
+    );
+}
+
+// Length 4 + 2 content bytes
+#[test]
+fn truncated_vlbytes_reports_decoding_error() {
+    let input = [4u8, 0xAA, 0xBB];
+    let res = VLBytes::tls_deserialize_bytes(&input);
+    assert!(
+        matches!(res, Err(Error::DecodingError(_))),
+        "expected DecodingError, got {res:?}"
+    );
+}
+
+// Same input, but for `VLByteVec`
+#[test]
+fn truncated_vlbytevec_reports_decoding_error() {
+    let input = [4u8, 0xAA, 0xBB];
+    let res = VLByteVec::tls_deserialize_bytes(&input);
+    assert!(
+        matches!(res, Err(Error::DecodingError(_))),
+        "expected DecodingError, got {res:?}"
     );
 }
 
