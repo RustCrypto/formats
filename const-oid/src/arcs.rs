@@ -73,15 +73,9 @@ impl<'a> Arcs<'a> {
                         Some(byte) => {
                             arc_bytes = checked_add!(arc_bytes, 1);
 
-                            // Accumulate the base 128 digits with overflow checking.
-                            //
-                            // An arc whose value does not fit in `Arc` (`u32`) is
-                            // rejected as `ArcTooBig` rather than being silently
-                            // truncated by the `<< 7` shift. Note that a `u32` arc can
-                            // be up to five base 128 bytes long, so checking the number
-                            // of consumed bytes alone is not sufficient: the final byte
-                            // of a five-byte arc can still push the value past
-                            // `u32::MAX`.
+                            // A five byte arc can still exceed `Arc`, so the digits are
+                            // accumulated with overflow checking rather than by counting
+                            // bytes.
                             result = match result
                                 .checked_mul(0x80)
                                 .and_then(|result| result.checked_add((byte & 0b0111_1111) as Arc))
