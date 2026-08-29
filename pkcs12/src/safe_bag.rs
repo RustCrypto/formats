@@ -44,9 +44,9 @@ impl<'a> ::der::DecodeValue<'a> for SafeBag {
         _header: ::der::Header,
     ) -> ::der::Result<Self> {
         let bag_id = reader.decode()?;
-        let bag_value = match reader.tlv_bytes() {
-            Ok(v) => v.to_vec(),
-            Err(e) => return Err(e),
+        let bag_value = {
+            let v = reader.tlv_bytes()?;
+            v.to_vec()
         };
         let bag_attributes = reader.decode()?;
         Ok(Self {
