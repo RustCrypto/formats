@@ -3,7 +3,7 @@
 use super::{is_highest_bit_set, uint, value_cmp};
 use crate::{
     AnyRef, BytesRef, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
-    Result, Tag, ValueOrd, Writer, ord::OrdIsValueOrd,
+    Result, Tag, ValueOrd, Writer, ord::OrdIsValueOrd, referenced::OwnedToRef,
 };
 use core::cmp::Ordering;
 
@@ -179,6 +179,16 @@ impl FixedTag for IntRef<'_> {
 }
 
 impl OrdIsValueOrd for IntRef<'_> {}
+
+impl<'a> OwnedToRef for IntRef<'a> {
+    type Borrowed<'b>
+        = IntRef<'a>
+    where
+        'a: 'b;
+    fn owned_to_ref(&self) -> Self::Borrowed<'a> {
+        *self
+    }
+}
 
 #[cfg(feature = "alloc")]
 mod allocating {
