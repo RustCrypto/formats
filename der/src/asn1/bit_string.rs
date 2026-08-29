@@ -248,6 +248,23 @@ impl FixedTag for BitStringRef<'_> {
     const TAG: Tag = Tag::BitString;
 }
 
+/// [`AsBitStringRef`] marks object that will act like a `BitString`.
+///
+/// It will allow to get a [`BitStringRef`] that points back to the underlying bytes.
+///
+/// Note: this trait does not simplify to [`AsRef<BitStringRef>`], because `BIT STRING`
+/// contains unused bits prefix and therefore cannot be a simple `&'a BitStringRef` slice.
+pub trait AsBitStringRef {
+    /// Borrows the owned or ref `BIT STRING` as [`BitStringRef`]
+    fn as_bit_string(&self) -> BitStringRef<'_>;
+}
+
+impl AsBitStringRef for BitStringRef<'_> {
+    fn as_bit_string(&self) -> BitStringRef<'_> {
+        *self
+    }
+}
+
 /// Sealed, so that `UnusedBits` newtype can't be created directly
 mod unused_bits {
     use core::ops::Deref;
@@ -555,6 +572,12 @@ mod allocating {
         type Borrowed<'a> = BitStringRef<'a>;
         fn owned_to_ref(&self) -> Self::Borrowed<'_> {
             self.into()
+        }
+    }
+
+    impl AsBitStringRef for BitString {
+        fn as_bit_string(&self) -> BitStringRef<'_> {
+            BitStringRef::from(self)
         }
     }
 }
