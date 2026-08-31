@@ -70,7 +70,7 @@ impl SignedCertificateTimestampList {
     pub fn parse_timestamps(&self) -> Result<Vec<SerializedSct>, Error> {
         let (tls_vec, rest) = TlsByteVecU16::tls_deserialize_bytes(self.0.as_bytes())?;
         if !rest.is_empty() {
-            return Err(tls_codec::Error::TrailingData)?;
+            return Err(tls_codec::Error::TrailingData.into());
         }
         let mut bytes = tls_vec.as_slice();
         let mut result = Vec::new();
@@ -112,7 +112,7 @@ impl SerializedSct {
     pub fn parse_timestamp(&self) -> Result<SignedCertificateTimestamp, Error> {
         let (sct, rest) = SignedCertificateTimestamp::tls_deserialize_bytes(self.data.as_slice())?;
         if !rest.is_empty() {
-            return Err(tls_codec::Error::TrailingData)?;
+            return Err(tls_codec::Error::TrailingData.into());
         }
         Ok(sct)
     }
