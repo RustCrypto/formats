@@ -12,6 +12,40 @@ Personal Information Exchange Syntax v1.1 ([RFC7292]).
 
 [Documentation][docs-link]
 
+## Builder (`builder` feature)
+
+The `builder` feature provides `Pkcs12Builder` for creating a `Pfx` containing one private key
+and one certificate, plus optional additional certificates (e.g. CA/intermediate chain
+certificates), all protected with password-based encryption (PBES2 / PBKDF2 by default) and a
+password-based MAC.
+
+### Features
+
+- PBES2 encryption with configurable PBKDF2 PRF and AES-CBC cipher
+- Configurable MAC algorithm and iteration count
+- Optional additional certificates (CA/intermediate chain)
+- `localKeyID` and `friendlyName` attribute helpers
+- Parsing and decryption of existing PKCS #12 files via `parse_pkcs12`
+- Per-bag attribute preservation (key ID, friendly name, and arbitrary attributes)
+- Legacy PKCS #12 PBE support (SHA-1/3DES-CBC, SHA-1/RC2-CBC) with the `legacy` feature
+
+### Quick start
+
+```toml
+[dependencies]
+pkcs12 = { version = "0.2", features = ["builder"] }
+```
+
+### `legacy` feature
+
+Enable the `legacy` feature to support legacy PKCS #12 PBE algorithms (SHA-1/3DES-CBC,
+SHA-1/RC2-CBC) and HMAC-SHA-1 MAC. 
+
+```toml
+[dependencies]
+pkcs12 = { version = "0.2", features = ["legacy"] }
+```
+
 ## Minimum Supported Rust Version (MSRV) Policy
 
 MSRV increases are not considered breaking changes and can happen in patch releases.
