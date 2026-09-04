@@ -24,15 +24,6 @@ pub(crate) const ARC_MAX_FIRST: Arc = 2;
 /// Maximum value of the second arc in an OID.
 pub(crate) const ARC_MAX_SECOND: Arc = 39;
 
-/// Maximum number of bytes supported in an arc.
-///
-/// Note that OIDs are base 128 encoded (with continuation bits), so we must consider how many bytes
-/// are required when each byte can only represent 7-bits of the input.
-const ARC_MAX_BYTES: usize = (Arc::BITS as usize).div_ceil(7);
-
-/// Maximum value of the last byte in an arc.
-const ARC_MAX_LAST_OCTET: u8 = 0b11110000; // Max bytes of leading 1-bits
-
 /// [`Iterator`] over [`Arc`] values (a.k.a. nodes) in an [`ObjectIdentifier`].
 ///
 /// This iterates over all arcs in an OID, including the root.
@@ -72,27 +63,28 @@ impl<'a> Arcs<'a> {
                 Ok(Some(root.second_arc()))
             }
             Some(offset) => {
-                let mut result = 0;
+                let mut result: Arc = 0;
                 let mut arc_bytes = 0;
 
                 loop {
                     let len = checked_add!(offset, arc_bytes);
 
                     match self.bytes.get(len).cloned() {
-                        // The arithmetic below includes advance checks
-                        // against `ARC_MAX_BYTES` and `ARC_MAX_LAST_OCTET`
-                        // which ensure the operations will not overflow.
-                        #[allow(clippy::arithmetic_side_effects)]
                         Some(byte) => {
                             arc_bytes = checked_add!(arc_bytes, 1);
 
-                            if (arc_bytes > ARC_MAX_BYTES) && (byte & ARC_MAX_LAST_OCTET != 0) {
-                                return Err(Error::ArcTooBig);
-                            }
+                            // A five byte arc can still exceed `Arc`, so the digits are
+                            // accumulated with overflow checking rather than by counting
+                            // bytes.
+                            result = match result
+                                .checked_mul(0x80)
+                                .and_then(|result| result.checked_add((byte & 0b0111_1111) as Arc))
+                            {
+                                Some(result) => result,
+                                None => return Err(Error::ArcTooBig),
+                            };
 
-                            result = (result << 7) | (byte & 0b1111111) as Arc;
-
-                            if byte & 0b10000000 == 0 {
+                            if byte & 0b1000_0000 == 0 {
                                 self.cursor = Some(checked_add!(offset, arc_bytes));
                                 return Ok(Some(result));
                             }
