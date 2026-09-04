@@ -42,7 +42,7 @@ pub use self::{
     general_string::GeneralStringRef,
     generalized_time::GeneralizedTime,
     ia5_string::Ia5StringRef,
-    integer::{int::IntRef, uint::UintRef},
+    integer::{AsIntRef, AsUintRef, int::IntRef, uint::UintRef},
     null::Null,
     octet_string::OctetStringRef,
     printable_string::PrintableStringRef,
