@@ -186,6 +186,18 @@ impl<'a> AlgorithmIdentifierRef<'a> {
     }
 }
 
+/// Borrow the owned or ref `AlgorithmIdentifier` as [`AlgorithmIdentifierRef`].
+pub trait AsAlgorithmIdentifierRef {
+    /// Borrow the owned or ref `AlgorithmIdentifier` as [`AlgorithmIdentifierRef`].
+    fn as_algo_ref<'a>(&'a self) -> AlgorithmIdentifierRef<'a>;
+}
+
+impl<'a> AsAlgorithmIdentifierRef for AlgorithmIdentifierRef<'a> {
+    fn as_algo_ref(&self) -> AlgorithmIdentifierRef<'a> {
+        *self
+    }
+}
+
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::*;
@@ -207,6 +219,33 @@ mod allocating {
             AlgorithmIdentifier {
                 oid: self.oid,
                 parameters: self.parameters.owned_to_ref(),
+            }
+        }
+    }
+
+    impl AsAlgorithmIdentifierRef for AlgorithmIdentifierOwned {
+        fn as_algo_ref<'a>(&'a self) -> AlgorithmIdentifierRef<'a> {
+            AlgorithmIdentifier {
+                oid: self.oid,
+                parameters: self.parameters.owned_to_ref(),
+            }
+        }
+    }
+
+    impl<'a> From<AlgorithmIdentifierRef<'a>> for AlgorithmIdentifierOwned {
+        fn from(value: AlgorithmIdentifierRef) -> Self {
+            Self {
+                oid: value.oid,
+                parameters: value.parameters.map(Into::into),
+            }
+        }
+    }
+
+    impl<'a> From<&'a AlgorithmIdentifierOwned> for AlgorithmIdentifierRef<'a> {
+        fn from(value: &'a AlgorithmIdentifierOwned) -> Self {
+            Self {
+                oid: value.oid,
+                parameters: value.parameters.as_ref().map(|p| p.to_ref()),
             }
         }
     }
