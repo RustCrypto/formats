@@ -34,16 +34,18 @@ pub use der::{
 
 pub use crate::{
     error::{Error, Result},
-    params::{RsaOaepParams, RsaPssParams, TrailerField},
-    private_key::RsaPrivateKey,
-    public_key::RsaPublicKey,
+    params::{RsaOaepParams, RsaOaepParamsRef, RsaPssParams, RsaPssParamsRef, TrailerField},
+    private_key::{RsaPrivateKey, RsaPrivateKeyRef},
+    public_key::{RsaPublicKey, RsaPublicKeyRef},
     traits::{DecodeRsaPrivateKey, DecodeRsaPublicKey},
     version::Version,
 };
 
 #[cfg(feature = "alloc")]
 pub use crate::{
-    private_key::{OtherPrimeInfos, other_prime_info::OtherPrimeInfo},
+    params::{RsaOaepParamsOwned, RsaPssParamsOwned},
+    private_key::{OtherPrimeInfos, RsaPrivateKeyOwned, other_prime_info::OtherPrimeInfo},
+    public_key::RsaPublicKeyOwned,
     traits::{EncodeRsaPrivateKey, EncodeRsaPublicKey},
 };
 

@@ -1,7 +1,7 @@
 //! PKCS#1 public key tests
 
 use hex_literal::hex;
-use pkcs1::RsaPublicKey;
+use pkcs1::RsaPublicKeyRef;
 
 /// RSA-2048 PKCS#1 public key encoded as ASN.1 DER.
 ///
@@ -22,7 +22,7 @@ const RSA_4096_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa4096-pub.der");
 
 #[test]
 fn decode_rsa2048_der() {
-    let key = RsaPublicKey::try_from(RSA_2048_DER_EXAMPLE).unwrap();
+    let key = RsaPublicKeyRef::try_from(RSA_2048_DER_EXAMPLE).unwrap();
 
     // Extracted using:
     // $ openssl asn1parse -in tests/examples/rsa2048-pub.pem
@@ -37,7 +37,7 @@ fn decode_rsa2048_der() {
 
 #[test]
 fn decode_rsa4096_der() {
-    let key = RsaPublicKey::try_from(RSA_4096_DER_EXAMPLE).unwrap();
+    let key = RsaPublicKeyRef::try_from(RSA_4096_DER_EXAMPLE).unwrap();
 
     // Extracted using:
     // $ openssl asn1parse -in tests/examples/rsa4096-pub.pem

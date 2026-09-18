@@ -3,18 +3,28 @@
 #[cfg(feature = "alloc")]
 pub(crate) mod other_prime_info;
 
-use crate::{Error, Result, RsaPublicKey, Version};
+use crate::{Error, Result, RsaPublicKeyRef, Version};
 use core::fmt;
 use der::{
     Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Tag, Writer,
-    asn1::{OctetStringRef, UintRef},
+    asn1::{AsUintRef, OctetStringRef, UintRef},
 };
 
 #[cfg(feature = "alloc")]
 use {self::other_prime_info::OtherPrimeInfo, alloc::vec::Vec, der::SecretDocument};
 
+#[cfg(feature = "alloc")]
+use der::asn1::Uint;
+
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
+
+/// PKCS#1 RSA Private Keys as defined in [RFC 8017 Appendix 1.2].
+pub type RsaPrivateKeyRef<'a> = RsaPrivateKey<UintRef<'a>>;
+
+/// PKCS#1 RSA Private Keys as defined in [RFC 8017 Appendix 1.2].
+#[cfg(feature = "alloc")]
+pub type RsaPrivateKeyOwned = RsaPrivateKey<Uint>;
 
 /// PKCS#1 RSA Private Keys as defined in [RFC 8017 Appendix 1.2].
 ///
@@ -40,45 +50,50 @@ use der::pem::PemLabel;
 ///
 /// [RFC 8017 Appendix 1.2]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.1.2
 #[derive(Clone)]
-pub struct RsaPrivateKey<'a> {
+pub struct RsaPrivateKey<U> {
     /// `n`: RSA modulus.
-    pub modulus: UintRef<'a>,
+    pub modulus: U,
 
     /// `e`: RSA public exponent.
-    pub public_exponent: UintRef<'a>,
+    pub public_exponent: U,
 
     /// `d`: RSA private exponent.
-    pub private_exponent: UintRef<'a>,
+    pub private_exponent: U,
 
     /// `p`: first prime factor of `n`.
-    pub prime1: UintRef<'a>,
+    pub prime1: U,
 
     /// `q`: Second prime factor of `n`.
-    pub prime2: UintRef<'a>,
+    pub prime2: U,
 
     /// First exponent: `d mod (p-1)`.
-    pub exponent1: UintRef<'a>,
+    pub exponent1: U,
 
     /// Second exponent: `d mod (q-1)`.
-    pub exponent2: UintRef<'a>,
+    pub exponent2: U,
 
     /// CRT coefficient: `(inverse of q) mod p`.
-    pub coefficient: UintRef<'a>,
+    pub coefficient: U,
 
     /// Additional primes `r_3`, ..., `r_u`, in order, if this is a multi-prime
     /// RSA key (i.e. `version` is `multi`).
-    pub other_prime_infos: Option<OtherPrimeInfos<'a>>,
+    pub other_prime_infos: Option<OtherPrimeInfos<U>>,
 }
 
-impl<'a> RsaPrivateKey<'a> {
+impl<U> RsaPrivateKey<U>
+where
+    U: AsUintRef,
+{
     /// Get the public key that corresponds to this [`RsaPrivateKey`].
-    pub fn public_key(&self) -> RsaPublicKey<'a> {
-        RsaPublicKey {
-            modulus: self.modulus,
-            public_exponent: self.public_exponent,
+    pub fn public_key<'a>(&'a self) -> RsaPublicKeyRef<'a> {
+        RsaPublicKeyRef {
+            modulus: self.modulus.as_uint_ref(),
+            public_exponent: self.public_exponent.as_uint_ref(),
         }
     }
+}
 
+impl<U> RsaPrivateKey<U> {
     /// Get the [`Version`] for this key.
     ///
     /// Determined by the presence or absence of the
@@ -92,7 +107,10 @@ impl<'a> RsaPrivateKey<'a> {
     }
 }
 
-impl<'a> DecodeValue<'a> for RsaPrivateKey<'a> {
+impl<'a, U> DecodeValue<'a> for RsaPrivateKey<U>
+where
+    U: Decode<'a, Error = der::Error>,
+{
     type Error = der::Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> der::Result<Self> {
@@ -119,7 +137,10 @@ impl<'a> DecodeValue<'a> for RsaPrivateKey<'a> {
     }
 }
 
-impl EncodeValue for RsaPrivateKey<'_> {
+impl<U> EncodeValue for RsaPrivateKey<U>
+where
+    U: Encode,
+{
     fn value_len(&self) -> der::Result<Length> {
         self.version().encoded_len()?
             + self.modulus.encoded_len()?
@@ -148,21 +169,21 @@ impl EncodeValue for RsaPrivateKey<'_> {
     }
 }
 
-impl<'a> Sequence<'a> for RsaPrivateKey<'a> {}
+impl<U> Sequence<'_> for RsaPrivateKey<U> {}
 
-impl<'a> From<RsaPrivateKey<'a>> for RsaPublicKey<'a> {
-    fn from(private_key: RsaPrivateKey<'a>) -> RsaPublicKey<'a> {
+impl<'a, U> From<&'a RsaPrivateKey<U>> for RsaPublicKeyRef<'a>
+where
+    U: AsUintRef,
+{
+    fn from(private_key: &'a RsaPrivateKey<U>) -> RsaPublicKeyRef<'a> {
         private_key.public_key()
     }
 }
 
-impl<'a> From<&RsaPrivateKey<'a>> for RsaPublicKey<'a> {
-    fn from(private_key: &RsaPrivateKey<'a>) -> RsaPublicKey<'a> {
-        private_key.public_key()
-    }
-}
-
-impl<'a> TryFrom<&'a [u8]> for RsaPrivateKey<'a> {
+impl<'a, U> TryFrom<&'a [u8]> for RsaPrivateKey<U>
+where
+    U: Decode<'a, Error = der::Error>,
+{
     type Error = Error;
 
     fn try_from(bytes: &'a [u8]) -> Result<Self> {
@@ -170,7 +191,10 @@ impl<'a> TryFrom<&'a [u8]> for RsaPrivateKey<'a> {
     }
 }
 
-impl<'a> TryFrom<&'a OctetStringRef> for RsaPrivateKey<'a> {
+impl<'a, U> TryFrom<&'a OctetStringRef> for RsaPrivateKey<U>
+where
+    U: Decode<'a, Error = der::Error>,
+{
     type Error = Error;
 
     fn try_from(bytes: &'a OctetStringRef) -> Result<Self> {
@@ -178,7 +202,10 @@ impl<'a> TryFrom<&'a OctetStringRef> for RsaPrivateKey<'a> {
     }
 }
 
-impl fmt::Debug for RsaPrivateKey<'_> {
+impl<U> fmt::Debug for RsaPrivateKey<U>
+where
+    U: fmt::Debug,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("RsaPrivateKey")
             .field("version", &self.version())
@@ -189,25 +216,31 @@ impl fmt::Debug for RsaPrivateKey<'_> {
 }
 
 #[cfg(feature = "alloc")]
-impl TryFrom<RsaPrivateKey<'_>> for SecretDocument {
+impl<U> TryFrom<RsaPrivateKey<U>> for SecretDocument
+where
+    U: Encode,
+{
     type Error = Error;
 
-    fn try_from(private_key: RsaPrivateKey<'_>) -> Result<SecretDocument> {
+    fn try_from(private_key: RsaPrivateKey<U>) -> Result<SecretDocument> {
         SecretDocument::try_from(&private_key)
     }
 }
 
 #[cfg(feature = "alloc")]
-impl TryFrom<&RsaPrivateKey<'_>> for SecretDocument {
+impl<U> TryFrom<&RsaPrivateKey<U>> for SecretDocument
+where
+    U: Encode,
+{
     type Error = Error;
 
-    fn try_from(private_key: &RsaPrivateKey<'_>) -> Result<SecretDocument> {
+    fn try_from(private_key: &RsaPrivateKey<U>) -> Result<SecretDocument> {
         Ok(Self::encode_msg(private_key)?)
     }
 }
 
 #[cfg(feature = "pem")]
-impl PemLabel for RsaPrivateKey<'_> {
+impl<U> PemLabel for RsaPrivateKey<U> {
     const PEM_LABEL: &'static str = "RSA PRIVATE KEY";
 }
 
@@ -217,12 +250,12 @@ impl PemLabel for RsaPrivateKey<'_> {
 #[cfg(not(feature = "alloc"))]
 #[derive(Clone)]
 #[non_exhaustive]
-pub struct OtherPrimeInfos<'a> {
-    _lifetime: core::marker::PhantomData<&'a ()>,
+pub struct OtherPrimeInfos<U> {
+    _marker: core::marker::PhantomData<U>,
 }
 
 #[cfg(not(feature = "alloc"))]
-impl<'a> DecodeValue<'a> for OtherPrimeInfos<'a> {
+impl<'a, U> DecodeValue<'a> for OtherPrimeInfos<U> {
     type Error = der::Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> der::Result<Self> {
@@ -233,7 +266,7 @@ impl<'a> DecodeValue<'a> for OtherPrimeInfos<'a> {
 }
 
 #[cfg(not(feature = "alloc"))]
-impl EncodeValue for OtherPrimeInfos<'_> {
+impl<U> EncodeValue for OtherPrimeInfos<U> {
     fn value_len(&self) -> der::Result<Length> {
         // Placeholder decoder that always returns an error.
         // Uses `Tag::Integer` to signal an unsupported version.
@@ -248,10 +281,10 @@ impl EncodeValue for OtherPrimeInfos<'_> {
 }
 
 #[cfg(not(feature = "alloc"))]
-impl der::FixedTag for OtherPrimeInfos<'_> {
+impl<U> der::FixedTag for OtherPrimeInfos<U> {
     const TAG: Tag = Tag::Sequence;
 }
 
 /// Additional RSA prime info in a multi-prime RSA key.
 #[cfg(feature = "alloc")]
-pub type OtherPrimeInfos<'a> = Vec<OtherPrimeInfo<'a>>;
+pub type OtherPrimeInfos<U> = Vec<OtherPrimeInfo<U>>;

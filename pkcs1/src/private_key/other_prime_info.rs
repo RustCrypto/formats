@@ -1,8 +1,6 @@
 //! PKCS#1 OtherPrimeInfo support.
 
-use der::{
-    DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Writer, asn1::UintRef,
-};
+use der::{Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequence, Writer};
 
 /// PKCS#1 OtherPrimeInfo as defined in [RFC 8017 Appendix 1.2].
 ///
@@ -18,18 +16,21 @@ use der::{
 ///
 /// [RFC 8017 Appendix 1.2]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.1.2
 #[derive(Clone)]
-pub struct OtherPrimeInfo<'a> {
+pub struct OtherPrimeInfo<U> {
     /// Prime factor `r_i` of `n`, where `i` >= 3.
-    pub prime: UintRef<'a>,
+    pub prime: U,
 
     /// Exponent: `d_i = d mod (r_i - 1)`.
-    pub exponent: UintRef<'a>,
+    pub exponent: U,
 
     /// CRT coefficient: `t_i = (r_1 * r_2 * ... * r_(i-1))^(-1) mod r_i`.
-    pub coefficient: UintRef<'a>,
+    pub coefficient: U,
 }
 
-impl<'a> DecodeValue<'a> for OtherPrimeInfo<'a> {
+impl<'a, U> DecodeValue<'a> for OtherPrimeInfo<U>
+where
+    U: Decode<'a, Error = der::Error>,
+{
     type Error = der::Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, _header: Header) -> der::Result<Self> {
@@ -41,7 +42,10 @@ impl<'a> DecodeValue<'a> for OtherPrimeInfo<'a> {
     }
 }
 
-impl EncodeValue for OtherPrimeInfo<'_> {
+impl<U> EncodeValue for OtherPrimeInfo<U>
+where
+    U: Encode,
+{
     fn value_len(&self) -> der::Result<Length> {
         self.prime.encoded_len()? + self.exponent.encoded_len()? + self.coefficient.encoded_len()?
     }
@@ -54,4 +58,4 @@ impl EncodeValue for OtherPrimeInfo<'_> {
     }
 }
 
-impl<'a> Sequence<'a> for OtherPrimeInfo<'a> {}
+impl<U> Sequence<'_> for OtherPrimeInfo<U> {}
