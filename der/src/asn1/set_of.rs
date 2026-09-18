@@ -167,10 +167,7 @@ where
             let item = T::decode(&mut reader)?;
 
             if let Some(last_item) = last_item {
-                // Ensure that the set obeys ordering rules
-                if matches!(last_item.der_cmp(&item), Ok(Ordering::Greater)) {
-                    return Err(Error::from_kind(ErrorKind::SetOrdering).into());
-                }
+                check_der_ordering(&last_item, &item)?;
             }
             last_item = Some(item);
             iter_len += 1;
@@ -364,7 +361,7 @@ where
 
     fn try_from(arr: &'a [T]) -> Result<SetOfRef<'a, T>, Error> {
         arr.iter()
-            .is_sorted_by(|a, b| !matches!(a.der_cmp(b), Ok(Ordering::Greater)))
+            .is_sorted_by(|&a, &b| check_der_ordering(a, b).is_ok())
             .then_some(SetOfRef {
                 inner: InnerRef::ObjectsRef(arr),
             })
