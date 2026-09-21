@@ -229,7 +229,7 @@ impl EncryptionKey {
                         key_size,
                     ),
                     #[cfg(feature = "belt")]
-                    Pbkdf2Prf::HmacHbelt => EncryptionKey::derive_with_pbkdf2::<BeltHash>(
+                    Pbkdf2Prf::HmacHbelt => EncryptionKey::derive_with_pbkdf2::<belt_hash::BeltHash>(
                         password,
                         pbkdf2_params,
                         key_size,
