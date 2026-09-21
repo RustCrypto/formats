@@ -74,7 +74,7 @@ impl Position {
     /// A [`Resumption`] value which can be used to continue parsing the outer message.
     pub(super) fn split_nested(&mut self, len: Length) -> Result<Resumption> {
         match self.depth.checked_add(1) {
-            Some(depth) if depth < Self::MAX_DEPTH => self.depth = depth,
+            Some(depth) if depth <= Self::MAX_DEPTH => self.depth = depth,
             _ => return Err(self.error(ErrorKind::NestingDepth)),
         }
 

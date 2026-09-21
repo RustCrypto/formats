@@ -3,7 +3,7 @@
 use super::value_cmp;
 use crate::{
     AnyRef, BytesRef, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
-    Result, Tag, ValueOrd, Writer, ord::OrdIsValueOrd,
+    Result, Tag, ValueOrd, Writer, asn1::integer::AsUintRef, ord::OrdIsValueOrd,
 };
 use core::cmp::Ordering;
 
@@ -169,12 +169,19 @@ impl FixedTag for UintRef<'_> {
 
 impl OrdIsValueOrd for UintRef<'_> {}
 
+impl AsUintRef for UintRef<'_> {
+    fn as_uint_ref<'a>(&'a self) -> UintRef<'a> {
+        *self
+    }
+}
+
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::{UintRef, decode_to_slice, encoded_len, strip_leading_zeroes};
     use crate::{
         BytesOwned, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
         Result, Tag, Writer,
+        asn1::integer::AsUintRef,
         ord::OrdIsValueOrd,
         referenced::{OwnedToRef, RefToOwned},
     };
@@ -284,6 +291,14 @@ mod allocating {
     impl OwnedToRef for Uint {
         type Borrowed<'a> = UintRef<'a>;
         fn owned_to_ref(&self) -> Self::Borrowed<'_> {
+            let inner = self.inner.as_ref();
+
+            UintRef { inner }
+        }
+    }
+
+    impl AsUintRef for Uint {
+        fn as_uint_ref<'a>(&'a self) -> UintRef<'a> {
             let inner = self.inner.as_ref();
 
             UintRef { inner }

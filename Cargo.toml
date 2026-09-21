@@ -63,6 +63,10 @@ x509-ocsp = { path = "./x509-ocsp" }
 # TODO: Remove after https://github.com/RustCrypto/key-wraps/pull/98
 belt-kwp = { git = "https://github.com/makavity/key-wraps.git" }
 
+# RSA: refactor: use *Ref (or *Owned) der types from RustCrypto/formats - #706
+rsa = { git = "https://github.com/dishmaker/RSA.git", rev = "96c97ec3e8b2bedde44f5954334618bec87a19c3" }
+
+
 [workspace.lints.clippy]
 borrow_as_ptr = "warn"
 cast_lossless = "warn"
@@ -72,7 +76,6 @@ cast_precision_loss = "warn"
 cast_sign_loss = "warn"
 checked_conversions = "warn"
 doc_markdown = "warn"
-from_iter_instead_of_collect = "warn"
 implicit_saturating_sub = "warn"
 manual_assert = "warn"
 map_unwrap_or = "warn"

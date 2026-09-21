@@ -11,8 +11,8 @@
 #![cfg(any(feature = "alloc", feature = "heapless"))]
 
 use crate::{
-    AnyRef, Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error, ErrorKind, FixedTag, Header,
-    Length, Reader, SliceReader, Tag, ValueOrd, Writer, ord::iter_cmp, ord::iter_cmp_owned,
+    Decode, DecodeValue, DerOrd, Encode, EncodeValue, Error, ErrorKind, FixedTag, Header, Length,
+    Reader, SliceReader, Tag, ValueOrd, Writer, ord::iter_cmp, ord::iter_cmp_owned,
 };
 use core::cmp::Ordering;
 
@@ -153,27 +153,30 @@ where
 {
     /// Creates a [`SetOfRef`] by parsing the *contents* of a DER-encoded `SET OF` —
     /// that is, the raw bytes after the tag and length bytes have been stripped.
-    fn from_bytes(v: &'a [u8]) -> Result<Self, Error> {
+    fn from_bytes(v: &'a [u8]) -> Result<Self, T::Error> {
+        // Cache len for .iter() calls
+        let mut iter_len = 0;
+
         // Make sure we can decode valid objects from the bytes
         let mut reader = SliceReader::new(v)?;
 
-        let mut iter_len = 0;
+        // Remember last item to check ordering
+        let mut last_item: Option<T> = None;
+
         while !reader.is_finished() {
-            AnyRef::decode(&mut reader).map_err(|_| Error::from_kind(ErrorKind::Failed))?;
+            let item = T::decode(&mut reader)?;
+
+            if let Some(last_item) = last_item {
+                check_der_ordering(&last_item, &item)?;
+            }
+            last_item = Some(item);
             iter_len += 1;
         }
 
         // Generate the set as a byte reference
-        let new_set = Self {
+        Ok(Self {
             inner: InnerRef::BytesRef(v, iter_len),
-        };
-
-        // Assert the constructed set obeys ordering rules
-        new_set
-            .iter()
-            .is_sorted_by(|a, b| !matches!(a.der_cmp(b), Ok(Ordering::Greater)))
-            .then_some(new_set)
-            .ok_or_else(|| Error::from_kind(ErrorKind::SetOrdering))
+        })
     }
 
     /// Get the nth element from this [`SetOfRef`].
@@ -269,7 +272,7 @@ where
     T: Clone,
     T: Decode<'a> + DerOrd,
 {
-    type Error = Error;
+    type Error = T::Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Self::Error> {
         let inner_slice: &'a [u8] = reader.read_slice(header.length())?;
@@ -358,7 +361,7 @@ where
 
     fn try_from(arr: &'a [T]) -> Result<SetOfRef<'a, T>, Error> {
         arr.iter()
-            .is_sorted_by(|a, b| !matches!(a.der_cmp(b), Ok(Ordering::Greater)))
+            .is_sorted_by(|&a, &b| check_der_ordering(a, b).is_ok())
             .then_some(SetOfRef {
                 inner: InnerRef::ObjectsRef(arr),
             })
@@ -806,7 +809,7 @@ mod allocating {
 #[allow(clippy::unwrap_used)]
 mod tests {
 
-    use crate::ErrorKind;
+    use crate::{ErrorKind, Tag, asn1::OctetStringRef};
     #[cfg(feature = "alloc")]
     use {
         super::SetOfVec,
@@ -919,6 +922,21 @@ mod tests {
         let set1 = SetOfRef::try_from(arr1.as_ref()).unwrap();
         let set2 = SetOfRef::try_from(arr2.as_ref()).unwrap();
         assert_eq!(set1.der_cmp(&set2), Ok(Ordering::Greater));
+    }
+
+    #[test]
+    fn setofref_from_bytes_should_return_decode_error() {
+        let inner_slice = [0x04, 0x00, 0x05, 0x00];
+        let result = SetOfRef::<'_, &OctetStringRef>::from_bytes(&inner_slice);
+
+        assert_eq!(
+            result,
+            Err(ErrorKind::TagUnexpected {
+                expected: Some(Tag::OctetString),
+                actual: Tag::Null
+            }
+            .into())
+        );
     }
 
     #[cfg(feature = "alloc")]
