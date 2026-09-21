@@ -195,46 +195,47 @@ impl EncryptionKey {
 
         match kdf {
             Kdf::Pbkdf2(pbkdf2_params) => {
-                let key = match pbkdf2_params.prf {
-                    #[cfg(feature = "sha1-insecure")]
-                    Pbkdf2Prf::HmacWithSha1 => EncryptionKey::derive_with_pbkdf2::<sha1::Sha1>(
-                        password,
-                        pbkdf2_params,
-                        key_size,
-                    ),
-                    #[cfg(not(feature = "sha1-insecure"))]
-                    Pbkdf2Prf::HmacWithSha1 => {
-                        return Err(Error::UnsupportedAlgorithm {
-                            oid: super::HMAC_WITH_SHA1_OID,
-                        });
-                    }
-                    Pbkdf2Prf::HmacWithSha224 => EncryptionKey::derive_with_pbkdf2::<sha2::Sha224>(
-                        password,
-                        pbkdf2_params,
-                        key_size,
-                    ),
-                    Pbkdf2Prf::HmacWithSha256 => EncryptionKey::derive_with_pbkdf2::<sha2::Sha256>(
-                        password,
-                        pbkdf2_params,
-                        key_size,
-                    ),
-                    Pbkdf2Prf::HmacWithSha384 => EncryptionKey::derive_with_pbkdf2::<sha2::Sha384>(
-                        password,
-                        pbkdf2_params,
-                        key_size,
-                    ),
-                    Pbkdf2Prf::HmacWithSha512 => EncryptionKey::derive_with_pbkdf2::<sha2::Sha512>(
-                        password,
-                        pbkdf2_params,
-                        key_size,
-                    ),
-                    #[cfg(feature = "belt")]
-                    Pbkdf2Prf::HmacHbelt => EncryptionKey::derive_with_pbkdf2::<belt_hash::BeltHash>(
-                        password,
-                        pbkdf2_params,
-                        key_size,
-                    ),
-                };
+                let key =
+                    match pbkdf2_params.prf {
+                        #[cfg(feature = "sha1-insecure")]
+                        Pbkdf2Prf::HmacWithSha1 => EncryptionKey::derive_with_pbkdf2::<sha1::Sha1>(
+                            password,
+                            pbkdf2_params,
+                            key_size,
+                        ),
+                        #[cfg(not(feature = "sha1-insecure"))]
+                        Pbkdf2Prf::HmacWithSha1 => {
+                            return Err(Error::UnsupportedAlgorithm {
+                                oid: super::HMAC_WITH_SHA1_OID,
+                            });
+                        }
+                        Pbkdf2Prf::HmacWithSha224 => EncryptionKey::derive_with_pbkdf2::<
+                            sha2::Sha224,
+                        >(
+                            password, pbkdf2_params, key_size
+                        ),
+                        Pbkdf2Prf::HmacWithSha256 => EncryptionKey::derive_with_pbkdf2::<
+                            sha2::Sha256,
+                        >(
+                            password, pbkdf2_params, key_size
+                        ),
+                        Pbkdf2Prf::HmacWithSha384 => EncryptionKey::derive_with_pbkdf2::<
+                            sha2::Sha384,
+                        >(
+                            password, pbkdf2_params, key_size
+                        ),
+                        Pbkdf2Prf::HmacWithSha512 => EncryptionKey::derive_with_pbkdf2::<
+                            sha2::Sha512,
+                        >(
+                            password, pbkdf2_params, key_size
+                        ),
+                        #[cfg(feature = "belt")]
+                        Pbkdf2Prf::HmacHbelt => EncryptionKey::derive_with_pbkdf2::<
+                            belt_hash::BeltHash,
+                        >(
+                            password, pbkdf2_params, key_size
+                        ),
+                    };
 
                 Ok(key)
             }
