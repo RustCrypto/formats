@@ -5,7 +5,7 @@ use core::fmt;
 use der::{
     Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Sequence, TagMode,
     TagNumber, Writer,
-    asn1::{AnyRef, BitStringRef, ContextSpecific, OctetStringRef, SequenceRef},
+    asn1::{AnyRef, AsBitStringRef, BitStringRef, ContextSpecific, OctetStringRef, SequenceRef},
 };
 use spki::AlgorithmIdentifier;
 
@@ -444,15 +444,18 @@ pub type PrivateKeyInfoRef<'a> = PrivateKeyInfo<AnyRef<'a>, &'a OctetStringRef, 
 
 /// [`BitStringLike`] marks object that will act like a `BitString`.
 ///
-/// It will allow to get a [`BitStringRef`] that points back to the underlying bytes.
-// TODO(tarcieri): replace this with `AsRef<BitStringRef>` when we can have `&BitStringRef`.
+/// Note: this trait was replaced by [`AsBitStringRef`]
+// TODO: replace this with `der::asn1::AsBitStringRef`
 pub trait BitStringLike {
     fn as_bit_string(&self) -> BitStringRef<'_>;
 }
 
-impl BitStringLike for BitStringRef<'_> {
+impl<T> BitStringLike for T
+where
+    T: AsBitStringRef,
+{
     fn as_bit_string(&self) -> BitStringRef<'_> {
-        BitStringRef::from(self)
+        self.as_bit_string_ref()
     }
 }
 
@@ -544,12 +547,6 @@ pub(crate) mod allocating {
                 private_key: self.private_key.borrow(),
                 public_key: self.public_key.owned_to_ref(),
             }
-        }
-    }
-
-    impl BitStringLike for BitString {
-        fn as_bit_string(&self) -> BitStringRef<'_> {
-            BitStringRef::from(self)
         }
     }
 }
