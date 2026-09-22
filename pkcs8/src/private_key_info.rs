@@ -445,7 +445,9 @@ pub type PrivateKeyInfoRef<'a> = PrivateKeyInfo<AnyRef<'a>, &'a OctetStringRef, 
 /// [`BitStringLike`] marks object that will act like a `BitString`.
 ///
 /// It will allow to get a [`BitStringRef`] that points back to the underlying bytes.
-// TODO(tarcieri): replace this with `AsRef<BitStringRef>` when we can have `&BitStringRef`.
+///
+/// Note: This trait will be replaced with [`der::asn1::AsBitStringRef`].
+// TODO: replace with `der::asn1::AsBitStringRef` (#2434)
 pub trait BitStringLike {
     fn as_bit_string(&self) -> BitStringRef<'_>;
 }
