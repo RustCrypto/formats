@@ -159,6 +159,7 @@ impl<Params, Key, PubKey> PrivateKeyInfo<Params, Key, PubKey> {
     }
 }
 
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -219,6 +220,7 @@ where
     }
 }
 
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: der::Choice<'a> + Encode,
@@ -279,6 +281,7 @@ where
     }
 }
 
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> EncodeValue for PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -301,6 +304,7 @@ where
     }
 }
 
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> Sequence<'a> for PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -311,6 +315,7 @@ where
 {
 }
 
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> TryFrom<&'a [u8]> for PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -341,6 +346,7 @@ where
 }
 
 #[cfg(feature = "alloc")]
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> TryFrom<PrivateKeyInfo<Params, Key, PubKey>> for SecretDocument
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -357,6 +363,7 @@ where
 }
 
 #[cfg(feature = "alloc")]
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> TryFrom<&PrivateKeyInfo<Params, Key, PubKey>> for SecretDocument
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -445,11 +452,13 @@ pub type PrivateKeyInfoRef<'a> = PrivateKeyInfo<AnyRef<'a>, &'a OctetStringRef, 
 /// [`BitStringLike`] marks object that will act like a `BitString`.
 ///
 /// Note: this trait was replaced by [`AsBitStringRef`]
+#[deprecated(since = "0.11.1", note = "Use `AsBitStringRef` instead")]
 // TODO: replace this with `der::asn1::AsBitStringRef`
 pub trait BitStringLike {
     fn as_bit_string(&self) -> BitStringRef<'_>;
 }
 
+#[allow(deprecated)]
 impl<T> BitStringLike for T
 where
     T: AsBitStringRef,
