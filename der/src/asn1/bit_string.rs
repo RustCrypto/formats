@@ -256,11 +256,11 @@ impl FixedTag for BitStringRef<'_> {
 /// contains unused bits prefix and therefore cannot be a simple `&'a BitStringRef` slice.
 pub trait AsBitStringRef {
     /// Borrows the owned or ref `BIT STRING` as [`BitStringRef`]
-    fn as_bit_string(&self) -> BitStringRef<'_>;
+    fn as_bit_string_ref(&self) -> BitStringRef<'_>;
 }
 
 impl AsBitStringRef for BitStringRef<'_> {
-    fn as_bit_string(&self) -> BitStringRef<'_> {
+    fn as_bit_string_ref(&self) -> BitStringRef<'_> {
         *self
     }
 }
@@ -576,7 +576,7 @@ mod allocating {
     }
 
     impl AsBitStringRef for BitString {
-        fn as_bit_string(&self) -> BitStringRef<'_> {
+        fn as_bit_string_ref(&self) -> BitStringRef<'_> {
             BitStringRef::from(self)
         }
     }
