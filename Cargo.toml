@@ -60,6 +60,8 @@ tls_codec_derive = { path = "./tls_codec/derive" }
 x509-tsp = { path = "./x509-tsp" }
 x509-cert = { path = "./x509-cert" }
 x509-ocsp = { path = "./x509-ocsp" }
+# TODO: Remove after https://github.com/RustCrypto/key-wraps/pull/98
+belt-kwp = { git = "https://github.com/makavity/key-wraps.git" }
 
 # RSA: refactor: use *Ref (or *Owned) der types from RustCrypto/formats - #706
 rsa = { git = "https://github.com/dishmaker/RSA.git", rev = "96c97ec3e8b2bedde44f5954334618bec87a19c3" }

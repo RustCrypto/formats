@@ -134,6 +134,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "belt-block"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0304188fd8684b910d24cae451c724cd5140a037c407e696247e94bb57b06434"
+dependencies = [
+ "cipher",
+]
+
+[[package]]
+name = "belt-hash"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "84605d8024cc6794dc339947b933532675297372feef3ce1f45feeaa8da35fb8"
+dependencies = [
+ "belt-block",
+ "digest",
+]
+
+[[package]]
+name = "belt-kwp"
+version = "0.2.0"
+source = "git+https://github.com/makavity/key-wraps.git#d6da937ed135db2296f95f0f851800fff04b751d"
+dependencies = [
+ "belt-block",
+]
+
+[[package]]
 name = "bit-set"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1039,6 +1066,8 @@ dependencies = [
  "aead",
  "aes",
  "aes-gcm",
+ "belt-hash",
+ "belt-kwp",
  "cbc",
  "der",
  "des",
@@ -1318,8 +1347,7 @@ dependencies = [
 [[package]]
 name = "rsa"
 version = "0.10.0-rc.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30b2aa4ba0d89f73d1e332df05be0eeab8840351c36ca5654341dfdb57bb3caf"
+source = "git+https://github.com/dishmaker/RSA.git?rev=96c97ec3e8b2bedde44f5954334618bec87a19c3#96c97ec3e8b2bedde44f5954334618bec87a19c3"
 dependencies = [
  "const-oid",
  "crypto-bigint",

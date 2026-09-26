@@ -91,8 +91,39 @@ const ED25519_PKCS8_KEY_CIPHERTEXT_DESCBC: &[u8] = &hex!(
     93E4E3893840181FBC63D75297B416A0B96CB7F9AB45CEABA"
 );
 
+/// PBES2 + PBKDF2-HMAC-HBELT + belt-kwp256 `AlgorithmIdentifier`, taken from the
+/// STB 34.101.78 (`bpki`) private key container `cmd/test/zed.sk` shipped with
+/// [bee2], the reference implementation.
+///
+/// [bee2]: https://github.com/agievich/bee2
+#[cfg(feature = "belt")]
+const PBES2_PBKDF2_HBELT_BELT_KWP_ALG_ID: &[u8] = &hex!(
+    "304806092a864886f70d01050d303b302a06092a864886f70d01050c301d0408
+     0c7f910ebb68478502022710300d06092a7000020022652f0c0500300d06092a
+     7000020022651f490500"
+);
+
+/// Plaintext of the `bign-curve256v1` PKCS#8 private key wrapped by `zed.sk`.
+#[cfg(feature = "belt")]
+const BIGN_PKCS8_KEY_PLAINTEXT: &[u8] = &hex!(
+    "303f0201003018060a2a7000020022652d0201060a2a7000020022652d030104
+     200100000000000000000000000000000000000000000000000000000000000000"
+);
+
+/// `encryptedData` of `zed.sk`, i.e. the above key wrapped with belt-kwp256.
+#[cfg(feature = "belt")]
+const BIGN_PKCS8_KEY_CIPHERTEXT_BELT_KWP: &[u8] = &hex!(
+    "a3f18c851870081760a74c01d34581e45e9dd333cda723fed51e4525d81eb91b
+     02742e8ce72906e3dafb40e450b6e989bc832daa0bdd9b50128a10cca5e052d4
+     bb4383ef9b96d6af48830820fefe7cdc58"
+);
+
 /// Password used to encrypt the keys.
 const PASSWORD: &[u8] = b"hunter42"; // Bad password; don't actually use outside tests!
+
+/// Password protecting the `zed.sk` container.
+#[cfg(feature = "belt")]
+const BELT_PASSWORD: &[u8] = b"zed";
 
 #[test]
 fn decrypt_pbes2_pbkdf2_sha256_aes256cbc() {
@@ -126,4 +157,22 @@ fn decrypt_pbes2_pbkdf2_sha256_descbc() {
     let mut buffer = Vec::from(ED25519_PKCS8_KEY_CIPHERTEXT_DESCBC);
     let plaintext = scheme.decrypt_in_place(PASSWORD, &mut buffer).unwrap();
     assert_eq!(plaintext, ED25519_PKCS8_KEY_PLAINTEXT);
+}
+
+#[test]
+#[cfg(feature = "belt")]
+fn encrypt_decrypt_pbes2_pbkdf2_hbelt_belt_kwp() {
+    let scheme = pkcs5::EncryptionScheme::try_from(PBES2_PBKDF2_HBELT_BELT_KWP_ALG_ID).unwrap();
+
+    let mut buffer = Vec::from(BIGN_PKCS8_KEY_CIPHERTEXT_BELT_KWP);
+    let plaintext = scheme.decrypt_in_place(BELT_PASSWORD, &mut buffer).unwrap();
+    assert_eq!(plaintext, BIGN_PKCS8_KEY_PLAINTEXT);
+
+    let pos = BIGN_PKCS8_KEY_PLAINTEXT.len();
+    let mut buffer = Vec::from(BIGN_PKCS8_KEY_PLAINTEXT);
+    buffer.extend_from_slice(&[0u8; 16]);
+    let ciphertext = scheme
+        .encrypt_in_place(BELT_PASSWORD, &mut buffer, pos)
+        .unwrap();
+    assert_eq!(ciphertext, BIGN_PKCS8_KEY_CIPHERTEXT_BELT_KWP);
 }
