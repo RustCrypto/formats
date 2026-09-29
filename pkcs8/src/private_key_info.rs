@@ -5,7 +5,7 @@ use core::fmt;
 use der::{
     Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Sequence, TagMode,
     TagNumber, Writer,
-    asn1::{AnyRef, BitStringRef, ContextSpecific, OctetStringRef, SequenceRef},
+    asn1::{AnyRef, AsBitStringRef, BitStringRef, ContextSpecific, OctetStringRef, SequenceRef},
 };
 use spki::AlgorithmIdentifier;
 
@@ -87,6 +87,37 @@ const PUBLIC_KEY_TAG: TagNumber = TagNumber(1);
 /// PublicKey ::= BIT STRING
 /// ```
 ///
+/// # Example usage
+///
+/// As of `pkcs8-0.11.0`, `PrivateKeyInfo` was split into [`PrivateKeyInfoRef`] and
+#[cfg_attr(
+    feature = "alloc",
+    doc = "[`PrivateKeyInfoOwned`][`crate::PrivateKeyInfoOwned`]."
+)]
+#[cfg_attr(not(feature = "alloc"), doc = "`PrivateKeyInfoOwned`.")]
+///
+/// ```
+/// use pkcs8::PrivateKeyInfoRef;
+/// use der::{Decode, oid::ObjectIdentifier};
+/// use hex_literal::hex;
+///
+/// // Example private key
+/// let der_bytes = &hex!(
+///     "30 27" // PrivateKeyInfo
+///         "02 01 00" // Version
+///     "30 13" // AlgorithmIdentifier
+///         "06 07 2a 86 48 ce 3d 02 01" // oid: ecPublicKey
+///         "06 08 2a 86 48 ce 3d 03 01 07" // parameters: prime256v1
+///     "04 0D" // PrivateKey
+///         "50 72 69 76 6b 65 79 20 62 79 74 65 73" // "Privkey bytes"
+///     );
+/// let key = PrivateKeyInfoRef::from_der(der_bytes).unwrap();
+///
+/// assert_eq!(key.algorithm.oid, ObjectIdentifier::new_unwrap("1.2.840.10045.2.1"));
+/// assert_eq!(key.private_key.as_bytes(), "Privkey bytes".as_bytes());
+/// assert_eq!(key.public_key, None);
+/// ```
+///
 /// [RFC 5208]: https://tools.ietf.org/html/rfc5208
 /// [RFC 5958]: https://datatracker.ietf.org/doc/html/rfc5958
 /// [RFC 5208 Section 5]: https://tools.ietf.org/html/rfc5208#section-5
@@ -128,6 +159,7 @@ impl<Params, Key, PubKey> PrivateKeyInfo<Params, Key, PubKey> {
     }
 }
 
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -188,6 +220,7 @@ where
     }
 }
 
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: der::Choice<'a> + Encode,
@@ -248,6 +281,7 @@ where
     }
 }
 
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> EncodeValue for PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -270,6 +304,7 @@ where
     }
 }
 
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> Sequence<'a> for PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -280,6 +315,7 @@ where
 {
 }
 
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> TryFrom<&'a [u8]> for PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -310,6 +346,7 @@ where
 }
 
 #[cfg(feature = "alloc")]
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> TryFrom<PrivateKeyInfo<Params, Key, PubKey>> for SecretDocument
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -326,6 +363,7 @@ where
 }
 
 #[cfg(feature = "alloc")]
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> TryFrom<&PrivateKeyInfo<Params, Key, PubKey>> for SecretDocument
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -385,19 +423,48 @@ where
 }
 
 /// [`PrivateKeyInfo`] with [`AnyRef`] algorithm parameters, and `&[u8]` key.
+///
+/// ## Example usage
+///
+/// ```
+/// use pkcs8::PrivateKeyInfoRef;
+/// use der::{Decode, oid::ObjectIdentifier};
+/// use hex_literal::hex;
+///
+/// // Example private key
+/// let der_bytes = &hex!(
+///     "30 27" // PrivateKeyInfo
+///         "02 01 00" // Version
+///     "30 13" // AlgorithmIdentifier
+///         "06 07 2a 86 48 ce 3d 02 01" // oid: ecPublicKey
+///         "06 08 2a 86 48 ce 3d 03 01 07" // parameters: prime256v1
+///     "04 0D" // PrivateKey
+///         "50 72 69 76 6b 65 79 20 62 79 74 65 73" // "Privkey bytes"
+///     );
+/// let key = PrivateKeyInfoRef::from_der(der_bytes).unwrap();
+///
+/// assert_eq!(key.algorithm.oid, ObjectIdentifier::new_unwrap("1.2.840.10045.2.1"));
+/// assert_eq!(key.private_key.as_bytes(), "Privkey bytes".as_bytes());
+/// assert_eq!(key.public_key, None);
+/// ```
 pub type PrivateKeyInfoRef<'a> = PrivateKeyInfo<AnyRef<'a>, &'a OctetStringRef, BitStringRef<'a>>;
 
 /// [`BitStringLike`] marks object that will act like a `BitString`.
 ///
-/// It will allow to get a [`BitStringRef`] that points back to the underlying bytes.
-// TODO(tarcieri): replace this with `AsRef<BitStringRef>` when we can have `&BitStringRef`.
+/// Note: this trait was replaced by [`AsBitStringRef`]
+#[deprecated(since = "0.11.1", note = "Use `AsBitStringRef` instead")]
+// TODO: replace this with `der::asn1::AsBitStringRef`
 pub trait BitStringLike {
     fn as_bit_string(&self) -> BitStringRef<'_>;
 }
 
-impl BitStringLike for BitStringRef<'_> {
+#[allow(deprecated)]
+impl<T> BitStringLike for T
+where
+    T: AsBitStringRef,
+{
     fn as_bit_string(&self) -> BitStringRef<'_> {
-        BitStringRef::from(self)
+        self.as_bit_string_ref()
     }
 }
 
@@ -413,6 +480,38 @@ pub(crate) mod allocating {
     use der::DecodePem;
 
     /// [`PrivateKeyInfo`] with [`Any`] algorithm parameters, and `Box<[u8]>` key.
+    ///
+    #[cfg_attr(feature = "pem", doc = "## Example usage")]
+    #[cfg_attr(feature = "pem", doc = "")]
+    #[cfg_attr(feature = "pem", doc = "```")]
+    #[cfg_attr(feature = "pem", doc = "use pkcs8::PrivateKeyInfoOwned;")]
+    #[cfg_attr(feature = "pem", doc = "use der::{DecodePem, oid::ObjectIdentifier};")]
+    #[cfg_attr(feature = "pem", doc = "use hex_literal::hex;")]
+    #[cfg_attr(feature = "pem", doc = "")]
+    #[cfg_attr(feature = "pem", doc = "// Example private key")]
+    #[cfg_attr(feature = "pem", doc = "let pem_str = r#\"-----BEGIN PRIVATE KEY-----")]
+    #[cfg_attr(
+        feature = "pem",
+        doc = "MCcCAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEDVByaXZrZXkgYnl0ZXM="
+    )]
+    #[cfg_attr(feature = "pem", doc = "-----END PRIVATE KEY-----\"#;")]
+    #[cfg_attr(feature = "pem", doc = "")]
+    #[cfg_attr(
+        feature = "pem",
+        doc = "let key = PrivateKeyInfoOwned::from_pem(&pem_str).unwrap();"
+    )]
+    #[cfg_attr(feature = "pem", doc = "")]
+    #[cfg_attr(
+        feature = "pem",
+        doc = "assert_eq!(key.algorithm.oid, ObjectIdentifier::new_unwrap(\"1.2.840.10045.2.1\"));"
+    )]
+    #[cfg_attr(
+        feature = "pem",
+        doc = "assert_eq!(key.private_key.as_bytes(), \"Privkey bytes\".as_bytes());"
+    )]
+    #[cfg_attr(feature = "pem", doc = "assert_eq!(key.public_key, None);")]
+    #[cfg_attr(feature = "pem", doc = "```")]
+    ///
     pub type PrivateKeyInfoOwned = PrivateKeyInfo<Any, OctetString, BitString>;
 
     impl DecodePrivateKey for PrivateKeyInfoOwned {
@@ -457,12 +556,6 @@ pub(crate) mod allocating {
                 private_key: self.private_key.borrow(),
                 public_key: self.public_key.owned_to_ref(),
             }
-        }
-    }
-
-    impl BitStringLike for BitString {
-        fn as_bit_string(&self) -> BitStringRef<'_> {
-            BitStringRef::from(self)
         }
     }
 }

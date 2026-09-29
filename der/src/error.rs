@@ -232,7 +232,7 @@ pub enum ErrorKind {
     #[cfg(feature = "std")]
     Io(std::io::ErrorKind),
 
-    /// Indefinite length disallowed (or malformed when decoding BER)
+    /// Indefinite length invalid (disallowed in DER or malformed when decoding BER)
     IndefiniteLength,
 
     /// Incorrect length for a given field.
@@ -240,6 +240,9 @@ pub enum ErrorKind {
         /// Tag of the value being decoded.
         tag: Tag,
     },
+
+    /// Too many nested productions (i.e. TLV-in-TLV) encountered.
+    NestingDepth,
 
     /// Message is not canonically encoded.
     Noncanonical {
@@ -373,6 +376,7 @@ impl fmt::Display for ErrorKind {
             ErrorKind::Io(err) => write!(f, "I/O error: {err:?}"),
             ErrorKind::IndefiniteLength => write!(f, "indefinite length disallowed/malformed"),
             ErrorKind::Length { tag } => write!(f, "incorrect length for {tag}"),
+            ErrorKind::NestingDepth => write!(f, "too many nested productions encountered"),
             ErrorKind::Noncanonical { tag } => {
                 write!(f, "ASN.1 {tag} not canonically encoded as DER")
             }

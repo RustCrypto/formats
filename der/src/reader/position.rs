@@ -10,32 +10,27 @@ pub(super) struct Position {
 
     /// Position in the input buffer (in bytes after Base64 decoding).
     position: Length,
+
+    /// Number of nested productions encountered (i.e. depth in the call stack).
+    depth: usize,
 }
 
 impl Position {
+    /// Maximum number of nested messages we tolerate (prevents stack exhaustion).
+    const MAX_DEPTH: usize = 64;
+
     /// Create a new position tracker with the given overall length.
     pub(super) fn new(input_len: Length) -> Self {
         Self {
             input_len,
             position: Length::ZERO,
+            depth: 0,
         }
-    }
-
-    /// Get the input length.
-    pub(super) fn input_len(&self) -> Length {
-        self.input_len
-    }
-
-    /// Get the current position.
-    pub(super) fn current(&self) -> Length {
-        self.position
     }
 
     /// Advance the current position by the given amount.
     ///
-    /// # Returns
-    ///
-    /// The new current position.
+    /// Returns the new current position.
     pub(super) fn advance(&mut self, amount: Length) -> Result<Length> {
         let new_position = (self.position + amount)?;
 
@@ -51,12 +46,38 @@ impl Position {
         Ok(new_position)
     }
 
+    /// Get the current position.
+    pub(super) fn current(&self) -> Length {
+        self.position
+    }
+
+    /// Create new [`Error`] from the given [`ErrorKind`] which includes the current position.
+    pub(super) fn error(&mut self, kind: ErrorKind) -> Error {
+        kind.at(self.position)
+    }
+
+    /// Get the input length.
+    pub(super) fn input_len(&self) -> Length {
+        self.input_len
+    }
+
+    /// Get the remaining length.
+    pub(super) fn remaining_len(&self) -> Length {
+        debug_assert!(self.position <= self.input_len());
+        self.input_len.saturating_sub(self.position)
+    }
+
     /// Split a nested position tracker of the given size.
     ///
     /// # Returns
     ///
     /// A [`Resumption`] value which can be used to continue parsing the outer message.
     pub(super) fn split_nested(&mut self, len: Length) -> Result<Resumption> {
+        match self.depth.checked_add(1) {
+            Some(depth) if depth <= Self::MAX_DEPTH => self.depth = depth,
+            _ => return Err(self.error(ErrorKind::NestingDepth)),
+        }
+
         let nested_input_len = (self.position + len)?;
 
         if nested_input_len > self.input_len {
@@ -73,6 +94,7 @@ impl Position {
     /// Resume processing the rest of a message after processing a nested inner portion.
     pub(super) fn resume_nested(&mut self, resumption: Resumption) {
         self.input_len = resumption.input_len;
+        self.depth = self.depth.saturating_sub(1);
     }
 }
 

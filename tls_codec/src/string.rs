@@ -24,20 +24,20 @@ impl Size for &str {
 }
 
 impl SerializeBytes for String {
-    fn tls_serialize(&self) -> Result<alloc::vec::Vec<u8>, crate::Error> {
-        SerializeBytes::tls_serialize(&VLByteSlice(self.as_bytes()))
+    fn tls_serialize_bytes(&self) -> Result<alloc::vec::Vec<u8>, crate::Error> {
+        SerializeBytes::tls_serialize_bytes(&VLByteSlice(self.as_bytes()))
     }
 }
 
 impl SerializeBytes for str {
-    fn tls_serialize(&self) -> Result<alloc::vec::Vec<u8>, crate::Error> {
-        SerializeBytes::tls_serialize(&self.as_bytes())
+    fn tls_serialize_bytes(&self) -> Result<alloc::vec::Vec<u8>, crate::Error> {
+        SerializeBytes::tls_serialize_bytes(&self.as_bytes())
     }
 }
 
 impl SerializeBytes for &str {
-    fn tls_serialize(&self) -> Result<alloc::vec::Vec<u8>, crate::Error> {
-        SerializeBytes::tls_serialize(&self.as_bytes())
+    fn tls_serialize_bytes(&self) -> Result<alloc::vec::Vec<u8>, crate::Error> {
+        SerializeBytes::tls_serialize_bytes(&self.as_bytes())
     }
 }
 
@@ -173,7 +173,7 @@ mod tests {
             assert_eq!(s.tls_serialized_len(), 1);
         }
 
-        let buf = SerializeBytes::tls_serialize(&s).unwrap();
+        let buf = SerializeBytes::tls_serialize_bytes(&s).unwrap();
         assert_eq!(buf, [0]);
         assert_eq!(s.tls_serialized_len(), 1);
     }
@@ -190,7 +190,7 @@ mod tests {
             assert_eq!(s.tls_serialized_len(), 6);
         }
 
-        let buf = SerializeBytes::tls_serialize(&s).unwrap();
+        let buf = SerializeBytes::tls_serialize_bytes(&s).unwrap();
         // length prefix (5) + b"hello"
         assert_eq!(buf, [5, b'h', b'e', b'l', b'l', b'o']);
         assert_eq!(s.tls_serialized_len(), 6);
@@ -208,7 +208,7 @@ mod tests {
             assert_eq!(s.tls_serialized_len(), 3);
         }
 
-        let buf = SerializeBytes::tls_serialize(&s).unwrap();
+        let buf = SerializeBytes::tls_serialize_bytes(&s).unwrap();
         assert_eq!(buf, [2, 0xC3, 0xBC]);
         assert_eq!(s.tls_serialized_len(), 3);
     }

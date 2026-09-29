@@ -25,7 +25,7 @@ hex-literal = "1"
 tempfile = "3"
 
 [features]
-alloc = ["der/alloc", "zeroize"]
+alloc = ["der/alloc", "spki/alloc", "zeroize"]
 std = ["der/std", "alloc"]
 
 pem = ["alloc", "der/pem"]

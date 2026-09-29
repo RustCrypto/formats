@@ -40,7 +40,10 @@ mod traits;
 mod digest;
 
 pub use crate::{
-    algorithm::{AlgorithmIdentifier, AlgorithmIdentifierRef, AlgorithmIdentifierWithOid},
+    algorithm::{
+        AlgorithmIdentifier, AlgorithmIdentifierRef, AlgorithmIdentifierWithOid,
+        AsAlgorithmIdentifierRef,
+    },
     error::{Error, Result},
     spki::{SubjectPublicKeyInfo, SubjectPublicKeyInfoRef},
     traits::{AssociatedAlgorithmIdentifier, DecodePublicKey, SignatureAlgorithmIdentifier},

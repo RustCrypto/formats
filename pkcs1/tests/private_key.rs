@@ -1,7 +1,7 @@
 //! PKCS#1 private key tests
 
 use hex_literal::hex;
-use pkcs1::{RsaPrivateKey, Version};
+use pkcs1::{RsaPrivateKeyRef, Version};
 
 /// RSA-2048 PKCS#1 private key encoded as ASN.1 DER.
 ///
@@ -17,7 +17,7 @@ const RSA_2048_MULTI_PRIME_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048
 
 #[test]
 fn decode_rsa2048_der() {
-    let key = RsaPrivateKey::try_from(RSA_2048_DER_EXAMPLE).unwrap();
+    let key = RsaPrivateKeyRef::try_from(RSA_2048_DER_EXAMPLE).unwrap();
     assert_eq!(key.version(), Version::TwoPrime);
 
     // Extracted using:
@@ -70,7 +70,7 @@ fn decode_rsa2048_der() {
 
 #[test]
 fn decode_rsa4096_der() {
-    let key = RsaPrivateKey::try_from(RSA_4096_DER_EXAMPLE).unwrap();
+    let key = RsaPrivateKeyRef::try_from(RSA_4096_DER_EXAMPLE).unwrap();
     assert_eq!(key.version(), Version::TwoPrime);
 
     // Extracted using:
@@ -125,13 +125,13 @@ fn decode_rsa4096_der() {
 #[test]
 fn decode_rsa2048_multi_prime_der() {
     // Multi-prime RSA keys are unsupported when the alloc feature is disabled
-    assert!(RsaPrivateKey::try_from(RSA_2048_MULTI_PRIME_DER_EXAMPLE).is_err());
+    assert!(RsaPrivateKeyRef::try_from(RSA_2048_MULTI_PRIME_DER_EXAMPLE).is_err());
 }
 
 #[cfg(feature = "alloc")]
 #[test]
 fn decode_rsa2048_multi_prime_der() {
-    let key = RsaPrivateKey::try_from(RSA_2048_MULTI_PRIME_DER_EXAMPLE).unwrap();
+    let key = RsaPrivateKeyRef::try_from(RSA_2048_MULTI_PRIME_DER_EXAMPLE).unwrap();
     assert_eq!(key.version(), Version::Multi);
 
     // Extracted using:
@@ -204,7 +204,7 @@ fn decode_rsa2048_multi_prime_der() {
 
 #[test]
 fn private_key_to_public_key() {
-    let private_key = RsaPrivateKey::try_from(RSA_2048_DER_EXAMPLE).unwrap();
+    let private_key = RsaPrivateKeyRef::try_from(RSA_2048_DER_EXAMPLE).unwrap();
     let public_key = private_key.public_key();
 
     // Extracted using:

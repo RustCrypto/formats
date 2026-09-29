@@ -1,5 +1,4 @@
-// The benches intentionally exercise the deprecated `VLBytes`.
-#![allow(deprecated)]
+#![cfg_attr(feature = "future_deprecations", allow(deprecated))]
 
 use criterion::{BatchSize, Criterion};
 use criterion::{criterion_group, criterion_main};

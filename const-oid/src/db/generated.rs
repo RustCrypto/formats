@@ -2561,6 +2561,12 @@ pub mod rfc6109 {
     pub const PROVIDER_UNIT: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.3.6.1.4.1.16572.2.2.7");
 }
+pub mod rfc6211 {
+    pub const ID_AA_CMS_ALGORITHM_PROTECT: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.52");
+    pub const ID_AA_CMS_ALGORITHM_PROTECTION: crate::ObjectIdentifier =
+        crate::ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.52");
+}
 pub mod rfc6268 {
     pub const RSADSI: crate::ObjectIdentifier =
         crate::ObjectIdentifier::new_unwrap("1.2.840.113549");
@@ -5261,6 +5267,14 @@ pub const DB: super::Database<'static> = super::Database(&[
     (&rfc6109::MANAGED_DOMAINS, "managedDomains"),
     (&rfc6109::LDIF_LOCATION_URL, "LDIFLocationURL"),
     (&rfc6109::PROVIDER_UNIT, "providerUnit"),
+    (
+        &rfc6211::ID_AA_CMS_ALGORITHM_PROTECT,
+        "id-aa-cmsAlgorithmProtect",
+    ),
+    (
+        &rfc6211::ID_AA_CMS_ALGORITHM_PROTECTION,
+        "id-aa-CMSAlgorithmProtection",
+    ),
     (&rfc6268::RSADSI, "rsadsi"),
     (&rfc6268::ID_DATA, "id-data"),
     (&rfc6268::ID_SIGNED_DATA, "id-signedData"),

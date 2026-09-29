@@ -12,11 +12,12 @@
 //! This is in contrast to the default behaviour defined by RFC 9000 that allows
 //! up to 62-bit length values.
 
-// `VLBytes` and `SecretVLBytes` are kept around as deprecated types. The
-// internal trait impls for them and their use as building blocks for other
-// items in this module would otherwise emit deprecation warnings at every call
-// site within the crate.
-#![allow(deprecated)]
+// `VLBytes` and `SecretVLBytes` are only deprecated when the
+// `future_deprecations` feature is enabled. In that configuration, the internal
+// trait impls for them and their use as building blocks for other items in this
+// module would otherwise emit deprecation warnings at every call site within
+// the crate.
+#![cfg_attr(feature = "future_deprecations", allow(deprecated))]
 
 use super::alloc::vec::Vec;
 use core::fmt;
@@ -92,7 +93,6 @@ impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
     #[inline(always)]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let (length, mut remainder) = ContentLength::tls_deserialize_bytes(bytes)?;
-        let len_len = length.0.bytes_len();
         let length: usize = length.0.value().try_into()?;
 
         if length == 0 {
@@ -101,12 +101,29 @@ impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
         }
 
         let mut result = Vec::new();
-        let mut read = len_len;
-        while (read - len_len) < length {
+        let mut read = 0usize;
+        while read < length {
             let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
+            // Measure how many bytes the element actually consumed from the
+            // input rather than trusting `tls_serialized_len`.
+            let consumed = remainder.len() - next_remainder.len();
             remainder = next_remainder;
-            read += element.tls_serialized_len();
             result.push(element);
+            // A zero-length element would never advance `read`, causing an
+            // infinite loop that keeps allocating. Reject such input.
+            if consumed == 0 {
+                return Err(Error::DecodingError(
+                    "Vector element consumed 0 bytes; refusing to loop".into(),
+                ));
+            }
+            read += consumed;
+        }
+        // The declared length is authoritative: the elements must consume
+        // exactly `length` bytes, not overshoot it.
+        if read != length {
+            return Err(Error::DecodingError(format!(
+                "Vector length mismatch: declared {length} bytes but elements consumed {read}"
+            )));
         }
         Ok((result, remainder))
     }
@@ -114,12 +131,12 @@ impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
 
 impl SerializeBytes for VLBytes {
     #[inline(always)]
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         let content_length = self.as_slice().len();
         let length = ContentLength::from_usize(content_length)?;
         let len_len = length.0.bytes_len();
 
-        let mut out = Vec::with_capacity(content_length + len_len);
+        let mut out = Vec::with_capacity(crate::checked_alloc_len(content_length, len_len)?);
         out.resize(len_len, 0);
         length.0.write_bytes(&mut out)?;
 
@@ -137,28 +154,30 @@ impl SerializeBytes for VLBytes {
 
 impl SerializeBytes for &VLBytes {
     #[inline(always)]
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
-        (*self).tls_serialize()
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
+        (*self).tls_serialize_bytes()
     }
 }
 
 impl<T: SerializeBytes> SerializeBytes for &[T] {
     #[inline(always)]
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         // We need to pre-compute the length of the content.
         // This requires more computations but the other option would be to buffer
         // the entire content, which can end up requiring a lot of memory.
-        let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
+        let content_length = self.iter().try_fold(0usize, |acc, e| {
+            crate::checked_len_add(acc, e.tls_serialized_len())
+        })?;
         let length = ContentLength::from_usize(content_length)?;
         let len_len = length.0.bytes_len();
 
-        let mut out = Vec::with_capacity(content_length + len_len);
+        let mut out = Vec::with_capacity(crate::checked_alloc_len(content_length, len_len)?);
         out.resize(len_len, 0);
         length.0.write_bytes(&mut out)?;
 
         // Serialize the elements
         for e in self.iter() {
-            out.append(&mut e.tls_serialize()?);
+            out.append(&mut e.tls_serialize_bytes()?);
         }
         #[cfg(debug_assertions)]
         if out.len() - len_len != content_length {
@@ -171,21 +190,23 @@ impl<T: SerializeBytes> SerializeBytes for &[T] {
 
 impl<T: SerializeBytes> SerializeBytes for &Vec<T> {
     #[inline(always)]
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
-        self.as_slice().tls_serialize()
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
+        self.as_slice().tls_serialize_bytes()
     }
 }
 
 impl<T: SerializeBytes> SerializeBytes for Vec<T> {
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
-        self.as_slice().tls_serialize()
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
+        self.as_slice().tls_serialize_bytes()
     }
 }
 
 impl<T: Size> Size for &[T] {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
-        let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
+        let content_length = self
+            .iter()
+            .fold(0, |acc, e| crate::len_add(acc, e.tls_serialized_len()));
         let len_len = ContentLength::from_usize(content_length)
             .map(|content_length| content_length.0.bytes_len())
             .unwrap_or({
@@ -193,7 +214,7 @@ impl<T: Size> Size for &[T] {
                 // trait. Let's say there's no content for now.
                 0
             });
-        content_length + len_len
+        crate::len_add(content_length, len_len)
     }
 }
 
@@ -270,10 +291,12 @@ macro_rules! impl_vl_bytes_generic {
 /// This is faster than the generic version.
 #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
 #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
-#[deprecated(
-    since = "0.4.3",
-    note = "Use `VLByteVec` instead. `VLBytes` does not produce a compact serde representation \
+#[cfg_attr(
+    feature = "future_deprecations",
+    deprecated(
+        note = "Use `VLByteVec` instead. `VLBytes` does not produce a compact serde representation \
             of byte vectors. The serde format of `VLByteVec` is not compatible with `VLBytes`."
+    )
 )]
 pub struct VLBytes {
     vec: Vec<u8>,
@@ -507,7 +530,12 @@ mod serde_compat {
             where
                 A: de::SeqAccess<'de>,
             {
-                let mut out = Vec::with_capacity(seq.size_hint().unwrap_or(0));
+                // The size hint comes from untrusted, self-describing input
+                // (e.g. a CBOR/MessagePack array header can claim a huge
+                // length). Cap the up-front allocation and let the vector grow
+                // as elements actually arrive.
+                let cap = core::cmp::min(seq.size_hint().unwrap_or(0), crate::MAX_PREALLOC);
+                let mut out = Vec::with_capacity(cap);
                 while let Some(b) = seq.next_element::<u8>()? {
                     out.push(b);
                 }
@@ -570,27 +598,23 @@ impl Size for VLByteSlice<'_> {
 }
 
 impl SerializeBytes for ContentLength {
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
-        SerializeBytes::tls_serialize(&self.0)
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
+        SerializeBytes::tls_serialize_bytes(&self.0)
     }
 }
 
 impl SerializeBytes for VLByteSlice<'_> {
-    fn tls_serialize(&self) -> Result<Vec<u8>, Error> {
+    fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         // Get the byte length of the content and make sure it's not too
         // large (requires `mls` feature, so we also do it explicitly below).
         let content_len = self.0.len();
         let content_length = ContentLength::from_usize(content_len)?;
 
         let len_len = content_length.tls_serialized_len();
-        let total_len = content_len + len_len;
-
-        if total_len > isize::MAX as usize {
-            return Err(Error::InvalidVectorLength);
-        }
+        let total_len = crate::checked_alloc_len(content_len, len_len)?;
 
         let mut out = alloc::vec::Vec::with_capacity(total_len);
-        out.append(&mut SerializeBytes::tls_serialize(&content_length)?);
+        out.append(&mut SerializeBytes::tls_serialize_bytes(&content_length)?);
         out.extend(self.0);
 
         Ok(out)
@@ -633,18 +657,31 @@ pub mod rw {
     impl<T: Deserialize> Deserialize for Vec<T> {
         #[inline(always)]
         fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
-            let (length, len_len) = read_length(bytes)?;
+            let (length, _len_len) = read_length(bytes)?;
 
             if length == 0 {
                 // An empty vector.
                 return Ok(Vec::new());
             }
 
+            // The declared length is authoritative and delimits the vector's
+            // content. Bound the reader to exactly `length` bytes and decode
+            // elements until it is exhausted. This measures actual consumption
+            // instead of trusting `tls_serialized_len()`, keeping this in sync
+            // with the `DeserializeBytes` implementation for non-canonical
+            // encodings (e.g. non-minimal varint lengths).
+            let mut sub = std::io::Read::take(bytes, length as u64);
             let mut result = Vec::new();
-            let mut read = len_len;
-            while (read - len_len) < length {
-                let element = T::tls_deserialize(bytes)?;
-                read += element.tls_serialized_len();
+            while sub.limit() > 0 {
+                let before = sub.limit();
+                let element = T::tls_deserialize(&mut sub)?;
+                // A zero-length element would never advance the reader, causing
+                // an infinite loop that keeps allocating. Reject such input.
+                if sub.limit() == before {
+                    return Err(Error::DecodingError(
+                        "Vector element consumed 0 bytes; refusing to loop".into(),
+                    ));
+                }
                 result.push(element);
             }
             Ok(result)
@@ -672,7 +709,9 @@ pub mod rw {
             // We need to pre-compute the length of the content.
             // This requires more computations but the other option would be to buffer
             // the entire content, which can end up requiring a lot of memory.
-            let content_length = self.iter().fold(0, |acc, e| acc + e.tls_serialized_len());
+            let content_length = self.iter().try_fold(0usize, |acc, e| {
+                crate::checked_len_add(acc, e.tls_serialized_len())
+            })?;
             let len_len = write_length(writer, content_length)?;
 
             // Serialize the elements
@@ -692,7 +731,7 @@ pub mod rw {
                 return Err(Error::LibraryError);
             }
 
-            Ok(content_length + len_len)
+            crate::checked_len_add(content_length, len_len)
         }
     }
 }
@@ -701,7 +740,7 @@ pub mod rw {
 #[cfg(feature = "std")]
 mod rw_bytes {
     use super::*;
-    use crate::{Deserialize, Serialize};
+    use crate::{Deserialize, Serialize, read_bytes_bounded};
 
     #[inline(always)]
     fn tls_serialize_bytes<W: std::io::Write>(
@@ -743,11 +782,9 @@ mod rw_bytes {
                 return Ok(Self::new(vec![]));
             }
 
-            let mut result = Self {
-                vec: vec![0u8; length.0.value().try_into()?],
-            };
-            bytes.read_exact(result.vec.as_mut_slice())?;
-            Ok(result)
+            let len: usize = length.0.value().try_into()?;
+            let vec = read_bytes_bounded(bytes, len)?;
+            Ok(Self { vec })
         }
     }
 
@@ -773,11 +810,9 @@ mod rw_bytes {
                 return Ok(Self::new(vec![]));
             }
 
-            let mut result = Self {
-                vec: vec![0u8; length.0.value().try_into()?],
-            };
-            bytes.read_exact(result.vec.as_mut_slice())?;
-            Ok(result)
+            let len: usize = length.0.value().try_into()?;
+            let vec = read_bytes_bounded(bytes, len)?;
+            Ok(Self { vec })
         }
     }
 
@@ -804,10 +839,12 @@ mod secret_bytes {
     /// a [`Vec<u8>`].
     #[cfg_attr(feature = "serde", derive(SerdeSerialize, SerdeDeserialize))]
     #[derive(Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
-    #[deprecated(
-        since = "0.4.3",
-        note = "Use `SecretVLByteVec` instead. The serde format of `SecretVLByteVec` is not \
+    #[cfg_attr(
+        feature = "future_deprecations",
+        deprecated(
+            note = "Use `SecretVLByteVec` instead. The serde format of `SecretVLByteVec` is not \
                 compatible with `SecretVLBytes`."
+        )
     )]
     pub struct SecretVLBytes(VLBytes);
 

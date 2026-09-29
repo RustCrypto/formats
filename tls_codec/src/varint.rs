@@ -170,7 +170,7 @@ impl Serialize for TlsVarInt {
 
 impl SerializeBytes for TlsVarInt {
     #[inline]
-    fn tls_serialize(&self) -> Result<alloc::vec::Vec<u8>, Error> {
+    fn tls_serialize_bytes(&self) -> Result<alloc::vec::Vec<u8>, Error> {
         let len = self.bytes_len();
         let mut bytes = alloc::vec![0u8; len];
         self.write_bytes(&mut bytes)?;

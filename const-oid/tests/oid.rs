@@ -113,6 +113,35 @@ fn from_bytes_oid_largearc_2() {
     assert_eq!(ObjectIdentifier::from_bytes(&[]), Err(Error::Empty));
 }
 
+/// An arc whose base 128 encoding denotes a value greater than `u32::MAX` (the
+/// `Arc` bound) must be rejected rather than silently truncated by the decoder.
+///
+/// `u32::MAX` (`2A 8F FF FF FF 7F`) is the largest valid arc; incrementing the
+/// leading arc byte to `0x90` denotes `2^32` (and `... 05` denotes `2^32 + 5`),
+/// both of which exceed `u32::MAX`.
+#[test]
+fn from_bytes_reject_arc_above_u32_max() {
+    // Sanity check: the largest in-range arc (`u32::MAX`) still decodes.
+    assert_eq!(
+        ObjectIdentifier::from_bytes(&[0x2A, 0x8F, 0xFF, 0xFF, 0xFF, 0x7F])
+            .unwrap()
+            .arc(2),
+        Some(4294967295),
+    );
+
+    // `1.2.4294967296` (`2^32`) -- previously truncated to `1.2.0`.
+    assert_eq!(
+        ObjectIdentifier::from_bytes(&[0x2A, 0x90, 0x80, 0x80, 0x80, 0x00]),
+        Err(Error::ArcTooBig),
+    );
+
+    // `1.2.4294967301` (`2^32 + 5`) -- previously truncated to `1.2.5`.
+    assert_eq!(
+        ObjectIdentifier::from_bytes(&[0x2A, 0x90, 0x80, 0x80, 0x80, 0x05]),
+        Err(Error::ArcTooBig),
+    );
+}
+
 #[test]
 fn from_str() {
     let oid0 = EXAMPLE_OID_0_STR.parse::<ObjectIdentifier>().unwrap();

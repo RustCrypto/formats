@@ -1,5 +1,5 @@
 #![no_main]
-#![allow(deprecated)]
+#![cfg_attr(feature = "future_deprecations", allow(deprecated))]
 
 use libfuzzer_sys::fuzz_target;
 use tls_codec::{Deserialize, Serialize, Size};

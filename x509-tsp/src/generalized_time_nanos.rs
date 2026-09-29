@@ -49,6 +49,14 @@ impl GeneralizedTimeNanos {
             nanoseconds: unix_duration.subsec_nanos(),
         })
     }
+
+    /// Convert this [`GeneralizedTimeNanos`] into a [`DateTime`].
+    ///
+    /// Note: This looses the nanoseconds precision.
+    #[must_use]
+    pub const fn to_date_time(&self) -> DateTime {
+        self.datetime
+    }
 }
 
 impl From<GeneralizedTime> for GeneralizedTimeNanos {
