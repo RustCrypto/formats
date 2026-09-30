@@ -237,10 +237,11 @@ pub trait Builder: Sized {
     type Output: Sized;
 
     /// Assemble the final object from signature.
-    fn assemble<S>(self, signature: BitString, signer: &S) -> Result<Self::Output>
-    where
-        S: Keypair + DynSignatureAlgorithmIdentifier,
-        S::VerifyingKey: EncodePublicKey;
+    fn assemble(
+        self,
+        signature: BitString,
+        signature_algorithm: AlgorithmIdentifier,
+    ) -> Result<Self::Output>;
 
     /// Finalize and return a serialization of the object for signature.
     fn finalize<S>(&mut self, signer: &S) -> Result<vec::Vec<u8>>
@@ -297,7 +298,7 @@ pub trait Builder: Sized {
 
         let signature = signer.try_sign(&blob)?.to_bitstring()?;
 
-        self.assemble(signature, signer)
+        self.assemble(signature, signer.signature_algorithm_identifier()?)
     }
 
     /// Run the object through the signer and build it.
@@ -353,7 +354,7 @@ pub trait Builder: Sized {
 
         let signature = signer.try_sign_with_rng(rng, &blob)?.to_bitstring()?;
 
-        self.assemble(signature, signer)
+        self.assemble(signature, signer.signature_algorithm_identifier()?)
     }
 }
 
@@ -396,12 +397,12 @@ where
         self.tbs.to_der().map_err(Error::from)
     }
 
-    fn assemble<S>(self, signature: BitString, _signer: &S) -> Result<Self::Output>
-    where
-        S: Keypair + DynSignatureAlgorithmIdentifier,
-        S::VerifyingKey: EncodePublicKey,
-    {
-        let signature_algorithm = self.tbs.signature.clone();
+    fn assemble(
+        mut self,
+        signature: BitString,
+        signature_algorithm: AlgorithmIdentifier,
+    ) -> Result<Self::Output> {
+        self.tbs.signature = signature_algorithm.clone();
 
         Ok(Certificate {
             tbs_certificate: self.tbs,
@@ -422,10 +423,11 @@ pub trait AsyncBuilder: Sized {
     type Output: Sized;
 
     /// Assemble the final object from signature.
-    fn assemble<S>(self, signature: BitString, signer: &S) -> Result<Self::Output>
-    where
-        S: Keypair + DynSignatureAlgorithmIdentifier,
-        S::VerifyingKey: EncodePublicKey;
+    fn assemble(
+        self,
+        signature: BitString,
+        signature_algorithm: AlgorithmIdentifier,
+    ) -> Result<Self::Output>;
 
     /// Finalize and return a serialization of the object for signature.
     fn finalize<S>(&mut self, signer: &S) -> Result<vec::Vec<u8>>
@@ -485,7 +487,7 @@ pub trait AsyncBuilder: Sized {
 
         let signature = signer.sign_async(&blob).await?.to_bitstring()?;
 
-        self.assemble(signature, signer)
+        self.assemble(signature, signer.signature_algorithm_identifier()?)
     }
 
     /// Run the object through the signer and build it.
@@ -548,7 +550,7 @@ pub trait AsyncBuilder: Sized {
             .await?
             .to_bitstring()?;
 
-        self.assemble(signature, signer)
+        self.assemble(signature, signer.signature_algorithm_identifier()?)
     }
 }
 
@@ -558,12 +560,12 @@ where
 {
     type Output = <T as Builder>::Output;
 
-    fn assemble<S>(self, signature: BitString, signer: &S) -> Result<Self::Output>
-    where
-        S: Keypair + DynSignatureAlgorithmIdentifier,
-        S::VerifyingKey: EncodePublicKey,
-    {
-        <T as Builder>::assemble(self, signature, signer)
+    fn assemble(
+        self,
+        signature: BitString,
+        signature_algorithm: AlgorithmIdentifier,
+    ) -> Result<Self::Output> {
+        <T as Builder>::assemble(self, signature, signature_algorithm)
     }
 
     fn finalize<S>(&mut self, signer: &S) -> Result<vec::Vec<u8>>
@@ -685,12 +687,12 @@ where
         self.tbs.to_der().map_err(Error::from)
     }
 
-    fn assemble<S>(self, signature: BitString, _signer: &S) -> Result<Self::Output>
-    where
-        S: Keypair + DynSignatureAlgorithmIdentifier,
-        S::VerifyingKey: EncodePublicKey,
-    {
-        let signature_algorithm = self.tbs.signature.clone();
+    fn assemble(
+        mut self,
+        signature: BitString,
+        signature_algorithm: AlgorithmIdentifier,
+    ) -> Result<Self::Output> {
+        self.tbs.signature = signature_algorithm.clone();
 
         Ok(CertificateList {
             tbs_cert_list: self.tbs,
