@@ -352,6 +352,19 @@ impl<P: Profile> CertificateInner<P> {
     pub fn signature(&self) -> &BitString {
         &self.signature
     }
+
+    /// Construct a certificate from a TBS certificate, signature algorithm, and a signature.
+    pub fn from_parts(
+        tbs_certificate: TbsCertificateInner<P>,
+        signature_algorithm: AlgorithmIdentifier,
+        signature: BitString,
+    ) -> Self {
+        Self {
+            tbs_certificate,
+            signature_algorithm,
+            signature,
+        }
+    }
 }
 
 #[cfg(feature = "pem")]
