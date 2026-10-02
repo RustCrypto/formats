@@ -353,3 +353,36 @@ async fn async_builder() {
     let pem = certificate.to_pem(LineEnding::LF).expect("generate pem");
     println!("{}", openssl::check_certificate(pem.as_bytes()));
 }
+
+/// RFC 5280 4.2: "A certificate MUST NOT include more than one instance of a particular
+/// extension." An extension added by the user that the profile also adds is an error.
+#[test]
+fn reject_duplicate_extension() {
+    use x509_cert::{builder::Error, ext::pkix::BasicConstraints};
+
+    let subject = Name::from_str("CN=root,O=World domination Inc,C=US").unwrap();
+    let profile = profile::cabf::Root::new(false, subject).expect("create root profile");
+    let pub_key = SubjectPublicKeyInfo::try_from(PKCS8_PUBLIC_KEY_DER).expect("get ecdsa pub key");
+    let mut builder = CertificateBuilder::new(
+        profile,
+        SerialNumber::from(42u32),
+        Validity::from_now(Duration::new(5, 0)).unwrap(),
+        pub_key,
+    )
+    .expect("Create certificate");
+
+    // The Root profile adds BasicConstraints too.
+    builder
+        .add_extension(&BasicConstraints {
+            ca: true,
+            path_len_constraint: Some(1),
+        })
+        .unwrap();
+
+    let err = builder
+        .build::<_, DerSignature>(&ecdsa_signer())
+        .unwrap_err();
+    assert!(
+        matches!(err, Error::DuplicateExtension { oid } if oid == const_oid::db::rfc5280::ID_CE_BASIC_CONSTRAINTS)
+    );
+}
