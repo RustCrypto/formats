@@ -429,3 +429,31 @@ fn decode_given_name() {
     Name::from_str("GN=my_name,SN=my_sn").unwrap();
     Name::from_str("givenName=my_name,SN=my_sn").unwrap();
 }
+
+/// `countryName` and `serialNumber` are encoded as PrintableString, `domainComponent` and
+/// `emailAddress` as IA5String. A value outside that string type's character set must be
+/// rejected when parsing, as it is when decoding: otherwise the parsed name holds a string
+/// that its own type rejects (`country()` fails, Display falls back to hex).
+#[cfg(feature = "std")]
+#[test]
+fn from_str_rejects_invalid_string_for_type() {
+    use std::str::FromStr;
+
+    for s in ["C=a@b", "C=x*", "C=a;b", "C=\u{e9}", "serialNumber=a@b"] {
+        assert!(Name::from_str(s).is_err(), "{s}");
+    }
+    for s in ["DC=\u{e9}", "emailAddress=\u{e9}@example.com"] {
+        assert!(Name::from_str(s).is_err(), "{s}");
+    }
+
+    // Valid values still parse, and read back through their typed accessors.
+    let name = Name::from_str("C=US,serialNumber=0123-45,DC=example,emailAddress=a@b.c").unwrap();
+    assert_eq!(
+        <_ as AsRef<str>>::as_ref(&name.country().unwrap().unwrap()),
+        "US"
+    );
+    assert_eq!(
+        name.to_string(),
+        "C=US,SERIALNUMBER=0123-45,DC=example,EMAIL=a@b.c"
+    );
+}
