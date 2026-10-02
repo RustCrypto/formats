@@ -347,6 +347,12 @@ impl FromStr for RdnSequence {
     type Err = der::Error;
 
     fn from_str(s: &str) -> der::Result<Self> {
+        // RFC 4514 Section 3: `distinguishedName = [ relativeDistinguishedName *( COMMA ... ) ]`,
+        // so the empty string is the empty sequence (which is also what `Display` produces).
+        if s.is_empty() {
+            return Ok(Self::default());
+        }
+
         let mut parts = split(s, b',')
             .map(RelativeDistinguishedName::from_str)
             .collect::<der::Result<Vec<_>>>()?;
