@@ -682,6 +682,17 @@ where
     {
         self.tbs.signature = cert_signer.signature_algorithm_identifier()?;
 
+        // RFC 5280 5.1.2.6: "When there are no revoked certificates, the revoked certificates
+        // list MUST be absent."
+        if self
+            .tbs
+            .revoked_certificates
+            .as_ref()
+            .is_some_and(|revoked| revoked.is_empty())
+        {
+            self.tbs.revoked_certificates = None;
+        }
+
         self.tbs.to_der().map_err(Error::from)
     }
 
