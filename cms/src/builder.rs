@@ -290,11 +290,11 @@ impl Builder for SignerInfoBuilder<'_> {
         Ok(signed_attributes_der)
     }
 
-    fn assemble<S>(self, signature: BitString, signer: &S) -> builder::Result<Self::Output>
-    where
-        S: Keypair + DynSignatureAlgorithmIdentifier,
-        S::VerifyingKey: EncodePublicKey,
-    {
+    fn assemble(
+        self,
+        signature: BitString,
+        signature_algorithm: AlgorithmIdentifierOwned,
+    ) -> builder::Result<Self::Output> {
         let signed_attrs = self.signed_attributes.as_ref().map(|signed_attributes| {
             SignedAttributes::try_from(signed_attributes.to_owned()).unwrap()
         });
@@ -307,8 +307,6 @@ impl Builder for SignerInfoBuilder<'_> {
 
         let signature_value =
             SignatureValue::new(signature.raw_bytes()).map_err(builder::Error::from)?;
-
-        let signature_algorithm = signer.signature_algorithm_identifier()?;
 
         Ok(SignerInfo {
             version: self.version(),

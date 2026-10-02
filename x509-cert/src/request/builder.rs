@@ -3,7 +3,8 @@ use alloc::vec;
 use der::{Encode, asn1::BitString};
 use signature::Keypair;
 use spki::{
-    AlgorithmIdentifier, DynSignatureAlgorithmIdentifier, EncodePublicKey, SubjectPublicKeyInfo,
+    AlgorithmIdentifier, AlgorithmIdentifierOwned, DynSignatureAlgorithmIdentifier,
+    EncodePublicKey, SubjectPublicKeyInfo,
 };
 
 use crate::{
@@ -119,16 +120,14 @@ impl Builder for RequestBuilder {
         self.info.to_der().map_err(Error::from)
     }
 
-    fn assemble<S>(self, signature: BitString, signer: &S) -> Result<Self::Output>
-    where
-        S: Keypair + DynSignatureAlgorithmIdentifier,
-        S::VerifyingKey: EncodePublicKey,
-    {
-        let algorithm = signer.signature_algorithm_identifier()?;
-
+    fn assemble(
+        self,
+        signature: BitString,
+        signature_algorithm: AlgorithmIdentifierOwned,
+    ) -> Result<Self::Output> {
         Ok(CertReq {
             info: self.info,
-            algorithm,
+            algorithm: signature_algorithm,
             signature,
         })
     }
