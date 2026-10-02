@@ -4,7 +4,6 @@ use crate::{
     DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag,
     ValueOrd, Writer,
     datetime::{self, DateTime},
-    encode::encode_value_to_slice,
 };
 use core::{cmp::Ordering, time::Duration};
 
@@ -178,11 +177,20 @@ impl FixedTag for UtcTime {
 /// (2000) sorts before `991231235959Z` (1999).
 impl ValueOrd for UtcTime {
     fn value_cmp(&self, other: &Self) -> Result<Ordering> {
-        let mut buf1 = [0u8; Self::LENGTH];
-        let mut buf2 = [0u8; Self::LENGTH];
-        let a = encode_value_to_slice(&mut buf1, self)?;
-        let b = encode_value_to_slice(&mut buf2, other)?;
-        Ok(a.cmp(b))
+        // Every field is encoded as two decimal digits, so comparing the fields in order is
+        // comparing the encodings.
+        let fields = |t: &Self| {
+            let dt = &t.0;
+            (
+                dt.year() % 100,
+                dt.month(),
+                dt.day(),
+                dt.hour(),
+                dt.minutes(),
+                dt.seconds(),
+            )
+        };
+        Ok(fields(self).cmp(&fields(other)))
     }
 }
 
