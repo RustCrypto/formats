@@ -123,6 +123,18 @@ impl<T: Alphabet> Encoding for T {
 
         err |= ((c[0] | c[1] | c[2] | c[3] | c[4] | c[5] | c[6]) >> 8) as u8;
 
+        // RFC 4648 3.5: the unused low bits of the last symbol of a partial block must be zero
+        // (otherwise several encodings decode to the same bytes). A remainder of 2/4/5/7
+        // symbols leaves 2/4/1/3 unused bits in its last symbol.
+        let (last, unused_mask) = match src_rem.len() {
+            2 => (c[1], 0b11),
+            4 => (c[3], 0b1111),
+            5 => (c[4], 0b1),
+            7 => (c[6], 0b111),
+            _ => (0, 0),
+        };
+        err |= u8::from(last & unused_mask != 0);
+
         if err == 0 {
             Ok(dst)
         } else {
