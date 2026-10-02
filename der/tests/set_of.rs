@@ -23,6 +23,42 @@ proptest! {
     }
 }
 
+/// X.690 11.6: `SET OF` components are ordered by their encodings as octet strings, so the
+/// constructed bit (0x20) of the identifier octet orders before the tag number.
+mod encoding_order {
+    use der::{
+        Decode, Encode,
+        asn1::{Any, AnyRef, SetOfRef, SetOfVec},
+    };
+    use hex_literal::hex;
+
+    /// `SET OF { PrintableString "a", SEQUENCE {} }`: 0x13 < 0x30.
+    const SORTED: &[u8] = &hex!("3105 130161 3000");
+
+    #[test]
+    fn setofvec_encodes_in_octet_order() {
+        let mut set = SetOfVec::new();
+        set.insert(Any::from_der(&hex!("3000")).unwrap()).unwrap();
+        set.insert(Any::from_der(&hex!("130161")).unwrap()).unwrap();
+        assert_eq!(set.to_der().unwrap(), SORTED);
+    }
+
+    #[test]
+    fn setofref_accepts_octet_order() {
+        let set = SetOfRef::<AnyRef<'_>>::from_der(SORTED).unwrap();
+        assert_eq!(set.to_der().unwrap(), SORTED);
+    }
+
+    #[test]
+    fn constructed_bit_before_tag_number() {
+        // [APPLICATION 29] primitive (0x5d) before [APPLICATION 0] constructed (0x60)
+        let mut set = SetOfVec::new();
+        set.insert(Any::from_der(&hex!("6000")).unwrap()).unwrap();
+        set.insert(Any::from_der(&hex!("5d00")).unwrap()).unwrap();
+        assert_eq!(set.to_der().unwrap(), hex!("3104 5d00 6000"));
+    }
+}
+
 /// Set ordering tests.
 #[cfg(all(feature = "derive", feature = "oid"))]
 mod ordering {
