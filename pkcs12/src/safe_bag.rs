@@ -3,7 +3,7 @@
 use alloc::vec::Vec;
 use const_oid::ObjectIdentifier;
 use der::asn1::OctetString;
-use der::{AnyRef, Decode, Enumerated, Sequence};
+use der::{AnyRef, Decode, Enumerated, Sequence, Tagged};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::Attributes;
 
@@ -31,7 +31,7 @@ pub type SafeContents = Vec<SafeBag>;
 #[allow(missing_docs)]
 pub struct SafeBag {
     pub bag_id: ObjectIdentifier,
-    //#[asn1(context_specific = "0", tag_mode = "EXPLICIT")]
+    /// DER encoding of the complete `[0] EXPLICIT` field (tag, length and the bag value).
     pub bag_value: Vec<u8>,
     pub bag_attributes: Option<Attributes>,
 }
@@ -44,7 +44,9 @@ impl<'a> ::der::DecodeValue<'a> for SafeBag {
         _header: ::der::Header,
     ) -> ::der::Result<Self> {
         let bag_id = reader.decode()?;
-        let bag_value = reader.tlv_bytes()?.to_vec();
+        let bag_value = reader.tlv_bytes()?;
+        check_bag_value(bag_value)?;
+        let bag_value = bag_value.to_vec();
         let bag_attributes = reader.decode()?;
         Ok(Self {
             bag_id,
@@ -53,18 +55,26 @@ impl<'a> ::der::DecodeValue<'a> for SafeBag {
         })
     }
 }
+/// `bagValue` must be a single `[0] EXPLICIT` (context-specific, constructed) TLV.
+fn check_bag_value(bag_value: &[u8]) -> ::der::Result<()> {
+    let tag = AnyRef::from_der(bag_value)?.tag();
+    let expected = ::der::Tag::ContextSpecific {
+        constructed: true,
+        number: ::der::TagNumber(0),
+    };
+    if tag != expected {
+        return Err(tag.unexpected_error(Some(expected)).into());
+    }
+    Ok(())
+}
+
 impl ::der::EncodeValue for SafeBag {
     fn value_len(&self) -> ::der::Result<::der::Length> {
-        let content = AnyRef::from_der(&self.bag_value)?;
+        check_bag_value(&self.bag_value)?;
         use ::der::Encode as _;
         [
             self.bag_id.encoded_len()?,
-            ::der::asn1::ContextSpecificRef {
-                tag_number: ::der::TagNumber(0),
-                tag_mode: ::der::TagMode::Explicit,
-                value: &content,
-            }
-            .encoded_len()?,
+            ::der::Length::try_from(self.bag_value.len())?,
             self.bag_attributes.encoded_len()?,
         ]
         .into_iter()
@@ -73,13 +83,8 @@ impl ::der::EncodeValue for SafeBag {
     fn encode_value(&self, writer: &mut impl ::der::Writer) -> ::der::Result<()> {
         use ::der::Encode as _;
         self.bag_id.encode(writer)?;
-        let content = AnyRef::from_der(&self.bag_value)?;
-        ::der::asn1::ContextSpecificRef {
-            tag_number: ::der::TagNumber(0),
-            tag_mode: ::der::TagMode::Explicit,
-            value: &content,
-        }
-        .encode(writer)?;
+        check_bag_value(&self.bag_value)?;
+        writer.write(&self.bag_value)?;
         self.bag_attributes.encode(writer)?;
         Ok(())
     }
