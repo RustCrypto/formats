@@ -339,8 +339,7 @@ where
 
 /// Decode a SEC1-encoded point from hexadecimal.
 ///
-/// Upper and lower case hexadecimal are both accepted, however mixed case is
-/// rejected.
+/// Upper, lower, and mixed case hexadecimal are all accepted.
 impl<Size> str::FromStr for EncodedPoint<Size>
 where
     Size: ModulusSize,
@@ -795,6 +794,23 @@ mod tests {
         )
         .unwrap();
         assert_eq!(point.as_bytes(), COMPRESSED_BYTES);
+    }
+
+    #[test]
+    fn decode_hex_any_case() {
+        let upper = "02ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB";
+        let point = EncodedPoint::from_str(upper).unwrap();
+        assert_eq!(
+            EncodedPoint::from_str(&upper.to_lowercase()).unwrap(),
+            point
+        );
+        assert_eq!(
+            EncodedPoint::from_str(
+                "02aBABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+            )
+            .unwrap(),
+            point
+        );
     }
 
     #[cfg(feature = "alloc")]
