@@ -104,6 +104,17 @@ impl<T: Alphabet> Encoding for T {
     // TODO(tarcieri): explicitly checked/wrapped arithmetic
     #[allow(clippy::arithmetic_side_effects)]
     fn decode_in_place(mut buf: &mut [u8]) -> Result<&[u8], InvalidEncodingError> {
+        // The input is overwritten while decoding: keep a copy of its last block (at most 4
+        // bytes, including any padding) so the decoded result can be validated against it like
+        // `decode` does (non-zero trailing bits must be rejected).
+        let mut last_block = [0u8; 4];
+        let last_block_len = match buf.len() % 4 {
+            0 => buf.len().min(4),
+            r => r,
+        };
+        last_block[..last_block_len].copy_from_slice(&buf[buf.len() - last_block_len..]);
+        let last_block = &last_block[..last_block_len];
+
         // TODO: eliminate unsafe code when LLVM12 is stable
         // See: https://github.com/rust-lang/rust/issues/80963
         let mut err = if T::PADDED {
@@ -162,8 +173,10 @@ impl<T: Alphabet> Encoding for T {
                     buf.as_mut_ptr().add(dst_rem_pos),
                     dst_rem_len,
                 );
-                Ok(buf.get_unchecked(..dlen))
             }
+            let decoded = &buf[..dlen];
+            validate_last_block::<T>(last_block, decoded).map_err(|_| InvalidEncodingError)?;
+            Ok(decoded)
         } else {
             Err(InvalidEncodingError)
         }
