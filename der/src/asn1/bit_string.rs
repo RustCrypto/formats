@@ -626,14 +626,24 @@ impl<T: flagset::Flags> FixedTag for flagset::FlagSet<T> {
     const TAG: Tag = BitStringRef::TAG;
 }
 
+/// Compares the BIT STRING encodings (X.690 11.6 orders `SET OF` components by their
+/// encodings). The encoding puts flag 0 in the most significant bit of the first octet and drops
+/// trailing zero bits, so this differs from comparing [`FlagSet::bits`][flagset::FlagSet::bits]
+/// as an integer.
 #[cfg(feature = "flagset")]
 impl<T> ValueOrd for flagset::FlagSet<T>
 where
     T: flagset::Flags,
-    T::Type: Ord,
+    T::Type: From<bool>,
+    T::Type: core::ops::Shl<usize, Output = T::Type>,
+    u128: From<T::Type>,
 {
     fn value_cmp(&self, other: &Self) -> Result<Ordering> {
-        Ok(self.bits().cmp(&other.bits()))
+        let mut buf1 = [0u8; 17];
+        let mut buf2 = [0u8; 17];
+        let a = crate::encode::encode_value_to_slice(&mut buf1, self)?;
+        let b = crate::encode::encode_value_to_slice(&mut buf2, other)?;
+        Ok(a.cmp(b))
     }
 }
 
@@ -765,5 +775,36 @@ mod tests {
         let bs1 = parse_bitstring(&hex!("00010204")).unwrap();
         let bs2 = parse_bitstring(&hex!("00010203")).unwrap();
         assert_eq!(bs1.der_cmp(&bs2), Ok(Ordering::Greater));
+    }
+
+    #[cfg(feature = "flagset")]
+    #[test]
+    fn flagset_valueord_is_encoding_order() {
+        use crate::{DerOrd, Encode, ValueOrd};
+
+        flagset::flags! {
+            enum Flags: u16 {
+                A, B, C, D, E, F, G, H, I,
+            }
+        }
+
+        // {A} encodes as `03 02 07 80`, {B} as `03 02 06 40`: {B} sorts first.
+        let a = flagset::FlagSet::from(Flags::A);
+        let b = flagset::FlagSet::from(Flags::B);
+        assert_eq!(b.value_cmp(&a), Ok(Ordering::Less));
+        assert_eq!(a.der_cmp(&b), Ok(Ordering::Greater));
+
+        // every pair agrees with the order of the encodings
+        let all: [flagset::FlagSet<Flags>; 512] =
+            core::array::from_fn(|i| flagset::FlagSet::new(u16::try_from(i).unwrap()).unwrap());
+        for x in &all {
+            for y in &all {
+                let mut bx = [0u8; 8];
+                let mut by = [0u8; 8];
+                let ex = x.encode_to_slice(&mut bx).unwrap();
+                let ey = y.encode_to_slice(&mut by).unwrap();
+                assert_eq!(x.der_cmp(y), Ok(ex.cmp(ey)), "{x:?} vs {y:?}");
+            }
+        }
     }
 }
