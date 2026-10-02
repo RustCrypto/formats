@@ -112,9 +112,13 @@ impl Builder for RequestBuilder {
         let public_key = SubjectPublicKeyInfo::from_key(&verifying_key)?;
         self.info.public_key = public_key;
 
-        self.info
-            .attributes
-            .insert(self.extension_req.clone().try_into()?)?;
+        // `ExtensionReq ::= SEQUENCE SIZE (1..MAX) OF Extension` (RFC 2985 5.4.2): only include
+        // the extensionRequest attribute when there is at least one extension.
+        if !self.extension_req.0.is_empty() {
+            self.info
+                .attributes
+                .insert(self.extension_req.clone().try_into()?)?;
+        }
 
         self.info.to_der().map_err(Error::from)
     }
