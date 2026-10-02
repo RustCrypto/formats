@@ -2,11 +2,11 @@
 
 use crate::{
     DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader, Result, Tag,
-    Writer,
+    ValueOrd, Writer,
     datetime::{self, DateTime},
-    ord::OrdIsValueOrd,
+    encode::encode_value_to_slice,
 };
-use core::time::Duration;
+use core::{cmp::Ordering, time::Duration};
 
 #[cfg(feature = "std")]
 use std::time::SystemTime;
@@ -173,7 +173,18 @@ impl FixedTag for UtcTime {
     const TAG: Tag = Tag::UtcTime;
 }
 
-impl OrdIsValueOrd for UtcTime {}
+/// Compares the `YYMMDDHHMMSSZ` encodings (X.690 11.6 orders `SET OF` components by their
+/// encodings), which differs from [`Ord`] (chronological) across 2000: `000101000000Z`
+/// (2000) sorts before `991231235959Z` (1999).
+impl ValueOrd for UtcTime {
+    fn value_cmp(&self, other: &Self) -> Result<Ordering> {
+        let mut buf1 = [0u8; Self::LENGTH];
+        let mut buf2 = [0u8; Self::LENGTH];
+        let a = encode_value_to_slice(&mut buf1, self)?;
+        let b = encode_value_to_slice(&mut buf2, other)?;
+        Ok(a.cmp(b))
+    }
+}
 
 impl From<&UtcTime> for UtcTime {
     fn from(value: &UtcTime) -> UtcTime {
@@ -255,8 +266,20 @@ impl<'a> arbitrary::Arbitrary<'a> for UtcTime {
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::UtcTime;
-    use crate::{Decode, Encode, SliceWriter};
+    use crate::{Decode, DerOrd, Encode, SliceWriter, ValueOrd};
+    use core::cmp::Ordering;
     use hex_literal::hex;
+
+    #[test]
+    fn value_ord_is_encoding_order() {
+        // 1999-12-31 encodes as "99...", 2000-01-01 as "00...": X.690 11.6 puts 2000 first.
+        let y1999 = UtcTime::from_der(&hex!("170d 3939313233313233353935395a")).unwrap();
+        let y2000 = UtcTime::from_der(&hex!("170d 3030303130313030303030305a")).unwrap();
+        assert!(y1999 < y2000); // `Ord` stays chronological
+        assert_eq!(y2000.value_cmp(&y1999), Ok(Ordering::Less));
+        assert_eq!(y2000.der_cmp(&y1999), Ok(Ordering::Less));
+        assert_eq!(y1999.value_cmp(&y1999), Ok(Ordering::Equal));
+    }
 
     #[test]
     fn round_trip_vector() {
