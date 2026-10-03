@@ -29,7 +29,7 @@ use x509_cert::serial_number::SerialNumber;
 #[allow(clippy::large_enum_variant)]
 pub enum CertificateChoices {
     Certificate(Certificate),
-    #[asn1(context_specific = "3", tag_mode = "EXPLICIT", constructed = "true")]
+    #[asn1(context_specific = "3", tag_mode = "IMPLICIT", constructed = "true")]
     Other(OtherCertificateFormat),
     // TODO DEFER add more choices if desired (i.e., AttributeCertificateV2)
 }
