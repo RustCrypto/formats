@@ -178,6 +178,7 @@ impl<'a> Decode<'a> for Document {
 
     fn decode<R: Reader<'a>>(reader: &mut R) -> Result<Document, Error> {
         let header = Header::peek(reader)?;
+        header.tag().assert_eq(Tag::Sequence)?;
         let length = (header.encoded_len()? + header.length())?;
         let bytes = reader.read_slice(length)?;
 
