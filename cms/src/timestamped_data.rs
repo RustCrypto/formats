@@ -78,11 +78,11 @@ pub struct MetaData {
 #[derive(Clone, Debug, Eq, PartialEq, Choice)]
 #[allow(missing_docs)]
 pub enum Evidence {
-    #[asn1(context_specific = "0")]
+    #[asn1(context_specific = "0", tag_mode = "IMPLICIT", constructed = "true")]
     TstEvidence(TimeStampTokenEvidence),
-    #[asn1(context_specific = "1")]
+    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", constructed = "true")]
     ErsEvidence(EvidenceRecord),
-    #[asn1(context_specific = "2")]
+    #[asn1(context_specific = "2", tag_mode = "IMPLICIT", constructed = "true")]
     OtherEvidence(OtherEvidence),
 }
 
@@ -124,9 +124,9 @@ pub type TimeStampToken = ContentInfo;
 pub struct EvidenceRecord {
     pub version: TsdVersion,
     pub digest_algorithm: Vec<AlgorithmIdentifierOwned>,
-    #[asn1(context_specific = "0", optional = "true")]
+    #[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
     pub crypto_infos: Option<CryptoInfos>,
-    #[asn1(context_specific = "1", optional = "true")]
+    #[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
     pub encryption_info: Option<EncryptionInfo>,
     pub archive_timestamp_sequence: ArchiveTimeStampSequence,
 }
@@ -171,11 +171,11 @@ pub type ArchiveTimeStampChain = Vec<ArchiveTimeStamp>;
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct ArchiveTimeStamp {
-    #[asn1(context_specific = "0", optional = "true")]
+    #[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
     digest_algorithm: Option<AlgorithmIdentifierOwned>,
-    #[asn1(context_specific = "1", optional = "true")]
+    #[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
     attributes: Option<Attributes>,
-    #[asn1(context_specific = "2", optional = "true")]
+    #[asn1(context_specific = "2", optional = "true", tag_mode = "IMPLICIT")]
     reduced_hashtree: Option<Vec<PartialHashtree>>,
     time_stamp: ContentInfo,
 }
