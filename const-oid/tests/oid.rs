@@ -142,6 +142,33 @@ fn from_bytes_reject_arc_above_u32_max() {
     );
 }
 
+/// X.690 8.19.2: each arc is encoded in the fewest possible octets, so the
+/// leading octet of an arc is never `0x80`. A padded encoding must be rejected:
+/// otherwise two different encodings decode to OIDs that print the same but
+/// compare unequal.
+#[test]
+fn from_bytes_reject_non_minimal_arc() {
+    // `1.2.840.113549` with `0x80` padding in front of the `840` arc.
+    assert_eq!(
+        ObjectIdentifier::from_bytes(&[0x2A, 0x80, 0x86, 0x48, 0x86, 0xF7, 0x0D]),
+        Err(Error::Base128),
+    );
+
+    // Padding in front of a single-octet arc: `1.2.0`.
+    assert_eq!(
+        ObjectIdentifier::from_bytes(&[0x2A, 0x80, 0x00]),
+        Err(Error::Base128),
+    );
+
+    // `0x80` is fine when it is not the leading octet of an arc.
+    assert_eq!(
+        ObjectIdentifier::from_bytes(&[0x2A, 0x81, 0x80, 0x00])
+            .unwrap()
+            .arc(2),
+        Some(16384),
+    );
+}
+
 #[test]
 fn from_str() {
     let oid0 = EXAMPLE_OID_0_STR.parse::<ObjectIdentifier>().unwrap();
