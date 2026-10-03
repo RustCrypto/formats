@@ -69,6 +69,13 @@ pub enum Error {
 
     /// Not all required elements were specified
     MissingAttributes,
+
+    /// More than one extension with the same OID (RFC 5280 4.2: "A certificate MUST NOT include
+    /// more than one instance of a particular extension").
+    DuplicateExtension {
+        /// Offending [`ObjectIdentifier`]
+        oid: ObjectIdentifier,
+    },
 }
 
 impl core::error::Error for Error {}
@@ -92,6 +99,9 @@ impl fmt::Display for Error {
                 "Non-ordered attribute or invalid attribute found (oid={oid})"
             ),
             Error::MissingAttributes => write!(f, "Not all required elements were specified"),
+            Error::DuplicateExtension { oid } => {
+                write!(f, "more than one extension with OID {oid}")
+            }
         }
     }
 }
@@ -380,6 +390,18 @@ where
         )?;
 
         self.extensions.append(&mut default_extensions);
+
+        // RFC 5280 4.2: a certificate MUST NOT include more than one instance of a particular
+        // extension. This also catches an extension added with `add_extension` that the profile
+        // adds as well.
+        for (i, ext) in self.extensions.iter().enumerate() {
+            if self.extensions[..i]
+                .iter()
+                .any(|e| e.extn_id == ext.extn_id)
+            {
+                return Err(Error::DuplicateExtension { oid: ext.extn_id });
+            }
+        }
 
         if !self.extensions.is_empty() {
             self.tbs.extensions = Some(self.extensions.clone());
