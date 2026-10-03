@@ -71,7 +71,7 @@ impl Size for ContentLength {
 impl DeserializeBytes for ContentLength {
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let (value, remainder) = super::TlsVarInt::tls_deserialize_bytes(bytes)?;
-        Ok((Self(value), remainder))
+        Ok((Self::new(value)?, remainder))
     }
 }
 
