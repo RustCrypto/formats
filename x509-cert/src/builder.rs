@@ -611,25 +611,25 @@ where
 
         let mut crl_extensions = Extensions::new();
         crl_extensions.push(crl_number.to_extension(&issuer_name, &crl_extensions)?);
-        let aki = match issuer
+        // RFC 5280 5.2.1: the CRL's authorityKeyIdentifier identifies the key used to sign the
+        // CRL, i.e. the issuer's own key: its subjectKeyIdentifier (computed from its public key
+        // when the certificate has none). The issuer certificate's own authorityKeyIdentifier
+        // names the key of *its* issuer and only matches for self-signed certificates.
+        let ski = match issuer
             .tbs_certificate
-            .get_extension::<AuthorityKeyIdentifier>()?
+            .get_extension::<SubjectKeyIdentifier>()?
         {
-            Some((_, aki)) => aki,
-            None => {
-                let ski = SubjectKeyIdentifier::try_from(
-                    issuer
-                        .tbs_certificate
-                        .subject_public_key_info()
-                        .owned_to_ref(),
-                )?;
-                AuthorityKeyIdentifier {
-                    // KeyIdentifier must be the same as subjectKeyIdentifier
-                    key_identifier: Some(ski.0.clone()),
-                    // other fields must not be present.
-                    ..Default::default()
-                }
-            }
+            Some((_, ski)) => ski,
+            None => SubjectKeyIdentifier::try_from(
+                issuer
+                    .tbs_certificate
+                    .subject_public_key_info()
+                    .owned_to_ref(),
+            )?,
+        };
+        let aki = AuthorityKeyIdentifier {
+            key_identifier: Some(ski.0),
+            ..Default::default()
         };
         crl_extensions.push(aki.to_extension(&issuer_name, &crl_extensions)?);
 
