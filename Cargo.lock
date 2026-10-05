@@ -294,7 +294,7 @@ dependencies = [
  "der",
  "digest",
  "hex-literal",
- "spki",
+ "spki 0.8.0",
  "x509-cert",
 ]
 
@@ -324,7 +324,7 @@ dependencies = [
  "sha2",
  "sha3",
  "signature",
- "spki",
+ "spki 0.8.0",
  "tokio",
  "x509-cert",
  "zeroize",
@@ -408,7 +408,7 @@ dependencies = [
  "cms",
  "const-oid",
  "der",
- "spki",
+ "spki 0.8.0",
  "x509-cert",
 ]
 
@@ -551,7 +551,7 @@ dependencies = [
  "elliptic-curve",
  "rfc6979",
  "signature",
- "spki",
+ "spki 0.8.0",
  "zeroize",
 ]
 
@@ -737,7 +737,7 @@ version = "0.2.0-pre"
 dependencies = [
  "der",
  "hex-literal",
- "spki",
+ "spki 0.8.0",
  "x509-cert",
 ]
 
@@ -1005,12 +1005,12 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
 name = "pkcs1"
-version = "0.8.0-rc.4"
+version = "0.8.0-rc.5"
 dependencies = [
  "const-oid",
  "der",
  "hex-literal",
- "spki",
+ "spki 0.8.1",
  "tempfile",
 ]
 
@@ -1026,7 +1026,7 @@ dependencies = [
  "pkcs5",
  "pkcs8",
  "sha2",
- "spki",
+ "spki 0.8.0",
  "whirlpool",
  "x509-cert",
  "zeroize",
@@ -1049,7 +1049,7 @@ dependencies = [
  "scrypt",
  "sha1",
  "sha2",
- "spki",
+ "spki 0.8.0",
 ]
 
 [[package]]
@@ -1062,7 +1062,7 @@ dependencies = [
  "hex-literal",
  "pkcs5",
  "rand_core 0.10.1",
- "spki",
+ "spki 0.8.0",
  "tempfile",
 ]
 
@@ -1329,7 +1329,7 @@ dependencies = [
  "rand_core 0.10.1",
  "sha2",
  "signature",
- "spki",
+ "spki 0.8.0",
  "zeroize",
 ]
 
@@ -1617,6 +1617,16 @@ dependencies = [
  "hex-literal",
  "sha2",
  "tempfile",
+]
+
+[[package]]
+name = "spki"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ef958a98b9d5da290cfc78946e9f3e61e1e62a18db0d92cac0b83cc161491a9"
+dependencies = [
+ "base64ct",
+ "der",
 ]
 
 [[package]]
@@ -2003,7 +2013,7 @@ dependencies = [
  "sha1",
  "sha2",
  "signature",
- "spki",
+ "spki 0.8.0",
  "tempfile",
  "tls_codec 0.4.2",
  "tokio",
@@ -2034,7 +2044,7 @@ dependencies = [
  "sha1",
  "sha2",
  "signature",
- "spki",
+ "spki 0.8.0",
  "x509-cert",
 ]
 
