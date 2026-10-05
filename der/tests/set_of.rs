@@ -66,3 +66,27 @@ mod ordering {
         assert_eq!(ObjectIdentifier::new("2.5.4.3").unwrap(), attr1.oid);
     }
 }
+
+/// X.690 11.6: `SET OF UTCTime` is ordered by the `YYMMDDHHMMSSZ` encodings, so a 20xx time
+/// (`00..49`) sorts before a 19xx time (`50..99`).
+mod utctime_order {
+    use der::{
+        Decode, Encode,
+        asn1::{SetOfVec, UtcTime},
+    };
+    use hex_literal::hex;
+
+    const Y1999: [u8; 15] = hex!("170d 3939313233313233353935395a");
+    const Y2000: [u8; 15] = hex!("170d 3030303130313030303030305a");
+
+    #[test]
+    fn setofvec_utctime_encodes_in_octet_order() {
+        let mut set = SetOfVec::new();
+        set.insert(UtcTime::from_der(&Y1999).unwrap()).unwrap();
+        set.insert(UtcTime::from_der(&Y2000).unwrap()).unwrap();
+        let mut want = hex!("311e").to_vec();
+        want.extend_from_slice(&Y2000);
+        want.extend_from_slice(&Y1999);
+        assert_eq!(set.to_der().unwrap(), want);
+    }
+}
