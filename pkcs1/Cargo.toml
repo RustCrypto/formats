@@ -16,8 +16,8 @@ edition = "2024"
 rust-version = "1.85"
 
 [dependencies]
-der = { version = "0.8", features = ["oid"] }
-spki = "0.8"
+der = { version = "0.8.2", features = ["oid"] }
+spki = "0.8.1"
 
 [dev-dependencies]
 const-oid = { version = "0.10", features = ["db"] }
