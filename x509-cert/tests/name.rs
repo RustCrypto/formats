@@ -429,3 +429,21 @@ fn decode_given_name() {
     Name::from_str("GN=my_name,SN=my_sn").unwrap();
     Name::from_str("givenName=my_name,SN=my_sn").unwrap();
 }
+
+/// RFC 4514 Section 2.1: an empty RDNSequence is the empty string, and Section 3's grammar makes
+/// the RDN list optional. So `Display` of the empty name must parse back to the empty name.
+#[cfg(feature = "std")]
+#[test]
+fn from_str_empty_name() {
+    use std::str::FromStr;
+
+    let empty = Name::default();
+    assert_eq!(empty.to_string(), "");
+    assert_eq!(Name::from_str("").unwrap(), empty);
+    assert_eq!(Name::from_str("").unwrap().to_der().unwrap(), hex!("30 00"));
+    assert_eq!(RdnSequence::from_str("").unwrap(), RdnSequence::default());
+
+    // A missing RDN between separators is still an error.
+    assert!(Name::from_str(",").is_err());
+    assert!(Name::from_str("CN=a,").is_err());
+}
