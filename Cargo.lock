@@ -294,7 +294,7 @@ dependencies = [
  "der",
  "digest",
  "hex-literal",
- "spki 0.8.0",
+ "spki",
  "x509-cert",
 ]
 
@@ -324,7 +324,7 @@ dependencies = [
  "sha2",
  "sha3",
  "signature",
- "spki 0.8.0",
+ "spki",
  "tokio",
  "x509-cert",
  "zeroize",
@@ -408,7 +408,7 @@ dependencies = [
  "cms",
  "const-oid",
  "der",
- "spki 0.8.0",
+ "spki",
  "x509-cert",
 ]
 
@@ -551,7 +551,7 @@ dependencies = [
  "elliptic-curve",
  "rfc6979",
  "signature",
- "spki 0.8.0",
+ "spki",
  "zeroize",
 ]
 
@@ -737,7 +737,7 @@ version = "0.2.0-pre"
 dependencies = [
  "der",
  "hex-literal",
- "spki 0.8.0",
+ "spki",
  "x509-cert",
 ]
 
@@ -1010,7 +1010,7 @@ dependencies = [
  "const-oid",
  "der",
  "hex-literal",
- "spki 0.8.1",
+ "spki",
  "tempfile",
 ]
 
@@ -1026,7 +1026,7 @@ dependencies = [
  "pkcs5",
  "pkcs8",
  "sha2",
- "spki 0.8.0",
+ "spki",
  "whirlpool",
  "x509-cert",
  "zeroize",
@@ -1049,7 +1049,7 @@ dependencies = [
  "scrypt",
  "sha1",
  "sha2",
- "spki 0.8.0",
+ "spki",
 ]
 
 [[package]]
@@ -1062,7 +1062,7 @@ dependencies = [
  "hex-literal",
  "pkcs5",
  "rand_core 0.10.1",
- "spki 0.8.0",
+ "spki",
  "tempfile",
 ]
 
@@ -1317,8 +1317,9 @@ dependencies = [
 
 [[package]]
 name = "rsa"
-version = "0.10.0-rc.18"
-source = "git+https://github.com/dishmaker/RSA.git?rev=96c97ec3e8b2bedde44f5954334618bec87a19c3#96c97ec3e8b2bedde44f5954334618bec87a19c3"
+version = "0.10.0-rc.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33405e321e16ef941ca66e254f6904c3aafd3c7ff001fb88bf11c73eb75c2b85"
 dependencies = [
  "const-oid",
  "crypto-bigint",
@@ -1329,7 +1330,7 @@ dependencies = [
  "rand_core 0.10.1",
  "sha2",
  "signature",
- "spki 0.8.0",
+ "spki",
  "zeroize",
 ]
 
@@ -1617,16 +1618,6 @@ dependencies = [
  "hex-literal",
  "sha2",
  "tempfile",
-]
-
-[[package]]
-name = "spki"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ef958a98b9d5da290cfc78946e9f3e61e1e62a18db0d92cac0b83cc161491a9"
-dependencies = [
- "base64ct",
- "der",
 ]
 
 [[package]]
@@ -2013,7 +2004,7 @@ dependencies = [
  "sha1",
  "sha2",
  "signature",
- "spki 0.8.0",
+ "spki",
  "tempfile",
  "tls_codec 0.4.2",
  "tokio",
@@ -2044,7 +2035,7 @@ dependencies = [
  "sha1",
  "sha2",
  "signature",
- "spki 0.8.0",
+ "spki",
  "x509-cert",
 ]
 
