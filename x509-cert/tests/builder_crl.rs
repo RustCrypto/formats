@@ -76,6 +76,68 @@ fn crl_signer() {
     println!("{}", openssl::check_crl(pem.as_bytes()));
 }
 
+/// RFC 5280 5.2.1: the CRL's authorityKeyIdentifier identifies the key used to sign the CRL,
+/// i.e. the CRL issuer's own key, not the key of whoever issued the CRL issuer's certificate.
+#[test]
+fn crl_aki_is_issuer_key() {
+    use der::{Decode, oid::AssociatedOid};
+    use x509_cert::ext::pkix::{AuthorityKeyIdentifier, SubjectKeyIdentifier};
+
+    let mut rng = rng();
+    let signer = ecdsa_signer();
+    let pub_key = SubjectPublicKeyInfo::try_from(PKCS8_PUBLIC_KEY_DER).expect("get ecdsa pub key");
+
+    // An intermediate CA certificate: its own AKI names its issuer's key (a different key).
+    let other_key = p256::ecdsa::SigningKey::from(p256::SecretKey::from_slice(&[7u8; 32]).unwrap());
+    let root_name = Name::from_str("CN=root,O=World domination Inc,C=US").unwrap();
+    let sub_name = Name::from_str("CN=sub,O=World domination Inc,C=US").unwrap();
+    let profile = profile::cabf::tls::Subordinate {
+        issuer: root_name,
+        subject: sub_name,
+        path_len_constraint: None,
+        emits_ocsp_response: false,
+        client_auth: false,
+    };
+    let validity = Validity::from_now(Duration::new(60, 0)).unwrap();
+    let builder = CertificateBuilder::new(
+        profile,
+        SerialNumber::generate(&mut rng),
+        validity,
+        pub_key.clone(),
+    )
+    .expect("Create certificate");
+    // signed by the root key; the subordinate's own key is `pub_key`
+    let sub_ca = builder.build::<_, DerSignature>(&other_key).unwrap();
+
+    let (_, sub_aki) = sub_ca
+        .tbs_certificate()
+        .get_extension::<AuthorityKeyIdentifier>()
+        .unwrap()
+        .unwrap();
+    let (_, sub_ski) = sub_ca
+        .tbs_certificate()
+        .get_extension::<SubjectKeyIdentifier>()
+        .unwrap()
+        .unwrap();
+    assert_ne!(sub_aki.key_identifier, Some(sub_ski.0.clone()));
+
+    // The subordinate CA signs a CRL with its own key.
+    let crl = CrlBuilder::<Rfc5280>::new(&sub_ca, CrlNumber::try_from(1u128).unwrap())
+        .unwrap()
+        .build::<_, DerSignature>(&signer)
+        .unwrap();
+    let crl_aki = crl
+        .tbs_cert_list
+        .crl_extensions
+        .as_ref()
+        .unwrap()
+        .iter()
+        .find(|e| e.extn_id == AuthorityKeyIdentifier::OID)
+        .map(|e| AuthorityKeyIdentifier::from_der(e.extn_value.as_bytes()).unwrap())
+        .unwrap();
+    assert_eq!(crl_aki.key_identifier, Some(sub_ski.0));
+}
+
 /// Use `openssl verify` to run a mock certificate chain against a newly signed CRL.
 #[test]
 fn crl_verify() {
