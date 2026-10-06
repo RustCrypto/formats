@@ -108,7 +108,8 @@ pub type SymmetricKeys = Vec<OneSymmetricKey>;
 #[derive(Sequence, PartialEq, Eq)]
 #[allow(missing_docs)]
 pub struct OneSymmetricKey {
-    pub s_key_attrs: Vec<Attribute>,
+    #[asn1(optional = "true")]
+    pub s_key_attrs: Option<Vec<Attribute>>,
     #[asn1(optional = "true")]
     pub s_key: Option<OctetString>,
 }
