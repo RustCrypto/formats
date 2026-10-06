@@ -198,6 +198,18 @@ impl AttributeTypeAndValue {
             _ => Tag::Utf8String,
         };
 
+        // The value must be valid for the chosen string type, as it is when decoded: otherwise
+        // the resulting name contains a string that its own type rejects.
+        match tag {
+            Tag::PrintableString => {
+                PrintableStringRef::new(parser.as_bytes())?;
+            }
+            Tag::Ia5String => {
+                Ia5StringRef::new(parser.as_bytes())?;
+            }
+            _ => {}
+        }
+
         Ok(Self {
             oid,
             value: Any::new(tag, parser.as_bytes())?,
