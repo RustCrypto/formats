@@ -133,7 +133,7 @@ impl<T: Alphabet> Encoding for T {
             7 => (c[6], 0b111),
             _ => (0, 0),
         };
-        err |= u8::from(last & unused_mask != 0);
+        err |= (last & unused_mask != 0) as u8;
 
         if err == 0 {
             Ok(dst)
