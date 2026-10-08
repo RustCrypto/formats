@@ -212,19 +212,61 @@ fn pkcs12_key_derive_whirlpool() {
     );
 }
 
+/// OpenSSL 3.6.4 vectors generated with:
+/// openssl kdf -keylen 65 -kdfopt digest:SHA256 \
+///   -kdfopt hexpass:007000e400730073d83ddd110000 \
+///   -kdfopt hexsalt:0102030405060708 -kdfopt iter:100 -kdfopt id:<N> PKCS12KDF
 #[test]
-fn pkcs12_key_derive_special_chars() {
-    const PASS_SHORT: &str = "🔥";
-    const SALT_INC: [u8; 8] = [0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8];
-
-    assert!(
-        derive_key_utf8::<sha2::Sha256>(
-            PASS_SHORT,
-            &SALT_INC,
+fn pkcs12_key_derive_supplementary_unicode() {
+    const SALT: [u8; 8] = [1, 2, 3, 4, 5, 6, 7, 8];
+    let vectors = [
+        (
             Pkcs12KeyType::EncryptionKey,
+            hex!(
+                "331be292f2e45dd5226ec2a91ace7010b20ececc1c2a5e2d292ff1fab1e90ac8722e2788bbc6429f3890d83ec248449c6d6caf4a1970283cd797ae53136023e624"
+            ),
+        ),
+        (
+            Pkcs12KeyType::Iv,
+            hex!(
+                "05061141c03edcf6fa206d35365336297f33d3008afc36dd7c49b4b8d02463672b9056351eca9c3f7d7bf69b133baf5e4305de228221f6b77f1b7556f1febd4351"
+            ),
+        ),
+        (
+            Pkcs12KeyType::Mac,
+            hex!(
+                "770a7dd4a0f649afc3eb07e9e9462ed0bd392557ab16b0dba792bf5209fc0b7fddcf9faaee3b54fa18045faead88aaef3034a1a5ad36989bd51bed104b234dabc3"
+            ),
+        ),
+    ];
+    for (kind, expected) in vectors {
+        assert_eq!(
+            derive_key_utf8::<sha2::Sha256>("päss🔑", &SALT, kind, 100, 65).unwrap(),
+            expected
+        );
+    }
+}
+
+#[test]
+fn pkcs12_utf8_and_bmp_passwords_agree() {
+    use der::asn1::BmpString;
+    use pkcs12::kdf::derive_key_bmp;
+    for password in ["", "ASCII", "ge@äheim", "a\0b"] {
+        let salt = [1, 2, 3, 4, 5, 6, 7, 8];
+        let utf8 =
+            derive_key_utf8::<sha2::Sha256>(password, &salt, Pkcs12KeyType::Mac, 100, 32).unwrap();
+        let bmp = derive_key_bmp::<sha2::Sha256>(
+            BmpString::from_utf8(password).unwrap(),
+            &salt,
+            Pkcs12KeyType::Mac,
             100,
-            32
+            32,
         )
-        .is_err()
-    ); // Emoji is not in the Basic Multilingual Plane
+        .unwrap();
+        assert_eq!(utf8, bmp);
+    }
+    assert!(
+        BmpString::from_utf8("🔑").is_err(),
+        "the strict BMP API remains unchanged"
+    );
 }
