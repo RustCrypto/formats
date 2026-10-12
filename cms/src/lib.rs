@@ -39,3 +39,9 @@ pub mod revocation;
 pub mod signed_data;
 pub mod symmetric_key;
 pub mod timestamped_data;
+
+
+// Re-export non-optional dependencies
+pub use der;
+pub use spki;
+pub use x509_cert;
