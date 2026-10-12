@@ -196,6 +196,31 @@ fn truncated_byte_vec_reports_end_of_stream() {
     );
 }
 
+// With `mls`, variable-length vector lengths are limited to 2^30 - 1 (RFC 9420 2.1.2: the
+// 8-byte "11" prefix is invalid). The bytes path must reject the length header itself, like
+// the `Read` path does, instead of accepting a 2^30-byte vector when the data is present.
+#[cfg(feature = "mls")]
+#[cfg_attr(feature = "future_deprecations", allow(deprecated))]
+#[test]
+fn mls_length_above_30_bits_is_rejected() {
+    use tls_codec::{VLByteVec, VLBytes};
+    // 8-byte varint (minimal for 2^30), followed by fewer content bytes than declared.
+    let mut input = vec![0xc0, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00];
+    input.extend_from_slice(&[0u8; 16]);
+    assert_eq!(
+        VLBytes::tls_deserialize_bytes(&input).map(|_| ()),
+        Err(Error::InvalidVectorLength)
+    );
+    assert_eq!(
+        VLByteVec::tls_deserialize_bytes(&input).map(|_| ()),
+        Err(Error::InvalidVectorLength)
+    );
+    assert_eq!(
+        Vec::<u8>::tls_deserialize_bytes(&input).map(|_| ()),
+        Err(Error::InvalidVectorLength)
+    );
+}
+
 // The length-summing overflow/saturation branches only exist on non-64-bit
 // targets (on 64-bit, lengths are bounded by `isize::MAX` and can't overflow
 // `usize`). This test therefore only compiles and runs on 32-bit — e.g. the
