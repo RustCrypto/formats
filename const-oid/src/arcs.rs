@@ -71,6 +71,12 @@ impl<'a> Arcs<'a> {
 
                     match self.bytes.get(len).cloned() {
                         Some(byte) => {
+                            // X.690 8.19.2: an arc is encoded in the fewest possible
+                            // octets, so its leading octet is never 0x80.
+                            if arc_bytes == 0 && byte == 0b1000_0000 {
+                                return Err(Error::Base128);
+                            }
+
                             arc_bytes = checked_add!(arc_bytes, 1);
 
                             // A five byte arc can still exceed `Arc`, so the digits are
