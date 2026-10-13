@@ -65,4 +65,28 @@ proptest! {
             assert_eq!(a, b);
         }
     }
+
+    /// Every accepted input is the canonical encoding of its output (RFC 4648 3.5: the unused
+    /// bits of the last symbol are zero), so decode-then-encode gives the input back.
+    #[test]
+    fn decode_is_canonical(string in string_regex("[a-z2-7]{0,32}").unwrap()) {
+        if let Ok(bytes) = Base32UnpaddedCt::decode_vec(&string) {
+            prop_assert_eq!(Base32UnpaddedCt::encode_string(&bytes), string.clone());
+        }
+        let padded = format!("{string}{}", "=".repeat((8 - string.len() % 8) % 8));
+        if let Ok(bytes) = Base32Ct::decode_vec(&padded) {
+            prop_assert_eq!(Base32Ct::encode_string(&bytes), padded);
+        }
+    }
+}
+
+/// "me" is the canonical encoding of "a" (0x61 = 01100 001|00); "mf" and "mh" set the unused
+/// low bits of the last symbol and must be rejected.
+#[test]
+fn reject_non_zero_trailing_bits() {
+    assert_eq!(Base32UnpaddedCt::decode_vec("me").unwrap(), b"a");
+    assert!(Base32UnpaddedCt::decode_vec("mf").is_err());
+    assert!(Base32UnpaddedCt::decode_vec("mh").is_err());
+    assert_eq!(Base32Ct::decode_vec("me======").unwrap(), b"a");
+    assert!(Base32Ct::decode_vec("mf======").is_err());
 }
