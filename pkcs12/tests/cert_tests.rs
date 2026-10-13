@@ -3,10 +3,7 @@ use const_oid::db::{
     rfc5911::{ID_DATA, ID_ENCRYPTED_DATA},
     rfc5912::ID_SHA_256,
 };
-use der::{
-    Decode, Encode,
-    asn1::{ContextSpecific, OctetString},
-};
+use der::{Decode, Encode, asn1::OctetString};
 use hex_literal::hex;
 use pkcs8::{
     EncryptedPrivateKeyInfoRef,
@@ -199,9 +196,7 @@ fn decode_sample_pfx() {
     for cert_bag in cert_bags {
         match cert_bag.bag_id {
             pkcs12::PKCS_12_CERT_BAG_OID => {
-                let cs: der::asn1::ContextSpecific<CertBag> =
-                    ContextSpecific::from_der(&cert_bag.bag_value).unwrap();
-                let cb = cs.value;
+                let cb: CertBag = cert_bag.bag_value.decode_as().unwrap();
                 assert_eq!(
                     include_bytes!("examples/cert.der"),
                     cb.cert_value.as_bytes()
@@ -242,11 +237,9 @@ fn decode_sample_pfx() {
     for safe_bag in safe_bags {
         match safe_bag.bag_id {
             pkcs12::PKCS_12_PKCS8_KEY_BAG_OID => {
-                let cs: ContextSpecific<EncryptedPrivateKeyInfoRef<'_>> =
-                    ContextSpecific::from_der(&safe_bag.bag_value).unwrap();
-                let mut ciphertext = cs.value.encrypted_data.as_bytes().to_vec();
-                let plaintext = cs
-                    .value
+                let epki: EncryptedPrivateKeyInfoRef<'_> = safe_bag.bag_value.decode_as().unwrap();
+                let mut ciphertext = epki.encrypted_data.as_bytes().to_vec();
+                let plaintext = epki
                     .encryption_algorithm
                     .decrypt_in_place("", &mut ciphertext)
                     .unwrap();
@@ -611,11 +604,10 @@ fn decode_sample_pfx2() {
     for safe_bag in safe_bags {
         match safe_bag.bag_id {
             pkcs12::PKCS_12_CERT_BAG_OID => {
-                let cs: ContextSpecific<CertBag> =
-                    ContextSpecific::from_der(&safe_bag.bag_value).unwrap();
+                let cb: CertBag = safe_bag.bag_value.decode_as().unwrap();
                 assert_eq!(
                     include_bytes!("examples/cert.der"),
-                    cs.value.cert_value.as_bytes()
+                    cb.cert_value.as_bytes()
                 );
             }
             _ => panic!(),
@@ -633,11 +625,9 @@ fn decode_sample_pfx2() {
     for safe_bag in safe_bags {
         match safe_bag.bag_id {
             pkcs12::PKCS_12_PKCS8_KEY_BAG_OID => {
-                let cs: ContextSpecific<EncryptedPrivateKeyInfoRef<'_>> =
-                    ContextSpecific::from_der(&safe_bag.bag_value).unwrap();
-                let mut ciphertext = cs.value.encrypted_data.as_bytes().to_vec();
-                let plaintext = cs
-                    .value
+                let epki: EncryptedPrivateKeyInfoRef<'_> = safe_bag.bag_value.decode_as().unwrap();
+                let mut ciphertext = epki.encrypted_data.as_bytes().to_vec();
+                let plaintext = epki
                     .encryption_algorithm
                     .decrypt_in_place("1234", &mut ciphertext)
                     .unwrap();

@@ -3,7 +3,7 @@
 use alloc::vec::Vec;
 use const_oid::ObjectIdentifier;
 use der::asn1::OctetString;
-use der::{AnyRef, Decode, Enumerated, Sequence};
+use der::{Any, Enumerated, Sequence};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::Attributes;
 
@@ -27,64 +27,16 @@ pub type SafeContents = Vec<SafeBag>;
 /// ```
 ///
 /// [RFC 7292 Section 4.2]: https://www.rfc-editor.org/rfc/rfc7292#section-4.2
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct SafeBag {
     pub bag_id: ObjectIdentifier,
-    //#[asn1(context_specific = "0", tag_mode = "EXPLICIT")]
-    pub bag_value: Vec<u8>,
+    /// The bag value inside the `[0] EXPLICIT` wrapper; decode it according to `bag_id`, e.g.
+    /// `bag.bag_value.decode_as::<CertBag>()`.
+    #[asn1(context_specific = "0", tag_mode = "EXPLICIT")]
+    pub bag_value: Any,
     pub bag_attributes: Option<Attributes>,
 }
-
-impl<'a> ::der::DecodeValue<'a> for SafeBag {
-    type Error = der::Error;
-
-    fn decode_value<R: ::der::Reader<'a>>(
-        reader: &mut R,
-        _header: ::der::Header,
-    ) -> ::der::Result<Self> {
-        let bag_id = reader.decode()?;
-        let bag_value = reader.tlv_bytes()?.to_vec();
-        let bag_attributes = reader.decode()?;
-        Ok(Self {
-            bag_id,
-            bag_value,
-            bag_attributes,
-        })
-    }
-}
-impl ::der::EncodeValue for SafeBag {
-    fn value_len(&self) -> ::der::Result<::der::Length> {
-        let content = AnyRef::from_der(&self.bag_value)?;
-        use ::der::Encode as _;
-        [
-            self.bag_id.encoded_len()?,
-            ::der::asn1::ContextSpecificRef {
-                tag_number: ::der::TagNumber(0),
-                tag_mode: ::der::TagMode::Explicit,
-                value: &content,
-            }
-            .encoded_len()?,
-            self.bag_attributes.encoded_len()?,
-        ]
-        .into_iter()
-        .try_fold(::der::Length::ZERO, |acc, len| acc + len)
-    }
-    fn encode_value(&self, writer: &mut impl ::der::Writer) -> ::der::Result<()> {
-        use ::der::Encode as _;
-        self.bag_id.encode(writer)?;
-        let content = AnyRef::from_der(&self.bag_value)?;
-        ::der::asn1::ContextSpecificRef {
-            tag_number: ::der::TagNumber(0),
-            tag_mode: ::der::TagMode::Explicit,
-            value: &content,
-        }
-        .encode(writer)?;
-        self.bag_attributes.encode(writer)?;
-        Ok(())
-    }
-}
-impl ::der::Sequence<'_> for SafeBag {}
 
 /// Version for the PrivateKeyInfo structure as defined in [RFC 5208 Section 5].
 ///
