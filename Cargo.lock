@@ -300,7 +300,7 @@ dependencies = [
 
 [[package]]
 name = "cms"
-version = "0.3.0-pre.2"
+version = "0.3.0-rc.0"
 dependencies = [
  "aes",
  "aes-kw",
