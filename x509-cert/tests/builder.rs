@@ -308,6 +308,37 @@ fn certificate_request_attributes() {
     println!("{}", openssl::check_request(pem.as_bytes()));
 }
 
+/// `ExtensionReq ::= SEQUENCE SIZE (1..MAX) OF Extension` (RFC 2985 5.4.2): a request without
+/// extensions carries no extensionRequest attribute; one with extensions carries exactly one.
+#[test]
+fn certificate_request_extension_req_only_when_extensions() {
+    use der::oid::AssociatedOid;
+    use x509_cert::request::ExtensionReq;
+
+    let subject = Name::from_str("CN=service.domination.world").unwrap();
+    let signer = ecdsa_signer();
+    let ext_req_attrs = |req: &request::CertReq| {
+        req.info
+            .attributes
+            .iter()
+            .filter(|a| a.oid == ExtensionReq::OID)
+            .count()
+    };
+
+    let builder = RequestBuilder::new(subject.clone()).unwrap();
+    let plain = builder.build::<_, DerSignature>(&signer).unwrap();
+    assert_eq!(ext_req_attrs(&plain), 0);
+
+    let mut builder = RequestBuilder::new(subject).unwrap();
+    builder
+        .add_extension(&SubjectAltName(vec![GeneralName::from(
+            std::net::IpAddr::V4(std::net::Ipv4Addr::new(192, 0, 2, 1)),
+        )]))
+        .unwrap();
+    let with_ext = builder.build::<_, DerSignature>(&signer).unwrap();
+    assert_eq!(ext_req_attrs(&with_ext), 1);
+}
+
 #[test]
 fn dynamic_signer() {
     let subject = Name::from_str("CN=Test").expect("parse common name");
