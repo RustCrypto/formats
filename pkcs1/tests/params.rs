@@ -262,6 +262,32 @@ fn new_oaep_param() {
     );
 }
 
+/// The `*Ref` types borrow from their input, which need not be `'static`.
+#[test]
+fn ref_params_non_static_input() {
+    fn pss(der: &[u8], buf: &mut [u8]) -> usize {
+        let param = RsaPssParamsRef::try_from(der).unwrap();
+        param.encode_to_slice(buf).unwrap().len()
+    }
+    fn oaep(der: &[u8], buf: &mut [u8]) -> usize {
+        let param = RsaOaepParamsRef::try_from(der).unwrap();
+        param.encode_to_slice(buf).unwrap().len()
+    }
+
+    let mut buf = [0_u8; 256];
+    let mut der = [0_u8; 64];
+
+    let n = RSA_PSS_PARAMETERS_SHA2_256.len();
+    der[..n].copy_from_slice(RSA_PSS_PARAMETERS_SHA2_256);
+    assert_eq!(pss(&der[..n], &mut buf), n);
+    assert_eq!(&buf[..n], RSA_PSS_PARAMETERS_SHA2_256);
+
+    let n = RSA_OAEP_PARAMETERS_SHA2_256.len();
+    der[..n].copy_from_slice(RSA_OAEP_PARAMETERS_SHA2_256);
+    assert_eq!(oaep(&der[..n], &mut buf), n);
+    assert_eq!(&buf[..n], RSA_OAEP_PARAMETERS_SHA2_256);
+}
+
 #[cfg(feature = "alloc")]
 mod test_alloc_trait_bounds {
     use der::{Decode, Encode};

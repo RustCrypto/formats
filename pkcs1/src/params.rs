@@ -152,8 +152,6 @@ impl<'a> RsaPssParamsRef<'a> {
 impl<Params> RsaPssParams<Params>
 where
     AlgorithmIdentifier<Params>: AsAlgorithmIdentifierRef,
-    AlgorithmIdentifier<Params>: From<AlgorithmIdentifier<AnyRef<'static>>>,
-    Params: PartialEq,
 {
     fn context_specific_hash(&self) -> Option<ContextSpecificRef<'_, AlgorithmIdentifier<Params>>> {
         if self.hash.as_algo_ref() == SHA_1_AI {
@@ -170,7 +168,7 @@ where
     fn context_specific_mask_gen(
         &self,
     ) -> Option<ContextSpecificRef<'_, AlgorithmIdentifier<AlgorithmIdentifier<Params>>>> {
-        if self.mask_gen == default_mgf1_sha1::<Params>() {
+        if is_default_mgf1_sha1(&self.mask_gen) {
             None
         } else {
             Some(ContextSpecificRef {
@@ -201,7 +199,7 @@ where
     AlgorithmIdentifier<Params>: DecodeValue<'a, Error = der::Error> + FixedTag,
     AlgorithmIdentifier<AlgorithmIdentifier<Params>>:
         DecodeValue<'a, Error = der::Error> + FixedTag,
-    AlgorithmIdentifier<Params>: From<AlgorithmIdentifierRef<'static>>,
+    AlgorithmIdentifier<Params>: From<AlgorithmIdentifierRef<'a>>,
     Params: 'a,
 {
     type Error = der::Error;
@@ -230,8 +228,6 @@ where
     for<'b> Option<ContextSpecificRef<'b, AlgorithmIdentifier<Params>>>: Encode,
     for<'b> Option<ContextSpecificRef<'b, AlgorithmIdentifier<AlgorithmIdentifier<Params>>>>:
         Encode,
-    AlgorithmIdentifier<Params>: From<AlgorithmIdentifierRef<'static>>,
-    Params: PartialEq,
 {
     fn value_len(&self) -> der::Result<Length> {
         self.context_specific_hash().encoded_len()?
@@ -256,7 +252,7 @@ where
     AlgorithmIdentifier<Params>: DecodeValue<'a, Error = der::Error> + FixedTag,
     AlgorithmIdentifier<AlgorithmIdentifier<Params>>:
         DecodeValue<'a, Error = der::Error> + FixedTag,
-    AlgorithmIdentifier<Params>: From<AlgorithmIdentifierRef<'static>>,
+    AlgorithmIdentifier<Params>: From<AlgorithmIdentifierRef<'a>>,
     Params: 'a,
 {
     type Error = Error;
@@ -267,14 +263,27 @@ where
 }
 
 /// Default Mask Generation Function (MGF): SHA-1.
-fn default_mgf1_sha1<Params>() -> AlgorithmIdentifier<AlgorithmIdentifier<Params>>
+fn default_mgf1_sha1<'a, Params>() -> AlgorithmIdentifier<AlgorithmIdentifier<Params>>
 where
-    AlgorithmIdentifier<Params>: From<AlgorithmIdentifierRef<'static>>,
+    AlgorithmIdentifier<Params>: From<AlgorithmIdentifierRef<'a>>,
 {
     AlgorithmIdentifier::<AlgorithmIdentifier<Params>> {
         oid: OID_MGF_1,
         parameters: Some(SHA_1_AI.into()),
     }
+}
+
+/// Is `mask_gen` the default MGF (MGF1 with SHA-1)?
+fn is_default_mgf1_sha1<Params>(mask_gen: &AlgorithmIdentifier<AlgorithmIdentifier<Params>>) -> bool
+where
+    AlgorithmIdentifier<Params>: AsAlgorithmIdentifierRef,
+{
+    mask_gen.oid == OID_MGF_1
+        && mask_gen
+            .parameters
+            .as_ref()
+            .map(AsAlgorithmIdentifierRef::as_algo_ref)
+            == Some(SHA_1_AI)
 }
 
 /// [`RsaOaepParams`] with [`AlgorithmIdentifier<AnyRef>`]
@@ -345,13 +354,11 @@ where
 impl<Params> RsaOaepParams<Params>
 where
     AlgorithmIdentifier<Params>: AsAlgorithmIdentifierRef,
-    AlgorithmIdentifier<Params>: From<AlgorithmIdentifierRef<'static>>,
-    Params: PartialEq,
 {
     fn context_specific_mask_gen(
         &self,
     ) -> Option<ContextSpecificRef<'_, AlgorithmIdentifier<AlgorithmIdentifier<Params>>>> {
-        if self.mask_gen == default_mgf1_sha1::<Params>() {
+        if is_default_mgf1_sha1(&self.mask_gen) {
             None
         } else {
             Some(ContextSpecificRef {
@@ -412,7 +419,7 @@ where
     AlgorithmIdentifier<Params>: DecodeValue<'a, Error = der::Error> + FixedTag,
     AlgorithmIdentifier<AlgorithmIdentifier<Params>>:
         DecodeValue<'a, Error = der::Error> + FixedTag,
-    AlgorithmIdentifier<Params>: From<AlgorithmIdentifierRef<'static>>,
+    AlgorithmIdentifier<Params>: From<AlgorithmIdentifierRef<'a>>,
     Params: 'a,
 {
     type Error = der::Error;
@@ -438,8 +445,6 @@ where
     for<'b> Option<ContextSpecificRef<'b, AlgorithmIdentifier<Params>>>: Encode,
     for<'b> Option<ContextSpecificRef<'b, AlgorithmIdentifier<AlgorithmIdentifier<Params>>>>:
         Encode,
-    AlgorithmIdentifier<Params>: From<AlgorithmIdentifierRef<'static>>,
-    Params: PartialEq,
 {
     fn value_len(&self) -> der::Result<Length> {
         self.context_specific_hash().encoded_len()?
@@ -462,7 +467,7 @@ where
     AlgorithmIdentifier<Params>: DecodeValue<'a, Error = der::Error> + FixedTag,
     AlgorithmIdentifier<AlgorithmIdentifier<Params>>:
         DecodeValue<'a, Error = der::Error> + FixedTag,
-    AlgorithmIdentifier<Params>: From<AlgorithmIdentifierRef<'static>>,
+    AlgorithmIdentifier<Params>: From<AlgorithmIdentifierRef<'a>>,
     Params: 'a,
 {
     type Error = Error;
