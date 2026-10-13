@@ -180,3 +180,31 @@ fn crl_verify() {
     println!("{verification_stderr}");
     assert!(verification_stderr.contains("certificate revoked"));
 }
+
+/// RFC 5280 5.1.2.6: "When there are no revoked certificates, the revoked certificates list
+/// MUST be absent."
+#[test]
+fn crl_without_revoked_certificates() {
+    let mut rng = rng();
+    let signer = ecdsa_signer();
+    let subject = Name::from_str("CN=root,O=World domination Inc,C=US").unwrap();
+    let profile = profile::cabf::Root::new(false, subject).expect("create root profile");
+    let pub_key = SubjectPublicKeyInfo::try_from(PKCS8_PUBLIC_KEY_DER).expect("get ecdsa pub key");
+    let ca_certificate = CertificateBuilder::new(
+        profile,
+        SerialNumber::generate(&mut rng),
+        Validity::from_now(Duration::new(60, 0)).unwrap(),
+        pub_key,
+    )
+    .expect("Create certificate")
+    .build::<_, DerSignature>(&signer)
+    .unwrap();
+
+    let crl = CrlBuilder::<Rfc5280>::new(&ca_certificate, CrlNumber::try_from(1u128).unwrap())
+        .unwrap()
+        .with_certificates(core::iter::empty())
+        .build::<_, DerSignature>(&signer)
+        .unwrap();
+
+    assert_eq!(crl.tbs_cert_list.revoked_certificates, None);
+}
