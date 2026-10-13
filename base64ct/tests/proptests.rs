@@ -167,4 +167,31 @@ proptest! {
         let expected = STANDARD_NO_PAD.decode(&string);
         assert_eq!(actual.ok(), expected.ok());
     }
+
+    /// `decode_in_place` accepts exactly what `decode` accepts (including the rejection of
+    /// non-zero trailing bits in the last block), with the same output.
+    #[test]
+    fn decode_in_place_equiv(string in string_regex("[a-zA-Z0-9/+=]{0,64}").unwrap()) {
+        let expected = Base64ct::decode_vec(&string).ok();
+        let mut buf = string.clone().into_bytes();
+        let actual = Base64ct::decode_in_place(&mut buf).ok().map(<[u8]>::to_vec);
+        prop_assert_eq!(actual, expected);
+
+        let expected = Base64UnpaddedCt::decode_vec(&string).ok();
+        let mut buf = string.into_bytes();
+        let actual = Base64UnpaddedCt::decode_in_place(&mut buf).ok().map(<[u8]>::to_vec);
+        prop_assert_eq!(actual, expected);
+    }
+}
+
+/// "AB==" has non-zero trailing bits ("AA==" is the canonical encoding of 0x00): `decode`
+/// rejects it (#679, #680) and so must `decode_in_place`.
+#[test]
+fn decode_in_place_rejects_trailing_bits() {
+    let mut buf = *b"AB==";
+    assert!(Base64ct::decode_in_place(&mut buf).is_err());
+    let mut buf = *b"AB";
+    assert!(Base64UnpaddedCt::decode_in_place(&mut buf).is_err());
+    let mut buf = *b"AA==";
+    assert_eq!(Base64ct::decode_in_place(&mut buf).unwrap(), [0u8]);
 }
