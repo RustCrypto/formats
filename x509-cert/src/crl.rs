@@ -85,6 +85,9 @@ pub struct RevokedCert<P: Profile = Rfc5280> {
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct TbsCertList<P: Profile = Rfc5280> {
+    /// `Version OPTIONAL`: absent in v1 CRLs. Decodes as [`Version::V1`] when absent, and
+    /// [`Version::V1`] is omitted when encoding.
+    #[asn1(default = "Default::default")]
     pub version: Version,
     pub signature: AlgorithmIdentifier,
     pub issuer: Name,
