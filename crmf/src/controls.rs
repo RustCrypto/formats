@@ -131,9 +131,9 @@ pub enum SinglePubInfoMethod {
 pub enum PkiArchiveOptions {
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "true")]
     EncryptedPrivKey(EncryptedKey),
-    #[asn1(context_specific = "1", tag_mode = "EXPLICIT", constructed = "true")]
+    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", constructed = "false")]
     KeyGenParameters(KeyGenParameters),
-    #[asn1(context_specific = "2", tag_mode = "EXPLICIT", constructed = "false")]
+    #[asn1(context_specific = "2", tag_mode = "IMPLICIT", constructed = "false")]
     ArchiveRemGenPrivKey(bool),
 }
 
@@ -152,7 +152,7 @@ pub enum PkiArchiveOptions {
 #[allow(missing_docs)]
 pub enum EncryptedKey {
     EncryptedValue(Box<EncryptedValue>),
-    #[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "true")]
+    #[asn1(context_specific = "0", tag_mode = "IMPLICIT", constructed = "true")]
     EnvelopedData(Box<EnvelopedData>),
 }
 

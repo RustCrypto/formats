@@ -154,15 +154,15 @@ pub struct PbmParameter {
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
 #[allow(missing_docs)]
 pub enum POPOPrivKey {
-    #[asn1(context_specific = "0", tag_mode = "EXPLICIT", constructed = "false")]
+    #[asn1(context_specific = "0", tag_mode = "IMPLICIT", constructed = "false")]
     ThisMessage(BitString),
-    #[asn1(context_specific = "1", tag_mode = "EXPLICIT", constructed = "true")]
+    #[asn1(context_specific = "1", tag_mode = "IMPLICIT", constructed = "false")]
     SubsequentMessage(SubsequentMessage),
-    #[asn1(context_specific = "2", tag_mode = "EXPLICIT", constructed = "false")]
+    #[asn1(context_specific = "2", tag_mode = "IMPLICIT", constructed = "false")]
     DhMac(BitString),
-    #[asn1(context_specific = "3", tag_mode = "EXPLICIT", constructed = "true")]
+    #[asn1(context_specific = "3", tag_mode = "IMPLICIT", constructed = "true")]
     AgreeMac(PkMacValue),
-    #[asn1(context_specific = "4", tag_mode = "EXPLICIT", constructed = "true")]
+    #[asn1(context_specific = "4", tag_mode = "IMPLICIT", constructed = "true")]
     EncryptedKey(EnvelopedData),
 }
 
