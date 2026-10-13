@@ -47,27 +47,13 @@ impl ParamsString {
 
     /// Add the given byte value to the [`ParamsString`], encoding it as "B64".
     pub fn add_b64_bytes(&mut self, name: impl TryInto<Ident>, bytes: &[u8]) -> Result<()> {
-        if !self.is_empty() {
-            self.0
-                .write_char(PARAMS_DELIMITER)
-                .map_err(|_| Error::ParamsMaxExceeded)?
-        }
-
         let name = name.try_into().map_err(|_| Error::ParamNameInvalid)?;
 
-        // Add param name
-        let offset = self.0.length;
-        if write!(self.0, "{name}=").is_err() {
-            self.0.length = offset;
-            return Err(Error::ParamsMaxExceeded);
-        }
-
-        // Encode B64 value
-        let offset = self.0.length as usize;
-        let written = B64::encode(bytes, &mut self.0.bytes[offset..])?.len();
-
-        self.0.length += written as u8;
-        Ok(())
+        // Encode into a scratch buffer first, so the value is checked like a parsed one
+        // (at most `Value::MAX_LENGTH`) and nothing is written if it doesn't fit.
+        let mut buf = [0u8; Value::MAX_LENGTH];
+        let encoded = B64::encode(bytes, &mut buf).map_err(|_| Error::ParamValueTooLong)?;
+        self.add(name, Value::new(encoded)?)
     }
 
     /// Add a key/value pair with a decimal value to the [`ParamsString`].
@@ -298,6 +284,42 @@ mod tests {
         params.add_b64_bytes("b", &[2, 3]).unwrap();
         params.add_b64_bytes("c", &[4, 5, 6]).unwrap();
         assert_eq!(params.to_string(), "a=AQ,b=AgM,c=BAUG");
+    }
+
+    /// `add_b64_bytes` keeps the same invariants as the other `add_*` methods: the result
+    /// always parses, duplicates are rejected, and a failed add leaves the params unchanged.
+    #[test]
+    fn add_b64_bytes_invariants() {
+        let mut params = ParamsString::new();
+        params.add_decimal("m", 1).unwrap();
+        assert_eq!(
+            params.add_b64_bytes("m", &[1]),
+            Err(Error::ParamNameDuplicated)
+        );
+
+        // 48 bytes encode to exactly `Value::MAX_LENGTH` (64) B64 characters.
+        params.add_b64_bytes("d", &[0xAB; 48]).unwrap();
+        assert!(ParamsString::from_str(params.as_str()).is_ok());
+
+        // 49 bytes encode to 66 characters: too long for a value, nothing is written.
+        let mut params = ParamsString::new();
+        params.add_decimal("m", 1).unwrap();
+        assert_eq!(
+            params.add_b64_bytes("d", &[0xAB; 49]),
+            Err(Error::ParamValueTooLong)
+        );
+        assert_eq!(params.as_str(), "m=1");
+
+        // A value that fits on its own but not in the remaining space: nothing is written.
+        let mut params = ParamsString::new();
+        params.add_b64_bytes("a", &[0xAB; 48]).unwrap();
+        let before = params.as_str().len();
+        assert_eq!(
+            params.add_b64_bytes("b", &[0xAB; 48]),
+            Err(Error::ParamsMaxExceeded)
+        );
+        assert_eq!(params.as_str().len(), before);
+        assert!(ParamsString::from_str(params.as_str()).is_ok());
     }
 
     #[test]
