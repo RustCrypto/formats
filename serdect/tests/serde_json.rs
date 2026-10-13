@@ -43,6 +43,33 @@ fn deserialize_array() {
     assert_eq!(deserialized.0, EXAMPLE_BYTES);
 }
 
+/// `array::deserialize_hex_or_bin` requires the exact length on the hex path too, like the
+/// binary path: a shorter hex string must not be accepted with the remaining bytes left zero.
+#[test]
+fn deserialize_array_wrong_length() {
+    // 15 and 17 bytes of hex for a 16-byte array.
+    let short = format!("\"{}\"", &HEX_LOWER[1..31]);
+    let long = format!("\"{}00\"", &HEX_LOWER[1..33]);
+    assert!(json::from_str::<array::HexLowerOrBin<16>>(&short).is_err());
+    assert!(json::from_str::<array::HexLowerOrBin<16>>(&long).is_err());
+    assert!(json::from_str::<array::HexUpperOrBin<16>>("\"AB\"").is_err());
+    assert!(json::from_str::<array::HexUpperOrBin<16>>("\"\"").is_err());
+
+    let mut buffer = [0u8; 16];
+    let mut de = json::Deserializer::from_str(&short);
+    assert!(array::deserialize_hex_or_bin(&mut buffer, &mut de).is_err());
+
+    // Slices keep their upper-bound rule: shorter is fine, longer is not.
+    let mut buffer = [0u8; 16];
+    let mut de = json::Deserializer::from_str(&short);
+    assert_eq!(
+        slice::deserialize_hex_or_bin(&mut buffer, &mut de).unwrap(),
+        &EXAMPLE_BYTES[..15]
+    );
+    let mut de = json::Deserializer::from_str(&long);
+    assert!(slice::deserialize_hex_or_bin(&mut buffer, &mut de).is_err());
+}
+
 #[test]
 fn deserialize_array_owned() {
     let deserialized =

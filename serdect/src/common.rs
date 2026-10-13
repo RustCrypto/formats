@@ -74,6 +74,12 @@ impl<'b, T: LengthCheck> Visitor<'_> for StrIntoBufVisitor<'b, T> {
     where
         E: Error,
     {
+        // Same length rule as the binary path (`SliceVisitor`): exact for arrays, an upper
+        // bound for slices. Checked on the hex length, before decoding.
+        if v.len() % 2 == 0 && !T::length_check(self.0.len(), v.len() / 2) {
+            return Err(Error::invalid_length(v.len(), &self));
+        }
+
         base16ct::mixed::decode(v, self.0).map_err(|err| match err {
             base16ct::Error::InvalidLength => {
                 Error::invalid_length(v.len(), &"an even number of hex digits")
