@@ -42,11 +42,9 @@ use der::{
 /// use std::str::FromStr;
 /// use x509_cert::name::Name;
 ///
-/// // Multiple syntaxes are supported by `from_str`:
+/// // RFC 4514 syntax: RDNs separated by `,`, attributes within an RDN by `+`:
 /// let subject = Name::from_str("CN=example.com").unwrap();
-/// let subject = Name::from_str("C=US; ST=California; L=Los Angeles; O=InternetCorporationforAssignedNamesandNumbers; CN=www.example.org").unwrap();
 /// let subject = Name::from_str("C=US,ST=California,L=Los Angeles,O=InternetCorporationforAssignedNamesandNumbers,CN=www.example.org").unwrap();
-/// let subject = Name::from_str("C=US/ST=California/L=Los Angeles/O=InternetCorporationforAssignedNamesandNumbers/CN=www.example.org").unwrap();
 /// let subject = Name::from_str("UID=jsmith,DC=example,DC=net").unwrap();
 /// let subject = Name::from_str("OU=Sales+CN=J.  Smith,DC=example,DC=net").unwrap();
 /// let subject = Name::from_str(r#"CN=James \"Jim\" Smith\, III,DC=example,DC=net"#).unwrap();
