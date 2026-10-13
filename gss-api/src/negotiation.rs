@@ -68,7 +68,7 @@ pub struct NegTokenInit<'a> {
     /// This field contains one or more security mechanisms available for
     /// the initiator, in decreasing preference order (favorite choice
     /// first).
-    #[asn1(context_specific = "0", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
     pub mech_types: Option<MechTypeList>,
 
     /// This field, if present, contains the service options that are
@@ -84,17 +84,17 @@ pub struct NegTokenInit<'a> {
     /// abstract definition includes named bits.  Implementations should
     /// not expect to receive exactly 32 bits in an encoding of
     /// ContextFlags.
-    #[asn1(context_specific = "1", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "1", optional = "true", tag_mode = "EXPLICIT")]
     pub req_flags: Option<ContextFlags>,
 
     /// This field, if present, contains the optimistic mechanism token.
-    #[asn1(context_specific = "2", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "2", optional = "true", tag_mode = "EXPLICIT")]
     pub mech_token: Option<&'a OctetStringRef>,
 
     /// This field, if present, contains an MIC token for the mechanism
     /// list in the initial negotiation message.  This MIC token is
     /// computed according to Section 5.
-    #[asn1(context_specific = "3", optional = "true", tag_mode = "IMPLICIT")]
+    #[asn1(context_specific = "3", optional = "true", tag_mode = "EXPLICIT")]
     pub mech_list_mic: Option<&'a OctetStringRef>,
 }
 
@@ -414,5 +414,31 @@ mod tests {
             ObjectIdentifier::new_unwrap("1.3.6.1.4.1.311.2.2.10"),
             neg_token_targ.supported_mech.unwrap()
         );
+    }
+
+    /// RFC 2478's NegTokenInit fields are tagged EXPLICITLY on the wire (the SPNEGO ASN.1
+    /// module is `DEFINITIONS EXPLICIT TAGS`). This is the NTLM NegTokenInit from the
+    /// `InitialContextToken` test in `lib.rs`.
+    #[cfg(feature = "rfc2478")]
+    #[test]
+    fn decode_rfc2478_neg_token_init() {
+        use der::Encode;
+
+        let neg_token_init_bytes = hex!(
+            "303ca00e300c060a2b06010401823702020aa22a04284e544c4d535350000100000005028862000000000000000000000000000000000601b01d0000000f"
+        );
+        let neg_token_init = NegTokenInit::from_der(&neg_token_init_bytes).unwrap();
+        assert_eq!(
+            neg_token_init.mech_types.as_deref(),
+            Some(&[ObjectIdentifier::new_unwrap("1.3.6.1.4.1.311.2.2.10")][..])
+        );
+        assert!(
+            neg_token_init
+                .mech_token
+                .unwrap()
+                .as_bytes()
+                .starts_with(b"NTLMSSP\0")
+        );
+        assert_eq!(neg_token_init.to_der().unwrap(), neg_token_init_bytes);
     }
 }
