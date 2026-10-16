@@ -18,5 +18,9 @@ typ = "typ"
 consts = "consts"
 # Certificate Ann
 "cann" = "cann"
-# encrypt-decrypt-encrypt 
+# encrypt-decrypt-encrypt
 "EDE" = "EDE"
+# -passin is an openssl(1) CLI option used in the builder interop tests
+"passin" = "passin"
+# BA is a hex byte value in test salt vectors
+"BA" = "BA"
