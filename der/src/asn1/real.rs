@@ -42,11 +42,19 @@ impl<'a> DecodeValue<'a> for f64 {
             let exponent = match mnth_bits_to_u8::<1, 0>(bytes) {
                 0 => {
                     mantissa_start = 2;
+                    // Section 8.5.7.4: the exponent octet must follow the control octet
+                    if bytes.len() < 2 {
+                        return Err(reader.error(Tag::Real.value_error()));
+                    }
                     let ebytes = (i16::from_be_bytes([0x0, bytes[1]])).to_be_bytes();
                     u64::from_be_bytes([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, ebytes[0], ebytes[1]])
                 }
                 1 => {
                     mantissa_start = 3;
+                    // Section 8.5.7.4: both exponent octets must follow the control octet
+                    if bytes.len() < 3 {
+                        return Err(reader.error(Tag::Real.value_error()));
+                    }
                     let ebytes = (i16::from_be_bytes([bytes[1], bytes[2]])).to_be_bytes();
                     u64::from_be_bytes([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, ebytes[0], ebytes[1]])
                 }
@@ -888,5 +896,23 @@ mod tests {
                 "wanted: {expect}\tgot: {decoded}"
             );
         }
+    }
+
+    #[test]
+    fn decode_truncated_binary_encoding_is_an_error() {
+        // GHSA-27m6-7r55-vwr2: the binary-encoding branch reads the exponent
+        // octets at a fixed offset in the value content without checking that
+        // the content is long enough to hold them. Truncated content must be
+        // an error, not a panic.
+        //
+        // One content octet in the one-octet exponent form (bits 1-0 = 00):
+        // reading `bytes[1]` is out of bounds.
+        assert!(f64::from_der(&[0x09, 0x01, 0x80]).is_err());
+        // One content octet in the two-octet exponent form (bits 1-0 = 01):
+        // reading `bytes[1]` is out of bounds.
+        assert!(f64::from_der(&[0x09, 0x01, 0x81]).is_err());
+        // Two content octets in the two-octet exponent form:
+        // reading `bytes[2]` is out of bounds.
+        assert!(f64::from_der(&[0x09, 0x02, 0x81, 0x00]).is_err());
     }
 }
