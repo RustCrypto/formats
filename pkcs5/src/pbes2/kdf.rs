@@ -33,6 +33,11 @@ pub const HMAC_WITH_SHA384_OID: ObjectIdentifier =
 pub const HMAC_WITH_SHA512_OID: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("1.2.840.113549.2.11");
 
+/// HMAC-HBELT (for use with PBKDF2)
+#[cfg(feature = "belt")]
+pub const HMAC_WITH_HBELT_OID: ObjectIdentifier =
+    ObjectIdentifier::new_unwrap("1.2.112.0.2.0.34.101.47.12");
+
 /// `id-scrypt` ([RFC 7914])
 ///
 /// [RFC 7914]: https://datatracker.ietf.org/doc/html/rfc7914#section-7
@@ -236,6 +241,25 @@ impl Pbkdf2Params {
             prf: Pbkdf2Prf::HmacWithSha256,
         })
     }
+
+    /// Initialize PBKDF2-HMAC-HBELT with the given iteration count and salt.
+    ///
+    /// # Errors
+    /// Returns [`Error::AlgorithmParametersInvalid`] if `iteration_count` exceeds
+    /// [`Pbkdf2Params::MAX_ITERATION_COUNT`] or `salt` exceeds [`Salt::MAX_LEN`].
+    #[cfg(feature = "belt")]
+    pub fn hmac_hbelt(iteration_count: u32, salt: &[u8]) -> Result<Self> {
+        if iteration_count > Self::MAX_ITERATION_COUNT {
+            return Err(Self::INVALID_ERR);
+        }
+
+        Ok(Self {
+            salt: salt.try_into().map_err(|_| Self::INVALID_ERR)?,
+            iteration_count,
+            key_length: None,
+            prf: Pbkdf2Prf::HmacHbelt,
+        })
+    }
 }
 
 impl<'a> DecodeValue<'a> for Pbkdf2Params {
@@ -310,6 +334,10 @@ pub enum Pbkdf2Prf {
 
     /// HMAC with SHA-512
     HmacWithSha512,
+
+    /// HMAC with HBELT
+    #[cfg(feature = "belt")]
+    HmacHbelt,
 }
 
 impl Pbkdf2Prf {
@@ -322,6 +350,8 @@ impl Pbkdf2Prf {
             Self::HmacWithSha256 => HMAC_WITH_SHA256_OID,
             Self::HmacWithSha384 => HMAC_WITH_SHA384_OID,
             Self::HmacWithSha512 => HMAC_WITH_SHA512_OID,
+            #[cfg(feature = "belt")]
+            Self::HmacHbelt => HMAC_WITH_HBELT_OID,
         }
     }
 }
@@ -357,6 +387,8 @@ impl TryFrom<AlgorithmIdentifierRef<'_>> for Pbkdf2Prf {
             HMAC_WITH_SHA256_OID => Ok(Self::HmacWithSha256),
             HMAC_WITH_SHA384_OID => Ok(Self::HmacWithSha384),
             HMAC_WITH_SHA512_OID => Ok(Self::HmacWithSha512),
+            #[cfg(feature = "belt")]
+            HMAC_WITH_HBELT_OID => Ok(Self::HmacHbelt),
             oid => Err(ErrorKind::OidUnknown { oid }.into()),
         }
     }
