@@ -27,12 +27,12 @@ where
     T: DerOrd,
 {
     fn der_cmp(&self, other: &Self) -> Result<Ordering, Error> {
-        match self {
-            Some(a) => match other {
-                Some(b) => a.der_cmp(b),
-                None => Ok(Ordering::Greater),
-            },
-            None => Ok(Ordering::Less),
+        match (self, other) {
+            (Some(a), Some(b)) => a.der_cmp(b),
+            (Some(_), None) => Ok(Ordering::Greater),
+            (None, Some(_)) => Ok(Ordering::Less),
+            // Both absent: neither contributes any octets.
+            (None, None) => Ok(Ordering::Equal),
         }
     }
 }
@@ -66,5 +66,21 @@ where
             Some(encodable) => encodable.encode(writer),
             None => Ok(()),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::DerOrd;
+    use core::cmp::Ordering;
+
+    #[test]
+    fn der_cmp() {
+        let none: Option<u8> = None;
+        assert_eq!(none.der_cmp(&None), Ok(Ordering::Equal));
+        assert_eq!(none.der_cmp(&Some(0)), Ok(Ordering::Less));
+        assert_eq!(Some(0u8).der_cmp(&None), Ok(Ordering::Greater));
+        assert_eq!(Some(1u8).der_cmp(&Some(2)), Ok(Ordering::Less));
+        assert_eq!(Some(2u8).der_cmp(&Some(2)), Ok(Ordering::Equal));
     }
 }

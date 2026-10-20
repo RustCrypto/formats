@@ -5,7 +5,7 @@ use core::fmt;
 use der::{
     Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Sequence, TagMode,
     TagNumber, Writer,
-    asn1::{AnyRef, BitStringRef, ContextSpecific, OctetStringRef, SequenceRef},
+    asn1::{AnyRef, AsBitStringRef, BitStringRef, ContextSpecific, OctetStringRef, SequenceRef},
 };
 use spki::AlgorithmIdentifier;
 
@@ -159,6 +159,7 @@ impl<Params, Key, PubKey> PrivateKeyInfo<Params, Key, PubKey> {
     }
 }
 
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -219,6 +220,7 @@ where
     }
 }
 
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: der::Choice<'a> + Encode,
@@ -279,6 +281,7 @@ where
     }
 }
 
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> EncodeValue for PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -301,6 +304,7 @@ where
     }
 }
 
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> Sequence<'a> for PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -311,6 +315,7 @@ where
 {
 }
 
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> TryFrom<&'a [u8]> for PrivateKeyInfo<Params, Key, PubKey>
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -341,6 +346,7 @@ where
 }
 
 #[cfg(feature = "alloc")]
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> TryFrom<PrivateKeyInfo<Params, Key, PubKey>> for SecretDocument
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -357,6 +363,7 @@ where
 }
 
 #[cfg(feature = "alloc")]
+#[allow(deprecated)]
 impl<'a, Params, Key, PubKey> TryFrom<&PrivateKeyInfo<Params, Key, PubKey>> for SecretDocument
 where
     Params: der::Choice<'a, Error = der::Error> + Encode,
@@ -444,15 +451,20 @@ pub type PrivateKeyInfoRef<'a> = PrivateKeyInfo<AnyRef<'a>, &'a OctetStringRef, 
 
 /// [`BitStringLike`] marks object that will act like a `BitString`.
 ///
-/// It will allow to get a [`BitStringRef`] that points back to the underlying bytes.
-// TODO(tarcieri): replace this with `AsRef<BitStringRef>` when we can have `&BitStringRef`.
+/// Note: this trait was replaced by [`AsBitStringRef`]
+#[deprecated(since = "0.11.1", note = "Use `AsBitStringRef` instead")]
+// TODO: replace this with `der::asn1::AsBitStringRef`
 pub trait BitStringLike {
     fn as_bit_string(&self) -> BitStringRef<'_>;
 }
 
-impl BitStringLike for BitStringRef<'_> {
+#[allow(deprecated)]
+impl<T> BitStringLike for T
+where
+    T: AsBitStringRef,
+{
     fn as_bit_string(&self) -> BitStringRef<'_> {
-        BitStringRef::from(self)
+        self.as_bit_string_ref()
     }
 }
 
@@ -544,12 +556,6 @@ pub(crate) mod allocating {
                 private_key: self.private_key.borrow(),
                 public_key: self.public_key.owned_to_ref(),
             }
-        }
-    }
-
-    impl BitStringLike for BitString {
-        fn as_bit_string(&self) -> BitStringRef<'_> {
-            BitStringRef::from(self)
         }
     }
 }

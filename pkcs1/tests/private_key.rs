@@ -202,6 +202,16 @@ fn decode_rsa2048_multi_prime_der() {
     );
 }
 
+/// RFC 8017 A.1.2: `OtherPrimeInfos ::= SEQUENCE SIZE(1..MAX) OF OtherPrimeInfo`, so a
+/// multi-prime key with an empty `otherPrimeInfos` is malformed.
+#[cfg(feature = "alloc")]
+#[test]
+fn reject_empty_other_prime_infos() {
+    // version 1 (multi), eight one-byte INTEGERs, otherPrimeInfos = SEQUENCE {}
+    let der = hex!("301d 020101 020107 020103 020105 02010b 02010d 020102 020104 020106 3000");
+    assert!(RsaPrivateKeyRef::try_from(der.as_slice()).is_err());
+}
+
 #[test]
 fn private_key_to_public_key() {
     let private_key = RsaPrivateKeyRef::try_from(RSA_2048_DER_EXAMPLE).unwrap();

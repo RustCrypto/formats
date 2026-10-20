@@ -43,6 +43,8 @@ pub type RsaPrivateKeyOwned = RsaPrivateKey<Uint>;
 ///     coefficient       INTEGER,  -- (inverse of q) mod p
 ///     otherPrimeInfos   OtherPrimeInfos OPTIONAL
 /// }
+///
+/// OtherPrimeInfos ::= SEQUENCE SIZE(1..MAX) OF OtherPrimeInfo
 /// ```
 ///
 /// Note: the `version` field is selected automatically based on the absence or
@@ -131,6 +133,17 @@ where
         // Ensure version is set correctly for two-prime vs multi-prime key.
         if version.is_multi() != result.other_prime_infos.is_some() {
             return Err(reader.error(der::ErrorKind::Value { tag: Tag::Integer }));
+        }
+
+        // `OtherPrimeInfos ::= SEQUENCE SIZE(1..MAX) OF OtherPrimeInfo`
+        // (without `alloc`, `OtherPrimeInfos` never decodes, so there is nothing to check)
+        #[cfg(feature = "alloc")]
+        if result
+            .other_prime_infos
+            .as_ref()
+            .is_some_and(|infos| infos.is_empty())
+        {
+            return Err(reader.error(der::ErrorKind::Value { tag: Tag::Sequence }));
         }
 
         Ok(result)

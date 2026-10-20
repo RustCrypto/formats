@@ -16,9 +16,8 @@ edition = "2024"
 rust-version = "1.85"
 
 [dependencies]
-der = { version = "0.8", features = ["oid", "alloc"] }
+der = { version = "0.8", features = ["oid", "alloc", "derive"] }
 spki = "0.8"
-x509-cert = { version = "0.3", default-features = false }
 
 [dev-dependencies]
 der = { version = "0.8", features = ["oid", "pem", "alloc"] }
