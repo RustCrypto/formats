@@ -25,7 +25,7 @@ cbc = { version = "0.2", optional = true }
 aes = { version = "0.9", optional = true, default-features = false }
 aes-gcm = { version = "0.11", optional = true, default-features = false, features = ["aes"] }
 belt-hash = { version = "0.2", optional = true, default-features = false }
-belt-kwp = { version = "0.2", optional = true, default-features = false }
+belt-kwp = { version = "0.2.1", optional = true, default-features = false }
 des = { version = "0.9", optional = true, default-features = false }
 pbkdf2 = { version = "0.13", optional = true, default-features = false, features = ["hmac"] }
 getrandom = { version = "0.4", optional = true, features = ["sys_rng"] }
