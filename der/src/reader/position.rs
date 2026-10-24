@@ -1,5 +1,6 @@
 //! Position tracking for processing nested input messages using only the stack.
 
+use super::MAX_NESTING_DEPTH;
 use crate::{Error, ErrorKind, Length, Result};
 
 /// State tracker for the current position in the input.
@@ -16,9 +17,6 @@ pub(super) struct Position {
 }
 
 impl Position {
-    /// Maximum number of nested messages we tolerate (prevents stack exhaustion).
-    const MAX_DEPTH: usize = 64;
-
     /// Create a new position tracker with the given overall length.
     pub(super) fn new(input_len: Length) -> Self {
         Self {
@@ -74,7 +72,7 @@ impl Position {
     /// A [`Resumption`] value which can be used to continue parsing the outer message.
     pub(super) fn split_nested(&mut self, len: Length) -> Result<Resumption> {
         match self.depth.checked_add(1) {
-            Some(depth) if depth <= Self::MAX_DEPTH => self.depth = depth,
+            Some(depth) if depth <= MAX_NESTING_DEPTH => self.depth = depth,
             _ => return Err(self.error(ErrorKind::NestingDepth)),
         }
 
