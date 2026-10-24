@@ -55,6 +55,9 @@ pub(crate) fn is_wsp(char: u8) -> bool {
 ///
 /// Returns a slice which starts at the beginning of the encapsulated text.
 ///
+/// The preamble may be ended by any of the line endings Section 3 allows
+/// (`eol = CRLF / CR / LF`); the boundary after it is what is looked for.
+///
 /// From RFC7468:
 /// > Data before the encapsulation boundaries are permitted, and
 /// > parsers MUST NOT malfunction when processing such data.
@@ -69,6 +72,9 @@ pub(crate) fn strip_preamble(mut bytes: &[u8]) -> Result<&[u8]> {
                 return Err(Error::Preamble);
             }
             CHAR_LF if remaining.starts_with(PRE_ENCAPSULATION_BOUNDARY) => {
+                return Ok(remaining);
+            }
+            CHAR_CR if remaining.starts_with(PRE_ENCAPSULATION_BOUNDARY) => {
                 return Ok(remaining);
             }
             _ => (),
