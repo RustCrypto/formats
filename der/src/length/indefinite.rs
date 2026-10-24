@@ -19,10 +19,11 @@
 //! >
 //! > The end-of-contents octets shall consist of two zero octets.
 
-use crate::{Decode, ErrorKind, Header, Length, Reader};
+use super::INDEFINITE_LENGTH_OCTET;
+use crate::{Decode, ErrorKind, Length, Reader, Tag, reader::MAX_NESTING_DEPTH};
 
 #[cfg(feature = "alloc")]
-use crate::Tag;
+use crate::Header;
 
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
@@ -36,20 +37,49 @@ const EOC_TAG: u8 = 0x00;
 /// resulting length based on the amount of data decoded.
 pub(super) fn decode_indefinite_length<'a>(reader: &mut impl Reader<'a>) -> crate::Result<Length> {
     let start_pos = reader.position();
+    let mut depth = 1;
 
     loop {
         // Look for the end-of-contents marker
         if reader.peek_byte() == Some(EOC_TAG) {
             read_eoc(reader)?;
+            depth -= 1;
 
-            // Compute how much we read and flag the decoded length as indefinite
-            let mut ret = (reader.position() - start_pos)?;
-            ret.indefinite = true;
-            return Ok(ret);
+            if depth == 0 {
+                // Compute how much we read and flag the decoded length as indefinite
+                let mut ret = (reader.position() - start_pos)?;
+                ret.indefinite = true;
+                return Ok(ret);
+            }
+
+            continue;
         }
 
-        let header = Header::decode(reader)?;
-        reader.drain(header.length())?;
+        let (tag, is_constructed) = Tag::decode_with_constructed_bit(reader)?;
+
+        if reader.peek_byte() == Some(INDEFINITE_LENGTH_OCTET) {
+            reader.read_byte()?;
+
+            if !is_constructed {
+                return Err(reader.error(ErrorKind::IndefiniteLength));
+            }
+
+            if depth >= MAX_NESTING_DEPTH {
+                return Err(reader.error(ErrorKind::NestingDepth));
+            }
+
+            depth += 1;
+        } else {
+            // Only decode definite lengths here: indefinite lengths would recurse.
+            let length = Length::decode(reader).map_err(|e| {
+                if e.kind() == ErrorKind::Overlength {
+                    reader.error(tag.length_error())
+                } else {
+                    e
+                }
+            })?;
+            reader.drain(length)?;
+        }
     }
 }
 
