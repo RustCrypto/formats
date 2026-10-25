@@ -12,7 +12,7 @@ categories = ["cryptography", "encoding", "no-std", "parser-implementations"]
 keywords = ["crypto", "p7b", "pkcs7", "signing"]
 readme = "README.md"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.87"
 
 [dependencies]
 const-oid = { version = "0.10", features = ["db"] }
