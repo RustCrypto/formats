@@ -3,7 +3,7 @@ name = "phc"
 version = "0.6.1"
 authors = ["RustCrypto Developers"]
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.87"
 readme = "README.md"
 repository = "https://github.com/RustCrypto/formats"
 license = "Apache-2.0 OR MIT"
@@ -16,7 +16,7 @@ storing password hashes
 
 [dependencies]
 base64ct = "1.7"
-ctutils = "0.4"
+ctutils = "0.4.5"
 
 # optional dependencies
 getrandom = { version = "0.4", optional = true, default-features = false }

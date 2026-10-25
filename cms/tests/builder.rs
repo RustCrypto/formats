@@ -871,7 +871,11 @@ fn test_create_password_recipient_info() {
         block_length: usize,
     ) -> Vec<u8> {
         assert!(padded_content_encryption_key.len() >= 2 * block_length);
-        assert!(padded_content_encryption_key.len() % block_length == 0);
+        assert!(
+            padded_content_encryption_key
+                .len()
+                .is_multiple_of(block_length)
+        );
 
         let content_encryption_key_length = padded_content_encryption_key[0] as usize;
         assert!(content_encryption_key_length != 0);
