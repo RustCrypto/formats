@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.8.3 (2026-10-25)
+### Added
+- `AsBitStringRef` trait ([#2418])
+
+### Fixed
+- Off-by-one error in max nested message check ([#2424])
+- Input validation in `SetOfRef` ([#2431])
+- Require a `SEQUENCE` in `Document::decode` ([#2442])
+- Order `SET OF` components by their encoded octets ([#2447])
+- Order `UTCTime` in `SET OF` by its encoding ([#2448])
+- `Option::der_cmp(None, None)` now returns `Equal` ([#2449])
+- Infinite recursion in `ValueOrd` for `ContextSpecific` ([#2450])
+- Order `FlagSet` by its `BIT STRING` encoding ([#2451])
+- Avoid panic on truncated binary `REAL` values ([#2483])
+- Stack overflow decoding nested BER indefinite lengths ([#2490])
+- Recursion in `TryFrom<AnyRef<'_>>` impl for `bool` ([#2491])
+
+[#2418]: https://github.com/RustCrypto/formats/pull/2418
+[#2424]: https://github.com/RustCrypto/formats/pull/2424
+[#2431]: https://github.com/RustCrypto/formats/pull/2431
+[#2442]: https://github.com/RustCrypto/formats/pull/2442
+[#2447]: https://github.com/RustCrypto/formats/pull/2447
+[#2448]: https://github.com/RustCrypto/formats/pull/2448
+[#2449]: https://github.com/RustCrypto/formats/pull/2449
+[#2450]: https://github.com/RustCrypto/formats/pull/2450
+[#2451]: https://github.com/RustCrypto/formats/pull/2451
+[#2483]: https://github.com/RustCrypto/formats/pull/2483
+[#2490]: https://github.com/RustCrypto/formats/pull/2490
+[#2491]: https://github.com/RustCrypto/formats/pull/2491
+
 ## 0.8.2 (2026-09-05)
 ### Added
 - `AsIntRef` and `AsUintRef` traits ([#2415])
@@ -26,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - `SET OF` is not supposed to disallow duplicates ([#2272])
 
-[#2247]: https://github.com/RustCrypto/formats/pull/2247
+[#2247]: https://github.com/RustCrypto/for dwqmats/pull/2247
 [#2272]: https://github.com/RustCrypto/formats/pull/2272
 [#2276]: https://github.com/RustCrypto/formats/pull/2276
 [#2345]: https://github.com/RustCrypto/formats/pull/2345
