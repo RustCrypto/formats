@@ -316,3 +316,45 @@ fn starts_with() {
     assert!(!child.starts_with(oid("2.2.3")));
     assert!(!child.starts_with(oid("1.2.3.4.5.6")));
 }
+
+/// Worst case RFC 5280 Appendix B mandates support for: at most 20 arcs,
+/// every arc below 2^28, dotted-decimal string at most 100 bytes.
+/// Twelve 7-digit arcs below 1.2 spell a 99-byte string that encodes to
+/// 49 contents octets, the ceiling for any Appendix B-conformant OID.
+#[test]
+fn rfc5280_appendix_b_worst_case_fits() {
+    let oid_str = "1.2.9999999.9999999.9999999.9999999.9999999.9999999.9999999.9999999.9999999.9999999.9999999.9999999";
+    assert_eq!(oid_str.len(), 99);
+
+    let oid = ObjectIdentifier::new(oid_str).unwrap();
+    assert_eq!(oid.as_bytes().len(), 49);
+    assert_eq!(oid.to_string(), oid_str);
+
+    let round_trip = ObjectIdentifier::from_bytes(oid.as_bytes()).unwrap();
+    assert_eq!(round_trip, oid);
+}
+
+/// 100-byte dotted string from #2485 encoding to 40 contents octets.
+#[test]
+fn rfc5280_appendix_b_100_byte_40_octet_oid_fits() {
+    let oid_str = "1.3.268435455.268435455.268435455.268435455.268435455.268435455.268435455.268435455.268435455.123456";
+    assert_eq!(oid_str.len(), 100);
+
+    let oid = ObjectIdentifier::new(oid_str).unwrap();
+    assert_eq!(oid.as_bytes().len(), 40);
+    assert_eq!(oid.to_string(), oid_str);
+
+    let round_trip = ObjectIdentifier::from_bytes(oid.as_bytes()).unwrap();
+    assert_eq!(round_trip, oid);
+}
+
+/// The default capacity is what grows with this change: an explicitly
+/// smaller capacity still rejects OIDs that do not fit it.
+#[test]
+fn explicit_smaller_capacity_still_rejects() {
+    let oid_str = "1.2.9999999.9999999.9999999.9999999.9999999.9999999.9999999.9999999.9999999.9999999.9999999.9999999";
+    let oid = ObjectIdentifier::new(oid_str).unwrap();
+    let ber = oid.as_bytes();
+    assert_eq!(ber.len(), 49);
+    assert!(ObjectIdentifier::<39>::from_bytes_sized(ber).is_err());
+}

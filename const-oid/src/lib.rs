@@ -42,10 +42,20 @@ pub use crate::{
 use crate::encoder::Encoder;
 use core::{borrow::Borrow, fmt, ops::Deref, str::FromStr};
 
-/// Default maximum size.
+/// Default maximum size: the largest BER/DER contents RFC 5280 Appendix B
+/// requires implementations to accept.
 ///
-/// Makes `ObjectIdentifier` 40-bytes total w\ 1-byte length.
-const DEFAULT_MAX_SIZE: usize = 39;
+/// Appendix B mandates support for OIDs with at most 20 arcs, every arc below
+/// 2^28, whose dotted-decimal string is at most 100 bytes. The 100-byte string
+/// is the binding limit: the leading `1.2.` packs the first two arcs into a
+/// single octet (the second arc is 0..=39 under X.660), and every further
+/// 4-octet arc costs at least 8 string bytes to spell (values in
+/// 2^21..=2^28-1 start at 7 digits), so 96 remaining bytes buy at most
+/// twelve of them: 1 + 12 * 4 = 49 contents octets, reached by twelve arcs
+/// of 9999999 below 1.2 (a 99-byte string).
+///
+/// Makes `ObjectIdentifier` 50-bytes total w\ 1-byte length.
+const DEFAULT_MAX_SIZE: usize = 49;
 
 /// Object identifier (OID).
 ///
@@ -60,7 +70,7 @@ const DEFAULT_MAX_SIZE: usize = 39;
 /// - The OID MUST have at least 3 arcs
 /// - The first arc MUST be within the range 0-2
 /// - The second arc MUST be within the range 0-39
-/// - The BER/DER encoding of the OID MUST be shorter than
+/// - The BER/DER encoding of the OID MUST be no longer than
 ///   [`ObjectIdentifier::MAX_SIZE`]
 #[derive(Clone, Copy, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct ObjectIdentifier<const MAX_SIZE: usize = DEFAULT_MAX_SIZE> {
