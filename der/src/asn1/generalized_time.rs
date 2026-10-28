@@ -25,7 +25,7 @@ use time::PrimitiveDateTime;
 /// > (i.e., times are `YYYYMMDDHHMMSSZ`), even where the number of seconds
 /// > is zero.  GeneralizedTime values MUST NOT include fractional seconds.
 ///
-/// [1]: https://tools.ietf.org/html/rfc5280#section-4.1.2.5.2
+/// [1]: https://www.rfc-editor.org/info/rfc5280#section-4.1.2.5.2
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct GeneralizedTime(DateTime);

@@ -184,7 +184,7 @@ impl TryFrom<AlgorithmIdentifierRef<'_>> for Kdf {
 ///     algid-hmacWithSHA1 }
 /// ```
 ///
-/// [RFC 8018 Appendix A.2]: https://tools.ietf.org/html/rfc8018#appendix-A.2
+/// [RFC 8018 Appendix A.2]: https://www.rfc-editor.org/info/rfc8018#appendix-A.2
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Pbkdf2Params {
     /// PBKDF2 salt

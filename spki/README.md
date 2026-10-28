@@ -54,4 +54,4 @@ dual licensed as above, without any additional terms or conditions.
 
 [RustCrypto]: https://github.com/rustcrypto
 [X.509]: https://en.wikipedia.org/wiki/X.509
-[RFC 5280 § 4.1]: https://tools.ietf.org/html/rfc5280#section-4.1
+[RFC 5280 § 4.1]: https://www.rfc-editor.org/info/rfc5280#section-4.1

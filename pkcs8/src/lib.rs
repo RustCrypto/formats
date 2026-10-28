@@ -57,10 +57,10 @@
 //! New keys should use AES instead.
 //! </div>
 //!
-//! [RFC 5208]: https://tools.ietf.org/html/rfc5208
-//! [RFC 5958]: https://tools.ietf.org/html/rfc5958
+//! [RFC 5208]: https://www.rfc-editor.org/info/rfc5208
+//! [RFC 5958]: https://www.rfc-editor.org/info/rfc5958
 //! [RFC 7914]: https://www.rfc-editor.org/info/rfc7914
-//! [PKCS#5v2 Password Based Encryption Scheme 2 (RFC 8018)]: https://tools.ietf.org/html/rfc8018#section-6.2
+//! [PKCS#5v2 Password Based Encryption Scheme 2 (RFC 8018)]: https://www.rfc-editor.org/info/rfc8018#section-6.2
 //! [scrypt]: https://en.wikipedia.org/wiki/Scrypt
 
 #[cfg(feature = "alloc")]

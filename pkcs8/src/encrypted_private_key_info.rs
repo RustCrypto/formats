@@ -35,7 +35,7 @@ use der::pem::PemLabel;
 /// EncryptedData ::= OCTET STRING
 /// ```
 ///
-/// [RFC 5208 Section 6]: https://tools.ietf.org/html/rfc5208#section-6
+/// [RFC 5208 Section 6]: https://www.rfc-editor.org/info/rfc5208#section-6
 #[derive(Clone, Eq, PartialEq)]
 pub struct EncryptedPrivateKeyInfo<Data> {
     /// Algorithm identifier describing a password-based symmetric encryption

@@ -20,8 +20,8 @@ use crate::certificate::{Profile, Rfc5280};
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 4.1.2.5]: https://tools.ietf.org/html/rfc5280#section-4.1.2.5
-/// [RFC 5280 Appendix A]: https://tools.ietf.org/html/rfc5280#page-117
+/// [RFC 5280 Section 4.1.2.5]: https://www.rfc-editor.org/info/rfc5280#section-4.1.2.5
+/// [RFC 5280 Appendix A]: https://www.rfc-editor.org/info/rfc5280#page-117
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Choice, Copy, Clone, Debug, Eq, PartialEq, ValueOrd)]
 pub enum Time {

@@ -56,7 +56,7 @@ mod choice {
         /// Custom derive test case for the `Choice` macro.
         ///
         /// Based on `Time` as defined in RFC 5280:
-        /// <https://tools.ietf.org/html/rfc5280#page-117>
+        /// <https://www.rfc-editor.org/info/rfc5280#page-117>
         ///
         /// ```text
         /// Time ::= CHOICE {
