@@ -73,7 +73,7 @@ macro_rules! impl_str_enum {
 ///        ... }
 /// ```
 ///
-/// [RFC 6031 Section 2.0]: https://datatracker.ietf.org/doc/html/rfc6031#section-2
+/// [RFC 6031 Section 2.0]: https://www.rfc-editor.org/info/rfc6031#section-2
 #[derive(Sequence, PartialEq, Eq)]
 #[allow(missing_docs)]
 pub struct SymmetricKeyPackage {
@@ -90,7 +90,7 @@ pub struct SymmetricKeyPackage {
 ///      SymmetricKeys ::= SEQUENCE SIZE (1..MAX) OF OneSymmetricKey
 /// ```
 ///
-/// [RFC 6031 Section 2.0]: https://datatracker.ietf.org/doc/html/rfc6031#section-2
+/// [RFC 6031 Section 2.0]: https://www.rfc-editor.org/info/rfc6031#section-2
 pub type SymmetricKeys = Vec<OneSymmetricKey>;
 
 /// The `OneSymmetricKey` type is defined in [RFC 6031 Section 2.0].
@@ -104,7 +104,7 @@ pub type SymmetricKeys = Vec<OneSymmetricKey>;
 ///          WITH COMPONENTS { ..., sKey PRESENT } )
 /// ```
 ///
-/// [RFC 6031 Section 2.0]: https://datatracker.ietf.org/doc/html/rfc6031#section-2
+/// [RFC 6031 Section 2.0]: https://www.rfc-editor.org/info/rfc6031#section-2
 #[derive(Sequence, PartialEq, Eq)]
 #[allow(missing_docs)]
 pub struct OneSymmetricKey {
@@ -119,7 +119,7 @@ pub struct OneSymmetricKey {
 /// ```text
 ///     KeyPkgVersion ::= INTEGER  { v1(1) } ( v1, ... )
 /// ```
-/// [RFC 6031 Section 2.0]: https://datatracker.ietf.org/doc/html/rfc6031#section-2
+/// [RFC 6031 Section 2.0]: https://www.rfc-editor.org/info/rfc6031#section-2
 #[derive(Default, Clone, Debug, Copy, PartialEq, Eq, PartialOrd, Ord, Enumerated)]
 #[asn1(type = "INTEGER")]
 #[repr(u8)]
@@ -139,7 +139,7 @@ pub enum KeyPkgVersion {
 ///      friendlyNameLangTag UTF8String OPTIONAL }
 /// ```
 ///
-/// [RFC 6031 Section 3.2.6]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.2.6
+/// [RFC 6031 Section 3.2.6]: https://www.rfc-editor.org/info/rfc6031#section-3.2.6
 #[derive(Sequence, PartialEq, Eq)]
 #[allow(missing_docs)]
 pub struct FriendlyName {
@@ -158,7 +158,7 @@ pub struct FriendlyName {
 ///      ... }
 /// ```
 ///
-/// [RFC 6031 Section 3.2.7]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.2.7
+/// [RFC 6031 Section 3.2.7]: https://www.rfc-editor.org/info/rfc6031#section-3.2.7
 #[derive(Sequence, PartialEq, Eq)]
 #[allow(missing_docs)]
 pub struct PSKCAlgorithmParameters {
@@ -178,7 +178,7 @@ pub struct PSKCAlgorithmParameters {
 ///      ... }
 /// ```
 ///
-/// [RFC 6031 Section 3.2.7]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.2.7
+/// [RFC 6031 Section 3.2.7]: https://www.rfc-editor.org/info/rfc6031#section-3.2.7
 #[derive(Sequence, PartialEq, Eq)]
 #[allow(missing_docs)]
 pub struct ChallengeFormat {
@@ -197,7 +197,7 @@ impl_str_enum!(
     ///                 "ALPHANUMERIC" |"BASE64" |"BINARY")
     /// ```
     ///
-    /// [RFC 6031 Section 3.2.7]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.2.7
+    /// [RFC 6031 Section 3.2.7]: https://www.rfc-editor.org/info/rfc6031#section-3.2.7
     #[derive(Copy, Clone, PartialEq, Eq)]
     pub enum Encoding {
         /// "DECIMAL"
@@ -223,7 +223,7 @@ impl_str_enum!(
 ///      ... }
 /// ```
 ///
-/// [RFC 6031 Section 3.2.7]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.2.7
+/// [RFC 6031 Section 3.2.7]: https://www.rfc-editor.org/info/rfc6031#section-3.2.7
 #[derive(Sequence, PartialEq, Eq)]
 #[allow(missing_docs)]
 pub struct ResponseFormat {
@@ -241,7 +241,7 @@ pub struct ResponseFormat {
 ///      mac          UTF8String }
 /// ```
 ///
-/// [RFC 6031 Section 3.2.12]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.2.12
+/// [RFC 6031 Section 3.2.12]: https://www.rfc-editor.org/info/rfc6031#section-3.2.12
 #[derive(Sequence, PartialEq, Eq)]
 #[allow(missing_docs)]
 pub struct ValueMac {
@@ -255,7 +255,7 @@ pub struct ValueMac {
 ///    PSKCKeyUsages ::= SEQUENCE OF PSKCKeyUsage
 /// ```
 ///
-/// [RFC 6031 Section 3.3.4]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.3.4
+/// [RFC 6031 Section 3.3.4]: https://www.rfc-editor.org/info/rfc6031#section-3.3.4
 pub type PSKCKeyUsages = Vec<PSKCKeyUsage>;
 
 impl_str_enum!(
@@ -267,7 +267,7 @@ impl_str_enum!(
     ///                     "KeyWrap" | "Unwrap" | "Derive" | "Generate")
     /// ```
     ///
-    /// [RFC 6031 Section 3.3.4]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.3.4
+    /// [RFC 6031 Section 3.3.4]: https://www.rfc-editor.org/info/rfc6031#section-3.3.4
     #[derive(Copy, Clone, PartialEq, Eq)]
     pub enum PSKCKeyUsage {
         /// "OTP"
@@ -307,7 +307,7 @@ impl_str_enum!(
 ///      pinEncoding       [5] Encoding OPTIONAL }
 /// ```
 ///
-/// [RFC 6031 Section 3.3.5]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.3.5
+/// [RFC 6031 Section 3.3.5]: https://www.rfc-editor.org/info/rfc6031#section-3.3.5
 #[derive(Sequence, PartialEq, Eq)]
 #[allow(missing_docs)]
 pub struct PINPolicy {
@@ -334,7 +334,7 @@ impl_str_enum!(
     ///                     "Algorithmic")
     /// ```
     ///
-    /// [RFC 6031 Section 3.3.5]: https://datatracker.ietf.org/doc/html/rfc6031#section-3.3.5
+    /// [RFC 6031 Section 3.3.5]: https://www.rfc-editor.org/info/rfc6031#section-3.3.5
     #[derive(Copy, Clone, PartialEq, Eq)]
     pub enum PINUsageMode {
         /// "Local"

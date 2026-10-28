@@ -24,7 +24,7 @@ const SHA_1_AI: AlgorithmIdentifierRef<'_> = AlgorithmIdentifierRef {
 /// ```text
 /// TrailerField ::= INTEGER { trailerFieldBC(1) }
 /// ```
-/// [RFC 8017 Appendix 2.3]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.2.3
+/// [RFC 8017 Appendix 2.3]: https://www.rfc-editor.org/info/rfc8017#appendix-A.2.3
 #[derive(Clone, Debug, Copy, PartialEq, Eq)]
 #[repr(u8)]
 #[derive(Default)]
@@ -80,7 +80,7 @@ pub type RsaPssParamsOwned = RsaPssParams<Any>;
 /// MaskGenAlgorithm ::= AlgorithmIdentifier
 /// ```
 ///
-/// [RFC 8017 Appendix 2.3]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.2.3
+/// [RFC 8017 Appendix 2.3]: https://www.rfc-editor.org/info/rfc8017#appendix-A.2.3
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RsaPssParams<Params> {
     /// Hash Algorithm
@@ -298,7 +298,7 @@ pub type RsaOaepParamsOwned = RsaOaepParams<Any>;
 /// PSourceAlgorithm ::= AlgorithmIdentifier
 /// ```
 ///
-/// [RFC 8017 Appendix 2.1]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.2.1
+/// [RFC 8017 Appendix 2.1]: https://www.rfc-editor.org/info/rfc8017#appendix-A.2.1
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RsaOaepParams<Params> {
     /// Hash Algorithm

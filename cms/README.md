@@ -63,6 +63,6 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
-[RFC 3274]: https://datatracker.ietf.org/doc/html/rfc3274
-[RFC 5652]: https://datatracker.ietf.org/doc/html/rfc5652
-[RFC 5911]: https://datatracker.ietf.org/doc/html/rfc5652
+[RFC 3274]: https://www.rfc-editor.org/info/rfc3274
+[RFC 5652]: https://www.rfc-editor.org/info/rfc5652
+[RFC 5911]: https://www.rfc-editor.org/info/rfc5652

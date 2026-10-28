@@ -156,7 +156,7 @@ impl TryFrom<SystemTime> for Time {
 ///     notAfter       Time
 /// }
 /// ```
-/// [RFC 5280 Section 4.1.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.5
+/// [RFC 5280 Section 4.1.2.5]: https://www.rfc-editor.org/info/rfc5280#section-4.1.2.5
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, ValueOrd)]
 pub struct Validity<P: Profile = Rfc5280> {

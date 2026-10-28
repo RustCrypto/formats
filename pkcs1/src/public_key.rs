@@ -30,7 +30,7 @@ pub type RsaPublicKeyOwned = RsaPublicKey<Uint>;
 /// }
 /// ```
 ///
-/// [RFC 8017 Appendix 1.1]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.1.1
+/// [RFC 8017 Appendix 1.1]: https://www.rfc-editor.org/info/rfc8017#appendix-A.1.1
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct RsaPublicKey<U> {
     /// `n`: RSA modulus

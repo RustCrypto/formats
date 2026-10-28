@@ -49,4 +49,4 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
-[RFC 4210]: https://datatracker.ietf.org/doc/html/rfc4210
+[RFC 4210]: https://www.rfc-editor.org/info/rfc4210

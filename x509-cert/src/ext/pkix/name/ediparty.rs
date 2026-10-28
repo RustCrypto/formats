@@ -24,7 +24,7 @@ use super::DirectoryString;
 /// See [this OpenSSL bug] for more details.
 ///
 /// [this OpenSSL bug]: https://github.com/openssl/openssl/issues/6859
-/// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
+/// [RFC 5280 Section 4.2.1.6]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.6
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct EdiPartyName {

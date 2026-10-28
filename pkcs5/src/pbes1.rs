@@ -49,7 +49,7 @@ pub const SALT_LENGTH: usize = 8;
 /// }
 /// ```
 ///
-/// [RFC 8018 Appendix A.C]: https://datatracker.ietf.org/doc/html/rfc8018#appendix-C
+/// [RFC 8018 Appendix A.C]: https://www.rfc-editor.org/info/rfc8018#appendix-C
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Algorithm {
     /// Encryption scheme.

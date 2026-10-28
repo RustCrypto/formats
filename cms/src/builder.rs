@@ -192,7 +192,7 @@ impl Builder for SignerInfoBuilder<'_> {
     type Output = SignerInfo;
 
     /// Calculate the data to be signed
-    /// [RFC 5652 § 5.4](https://datatracker.ietf.org/doc/html/rfc5652#section-5.4)
+    /// [RFC 5652 § 5.4](https://www.rfc-editor.org/info/rfc5652#section-5.4)
     /// If an `external_message_digest` is passed in, it is assumed, that we are signing external
     /// content (see RFC 5652 § 5.2). In this case, the `eContent` in `EncapsulatedContentInfo`
     /// must be `None`.
@@ -1338,7 +1338,7 @@ where
 }
 
 /// Create a content-type attribute according to
-/// [RFC 5652 § 11.1](https://datatracker.ietf.org/doc/html/rfc5652#section-11.1)
+/// [RFC 5652 § 11.1](https://www.rfc-editor.org/info/rfc5652#section-11.1)
 pub fn create_content_type_attribute(content_type: ObjectIdentifier) -> Result<Attribute> {
     let content_type_attribute_value =
         AttributeValue::new(Tag::ObjectIdentifier, content_type.as_bytes())?;
@@ -1352,7 +1352,7 @@ pub fn create_content_type_attribute(content_type: ObjectIdentifier) -> Result<A
 }
 
 /// Create a message digest attribute according to
-/// [RFC 5652 § 11.2](https://datatracker.ietf.org/doc/html/rfc5652#section-11.2)
+/// [RFC 5652 § 11.2](https://www.rfc-editor.org/info/rfc5652#section-11.2)
 pub fn create_message_digest_attribute(message_digest: &[u8]) -> Result<Attribute> {
     let message_digest_der = OctetStringRef::new(message_digest)?;
     let message_digest_attribute_value =
@@ -1367,7 +1367,7 @@ pub fn create_message_digest_attribute(message_digest: &[u8]) -> Result<Attribut
 }
 
 /// Create a signing time attribute according to
-/// [RFC 5652 § 11.3](https://datatracker.ietf.org/doc/html/rfc5652#section-11.3)
+/// [RFC 5652 § 11.3](https://www.rfc-editor.org/info/rfc5652#section-11.3)
 /// Dates between 1 January 1950 and 31 December 2049 (inclusive) MUST be
 /// encoded as UTCTime.  Any dates with year values before 1950 or after
 /// 2049 MUST be encoded as GeneralizedTime.

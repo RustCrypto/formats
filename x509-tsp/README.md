@@ -47,4 +47,4 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
-[RFC 3161]: https://datatracker.ietf.org/doc/html/rfc3161
+[RFC 3161]: https://www.rfc-editor.org/info/rfc3161

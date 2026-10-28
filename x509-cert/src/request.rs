@@ -48,7 +48,7 @@ pub enum Version {
 /// }
 /// ```
 ///
-/// [RFC 2986 Section 4]: https://datatracker.ietf.org/doc/html/rfc2986#section-4
+/// [RFC 2986 Section 4]: https://www.rfc-editor.org/info/rfc2986#section-4
 #[derive(Clone, Debug, PartialEq, Eq, Sequence)]
 pub struct CertReqInfo {
     /// Certification request version.
@@ -75,7 +75,7 @@ pub struct CertReqInfo {
 /// }
 /// ```
 ///
-/// [RFC 2986 Section 4]: https://datatracker.ietf.org/doc/html/rfc2986#section-4
+/// [RFC 2986 Section 4]: https://www.rfc-editor.org/info/rfc2986#section-4
 #[derive(Clone, Debug, PartialEq, Eq, Sequence)]
 pub struct CertReq {
     /// Certification request information.
@@ -107,7 +107,7 @@ impl<'a> TryFrom<&'a [u8]> for CertReq {
 /// ExtensionReq ::= SEQUENCE SIZE (1..MAX) OF Extension
 /// ```
 ///
-/// [RFC 5272 Section 3.1]: https://datatracker.ietf.org/doc/html/rfc5272#section-3.1
+/// [RFC 5272 Section 3.1]: https://www.rfc-editor.org/info/rfc5272#section-3.1
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct ExtensionReq(pub Vec<Extension>);
 

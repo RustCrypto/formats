@@ -17,7 +17,7 @@ use x509_cert::{
 ///    serialNumber            CertificateSerialNumber }
 /// ```
 ///
-/// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
+/// [RFC 6960 Section 4.1.1]: https://www.rfc-editor.org/info/rfc6960#section-4.1.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct CertId<P: Profile + 'static = Rfc5280> {
@@ -52,7 +52,7 @@ mod builder {
         ///
         /// [RFC 6960 Section 4.1.1]
         ///
-        /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
+        /// [RFC 6960 Section 4.1.1]: https://www.rfc-editor.org/info/rfc6960#section-4.1.1
         pub fn from_issuer<D>(
             issuer: &Certificate,
             serial_number: SerialNumber,
@@ -88,7 +88,7 @@ mod builder {
         ///
         /// [RFC 6960 Section 4.1.1]
         ///
-        /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
+        /// [RFC 6960 Section 4.1.1]: https://www.rfc-editor.org/info/rfc6960#section-4.1.1
         pub fn from_cert<D>(issuer: &Certificate, cert: &Certificate) -> Result<Self, Error>
         where
             D: Digest + AssociatedOid,

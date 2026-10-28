@@ -523,8 +523,8 @@ mod from_crl {
     /// issued and has not revoked. The method's own documentation says so; this pins the behavior
     /// that documentation describes.
     ///
-    /// [RFC 2560]: https://datatracker.ietf.org/doc/html/rfc2560#section-2.2
-    /// [RFC 6960]: https://datatracker.ietf.org/doc/html/rfc6960#section-2.2
+    /// [RFC 2560]: https://www.rfc-editor.org/info/rfc2560#section-2.2
+    /// [RFC 6960]: https://www.rfc-editor.org/info/rfc6960#section-2.2
     #[test]
     fn a_serial_the_crl_does_not_list_is_good() {
         let (ca, crl) = actalis();

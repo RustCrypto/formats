@@ -11,7 +11,7 @@ use der::{Sequence, ValueOrd};
 /// PolicyMappings ::= SEQUENCE SIZE (1..MAX) OF SEQUENCE {
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.5
+/// [RFC 5280 Section 4.2.1.5]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.5
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PolicyMappings(pub Vec<PolicyMapping>);
 
@@ -31,7 +31,7 @@ impl_extension!(PolicyMappings, critical = true);
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.5
+/// [RFC 5280 Section 4.2.1.5]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.5
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct PolicyMapping {

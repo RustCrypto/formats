@@ -83,7 +83,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [RustCrypto]: https://github.com/rustcrypto
 [MS-SPNG]: https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-spng
-[RFC1509]: https://datatracker.ietf.org/doc/html/rfc1509
-[RFC2478]: https://datatracker.ietf.org/doc/html/rfc2478
-[RFC4178]: https://datatracker.ietf.org/doc/html/rfc4178
+[RFC1509]: https://www.rfc-editor.org/info/rfc1509
+[RFC2478]: https://www.rfc-editor.org/info/rfc2478
+[RFC4178]: https://www.rfc-editor.org/info/rfc4178
 [Kerberos]: https://en.wikipedia.org/wiki/Kerberos_(protocol)

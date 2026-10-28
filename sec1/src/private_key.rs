@@ -26,7 +26,7 @@ use der::pem::PemLabel;
 /// > be set to ecPrivkeyVer1, which is of type INTEGER and whose value
 /// > is one (1).
 ///
-/// [RFC5915 Section 3]: https://datatracker.ietf.org/doc/html/rfc5915#section-3
+/// [RFC5915 Section 3]: https://www.rfc-editor.org/info/rfc5915#section-3
 const VERSION: u8 = 1;
 
 /// Context-specific tag number for the elliptic curve parameters.
@@ -56,7 +56,7 @@ const PUBLIC_KEY_TAG: TagNumber = TagNumber(1);
 /// ```
 ///
 /// [SEC1: Elliptic Curve Cryptography (Version 2.0)]: https://www.secg.org/sec1-v2.pdf
-/// [RFC5915 Section 3]: https://datatracker.ietf.org/doc/html/rfc5915#section-3
+/// [RFC5915 Section 3]: https://www.rfc-editor.org/info/rfc5915#section-3
 #[derive(Clone)]
 pub struct EcPrivateKey<'a> {
     /// Private key data.

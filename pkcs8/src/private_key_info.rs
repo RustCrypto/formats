@@ -119,9 +119,9 @@ const PUBLIC_KEY_TAG: TagNumber = TagNumber(1);
 /// ```
 ///
 /// [RFC 5208]: https://tools.ietf.org/html/rfc5208
-/// [RFC 5958]: https://datatracker.ietf.org/doc/html/rfc5958
+/// [RFC 5958]: https://www.rfc-editor.org/info/rfc5958
 /// [RFC 5208 Section 5]: https://tools.ietf.org/html/rfc5208#section-5
-/// [RFC 5958 Section 2]: https://datatracker.ietf.org/doc/html/rfc5958#section-2
+/// [RFC 5958 Section 2]: https://www.rfc-editor.org/info/rfc5958#section-2
 #[derive(Clone)]
 pub struct PrivateKeyInfo<Params, Key, PubKey> {
     /// X.509 `AlgorithmIdentifier` for the private key type.

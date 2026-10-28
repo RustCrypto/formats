@@ -313,7 +313,7 @@ mod sequence {
     //      -- and onlyContainsAttributeCerts may be set to TRUE.
     // ```
     //
-    // [RFC 5280 Section 5.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.5
+    // [RFC 5280 Section 5.2.5]: https://www.rfc-editor.org/info/rfc5280#section-5.2.5
     #[derive(Sequence, Default)]
     pub struct IssuingDistributionPointExample {
         // Omit distributionPoint and only_some_reasons because corresponding structs are not
@@ -375,7 +375,7 @@ mod sequence {
     //         }
     // ```
     //
-    // [RFC 5280 Section 4.1.2.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.9
+    // [RFC 5280 Section 4.1.2.9]: https://www.rfc-editor.org/info/rfc5280#section-4.1.2.9
     #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
     pub struct ExtensionExample<'a> {
         /// extnID      OBJECT IDENTIFIER,

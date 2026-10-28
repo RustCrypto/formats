@@ -12,7 +12,7 @@ use der::{Choice, ValueOrd};
 /// GeneralNames ::= SEQUENCE SIZE (1..MAX) OF GeneralName
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
+/// [RFC 5280 Section 4.2.1.6]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.6
 pub type GeneralNames = alloc::vec::Vec<GeneralName>;
 
 /// GeneralName as defined in [RFC 5280 Section 4.2.1.6].
@@ -33,7 +33,7 @@ pub type GeneralNames = alloc::vec::Vec<GeneralName>;
 ///
 /// This implementation does not currently support the `x400Address` choice.
 ///
-/// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
+/// [RFC 5280 Section 4.2.1.6]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.6
 #[derive(Clone, Debug, Eq, PartialEq, Choice, ValueOrd)]
 #[allow(missing_docs)]
 pub enum GeneralName {

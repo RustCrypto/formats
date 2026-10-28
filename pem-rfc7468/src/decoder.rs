@@ -8,7 +8,7 @@
 //! > boundaries", are base64-encoded data according to Section 4 of
 //! > [RFC 4648].
 //!
-//! [RFC 4648]: https://datatracker.ietf.org/doc/html/rfc4648
+//! [RFC 4648]: https://www.rfc-editor.org/info/rfc4648
 
 use crate::{
     BASE64_WRAP_WIDTH, Base64Decoder, Error, POST_ENCAPSULATION_BOUNDARY,

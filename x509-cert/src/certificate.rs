@@ -82,7 +82,7 @@ impl Profile for Raw {
 /// Version  ::=  INTEGER  {  v1(0), v2(1), v3(2)  }
 /// ```
 ///
-/// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
+/// [RFC 5280 Section 4.1]: https://www.rfc-editor.org/info/rfc5280#section-4.1
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Enumerated)]
 #[asn1(type = "INTEGER")]
@@ -133,7 +133,7 @@ pub type TbsCertificate = TbsCertificateInner<Rfc5280>;
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
+/// [RFC 5280 Section 4.1]: https://www.rfc-editor.org/info/rfc5280#section-4.1
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
@@ -313,7 +313,7 @@ impl<P: Profile> TbsCertificateInner<P> {
 
 /// X.509 certificates are defined in [RFC 5280 Section 4.1].
 ///
-/// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
+/// [RFC 5280 Section 4.1]: https://www.rfc-editor.org/info/rfc5280#section-4.1
 pub type Certificate = CertificateInner<Rfc5280>;
 
 /// X.509 certificates are defined in [RFC 5280 Section 4.1].
@@ -326,7 +326,7 @@ pub type Certificate = CertificateInner<Rfc5280>;
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
+/// [RFC 5280 Section 4.1]: https://www.rfc-editor.org/info/rfc5280#section-4.1
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
@@ -369,7 +369,7 @@ impl<P: Profile> PemLabel for CertificateInner<P> {
 /// PkiPath ::= SEQUENCE OF Certificate
 /// ```
 ///
-/// [RFC 6066]: https://datatracker.ietf.org/doc/html/rfc6066#section-10.1
+/// [RFC 6066]: https://www.rfc-editor.org/info/rfc6066#section-10.1
 pub type PkiPath = Vec<Certificate>;
 
 #[cfg(feature = "pem")]

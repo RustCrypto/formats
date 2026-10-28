@@ -42,7 +42,7 @@ use der::{
 /// `UTF8String` are the new types and the other types are legacy. Until
 /// the need arises, we only support `PrintableString` and `UTF8String`.
 ///
-/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
+/// [RFC 5280 Section 4.2.1.4]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq, Choice, ValueOrd)]
 #[allow(missing_docs)]
 pub enum DirectoryString {

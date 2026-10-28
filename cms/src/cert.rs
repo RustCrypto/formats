@@ -72,7 +72,7 @@ pub struct OtherCertificateFormat {
 ///   serialNumber CertificateSerialNumber }
 /// ```
 ///
-/// [RFC 5652 Section 10.2.4]: https://datatracker.ietf.org/doc/html/rfc5652#section-10.2.4
+/// [RFC 5652 Section 10.2.4]: https://www.rfc-editor.org/info/rfc5652#section-10.2.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct IssuerAndSerialNumber {
