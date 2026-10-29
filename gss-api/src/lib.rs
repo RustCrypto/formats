@@ -29,7 +29,7 @@ pub mod negotiation;
 ///   MechType ::= OBJECT IDENTIFIER
 /// ```
 ///
-/// [RFC 1508 Appendix B]: https://datatracker.ietf.org/doc/html/rfc1508#appendix-B
+/// [RFC 1508 Appendix B]: https://www.rfc-editor.org/info/rfc1508#appendix-B
 pub type MechType = ObjectIdentifier;
 
 /// InitialContextToken as defined in [RFC 1508 Appendix B].
@@ -45,7 +45,7 @@ pub type MechType = ObjectIdentifier;
 ///     }
 /// ```
 ///
-/// [RFC 1508 Appendix B]: https://datatracker.ietf.org/doc/html/rfc1508#appendix-B
+/// [RFC 1508 Appendix B]: https://www.rfc-editor.org/info/rfc1508#appendix-B
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct InitialContextToken<'a> {
     /// mechanism type OID
@@ -92,7 +92,7 @@ impl EncodeValue for InitialContextToken<'_> {
 /// -- interpretation based on predecessor InitialContextToken
 /// ```
 ///
-/// [RFC 1508 Appendix B]: https://datatracker.ietf.org/doc/html/rfc1508#appendix-B
+/// [RFC 1508 Appendix B]: https://www.rfc-editor.org/info/rfc1508#appendix-B
 pub type SubsequentContextToken<'a> = AnyRef<'a>;
 
 /// The `PerMsgToken` type is defined in [RFC 1508 Appendix B].
@@ -102,7 +102,7 @@ pub type SubsequentContextToken<'a> = AnyRef<'a>;
 ///         innerMsgToken ANY
 /// ```
 ///
-/// [RFC 1508 Appendix B]: https://datatracker.ietf.org/doc/html/rfc1508#appendix-B
+/// [RFC 1508 Appendix B]: https://www.rfc-editor.org/info/rfc1508#appendix-B
 pub type PerMsgToken<'a> = AnyRef<'a>;
 
 /// The `SealedMessage` type is defined in [RFC 1508 Appendix B].
@@ -115,7 +115,7 @@ pub type PerMsgToken<'a> = AnyRef<'a>;
 ///         sealedUserData ANY
 /// ```
 ///
-/// [RFC 1508 Appendix B]: https://datatracker.ietf.org/doc/html/rfc1508#appendix-B
+/// [RFC 1508 Appendix B]: https://www.rfc-editor.org/info/rfc1508#appendix-B
 pub type SealedMessage<'a> = AnyRef<'a>;
 
 #[cfg(test)]

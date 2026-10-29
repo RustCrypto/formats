@@ -6,7 +6,7 @@
 //! `oiddbgen` (a subcrate in the source code) to generate the values from
 //! the relevant standard.
 //!
-//! [RFC 5280]: https://datatracker.ietf.org/doc/html/rfc5280
+//! [RFC 5280]: https://www.rfc-editor.org/info/rfc5280
 //! [Object Identifier Descriptors]: https://www.iana.org/assignments/ldap-parameters/ldap-parameters.xhtml#ldap-parameters-3
 
 #![allow(clippy::arithmetic_side_effects, missing_docs)]

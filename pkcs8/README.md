@@ -90,5 +90,5 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
-[RFC 5208]: https://tools.ietf.org/html/rfc5208
+[RFC 5208]: https://www.rfc-editor.org/info/rfc5208
 [scrypt]: https://en.wikipedia.org/wiki/Scrypt

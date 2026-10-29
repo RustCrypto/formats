@@ -3,7 +3,7 @@
 //! This module contains the building logic for Key Agreement Recipient Info.
 //! It partially implements [RFC 5753].
 //!
-//! [RFC 5753]: https://datatracker.ietf.org/doc/html/rfc5753
+//! [RFC 5753]: https://www.rfc-editor.org/info/rfc5753
 //!
 
 // Super imports
@@ -103,8 +103,8 @@ pub struct EccCmsSharedInfo {
 /// - dhSinglePass-stdDH-sha384kdf-scheme
 /// - dhSinglePass-stdDH-sha512kdf-scheme
 ///
-/// [RFC 5753 Section 7.1.4]: https://datatracker.ietf.org/doc/html/rfc5753#section-7.1.4
-/// [RFC 5753 Section 8]: https://datatracker.ietf.org/doc/html/rfc5753#section-8
+/// [RFC 5753 Section 7.1.4]: https://www.rfc-editor.org/info/rfc5753#section-7.1.4
+/// [RFC 5753 Section 8]: https://www.rfc-editor.org/info/rfc5753#section-8
 pub trait KeyAgreementAlgorithm {
     /// Compute a shared key with the provided parameters
     fn kdf<C, Enc>(
@@ -286,11 +286,11 @@ where
     /// - Add support for `'Co-factor' ECDH` - see [RFC 5753 Section 3.1.1]
     /// - Add support for `1-Pass ECMQV` - see [RFC 5753 Section 3.2.1]
     ///
-    /// [RFC 5753 Section 3]: https://datatracker.ietf.org/doc/html/rfc5753#section-3
-    /// [RFC 5652 Section 6.2.2]: https://datatracker.ietf.org/doc/html/rfc5652#section-6.2.2
-    /// [RFC 5753 Section 3.1.1]: https://datatracker.ietf.org/doc/html/rfc5753#section-3.1.1
-    /// [RFC 5753 Section 3.1.2]: https://datatracker.ietf.org/doc/html/rfc5753#section-3.1.2
-    /// [RFC 5753 Section 3.2.1]: https://datatracker.ietf.org/doc/html/rfc5753#section-3.2.1
+    /// [RFC 5753 Section 3]: https://www.rfc-editor.org/info/rfc5753#section-3
+    /// [RFC 5652 Section 6.2.2]: https://www.rfc-editor.org/info/rfc5652#section-6.2.2
+    /// [RFC 5753 Section 3.1.1]: https://www.rfc-editor.org/info/rfc5753#section-3.1.1
+    /// [RFC 5753 Section 3.1.2]: https://www.rfc-editor.org/info/rfc5753#section-3.1.2
+    /// [RFC 5753 Section 3.2.1]: https://www.rfc-editor.org/info/rfc5753#section-3.2.1
     fn build_with_rng(
         &mut self,
         content_encryption_key: &[u8],
@@ -314,7 +314,7 @@ where
                     ephemeral_secret.diffie_hellman(&recipient_public_key);
 
                 // Generate shared info for KDF
-                // As per https://datatracker.ietf.org/doc/html/rfc5753#section-7.2"
+                // As per https://www.rfc-editor.org/info/rfc5753#section-7.2"
                 // ```
                 // keyInfo contains the object identifier of the key-encryption
                 // algorithm (used to wrap the CEK) and associated parameters.  In
@@ -324,7 +324,7 @@ where
                 let key_wrap_algorithm_identifier = KW::algorithm_identifier();
                 let key_wrap_algorithm_der = key_wrap_algorithm_identifier.to_der()?;
 
-                // As per https://datatracker.ietf.org/doc/html/rfc5753#section-7.2"
+                // As per https://www.rfc-editor.org/info/rfc5753#section-7.2"
                 // ```
                 // entityUInfo optionally contains additional keying material
                 // supplied by the sending agent.  When used with ECDH and CMS, the
@@ -334,7 +334,7 @@ where
                 // ```
                 let entity_u_info = self.ukm.clone();
 
-                // As per https://datatracker.ietf.org/doc/html/rfc5753#section-7.2"
+                // As per https://www.rfc-editor.org/info/rfc5753#section-7.2"
                 // ```
                 // suppPubInfo contains the length of the generated KEK, in bits,
                 // represented as a 32-bit number, as in [CMS-DH] and [CMS-AES].

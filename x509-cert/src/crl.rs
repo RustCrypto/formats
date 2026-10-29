@@ -27,7 +27,7 @@ use der::pem::PemLabel;
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 5.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.1
+/// [RFC 5280 Section 5.1]: https://www.rfc-editor.org/info/rfc5280#section-5.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct CertificateList<P: Profile = Rfc5280> {
@@ -54,7 +54,7 @@ impl<P: Profile> PemLabel for CertificateList<P> {
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 5.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.1
+/// [RFC 5280 Section 5.1]: https://www.rfc-editor.org/info/rfc5280#section-5.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct RevokedCert<P: Profile = Rfc5280> {
@@ -81,7 +81,7 @@ pub struct RevokedCert<P: Profile = Rfc5280> {
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 5.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.1
+/// [RFC 5280 Section 5.1]: https://www.rfc-editor.org/info/rfc5280#section-5.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct TbsCertList<P: Profile = Rfc5280> {

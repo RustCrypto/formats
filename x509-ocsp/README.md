@@ -50,4 +50,4 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
-[RFC 6960]: https://datatracker.ietf.org/doc/html/rfc6960
+[RFC 6960]: https://www.rfc-editor.org/info/rfc6960

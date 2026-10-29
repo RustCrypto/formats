@@ -21,7 +21,7 @@ use crate::ext::pkix::name::{DistributionPointName, GeneralNames};
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 5.2.5]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.5
+/// [RFC 5280 Section 5.2.5]: https://www.rfc-editor.org/info/rfc5280#section-5.2.5
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct IssuingDistributionPoint {
@@ -75,7 +75,7 @@ impl_extension!(IssuingDistributionPoint, critical = true);
 ///      cRLIssuer               [2]     GeneralNames OPTIONAL }
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
+/// [RFC 5280 Section 4.2.1.13]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.13
 #[derive(Clone, Debug, PartialEq, Eq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct DistributionPoint {
@@ -91,7 +91,7 @@ pub struct DistributionPoint {
 
 /// ReasonFlags as defined in [RFC 5280 Section 4.2.1.13].
 ///
-/// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
+/// [RFC 5280 Section 4.2.1.13]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.13
 pub type ReasonFlags = FlagSet<Reasons>;
 
 flags! {
@@ -111,7 +111,7 @@ flags! {
     /// }
     /// ```
     ///
-    /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
+    /// [RFC 5280 Section 4.2.1.13]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.13
     #[allow(missing_docs)]
     pub enum Reasons: u16 {
         Unused = 1 << 0,

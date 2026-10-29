@@ -35,12 +35,12 @@
 //! - [PKCS#5v2 Password Based Encryption Scheme 2 (RFC 8018)]
 //!   - Key derivation functions:
 //!     - [scrypt] ([RFC 7914])
-//!     - PBKDF2 ([RFC 8018](https://datatracker.ietf.org/doc/html/rfc8018#section-5.2))
+//!     - PBKDF2 ([RFC 8018](https://www.rfc-editor.org/info/rfc8018#section-5.2))
 //!       - SHA-2 based PRF with HMAC-SHA224, HMAC-SHA256, HMAC-SHA384, or HMAC-SHA512
 //!       - SHA-1 based PRF with HMAC-SHA1, when the `sha1` feature of this crate is enabled.
 //!   - Symmetric encryption: AES-128-CBC, AES-192-CBC, or AES-256-CBC
 //!     (best available options for PKCS#5v2)
-//!  
+//!
 //! ## Legacy DES-CBC and DES-EDE3-CBC (3DES) support (optional)
 //! When the `des-insecure` and/or `3des` features are enabled this crate provides support for
 //! private keys encrypted with DES-CBC and DES-EDE3-CBC (3DES or Triple DES) symmetric
@@ -57,10 +57,10 @@
 //! New keys should use AES instead.
 //! </div>
 //!
-//! [RFC 5208]: https://tools.ietf.org/html/rfc5208
-//! [RFC 5958]: https://tools.ietf.org/html/rfc5958
-//! [RFC 7914]: https://datatracker.ietf.org/doc/html/rfc7914
-//! [PKCS#5v2 Password Based Encryption Scheme 2 (RFC 8018)]: https://tools.ietf.org/html/rfc8018#section-6.2
+//! [RFC 5208]: https://www.rfc-editor.org/info/rfc5208
+//! [RFC 5958]: https://www.rfc-editor.org/info/rfc5958
+//! [RFC 7914]: https://www.rfc-editor.org/info/rfc7914
+//! [PKCS#5v2 Password Based Encryption Scheme 2 (RFC 8018)]: https://www.rfc-editor.org/info/rfc8018#section-6.2
 //! [scrypt]: https://en.wikipedia.org/wiki/Scrypt
 
 #[cfg(feature = "alloc")]

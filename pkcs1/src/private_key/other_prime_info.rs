@@ -14,7 +14,7 @@ use der::{Decode, DecodeValue, Encode, EncodeValue, Header, Length, Reader, Sequ
 /// }
 /// ```
 ///
-/// [RFC 8017 Appendix 1.2]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.1.2
+/// [RFC 8017 Appendix 1.2]: https://www.rfc-editor.org/info/rfc8017#appendix-A.1.2
 #[derive(Clone)]
 pub struct OtherPrimeInfo<U> {
     /// Prime factor `r_i` of `n`, where `i` >= 3.

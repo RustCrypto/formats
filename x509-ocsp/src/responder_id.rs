@@ -11,7 +11,7 @@ use x509_cert::name::Name;
 ///    byKey               [2] KeyHash }
 /// ```
 ///
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+/// [RFC 6960 Section 4.2.1]: https://www.rfc-editor.org/info/rfc6960#section-4.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Choice)]
 #[allow(missing_docs)]
 pub enum ResponderId {
@@ -44,5 +44,5 @@ impl From<KeyHash> for ResponderId {
 ///                          -- bits] in the responder's certificate)
 /// ```
 ///
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+/// [RFC 6960 Section 4.2.1]: https://www.rfc-editor.org/info/rfc6960#section-4.2.1
 pub type KeyHash = OctetString;

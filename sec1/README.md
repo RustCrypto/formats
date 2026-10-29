@@ -55,4 +55,4 @@ dual licensed as above, without any additional terms or conditions.
 
 [RustCrypto]: https://github.com/rustcrypto
 [SEC1: Elliptic Curve Cryptography]: https://www.secg.org/sec1-v2.pdf
-[RFC5915]: https://datatracker.ietf.org/doc/html/rfc5915
+[RFC5915]: https://www.rfc-editor.org/info/rfc5915

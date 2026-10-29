@@ -82,7 +82,7 @@ impl<'i, E: Encoding> Decoder<'i, E> {
     /// - `Err(Error::InvalidLength)` if the input buffer is empty or the line
     ///   width is zero.
     ///
-    /// [RFC7468]: https://datatracker.ietf.org/doc/html/rfc7468
+    /// [RFC7468]: https://www.rfc-editor.org/info/rfc7468
     pub fn new_wrapped(input: &'i [u8], line_width: usize) -> Result<Self, Error> {
         let line_reader = LineReader::new_wrapped(input, line_width)?;
         let remaining_len = line_reader.decoded_len::<E>()?;

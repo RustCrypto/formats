@@ -37,7 +37,7 @@ pub struct Pkcs12PbeParams {
 ///     algid-hmacWithSHA1 }
 /// ```
 ///
-/// [RFC 8018 Appendix A.2]: https://tools.ietf.org/html/rfc8018#appendix-A.2
+/// [RFC 8018 Appendix A.2]: https://www.rfc-editor.org/info/rfc8018#appendix-A.2
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct Pbkdf2Params {
     /// PBKDF2 salt

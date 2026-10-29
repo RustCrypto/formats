@@ -15,7 +15,7 @@ use der::{
 /// OcspNoCheck ::= NULL
 /// ```
 ///
-/// [RFC 6960 Section 4.2.2.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.2.2.1
+/// [RFC 6960 Section 4.2.2.2.1]: https://www.rfc-editor.org/info/rfc6960#section-4.2.2.2.1
 pub type OcspNoCheck = Null;
 
 /// OCSPResponse structure as defined in [RFC 6960 Section 4.2.1].
@@ -26,7 +26,7 @@ pub type OcspNoCheck = Null;
 ///    responseBytes           [0] EXPLICIT ResponseBytes OPTIONAL }
 /// ```
 ///
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+/// [RFC 6960 Section 4.2.1]: https://www.rfc-editor.org/info/rfc6960#section-4.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct OcspResponse {
@@ -41,7 +41,7 @@ impl OcspResponse {
     ///
     /// [RFC 6960 Section 4.2.1]
     ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+    /// [RFC 6960 Section 4.2.1]: https://www.rfc-editor.org/info/rfc6960#section-4.2.1
     pub fn successful(res: impl AsResponseBytes) -> Result<Self, der::Error> {
         Ok(OcspResponse {
             response_status: OcspResponseStatus::Successful,
@@ -53,7 +53,7 @@ impl OcspResponse {
     ///
     /// [RFC 6960 Section 4.2.1]
     ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+    /// [RFC 6960 Section 4.2.1]: https://www.rfc-editor.org/info/rfc6960#section-4.2.1
     pub fn malformed_request() -> Self {
         OcspResponse {
             response_status: OcspResponseStatus::MalformedRequest,
@@ -65,7 +65,7 @@ impl OcspResponse {
     ///
     /// [RFC 6960 Section 4.2.1]
     ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+    /// [RFC 6960 Section 4.2.1]: https://www.rfc-editor.org/info/rfc6960#section-4.2.1
     pub fn internal_error() -> Self {
         OcspResponse {
             response_status: OcspResponseStatus::InternalError,
@@ -77,7 +77,7 @@ impl OcspResponse {
     ///
     /// [RFC 6960 Section 4.2.1]
     ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+    /// [RFC 6960 Section 4.2.1]: https://www.rfc-editor.org/info/rfc6960#section-4.2.1
     pub fn try_later() -> Self {
         OcspResponse {
             response_status: OcspResponseStatus::TryLater,
@@ -89,7 +89,7 @@ impl OcspResponse {
     ///
     /// [RFC 6960 Section 4.2.1]
     ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+    /// [RFC 6960 Section 4.2.1]: https://www.rfc-editor.org/info/rfc6960#section-4.2.1
     pub fn sig_required() -> Self {
         OcspResponse {
             response_status: OcspResponseStatus::SigRequired,
@@ -101,7 +101,7 @@ impl OcspResponse {
     ///
     /// [RFC 6960 Section 4.2.1]
     ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+    /// [RFC 6960 Section 4.2.1]: https://www.rfc-editor.org/info/rfc6960#section-4.2.1
     pub fn unauthorized() -> Self {
         OcspResponse {
             response_status: OcspResponseStatus::Unauthorized,
@@ -124,7 +124,7 @@ impl OcspResponse {
 /// }
 /// ```
 ///
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+/// [RFC 6960 Section 4.2.1]: https://www.rfc-editor.org/info/rfc6960#section-4.2.1
 #[derive(Enumerated, Copy, Clone, Debug, Eq, PartialEq)]
 #[repr(u32)]
 #[allow(missing_docs)]
@@ -145,7 +145,7 @@ pub enum OcspResponseStatus {
 ///    response                OCTET STRING }
 /// ```
 ///
-/// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+/// [RFC 6960 Section 4.2.1]: https://www.rfc-editor.org/info/rfc6960#section-4.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct ResponseBytes {

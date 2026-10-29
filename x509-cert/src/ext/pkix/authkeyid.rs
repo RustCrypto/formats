@@ -18,7 +18,7 @@ use der::asn1::OctetString;
 /// KeyIdentifier ::= OCTET STRING
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.1
+/// [RFC 5280 Section 4.2.1.1]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, Default)]
 #[allow(missing_docs)]
 pub struct AuthorityKeyIdentifier {

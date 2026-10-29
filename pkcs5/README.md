@@ -57,4 +57,4 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
-[RFC 8018]: https://tools.ietf.org/html/rfc8018
+[RFC 8018]: https://www.rfc-editor.org/info/rfc8018

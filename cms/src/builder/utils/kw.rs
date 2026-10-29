@@ -48,8 +48,8 @@ use aes_kw::AesKw;
 /// - id-aes192-wrap
 /// - id-aes256-wrap
 ///
-/// [RFC 5753 Section 8]: https://datatracker.ietf.org/doc/html/rfc5753#section-8
-/// [RFC 5753 Section 7.1.5]: https://datatracker.ietf.org/doc/html/rfc5753#section-7.1.5
+/// [RFC 5753 Section 8]: https://www.rfc-editor.org/info/rfc5753#section-8
+/// [RFC 5753 Section 7.1.5]: https://www.rfc-editor.org/info/rfc5753#section-7.1.5
 ///
 /// Represents key wrap algorithms methods.
 pub trait KeyWrapAlgorithm: AssociatedOid + KeySizeUser {
@@ -70,8 +70,8 @@ pub trait KeyWrapAlgorithm: AssociatedOid + KeySizeUser {
     /// In all cases the parameters field MUST be absent.
     /// ```
     ///
-    /// [RFC 3565 Section 2.3.2]: https://datatracker.ietf.org/doc/html/rfc3565#section-2.3.2
-    /// [RFC 5753 Section 7.2]: https://datatracker.ietf.org/doc/html/rfc5753#section-7.2
+    /// [RFC 3565 Section 2.3.2]: https://www.rfc-editor.org/info/rfc3565#section-2.3.2
+    /// [RFC 5753 Section 7.2]: https://www.rfc-editor.org/info/rfc5753#section-7.2
     fn algorithm_identifier() -> AlgorithmIdentifierOwned;
 
     /// Return an empty wrapping key (KEK) with the adequate size to be used with aes-key-wrap

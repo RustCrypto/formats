@@ -1,7 +1,7 @@
 //! Signed Certificate Timestamp list extension as defined in the
 //! [Certificate Transparency RFC 6962].
 //!
-//! [Certificate Transparency RFC 6962]: https://datatracker.ietf.org/doc/html/rfc6962
+//! [Certificate Transparency RFC 6962]: https://www.rfc-editor.org/info/rfc6962
 
 use alloc::{format, vec::Vec};
 use const_oid::{AssociatedOid, ObjectIdentifier, db::rfc6962::CT_PRECERT_SCTS};
@@ -17,7 +17,7 @@ use tls_codec::{
 /// SignedCertificateTimestampList ::= OCTET STRING
 /// ```
 ///
-/// [RFC 6962 Section 3.3]: https://datatracker.ietf.org/doc/html/rfc6962#section-3.3
+/// [RFC 6962 Section 3.3]: https://www.rfc-editor.org/info/rfc6962#section-3.3
 #[derive(Debug, PartialEq)]
 pub struct SignedCertificateTimestampList(OctetString);
 
@@ -86,7 +86,7 @@ impl SignedCertificateTimestampList {
 /// A byte string that contains a serialized [SignedCertificateTimestamp] as
 /// defined in [RFC 6962 section 3.3].
 ///
-/// [RFC 6962 section 3.3]: https://datatracker.ietf.org/doc/html/rfc6962#section-3.3
+/// [RFC 6962 section 3.3]: https://www.rfc-editor.org/info/rfc6962#section-3.3
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerializeBytes, TlsSize)]
 pub struct SerializedSct {
     data: TlsByteVecU16,
@@ -120,7 +120,7 @@ impl SerializedSct {
 
 /// A signed certificate timestamp (SCT) as defined in [RFC 6962 section 3.2].
 ///
-/// [RFC 6962 section 3.2]: https://datatracker.ietf.org/doc/html/rfc6962#section-3.2
+/// [RFC 6962 section 3.2]: https://www.rfc-editor.org/info/rfc6962#section-3.2
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerializeBytes, TlsSize)]
 pub struct SignedCertificateTimestamp {
     /// The version of the protocol to which the SCT conforms.
@@ -139,7 +139,7 @@ pub struct SignedCertificateTimestamp {
     /// version, timestamp, extensions and others. See [RFC 6962 section 3.2]
     /// for a complete list.
     ///
-    /// [RFC 6962 section 3.2]:https://datatracker.ietf.org/doc/html/rfc6962#section-3.2
+    /// [RFC 6962 section 3.2]:https://www.rfc-editor.org/info/rfc6962#section-3.2
     pub signature: DigitallySigned,
 }
 
@@ -155,7 +155,7 @@ impl SignedCertificateTimestamp {
 /// The version of the protocol to which the SCT conforms
 /// as defined in [RFC 6962 section 3.2]. Currently, it is always v1.
 ///
-/// [RFC 6962 section 3.2]: https://datatracker.ietf.org/doc/html/rfc6962#section-3.2
+/// [RFC 6962 section 3.2]: https://www.rfc-editor.org/info/rfc6962#section-3.2
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerializeBytes, TlsSize)]
 #[repr(u8)]
 pub enum Version {
@@ -167,7 +167,7 @@ pub enum Version {
 /// the DER encoding of the key represented as [SubjectPublicKeyInfo][spki::SubjectPublicKeyInfo]
 /// as defined in [RFC 6962 section 3.2].
 ///
-/// [RFC 6962 section 3.2]: https://datatracker.ietf.org/doc/html/rfc6962#section-3.2
+/// [RFC 6962 section 3.2]: https://www.rfc-editor.org/info/rfc6962#section-3.2
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerializeBytes, TlsSize)]
 pub struct LogId {
     /// Hash of the log's public key.
@@ -176,12 +176,12 @@ pub struct LogId {
 
 /// Digital signature as defined in [RFC 5246 section 4.7].
 ///
-/// [RFC 5246 section 4.7]: https://datatracker.ietf.org/doc/html/rfc5246#section-4.7
+/// [RFC 5246 section 4.7]: https://www.rfc-editor.org/info/rfc5246#section-4.7
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerializeBytes, TlsSize)]
 pub struct DigitallySigned {
     /// [SignatureAndHashAlgorithm] as defined in [RFC 5246 section 7.4.1.4.1].
     ///
-    /// [RFC 5246 section 7.4.1.4.1]: https://datatracker.ietf.org/doc/html/rfc5246#section-7.4.1.4.1
+    /// [RFC 5246 section 7.4.1.4.1]: https://www.rfc-editor.org/info/rfc5246#section-7.4.1.4.1
     pub algorithm: SignatureAndHashAlgorithm,
     /// Digital signature over some contents using the [SignatureAndHashAlgorithm].
     pub signature: TlsByteVecU16,
@@ -189,7 +189,7 @@ pub struct DigitallySigned {
 
 /// A combination of signature and hashing algorithms as defined in [RFC 5246 section 7.4.1.4.1].
 ///
-/// [RFC 5246 section 7.4.1.4.1]: https://datatracker.ietf.org/doc/html/rfc5246#section-7.4.1.4.1
+/// [RFC 5246 section 7.4.1.4.1]: https://www.rfc-editor.org/info/rfc5246#section-7.4.1.4.1
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerializeBytes, TlsSize)]
 pub struct SignatureAndHashAlgorithm {
     /// The hashing algorithm.
@@ -200,7 +200,7 @@ pub struct SignatureAndHashAlgorithm {
 
 /// Signature algorithm as defined in [RFC 5246 section 7.4.1.4.1].
 ///
-/// [RFC 5246 section 7.4.1.4.1]: https://datatracker.ietf.org/doc/html/rfc5246#section-7.4.1.4.1
+/// [RFC 5246 section 7.4.1.4.1]: https://www.rfc-editor.org/info/rfc5246#section-7.4.1.4.1
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerializeBytes, TlsSize)]
 #[repr(u8)]
 pub enum SignatureAlgorithm {
@@ -220,7 +220,7 @@ pub enum SignatureAlgorithm {
 
 /// Hashing algorithm as defined in [RFC 5246 section 7.4.1.4.1].
 ///
-/// [RFC 5246 section 7.4.1.4.1]: https://datatracker.ietf.org/doc/html/rfc5246#section-7.4.1.4.1
+/// [RFC 5246 section 7.4.1.4.1]: https://www.rfc-editor.org/info/rfc5246#section-7.4.1.4.1
 #[derive(PartialEq, Debug, TlsDeserializeBytes, TlsSerializeBytes, TlsSize)]
 #[repr(u8)]
 pub enum HashAlgorithm {

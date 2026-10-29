@@ -50,7 +50,7 @@ use crate::status::{CertConfirmContent, ErrorMsgContent};
 /// }
 /// ```
 ///
-/// [RFC 4210 Section 5.1.2]: https://datatracker.ietf.org/doc/html/rfc4210#section-5.1.2
+/// [RFC 4210 Section 5.1.2]: https://www.rfc-editor.org/info/rfc4210#section-5.1.2
 #[derive(Clone, Debug, Eq, PartialEq, Choice)]
 #[allow(missing_docs)]
 pub enum PkiBody<'a> {

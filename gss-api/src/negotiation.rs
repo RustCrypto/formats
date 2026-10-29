@@ -12,7 +12,7 @@ use crate::MechType;
 ///   MechTypeList ::= SEQUENCE OF MechType
 /// ```
 ///
-/// [RFC 4178 Section 4.1]: https://datatracker.ietf.org/doc/html/rfc4178#section-4.1
+/// [RFC 4178 Section 4.1]: https://www.rfc-editor.org/info/rfc4178#section-4.1
 pub type MechTypeList = alloc::vec::Vec<MechType>;
 
 /// `NegotiationToken` as defined in [RFC 4178 Section 4.2].
@@ -24,7 +24,7 @@ pub type MechTypeList = alloc::vec::Vec<MechType>;
 /// }
 /// ```
 ///
-/// [RFC 4178 Section 4.2]: https://datatracker.ietf.org/doc/html/rfc4178#section-4.2
+/// [RFC 4178 Section 4.2]: https://www.rfc-editor.org/info/rfc4178#section-4.2
 #[derive(Clone, Debug, PartialEq, Eq, Choice)]
 pub enum NegotiationToken<'a> {
     /// This is the inner token of the initial negotiation message.
@@ -61,7 +61,7 @@ pub enum NegotiationToken<'a> {
 /// }
 /// ```
 ///
-/// [RFC 4178 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc4178#section-4.2.1
+/// [RFC 4178 Section 4.2.1]: https://www.rfc-editor.org/info/rfc4178#section-4.2.1
 #[cfg(feature = "rfc2478")]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct NegTokenInit<'a> {
@@ -112,7 +112,7 @@ pub struct NegTokenInit<'a> {
 /// } (SIZE (32))
 /// ```
 ///
-/// [RFC 4178 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc4178#section-4.2.1
+/// [RFC 4178 Section 4.2.1]: https://www.rfc-editor.org/info/rfc4178#section-4.2.1
 pub type ContextFlags = BitString;
 
 /// `NegTokenTarg` as defined in [RFC 2479 Section 3.2.1].
@@ -129,7 +129,7 @@ pub type ContextFlags = BitString;
 /// }
 /// ```
 ///
-/// [RFC 2479 Section 3.2.1]: https://datatracker.ietf.org/doc/html/rfc2478#section-3.2.1
+/// [RFC 2479 Section 3.2.1]: https://www.rfc-editor.org/info/rfc2478#section-3.2.1
 #[cfg(feature = "rfc2478")]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Sequence)]
 pub struct NegTokenTarg<'a> {
@@ -199,7 +199,7 @@ pub struct NegTokenTarg<'a> {
 /// }
 /// ```
 ///
-/// [RFC 2479 Section 3.2.1]: https://datatracker.ietf.org/doc/html/rfc2478#section-3.2.1
+/// [RFC 2479 Section 3.2.1]: https://www.rfc-editor.org/info/rfc2478#section-3.2.1
 #[cfg(feature = "rfc2478")]
 #[derive(Clone, Debug, Copy, PartialEq, Eq, PartialOrd, Ord, Enumerated)]
 #[asn1(type = "ENUMERATED")]
@@ -233,7 +233,7 @@ pub enum NegResult {
 /// }
 /// ```
 ///
-/// [RFC 4178 Section 4.2.2]: https://datatracker.ietf.org/doc/html/rfc4178#section-4.2.2
+/// [RFC 4178 Section 4.2.2]: https://www.rfc-editor.org/info/rfc4178#section-4.2.2
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 pub struct NegTokenResp<'a> {
     /// This field is REQUIRED in the first reply from the target, and is
@@ -323,19 +323,19 @@ pub struct NegHints<'a> {
 pub struct NegTokenInit2<'a> {
     /// The list of authentication mechanisms that are available, by OID, as specified in [RFC4178] section 4.1.
     ///
-    /// [RFC4178]: https://datatracker.ietf.org/doc/html/rfc4178
+    /// [RFC4178]: https://www.rfc-editor.org/info/rfc4178
     #[asn1(context_specific = "0", optional = "true", tag_mode = "EXPLICIT")]
     pub mech_types: Option<MechTypeList>,
 
     /// As specified in [RFC4178] section 4.2.1 This field SHOULD be omitted by the sender.
     ///
-    /// [RFC4178]: https://datatracker.ietf.org/doc/html/rfc4178
+    /// [RFC4178]: https://www.rfc-editor.org/info/rfc4178
     #[asn1(context_specific = "1", optional = "true", tag_mode = "EXPLICIT")]
     pub req_flags: Option<ContextFlags>,
 
     /// The optimistic mechanism token ([RFC4178] section 4.2.1).
     ///
-    /// [RFC4178]: https://datatracker.ietf.org/doc/html/rfc4178
+    /// [RFC4178]: https://www.rfc-editor.org/info/rfc4178
     #[asn1(context_specific = "2", optional = "true", tag_mode = "EXPLICIT")]
     pub mech_token: Option<&'a OctetStringRef>,
 
@@ -345,7 +345,7 @@ pub struct NegTokenInit2<'a> {
 
     /// The message integrity code (MIC) token ([RFC4178] section 4.2.1).
     ///
-    /// [RFC4178]: https://datatracker.ietf.org/doc/html/rfc4178
+    /// [RFC4178]: https://www.rfc-editor.org/info/rfc4178
     #[asn1(context_specific = "4", optional = "true", tag_mode = "EXPLICIT")]
     pub mech_list_mic: Option<&'a OctetStringRef>,
 }

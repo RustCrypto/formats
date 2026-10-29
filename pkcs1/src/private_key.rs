@@ -50,7 +50,7 @@ pub type RsaPrivateKeyOwned = RsaPrivateKey<Uint>;
 /// Note: the `version` field is selected automatically based on the absence or
 /// presence of the `other_prime_infos` field.
 ///
-/// [RFC 8017 Appendix 1.2]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.1.2
+/// [RFC 8017 Appendix 1.2]: https://www.rfc-editor.org/info/rfc8017#appendix-A.1.2
 #[derive(Clone)]
 pub struct RsaPrivateKey<U> {
     /// `n`: RSA modulus.

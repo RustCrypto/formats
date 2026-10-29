@@ -55,7 +55,7 @@ use der::{
 /// ```
 ///
 /// [RFC 4514 Section 3]: https://www.rfc-editor.org/rfc/rfc4514#section-3
-/// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
+/// [RFC 5280 Section 4.1.2.4]: https://www.rfc-editor.org/info/rfc5280#section-4.1.2.4
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Name(pub(crate) RdnSequence);
@@ -78,7 +78,7 @@ impl Name {
     /// As the name implies, this is a dangerous helper. You are responsible for ensuring the
     /// [`RdnSequence`] complies with the RFC.
     ///
-    /// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
+    /// [RFC 5280 Section 4.1.2.4]: https://www.rfc-editor.org/info/rfc5280#section-4.1.2.4
     #[cfg(feature = "hazmat")]
     pub fn hazmat_from_rdn_sequence(value: RdnSequence) -> Self {
         Self(value)
@@ -281,7 +281,7 @@ impl Name {
 ///
 /// Follows the rules in [RFC 4514].
 ///
-/// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
+/// [RFC 4514]: https://www.rfc-editor.org/info/rfc4514
 impl FromStr for Name {
     type Err = der::Error;
 
@@ -292,7 +292,7 @@ impl FromStr for Name {
 
 /// Serializes the name according to the rules in [RFC 4514].
 ///
-/// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
+/// [RFC 4514]: https://www.rfc-editor.org/info/rfc4514
 impl fmt::Display for Name {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
@@ -305,7 +305,7 @@ impl fmt::Display for Name {
 /// RDNSequence ::= SEQUENCE OF RelativeDistinguishedName
 /// ```
 ///
-/// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
+/// [RFC 5280 Section 4.1.2.4]: https://www.rfc-editor.org/info/rfc5280#section-4.1.2.4
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct RdnSequence(Vec<RelativeDistinguishedName>);
@@ -342,7 +342,7 @@ impl RdnSequence {
 ///
 /// Follows the rules in [RFC 4514].
 ///
-/// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
+/// [RFC 4514]: https://www.rfc-editor.org/info/rfc4514
 impl FromStr for RdnSequence {
     type Err = der::Error;
 
@@ -357,7 +357,7 @@ impl FromStr for RdnSequence {
 
 /// Serializes the structure according to the rules in [RFC 4514].
 ///
-/// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
+/// [RFC 4514]: https://www.rfc-editor.org/info/rfc4514
 impl fmt::Display for RdnSequence {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // As per RFC 4514 Section 2.1, the elements are reversed
@@ -409,7 +409,7 @@ fn split(s: &str, b: u8) -> impl '_ + Iterator<Item = &'_ str> {
 /// DistinguishedName ::=   RDNSequence
 /// ```
 ///
-/// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
+/// [RFC 5280 Section 4.1.2.4]: https://www.rfc-editor.org/info/rfc5280#section-4.1.2.4
 pub type DistinguishedName = RdnSequence;
 
 /// RelativeDistinguishedName as defined in [RFC 5280 Section 4.1.2.4].
@@ -435,7 +435,7 @@ pub type DistinguishedName = RdnSequence;
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 4.1.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
+/// [RFC 5280 Section 4.1.2.4]: https://www.rfc-editor.org/info/rfc5280#section-4.1.2.4
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct RelativeDistinguishedName(pub(crate) SetOfVec<AttributeTypeAndValue>);
@@ -466,7 +466,7 @@ impl RelativeDistinguishedName {
 ///
 /// This function follows the rules in [RFC 4514].
 ///
-/// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
+/// [RFC 4514]: https://www.rfc-editor.org/info/rfc4514
 impl FromStr for RelativeDistinguishedName {
     type Err = der::Error;
 
@@ -489,7 +489,7 @@ impl TryFrom<Vec<AttributeTypeAndValue>> for RelativeDistinguishedName {
 
 /// Serializes the structure according to the rules in [RFC 4514].
 ///
-/// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
+/// [RFC 4514]: https://www.rfc-editor.org/info/rfc4514
 impl fmt::Display for RelativeDistinguishedName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (i, atv) in self.0.iter().enumerate() {
