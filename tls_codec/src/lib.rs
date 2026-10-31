@@ -181,6 +181,22 @@ pub const fn len_add(a: usize, b: usize) -> usize {
     a.saturating_add(b)
 }
 
+/// Appends `bytes` to `out`, as `out.append(&mut bytes)`.
+///
+/// Always `Ok`: the `Result` only gives the verification a place to state that
+/// the concatenation fits in a `Vec` (an in-memory value always does, as for
+/// [`len_add`]). Being `#[inline(always)]` and infallible, no check survives
+/// optimisation: the serialization hot path is the same as a direct `append`.
+///
+/// Not public API: `pub` only because `tls_codec_derive`'s generated serializers
+/// call it.
+#[doc(hidden)]
+#[inline(always)]
+pub fn append_bytes(out: &mut Vec<u8>, mut bytes: Vec<u8>) -> Result<(), Error> {
+    out.append(&mut bytes);
+    Ok(())
+}
+
 /// Like [`len_add`], but for contexts that can surface an error: an overflow
 /// becomes [`Error::InvalidVectorLength`], so a wrapped, too-small length is
 /// never written to the wire. One definition on every target.

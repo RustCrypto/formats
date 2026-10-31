@@ -977,8 +977,9 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                                 }
                                 let mut out = Vec::with_capacity(expected_out);
 
+                                // `append_bytes` is `out.append(..)`, inlined; see its docs.
                                 #(
-                                    out.append(&mut #prefixes::tls_serialize_bytes(&self.#members)?);
+                                    tls_codec::append_bytes(&mut out, #prefixes::tls_serialize_bytes(&self.#members)?)?;
                                 )*
                                 if cfg!(debug_assertions) {
                                     debug_assert_eq!(out.len(), expected_out, "Expected to serialize {} bytes but only {} were generated.", expected_out, out.len());
@@ -1040,7 +1041,7 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                             quote! {
                                 #ident::#variant_id { #(#members: #bindings,)* } => {
                                     let mut discriminant_out = tls_codec::SerializeBytes::tls_serialize_bytes(&#discriminant)?;
-                                    #(discriminant_out.append(&mut #prefixes::tls_serialize_bytes(#bindings)?);)*
+                                    #(tls_codec::append_bytes(&mut discriminant_out, #prefixes::tls_serialize_bytes(#bindings)?)?;)*
                                     Ok(discriminant_out)
                                 },
                             }
