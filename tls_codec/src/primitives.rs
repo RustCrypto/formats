@@ -46,7 +46,14 @@ impl<T: Serialize> Serialize for Option<T> {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<T: SerializeBytes> SerializeBytes for Option<T> {
+    #[cfg_attr(hax, hax_lib::ensures(|res| if self.is_none() {
+        res.is_ok_and(|out| out == vec![0u8] && out.len() == self.tls_serialized_len())
+    } else {
+        res.is_err() || res.is_ok_and(|out| out.first() == Some(&1u8)
+            && out.len() == self.tls_serialized_len())
+    }))]
     #[inline]
     fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         match self {
@@ -96,7 +103,14 @@ impl<T: Deserialize> Deserialize for Option<T> {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<T: DeserializeBytes> DeserializeBytes for Option<T> {
+    #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
+        || res.is_ok_and(|(value, remainder)|
+            bytes.first() == Some(&if value.is_some() { 1u8 } else { 0u8 })
+                && remainder.len() <= bytes.len()
+                && (!cfg!(feature = "mls")
+                    || remainder.len() + value.tls_serialized_len() == bytes.len()))))]
     #[inline]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let (some_or_none, remainder) = <u8>::tls_deserialize_bytes(bytes)?;
@@ -125,7 +139,20 @@ macro_rules! impl_unsigned {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl DeserializeBytes for $t {
+            #[cfg_attr(hax, hax_lib::ensures(|res| if bytes.len() < $bytes {
+                                                res == Err(Error::EndOfStream)
+                                            } else {
+                                                res.is_ok_and(|(value, remainder)|
+                                                    <$t>::to_be_bytes(value)[..] == bytes[..$bytes]
+                                                        && remainder.len() == bytes.len() - $bytes
+                                                        && remainder.len() <= bytes.len()
+                                                        && (!cfg!(feature = "mls")
+                                                            || remainder.len()
+                                                                + value.tls_serialized_len()
+                                                                == bytes.len()))
+                                            }))]
             #[inline]
             fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
                 let len = core::mem::size_of::<$t>();

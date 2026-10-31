@@ -26,7 +26,18 @@ impl<const LEN: usize> Deserialize for [u8; LEN] {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl<const LEN: usize> DeserializeBytes for [u8; LEN] {
+    #[cfg_attr(hax, hax_lib::ensures(|res| if bytes.len() < LEN {
+        res == Err(Error::EndOfStream)
+    } else {
+        res.is_ok_and(|(value, remainder)|
+            value[..] == bytes[..LEN]
+                && remainder.len() == bytes.len() - LEN
+                && remainder.len() <= bytes.len()
+                && (!cfg!(feature = "mls")
+                    || remainder.len() + value.tls_serialized_len() == bytes.len()))
+    }))]
     #[inline]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let out = bytes
