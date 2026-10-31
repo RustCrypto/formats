@@ -42,6 +42,7 @@ const MAX_MLS_LEN: u64 = (1 << 30) - 1;
 /// Otherwise, this type is no-op.
 struct ContentLength(super::TlsVarInt);
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl ContentLength {
     #[cfg(all(not(feature = "mls"), feature = "arbitrary"))]
     const MAX: u64 = crate::TlsVarInt::MAX;
@@ -49,6 +50,7 @@ impl ContentLength {
     #[cfg(feature = "mls")]
     const MAX: u64 = MAX_MLS_LEN;
 
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     fn new(value: super::TlsVarInt) -> Result<Self, Error> {
         #[cfg(feature = "mls")]
         if Self::MAX < value.value() {
@@ -57,6 +59,8 @@ impl ContentLength {
         Ok(Self(value))
     }
 
+    #[cfg_attr(all(hax, feature = "mls"), hax_lib::ensures(|res|
+        res.is_ok_and(|cl| cl.0.value() == value as u64) == (value as u64 <= MAX_MLS_LEN)))]
     fn from_usize(value: usize) -> Result<Self, Error> {
         Self::new(super::TlsVarInt::try_new(value.try_into()?)?)
     }
@@ -141,7 +145,16 @@ impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl SerializeBytes for VLBytes {
+    #[cfg_attr(hax, hax_lib::ensures(|res|
+        if ContentLength::from_usize(self.as_slice().len()).is_ok_and(|cl|
+            crate::checked_alloc_len(self.as_slice().len(), cl.0.bytes_len()).is_ok())
+        {
+            res.is_ok_and(|out| out.len() == self.tls_serialized_len())
+        } else {
+            res.is_err()
+        }))]
     #[inline(always)]
     fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         let content_length = self.as_slice().len();
@@ -263,19 +276,28 @@ macro_rules! impl_vl_bytes_generic {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl $name {
             /// Get a reference to the vlbytes's vec.
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             pub fn as_slice(&self) -> &[u8] {
                 self.vec().as_ref()
             }
 
             /// Add an element to this.
+            #[cfg_attr(hax, hax_lib::requires(self.as_slice().len() < usize::MAX))]
+            #[cfg_attr(hax, hax_lib::ensures(|_|
+                                future(self).as_slice().len() == self.as_slice().len() + 1))]
             #[inline]
             pub fn push(&mut self, value: u8) {
                 self.vec_mut().push(value);
             }
 
             /// Remove the last element.
+            #[cfg_attr(hax, hax_lib::ensures(|res|
+                                res.is_some() == !self.as_slice().is_empty()
+                                    && future(self).as_slice().len()
+                                        == self.as_slice().len() - usize::from(res.is_some())))]
             #[inline]
             pub fn pop(&mut self) -> Option<u8> {
                 self.vec_mut().pop()
@@ -354,6 +376,7 @@ impl From<VLBytes> for Vec<u8> {
     }
 }
 
+#[cfg_attr(hax, hax_lib::ensures(|_| true))]
 #[inline(always)]
 fn tls_serialize_bytes_len(bytes: &[u8]) -> usize {
     let content_length = bytes.len();
@@ -585,8 +608,10 @@ impl fmt::Debug for VLByteSlice<'_> {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl VLByteSlice<'_> {
     /// Get the raw slice.
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     #[inline(always)]
     pub fn as_slice(&self) -> &[u8] {
         self.0
@@ -613,7 +638,16 @@ impl SerializeBytes for ContentLength {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl SerializeBytes for VLByteSlice<'_> {
+    #[cfg_attr(hax, hax_lib::ensures(|res|
+        if ContentLength::from_usize(self.0.len()).is_ok_and(|cl|
+            crate::checked_alloc_len(self.0.len(), cl.0.bytes_len()).is_ok())
+        {
+            res.is_ok_and(|out| out.len() == self.tls_serialized_len())
+        } else {
+            res.is_err()
+        }))]
     fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         // Get the byte length of the content and make sure it's not too
         // large (requires `mls` feature, so we also do it explicitly below).
