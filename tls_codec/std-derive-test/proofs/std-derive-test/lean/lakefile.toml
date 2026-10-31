@@ -1,0 +1,19 @@
+name = "StdDeriveTest"
+version = "0.1.0"
+defaultTargets = ["StdDeriveTest"]
+# Reuse TlsCodec's checked-out (and built) dependencies (mathlib, hax, ...): no
+# download, no rebuild. The pinned revisions are TlsCodec's (`lake-manifest.json`
+# here mirrors its manifest); never `lake update` this project.
+packagesDir = "../../../../proofs/tls-codec/lean/.lake/packages"
+
+[[lean_lib]]
+name = "StdDeriveTest"
+# Same as TlsCodec: the extracted names contain `__`.
+leanOptions = { weak.linter.style.nameCheck = false }
+
+# The extraction of `tls_codec` (scenario `tls-codec`), whose Lean names this
+# crate's extraction refers to (`-external-names` in `../../../hax.toml`). It
+# brings `aeneas` and `hax` with it.
+[[require]]
+name = "TlsCodec"
+path = "../../../../proofs/tls-codec/lean"
