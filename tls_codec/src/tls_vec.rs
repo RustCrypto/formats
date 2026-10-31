@@ -32,7 +32,7 @@ macro_rules! impl_byte_size {
         /// The serialized len
         #[inline(always)]
         fn tls_serialized_byte_length(&$self) -> usize {
-            $self.as_slice().len() + $len_len
+            crate::len_add($self.as_slice().len(), $len_len)
         }
     }
 }
@@ -202,8 +202,8 @@ macro_rules! impl_serialize_common {
     ($self:ident, $size:ty, $name:ident, $len_len:literal $(,#[$std_enabled:meta])?) => {
         $(#[$std_enabled])?
         fn get_content_lengths(&$self) -> Result<(usize, usize), Error> {
-            // Sum the element lengths with an overflow check on platforms where
-            // `usize` is narrow enough for it to matter (see `crate::len_add`).
+            // Sum the element lengths with an overflow check
+            // (see `crate::checked_len_add`).
             // Computing `byte_length` directly (rather than deriving it from
             // `tls_serialized_len()`) lets us reject a true overflow instead of
             // trusting a possibly-saturated value from the `Size` impl.

@@ -761,30 +761,21 @@ fn define_discriminant_constants(
     Ok(quote! { #(#discriminant_constants)* })
 }
 
-/// Builds an expression that sums `base` and all `terms` into a `usize`,
-/// guarding against overflow only on targets where it can actually occur.
+/// Builds an expression that sums `base` and all `terms` into a `usize`
+/// through `tls_codec::len_add`.
 ///
-/// On 64-bit targets every length is bounded by addressable memory
-/// (`isize::MAX`), so the sum can't overflow `usize`; a plain, branch-free
-/// addition is emitted to keep the serialization hot path free of checks. On
-/// narrower targets the serialized form of a large structure can carry enough
-/// length-prefix / discriminant overhead to exceed `usize::MAX`, so we saturate
-/// rather than silently wrapping to a small value (a wrapped length would be
-/// written to the wire as a truncated, mismatched length prefix).
-///
-/// This mirrors `tls_codec::len_add` but is emitted inline so the helper does
-/// not need to be part of `tls_codec`'s public API.
+/// `len_add` saturates at `usize::MAX` on every target (a sum of serialized
+/// lengths can exceed `usize::MAX` even on 64-bit targets, since `Size` counts
+/// aliased data once per reference): an oversized length stays oversized and
+/// is rejected by the length-encoding bounds checks instead of being written to
+/// the wire as a truncated, mismatched length prefix. Calling the crate's
+/// helper keeps one place that defines the sum (the same helper
+/// as the crate's own sums).
 fn sum_lengths(terms: &[TokenStream2], base: TokenStream2) -> TokenStream2 {
     quote! {
         {
-            #[cfg(target_pointer_width = "64")]
-            let __tls_len: usize = #base #(+ #terms)*;
-            #[cfg(not(target_pointer_width = "64"))]
-            let __tls_len: usize = {
-                let mut __tls_len: usize = #base;
-                #(__tls_len = __tls_len.saturating_add(#terms);)*
-                __tls_len
-            };
+            let mut __tls_len: usize = #base;
+            #(__tls_len = tls_codec::len_add(__tls_len, #terms);)*
             __tls_len
         }
     }

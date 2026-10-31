@@ -13,10 +13,13 @@ use std::io::{Read, Write};
 impl<T: Size> Size for Option<T> {
     #[inline]
     fn tls_serialized_len(&self) -> usize {
-        1 + match self {
-            Some(v) => v.tls_serialized_len(),
-            None => 0,
-        }
+        crate::len_add(
+            1,
+            match self {
+                Some(v) => v.tls_serialized_len(),
+                None => 0,
+            },
+        )
     }
 }
 
@@ -244,7 +247,7 @@ where
 {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
-        self.0.tls_serialized_len() + self.1.tls_serialized_len()
+        crate::len_add(self.0.tls_serialized_len(), self.1.tls_serialized_len())
     }
 }
 
@@ -303,7 +306,10 @@ where
 {
     #[inline(always)]
     fn tls_serialized_len(&self) -> usize {
-        self.0.tls_serialized_len() + self.1.tls_serialized_len() + self.2.tls_serialized_len()
+        crate::len_add(
+            crate::len_add(self.0.tls_serialized_len(), self.1.tls_serialized_len()),
+            self.2.tls_serialized_len(),
+        )
     }
 }
 

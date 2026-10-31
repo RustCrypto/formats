@@ -162,50 +162,29 @@ fn read_bytes_bounded<R: std::io::Read>(reader: &mut R, len: usize) -> Result<Ve
     Ok(result)
 }
 
-/// Adds two serialized-length components, guarding against `usize` overflow
-/// only on platforms where it can actually occur.
+/// Adds two serialized-length components, saturating at `usize::MAX`.
 ///
-/// On 64-bit targets every length is bounded by the amount of addressable
-/// memory (`isize::MAX`), so a sum of serialized lengths can never overflow
-/// `usize`. There this compiles down to a plain addition with no branch,
-/// keeping the serialization hot path free of overflow checks.
+/// A sum of serialized lengths is not bounded by the addressable memory: `Size`
+/// for `&[T]`, `Vec<&[u8]>`, ... counts aliased data once per reference, so a
+/// structure of about 1 GiB can describe more than `usize::MAX` bytes even on
+/// 64-bit targets. Saturating instead of wrapping keeps an oversized length
+/// oversized, so it is subsequently rejected by the length-encoding bounds
+/// checks instead of producing a truncated, mismatched length prefix on the
+/// wire. One definition on every target.
 ///
-/// On narrower targets (32-bit, 16-bit is not officially supported)
-/// the serialized form of a large in-memory structure can carry enough
-/// length-prefix / discriminant overhead to exceed `usize::MAX`.
-/// There we saturate at `usize::MAX` rather than silently wrapping to a small
-/// value, so the oversized length is subsequently rejected by the
-/// length-encoding bounds checks instead of producing a truncated, mismatched
-/// length prefix on the wire.
-///
-/// `tls_codec_derive` emits the equivalent logic inline, so this helper does not
-/// need to be part of the public API.
+/// Not public API: `pub` only because `tls_codec_derive`'s generated `Size`
+/// impls call it, so that the crate's and the derived sums share one
+/// definition.
+#[doc(hidden)]
 #[inline(always)]
-#[cfg(target_pointer_width = "64")]
-pub(crate) const fn len_add(a: usize, b: usize) -> usize {
-    a + b
-}
-
-#[inline(always)]
-#[cfg(not(target_pointer_width = "64"))]
-pub(crate) const fn len_add(a: usize, b: usize) -> usize {
+pub const fn len_add(a: usize, b: usize) -> usize {
     a.saturating_add(b)
 }
 
-/// Like [`len_add`], but for contexts that can surface an error.
-///
-/// On 64-bit targets this is a plain, branch-free addition (see [`len_add`] for
-/// why it can't overflow). On narrower targets an overflow becomes
-/// [`Error::InvalidVectorLength`] so a wrapped, too-small length is never
-/// written to the wire.
+/// Like [`len_add`], but for contexts that can surface an error: an overflow
+/// becomes [`Error::InvalidVectorLength`], so a wrapped, too-small length is
+/// never written to the wire. One definition on every target.
 #[inline(always)]
-#[cfg(target_pointer_width = "64")]
-pub(crate) fn checked_len_add(a: usize, b: usize) -> Result<usize, Error> {
-    Ok(a + b)
-}
-
-#[inline(always)]
-#[cfg(not(target_pointer_width = "64"))]
 pub(crate) fn checked_len_add(a: usize, b: usize) -> Result<usize, Error> {
     a.checked_add(b).ok_or(Error::InvalidVectorLength)
 }
