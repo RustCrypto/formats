@@ -718,6 +718,18 @@ pub mod rw {
         Serialize::tls_serialize(&ContentLength::from_usize(content_length)?, writer)
     }
 
+    /// The sum of the elements' serialized lengths (with the overflow check of
+    /// [`crate::checked_len_add`]).
+    // A function of its own only for the verification: aeneas cannot translate
+    // `Iterator::try_fold`, so this body is opaque and hand-translated in the Lean
+    // model, while the serializer below stays extracted.
+    #[inline(always)]
+    fn checked_content_length<T: Size>(elements: &[T]) -> Result<usize, Error> {
+        elements.iter().try_fold(0usize, |acc, e| {
+            crate::checked_len_add(acc, e.tls_serialized_len())
+        })
+    }
+
     impl<T: Serialize + std::fmt::Debug> Serialize for Vec<T> {
         #[inline(always)]
         fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
@@ -731,23 +743,13 @@ pub mod rw {
             // We need to pre-compute the length of the content.
             // This requires more computations but the other option would be to buffer
             // the entire content, which can end up requiring a lot of memory.
-            let content_length = self.iter().try_fold(0usize, |acc, e| {
-                crate::checked_len_add(acc, e.tls_serialized_len())
-            })?;
+            let content_length = checked_content_length(self)?;
             let len_len = write_length(writer, content_length)?;
 
-            // Serialize the elements
-            #[cfg(debug_assertions)]
-            let mut written = 0;
-            for e in self.iter() {
-                #[cfg(debug_assertions)]
-                {
-                    written += e.tls_serialize(writer)?;
-                }
-                // We don't care about the length here. We pre-computed it.
-                #[cfg(not(debug_assertions))]
-                e.tls_serialize(writer)?;
-            }
+            // Serialize the elements (the index loop of `tls_vec::serialize_elements`:
+            // aeneas fails on a loop over the elements inlined here).
+            #[cfg_attr(not(debug_assertions), allow(unused_variables))]
+            let written = crate::tls_vec::serialize_elements(self, writer)?;
             #[cfg(debug_assertions)]
             if written != content_length {
                 return Err(Error::LibraryError);

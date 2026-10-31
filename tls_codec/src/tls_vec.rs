@@ -15,6 +15,34 @@ use zeroize::Zeroize;
 
 use crate::{Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size, U24};
 
+/// Serialize `elements` one after the other and return the number of bytes
+/// written. Shared by the `serialize` methods of the generic vector types and
+/// `Serialize for &[T]` (`quic_vec.rs`).
+#[cfg(feature = "std")]
+#[inline(always)]
+pub(crate) fn serialize_elements<T: Serialize, W: Write>(
+    elements: &[T],
+    writer: &mut W,
+) -> Result<usize, Error> {
+    let mut written = 0usize;
+    let mut failure: Option<Error> = None;
+    let mut i = 0usize;
+    while i < elements.len() {
+        match elements[i].tls_serialize(writer) {
+            Ok(n) => written += n,
+            Err(err) => {
+                failure = Some(err);
+                break;
+            }
+        }
+        i += 1;
+    }
+    if let Some(err) = failure {
+        return Err(err);
+    }
+    Ok(written)
+}
+
 macro_rules! impl_size {
     ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
         /// The serialized len
@@ -190,9 +218,7 @@ macro_rules! impl_serialize {
             let mut written = <$size as Serialize>::tls_serialize(&<$size>::try_from(byte_length).unwrap(), writer)?;
 
             // Now serialize the elements
-            for e in $self.as_slice().iter() {
-                written += e.tls_serialize(writer)?;
-            }
+            written += serialize_elements($self.as_slice(), writer)?;
 
             $self.assert_written_bytes(tls_serialized_len, written)?;
             Ok(written)
