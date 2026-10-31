@@ -76,8 +76,10 @@ impl TlsVarInt {
             }
         }
         let mut value = self.0;
-        for b in bytes.iter_mut().rev() {
-            *b |= (value & 0xFF) as u8;
+        let mut i = len;
+        while i > 0 {
+            i -= 1;
+            bytes[i] |= (value & 0xFF) as u8;
             value >>= 8;
         }
 
