@@ -272,6 +272,7 @@ macro_rules! impl_serialize_common {
 
         $(#[$std_enabled])?
         fn assert_written_bytes(&$self, tls_serialized_len: usize, written: usize) -> Result<(), Error> {
+            #[cfg(not(hax))]
             debug_assert_eq!(
                 written, tls_serialized_len,
                 "{} bytes should have been serialized but {} were written",
