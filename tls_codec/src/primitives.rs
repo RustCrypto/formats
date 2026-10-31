@@ -405,7 +405,7 @@ impl<T: Deserialize> Deserialize for Box<T> {
     #[cfg(feature = "std")]
     #[inline(always)]
     fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
-        T::tls_deserialize(bytes).map(Box::new)
+        Ok(Box::new(T::tls_deserialize(bytes)?))
     }
 }
 
