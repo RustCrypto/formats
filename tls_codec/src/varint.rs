@@ -53,6 +53,10 @@ impl TlsVarInt {
     /// The buffer must be at least of the length returned by
     /// [`Self::bytes_len`].
     pub(crate) fn write_bytes(&self, buf: &mut [u8]) -> Result<usize, Error> {
+        // Unreachable: every constructor enforces `self.0 <= MAX`.
+        if self.0 > Self::MAX {
+            return Err(Error::InvalidVectorLength);
+        }
         let len = self.bytes_len();
         if buf.len() < len {
             return Err(Error::InvalidVectorLength);
