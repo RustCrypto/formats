@@ -538,7 +538,7 @@ macro_rules! impl_tls_vec_generic {
 
         impl<T: $($bounds + )*> core::ops::IndexMut<usize> for $name<T> {
             #[inline]
-            fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+            fn index_mut(&mut self, i: usize) -> &mut T {
                 self.vec.index_mut(i)
             }
         }
@@ -736,7 +736,7 @@ macro_rules! impl_tls_vec {
 
         impl core::ops::IndexMut<usize> for $name {
             #[inline]
-            fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+            fn index_mut(&mut self, i: usize) -> &mut u8 {
                 self.vec.index_mut(i)
             }
         }
