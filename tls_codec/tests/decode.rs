@@ -313,6 +313,24 @@ fn deserialize_bytes_tls_vl_invalid_length() {
 }
 
 #[test]
+fn deserialize_tls_vl_length_above_mls_limit() {
+    use tls_codec::{Deserialize, DeserializeBytes};
+    // 2^30 as a (minimal) 8-byte varint: one more than the 30-bit length
+    // limit of MLS (RFC 9420, Section 2.1.2). No content follows.
+    let b = [0xc0u8, 0, 0, 0, 0x40, 0, 0, 0];
+    if cfg!(feature = "mls") {
+        assert_eq!(
+            VLBytes::tls_deserialize(&mut &b[..]),
+            Err(Error::InvalidVectorLength)
+        );
+        assert_eq!(
+            VLBytes::tls_deserialize_bytes(&b),
+            Err(Error::InvalidVectorLength)
+        );
+    }
+}
+
+#[test]
 fn deserialize_empty_vl_bytes() {
     use tls_codec::Deserialize;
     let mut b: &[u8] = &[0x00];
