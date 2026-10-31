@@ -6,6 +6,7 @@ use crate::{Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Siz
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct TlsVarInt(u64);
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl TlsVarInt {
     /// The largest value that can be represented by this type.
     pub const MAX: u64 = (1 << 62) - 1;
@@ -15,6 +16,7 @@ impl TlsVarInt {
     ///
     /// Returns [`Error::InvalidVectorLength`] if the value is larger than
     /// [`TlsVarInt::MAX`].
+    #[cfg_attr(hax, hax_lib::ensures(|res| res == if value <= TlsVarInt::MAX { Ok(TlsVarInt(value)) } else { Err(Error::InvalidVectorLength) }))]
     #[inline]
     pub(crate) fn try_new(value: u64) -> Result<Self, Error> {
         if Self::MAX < value {
@@ -25,6 +27,7 @@ impl TlsVarInt {
     }
 
     /// Returns the value of this variable-length int.
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     #[inline]
     pub const fn value(&self) -> u64 {
         self.0
@@ -32,6 +35,7 @@ impl TlsVarInt {
 
     /// Returns the number of bytes required to encode this variable-length
     /// int.
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     pub(crate) const fn bytes_len(&self) -> usize {
         let value = self.0;
         if value <= 0x3f {
@@ -52,6 +56,14 @@ impl TlsVarInt {
     ///
     /// The buffer must be at least of the length returned by
     /// [`Self::bytes_len`].
+    #[cfg_attr(hax, hax_lib::ensures(|res| {
+        let len = self.bytes_len();
+        res == (if self.0 > TlsVarInt::MAX || buf.len() < len {
+            Err(Error::InvalidVectorLength)
+        } else {
+            Ok(len)
+        })
+    }))]
     pub(crate) fn write_bytes(&self, buf: &mut [u8]) -> Result<usize, Error> {
         // Unreachable: every constructor enforces `self.0 <= MAX`.
         if self.0 > Self::MAX {
@@ -87,22 +99,33 @@ impl TlsVarInt {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl TryFrom<u64> for TlsVarInt {
     type Error = Error;
 
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     #[inline]
     fn try_from(value: u64) -> Result<Self, Self::Error> {
         Self::try_new(value)
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl From<TlsVarInt> for u64 {
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     #[inline]
     fn from(value: TlsVarInt) -> Self {
         value.0
     }
 }
 
+#[cfg_attr(all(hax, feature = "mls"), hax_lib::ensures(|res| res
+    == if _value <= TlsVarInt::MAX && TlsVarInt(_value).bytes_len() == _len {
+        Ok(())
+    } else {
+        Err(Error::InvalidVectorLength)
+    }))]
+#[cfg_attr(all(hax, not(feature = "mls")), hax_lib::ensures(|_| true))]
 fn check_min_len(_value: u64, _len: usize) -> Result<(), Error> {
     #[cfg(feature = "mls")]
     {
@@ -147,7 +170,13 @@ impl Deserialize for TlsVarInt {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl DeserializeBytes for TlsVarInt {
+    #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
+        || res.is_ok_and(|(value, remainder)| value.value() <= TlsVarInt::MAX
+            && remainder.len() <= bytes.len()
+            && (!cfg!(feature = "mls")
+                || remainder.len() + value.tls_serialized_len() == bytes.len()))))]
     #[inline]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
     where
@@ -194,7 +223,13 @@ impl Serialize for TlsVarInt {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl SerializeBytes for TlsVarInt {
+    #[cfg_attr(hax, hax_lib::ensures(|res| if self.0 <= TlsVarInt::MAX {
+        res.is_ok_and(|out| out.len() == self.bytes_len() && out.len() == self.tls_serialized_len())
+    } else {
+        res.is_err()
+    }))]
     #[inline]
     fn tls_serialize_bytes(&self) -> Result<alloc::vec::Vec<u8>, Error> {
         let len = self.bytes_len();
@@ -212,6 +247,8 @@ impl Size for TlsVarInt {
 }
 
 /// Calculates the value and the length from the first byte.
+#[cfg_attr(hax, hax_lib::ensures(|res|
+    res == Ok((usize::from(byte & 0x3F), 1usize << (byte >> 6)))))]
 #[inline(always)]
 pub(crate) fn calculate_value(byte: u8) -> Result<(usize, usize), Error> {
     let value: usize = (byte & 0x3F).into();
