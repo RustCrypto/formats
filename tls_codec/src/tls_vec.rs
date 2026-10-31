@@ -101,17 +101,29 @@ macro_rules! impl_deserialize {
             // with the `DeserializeBytes` implementation for non-canonical
             // encodings (e.g. non-minimal varint lengths).
             let mut sub = Read::take(bytes, length as u64);
+            let mut failure: Option<Error> = None;
             while sub.limit() > 0 {
                 let before = sub.limit();
-                let element = T::tls_deserialize(&mut sub)?;
-                // A zero-length element would never advance the reader, causing
-                // an infinite loop that keeps allocating. Reject such input.
-                if sub.limit() == before {
-                    return Err(Error::DecodingError(format!(
-                        "Vector element consumed 0 bytes; refusing to loop"
-                    )));
+                match T::tls_deserialize(&mut sub) {
+                    Ok(element) => {
+                        // A zero-length element would never advance the reader, causing
+                        // an infinite loop that keeps allocating. Reject such input.
+                        if sub.limit() == before {
+                            failure = Some(Error::DecodingError(format!(
+                                "Vector element consumed 0 bytes; refusing to loop"
+                            )));
+                            break;
+                        }
+                        result.push(element);
+                    }
+                    Err(e) => {
+                        failure = Some(e);
+                        break;
+                    }
                 }
-                result.push(element);
+            }
+            if let Some(e) = failure {
+                return Err(e);
             }
             Ok(result)
         }
@@ -126,21 +138,33 @@ macro_rules! impl_deserialize_bytes {
             let (len, mut remainder) = <$size>::tls_deserialize_bytes(bytes)?;
             let length: usize = len.try_into().unwrap();
             let mut read = 0usize;
+            let mut failure: Option<Error> = None;
             while read < length {
-                let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
-                // Measure how many bytes the element actually consumed from the
-                // input rather than trusting `tls_serialized_len`.
-                let consumed = remainder.len() - next_remainder.len();
-                remainder = next_remainder;
-                result.push(element);
-                // A zero-length element would never advance `read`, causing an
-                // infinite loop that keeps allocating. Reject such input.
-                if consumed == 0 {
-                    return Err(Error::DecodingError(alloc::format!(
-                        "Vector element consumed 0 bytes; refusing to loop"
-                    )));
+                match T::tls_deserialize_bytes(remainder) {
+                    Ok((element, next_remainder)) => {
+                        // Measure how many bytes the element actually consumed from the
+                        // input rather than trusting `tls_serialized_len`.
+                        let consumed = remainder.len() - next_remainder.len();
+                        remainder = next_remainder;
+                        result.push(element);
+                        // A zero-length element would never advance `read`, causing an
+                        // infinite loop that keeps allocating. Reject such input.
+                        if consumed == 0 {
+                            failure = Some(Error::DecodingError(alloc::format!(
+                                "Vector element consumed 0 bytes; refusing to loop"
+                            )));
+                            break;
+                        }
+                        read += consumed;
+                    }
+                    Err(e) => {
+                        failure = Some(e);
+                        break;
+                    }
                 }
-                read += consumed;
+            }
+            if let Some(e) = failure {
+                return Err(e);
             }
             // The declared length is authoritative: the elements must consume
             // exactly `length` bytes, not overshoot it.

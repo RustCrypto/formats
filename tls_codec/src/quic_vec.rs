@@ -102,21 +102,33 @@ impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
 
         let mut result = Vec::new();
         let mut read = 0usize;
+        let mut failure: Option<Error> = None;
         while read < length {
-            let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
-            // Measure how many bytes the element actually consumed from the
-            // input rather than trusting `tls_serialized_len`.
-            let consumed = remainder.len() - next_remainder.len();
-            remainder = next_remainder;
-            result.push(element);
-            // A zero-length element would never advance `read`, causing an
-            // infinite loop that keeps allocating. Reject such input.
-            if consumed == 0 {
-                return Err(Error::DecodingError(
-                    "Vector element consumed 0 bytes; refusing to loop".into(),
-                ));
+            match T::tls_deserialize_bytes(remainder) {
+                Ok((element, next_remainder)) => {
+                    // Measure how many bytes the element actually consumed from the
+                    // input rather than trusting `tls_serialized_len`.
+                    let consumed = remainder.len() - next_remainder.len();
+                    remainder = next_remainder;
+                    result.push(element);
+                    // A zero-length element would never advance `read`, causing an
+                    // infinite loop that keeps allocating. Reject such input.
+                    if consumed == 0 {
+                        failure = Some(Error::DecodingError(
+                            "Vector element consumed 0 bytes; refusing to loop".into(),
+                        ));
+                        break;
+                    }
+                    read += consumed;
+                }
+                Err(e) => {
+                    failure = Some(e);
+                    break;
+                }
             }
-            read += consumed;
+        }
+        if let Some(e) = failure {
+            return Err(e);
         }
         // The declared length is authoritative: the elements must consume
         // exactly `length` bytes, not overshoot it.
@@ -176,8 +188,18 @@ impl<T: SerializeBytes> SerializeBytes for &[T] {
         length.0.write_bytes(&mut out)?;
 
         // Serialize the elements
+        let mut failure: Option<Error> = None;
         for e in self.iter() {
-            out.append(&mut e.tls_serialize_bytes()?);
+            match e.tls_serialize_bytes() {
+                Ok(mut bytes) => out.append(&mut bytes),
+                Err(err) => {
+                    failure = Some(err);
+                    break;
+                }
+            }
+        }
+        if let Some(err) = failure {
+            return Err(err);
         }
         #[cfg(debug_assertions)]
         if out.len() - len_len != content_length {
@@ -660,17 +682,29 @@ pub mod rw {
             // encodings (e.g. non-minimal varint lengths).
             let mut sub = std::io::Read::take(bytes, length as u64);
             let mut result = Vec::new();
+            let mut failure: Option<Error> = None;
             while sub.limit() > 0 {
                 let before = sub.limit();
-                let element = T::tls_deserialize(&mut sub)?;
-                // A zero-length element would never advance the reader, causing
-                // an infinite loop that keeps allocating. Reject such input.
-                if sub.limit() == before {
-                    return Err(Error::DecodingError(
-                        "Vector element consumed 0 bytes; refusing to loop".into(),
-                    ));
+                match T::tls_deserialize(&mut sub) {
+                    Ok(element) => {
+                        // A zero-length element would never advance the reader, causing
+                        // an infinite loop that keeps allocating. Reject such input.
+                        if sub.limit() == before {
+                            failure = Some(Error::DecodingError(
+                                "Vector element consumed 0 bytes; refusing to loop".into(),
+                            ));
+                            break;
+                        }
+                        result.push(element);
+                    }
+                    Err(e) => {
+                        failure = Some(e);
+                        break;
+                    }
                 }
-                result.push(element);
+            }
+            if let Some(e) = failure {
+                return Err(e);
             }
             Ok(result)
         }

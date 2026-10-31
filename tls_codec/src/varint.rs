@@ -124,10 +124,19 @@ impl Deserialize for TlsVarInt {
         let (value, len) = calculate_value(len_byte)?;
         let mut value: u64 = value.try_into().map_err(|_| Error::InvalidInput)?;
 
-        for _ in 1..len {
+        let mut failure: Option<Error> = None;
+        let mut i = 1usize;
+        while i < len {
             let mut next = [0u8; 1];
-            bytes.read_exact(&mut next)?;
+            if let Err(e) = bytes.read_exact(&mut next) {
+                failure = Some(e.into());
+                break;
+            }
             value = (value << 8) + u64::from(next[0]);
+            i += 1;
+        }
+        if let Some(e) = failure {
+            return Err(e);
         }
 
         check_min_len(value, len)?;
@@ -147,10 +156,23 @@ impl DeserializeBytes for TlsVarInt {
         let (value, len) = calculate_value(len_byte)?;
         let mut value: u64 = value.try_into().map_err(|_| Error::InvalidInput)?;
 
-        for _ in 1..len {
-            let (next, next_remainder) = u8::tls_deserialize_bytes(remainder)?;
-            remainder = next_remainder;
-            value = (value << 8) + u64::from(next);
+        let mut failure: Option<Error> = None;
+        let mut i = 1usize;
+        while i < len {
+            match u8::tls_deserialize_bytes(remainder) {
+                Ok((next, next_remainder)) => {
+                    remainder = next_remainder;
+                    value = (value << 8) + u64::from(next);
+                }
+                Err(e) => {
+                    failure = Some(e);
+                    break;
+                }
+            }
+            i += 1;
+        }
+        if let Some(e) = failure {
+            return Err(e);
         }
 
         check_min_len(value, len)?;
