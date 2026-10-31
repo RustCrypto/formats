@@ -38,6 +38,8 @@ use std::io::{Read, Write};
 mod arrays;
 mod primitives;
 mod quic_vec;
+#[cfg(hax)]
+pub mod spec;
 mod string;
 mod tls_vec;
 mod varint;
