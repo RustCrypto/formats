@@ -11,7 +11,8 @@ tactics its downstream crates (OpenMLS) reuse. Reading order:
    `Verification/Std/` (`std` path: `Serialize` / `Deserialize` on lawful readers / writers).
 5. For downstream crates: `Verification/Derive/` (tactics for the derived impls, `Bytes` and `Std`;
    `HandWritten` for hand-written codecs, `HandWrittenReader` for hand-written bytes decoders that
-   return the reader slice) and `Verification/Std/SecretFrom.lean`.
+   return the reader slice, `RoundTripStd` for the `std` round trip of composed codecs) and
+   `Verification/Std/SecretFrom.lean`.
 6. `Tools/AxiomGate.lean`: the `#axiom_gate` command.
 
 Each file starts with what it proves, which obligations use it and which axioms it reaches. Layout
@@ -21,5 +22,6 @@ import TlsCodec.Verification.ProofObligations
 import TlsCodec.Verification.Derive.Std
 import TlsCodec.Verification.Derive.HandWritten
 import TlsCodec.Verification.Derive.HandWrittenReader
+import TlsCodec.Verification.Derive.RoundTripStd
 import TlsCodec.Verification.Std.SecretFrom
 import TlsCodec.Tools.AxiomGate
