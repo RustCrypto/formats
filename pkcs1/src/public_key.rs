@@ -7,7 +7,10 @@ use der::{
 };
 
 #[cfg(feature = "alloc")]
-use der::{Document, asn1::Uint};
+use {
+    crate::{DecodeRsaPublicKey, EncodeRsaPublicKey},
+    der::{Document, asn1::Uint},
+};
 
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
@@ -69,6 +72,23 @@ where
 }
 
 impl<'a, U> Sequence<'a> for RsaPublicKey<U> {}
+
+#[cfg(feature = "alloc")]
+impl DecodeRsaPublicKey for RsaPublicKeyOwned {
+    fn from_pkcs1_der(bytes: &[u8]) -> Result<Self> {
+        Ok(Self::from_der(bytes)?)
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<U> EncodeRsaPublicKey for RsaPublicKey<U>
+where
+    U: EncodeValue + FixedTag,
+{
+    fn to_pkcs1_der(&self) -> Result<Document> {
+        self.try_into()
+    }
+}
 
 impl<'a, U> TryFrom<&'a [u8]> for RsaPublicKey<U>
 where
