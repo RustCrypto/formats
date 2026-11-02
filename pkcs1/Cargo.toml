@@ -1,6 +1,6 @@
 [package]
 name = "pkcs1"
-version = "0.8.0-rc.5"
+version = "0.8.0"
 description = """
 Pure Rust implementation of Public-Key Cryptography Standards (PKCS) #1:
 RSA Cryptography Specifications Version 2.2 (RFC 8017)
@@ -33,4 +33,3 @@ zeroize = ["der/zeroize"]
 
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
