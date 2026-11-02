@@ -14,7 +14,10 @@ use der::{
 use {self::other_prime_info::OtherPrimeInfo, alloc::vec::Vec, der::SecretDocument};
 
 #[cfg(feature = "alloc")]
-use der::asn1::Uint;
+use {
+    crate::{DecodeRsaPrivateKey, EncodeRsaPrivateKey},
+    der::asn1::Uint,
+};
 
 #[cfg(feature = "pem")]
 use der::pem::PemLabel;
@@ -183,6 +186,23 @@ where
 }
 
 impl<U> Sequence<'_> for RsaPrivateKey<U> {}
+
+#[cfg(feature = "alloc")]
+impl DecodeRsaPrivateKey for RsaPrivateKeyOwned {
+    fn from_pkcs1_der(bytes: &[u8]) -> Result<Self> {
+        Ok(Self::from_der(bytes)?)
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<U> EncodeRsaPrivateKey for RsaPrivateKey<U>
+where
+    U: Encode,
+{
+    fn to_pkcs1_der(&self) -> Result<SecretDocument> {
+        self.try_into()
+    }
+}
 
 impl<'a, U> From<&'a RsaPrivateKey<U>> for RsaPublicKeyRef<'a>
 where
