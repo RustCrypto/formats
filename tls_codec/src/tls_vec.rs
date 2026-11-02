@@ -214,12 +214,6 @@ macro_rules! impl_serialize_common {
             let tls_serialized_len = crate::checked_len_add(byte_length, $len_len)?;
 
             let max_len = <$size>::MAX.try_into().unwrap();
-            debug_assert!(
-                byte_length <= max_len,
-                "Vector length can't be encoded in the vector length a {} >= {}",
-                byte_length,
-                max_len
-            );
             if byte_length > max_len {
                 return Err(Error::InvalidVectorLength);
             }

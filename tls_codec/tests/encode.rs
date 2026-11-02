@@ -124,3 +124,14 @@ fn serialize_into_short_writer() {
     assert_eq!(short_writer.0.len(), 35);
     assert_eq!(&short_writer.0[short_writer.0.len() - 3..], &[0, 1, 2])
 }
+
+#[test]
+fn serialize_vec_too_long_for_length_field() {
+    use tls_codec::{Error, TlsByteVecU8, TlsVecU8};
+    let res = TlsVecU8::<u8>::new(vec![0u8; 300]).tls_serialize_detached();
+    assert_eq!(res, Err(Error::InvalidVectorLength));
+    let res = TlsByteVecU8::new(vec![0u8; 256]).tls_serialize_detached();
+    assert_eq!(res, Err(Error::InvalidVectorLength));
+    let res = TlsVecU16::<u8>::new(vec![0u8; 65536]).tls_serialize_detached();
+    assert_eq!(res, Err(Error::InvalidVectorLength));
+}
