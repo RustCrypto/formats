@@ -118,9 +118,7 @@ impl Deserialize for TlsVarInt {
     #[inline]
     fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
         let mut len_byte = [0u8; 1];
-        if bytes.read(&mut len_byte)? == 0 {
-            return Err(Error::EndOfStream);
-        };
+        bytes.read_exact(&mut len_byte)?;
         let len_byte = len_byte[0];
 
         let (value, len) = calculate_value(len_byte)?;

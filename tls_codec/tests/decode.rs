@@ -460,3 +460,45 @@ fn byte_vec_round_trips_beyond_prealloc_cap() {
     assert_eq!(read.as_slice(), payload.as_slice());
     assert!(read_input.is_empty());
 }
+
+/// A reader whose first `read` call fails with `ErrorKind::Interrupted`,
+/// which `std::io::Read` documents as retryable.
+struct InterruptOnce<'a> {
+    interrupted: bool,
+    inner: &'a [u8],
+}
+
+impl std::io::Read for InterruptOnce<'_> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        if !self.interrupted {
+            self.interrupted = true;
+            return Err(std::io::ErrorKind::Interrupted.into());
+        }
+        self.inner.read(buf)
+    }
+}
+
+#[test]
+fn deserialize_retries_interrupted_reads() {
+    use tls_codec::Deserialize;
+    let mut reader = InterruptOnce {
+        interrupted: false,
+        inner: &[0x02, 0x07, 0x08],
+    };
+    let res = VLBytes::tls_deserialize(&mut reader).unwrap();
+    assert_eq!(res.as_slice(), &[7, 8]);
+
+    let mut reader = InterruptOnce {
+        interrupted: false,
+        inner: &[0x02, 0x07, 0x08],
+    };
+    let res = TlsByteVecU8::tls_deserialize(&mut reader).unwrap();
+    assert_eq!(res.as_slice(), &[7, 8]);
+
+    // End of input on the first byte is still reported as `EndOfStream`.
+    let mut empty: &[u8] = &[];
+    assert_eq!(
+        VLBytes::tls_deserialize(&mut empty),
+        Err(Error::EndOfStream)
+    );
+}
