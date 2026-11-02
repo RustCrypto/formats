@@ -21,7 +21,11 @@ use crate::{RsaPrivateKeyRef, RsaPublicKeyRef};
 #[cfg(doc)]
 use crate::{RsaPrivateKey, RsaPublicKey};
 
-/// Parse an [`RsaPrivateKey`] from a PKCS#1-encoded document.
+/// Decode an owned type from a PKCS#1-encoded [`RsaPrivateKey`].
+///
+/// Implemented for `RsaPrivateKeyOwned` with the `alloc` feature enabled, and
+/// usable by RSA implementations for their own key types. For borrowed decoding
+/// into [`crate::RsaPrivateKeyRef`], use [`der::Decode`] instead.
 pub trait DecodeRsaPrivateKey: Sized {
     /// Deserialize PKCS#1 private key from ASN.1 DER-encoded data
     /// (binary format).
@@ -57,7 +61,11 @@ pub trait DecodeRsaPrivateKey: Sized {
     }
 }
 
-/// Parse a [`RsaPublicKey`] from a PKCS#1-encoded document.
+/// Decode an owned type from a PKCS#1-encoded [`RsaPublicKey`].
+///
+/// Implemented for `RsaPublicKeyOwned` with the `alloc` feature enabled, and
+/// usable by RSA implementations for their own key types. For borrowed decoding
+/// into [`crate::RsaPublicKeyRef`], use [`der::Decode`] instead.
 pub trait DecodeRsaPublicKey: Sized {
     /// Deserialize object from ASN.1 DER-encoded [`RsaPublicKey`]
     /// (binary format).
