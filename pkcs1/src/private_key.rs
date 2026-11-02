@@ -23,9 +23,15 @@ use {
 use der::pem::PemLabel;
 
 /// PKCS#1 RSA Private Keys as defined in [RFC 8017 Appendix 1.2].
+///
+/// Borrows its integer data from the input. Decode DER using [`der::Decode::from_der`]
+/// or [`TryFrom<&[u8]>`].
 pub type RsaPrivateKeyRef<'a> = RsaPrivateKey<UintRef<'a>>;
 
 /// PKCS#1 RSA Private Keys as defined in [RFC 8017 Appendix 1.2].
+///
+/// Owns its integer data. Use [`DecodeRsaPrivateKey`] and [`EncodeRsaPrivateKey`]
+/// for DER decoding and encoding, or PEM when the `pem` feature is enabled.
 #[cfg(feature = "alloc")]
 pub type RsaPrivateKeyOwned = RsaPrivateKey<Uint>;
 
@@ -219,6 +225,7 @@ where
 {
     type Error = Error;
 
+    /// Decode a PKCS#1 RSA private key from ASN.1 DER-encoded bytes.
     fn try_from(bytes: &'a [u8]) -> Result<Self> {
         Ok(Self::from_der(bytes)?)
     }

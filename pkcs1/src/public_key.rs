@@ -16,9 +16,15 @@ use {
 use der::pem::PemLabel;
 
 /// [`RsaPublicKey`] with [`UintRef`] INTEGERs.
+///
+/// Borrows its integer data from the input. Decode DER using [`der::Decode::from_der`]
+/// or [`TryFrom<&[u8]>`].
 pub type RsaPublicKeyRef<'a> = RsaPublicKey<UintRef<'a>>;
 
 /// [`RsaPublicKey`] with allocating [`Uint`] INTEGERs.
+///
+/// Owns its integer data. Use [`DecodeRsaPublicKey`] and [`EncodeRsaPublicKey`]
+/// for DER decoding and encoding, or PEM when the `pem` feature is enabled.
 #[cfg(feature = "alloc")]
 pub type RsaPublicKeyOwned = RsaPublicKey<Uint>;
 
@@ -97,6 +103,7 @@ where
 {
     type Error = Error;
 
+    /// Decode a PKCS#1 RSA public key from ASN.1 DER-encoded bytes.
     fn try_from(bytes: &'a [u8]) -> Result<Self> {
         Ok(Self::from_der(bytes)?)
     }
