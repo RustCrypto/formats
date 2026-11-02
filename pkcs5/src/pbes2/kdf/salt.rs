@@ -21,6 +21,11 @@ impl Salt {
     /// Returns [`Error`] in the event the length of `slice` exceeds [`Salt::MAX_LEN`].
     pub fn new(slice: impl AsRef<[u8]>) -> Result<Self> {
         let slice = slice.as_ref();
+
+        if slice.len() > Self::MAX_LEN {
+            return Err(Self::TAG.length_error().into());
+        }
+
         let length = Length::new(u32::try_from(slice.len()).map_err(|_| Self::TAG.length_error())?);
 
         let mut inner = [0u8; Self::MAX_LEN];

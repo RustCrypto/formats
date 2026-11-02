@@ -235,6 +235,19 @@ fn desede3cbc_valid_iv_still_decodes() {
     }
 }
 
+#[test]
+fn salt_too_long_is_error_not_panic() {
+    let salt = [0u8; pbes2::Salt::MAX_LEN + 1];
+    assert!(pbes2::Salt::new(salt).is_err());
+    assert!(pbes2::Pbkdf2Params::hmac_sha256(1000, &salt).is_err());
+}
+
+#[test]
+fn salt_max_len_is_accepted() {
+    let salt = [0xA5u8; pbes2::Salt::MAX_LEN];
+    assert_eq!(pbes2::Salt::new(salt).unwrap().as_bytes(), salt);
+}
+
 /// Encoding test for PBES2 + PBKDF2-SHA1 + AES-128-CBC `AlgorithmIdentifier`
 #[test]
 fn encode_pbes2_pbkdf2_sha1_aes128cbc() {
