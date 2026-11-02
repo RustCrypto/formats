@@ -482,6 +482,62 @@ pub mod io {
         fn same_bytes(&self) {}
     }
 
+    /// Types whose `std` and byte-slice decoders agree.
+    #[hax_lib::attributes]
+    pub trait DecodersAgree: Deserialize + crate::DeserializeBytes + PartialEq + Sized {
+        /// Lemma method (empty body): on every lawful reader, the `std` decoder fails exactly
+        /// when the byte-slice decoder fails on the bytes the reader yields; otherwise both give
+        /// the same value and the reader is left with the byte-slice remainder.
+        #[hax_lib::ensures(|_| {
+            let bytes = stream(&reader);
+            let (res, after) = decode_std::<Self, R>(reader);
+            match Self::tls_deserialize_bytes(&bytes) {
+                Ok((value, rest)) => {
+                    res.is_ok_and(|out| out == value) && stream(&after).as_slice() == rest
+                }
+                Err(_) => res.is_err(),
+            }
+        })]
+        #[allow(unused_variables)]
+        fn decoders_agree<R: Read>(reader: R) {}
+
+        /// Lemma method (empty body): the byte-slice decoder reads no further than what it
+        /// consumes. If it decodes `prefix ++ rest` leaving `rest`, it decodes
+        /// `prefix ++ other_rest` to the same value, leaving `other_rest`. (Needed by `Vec<T>`,
+        /// whose byte-slice decoder runs the elements on the whole remainder, while its `std`
+        /// decoder runs them on a reader bounded by the vector length.)
+        #[hax_lib::requires(is_concat(prefix, rest, bytes) && is_concat(prefix, other_rest, other))]
+        #[hax_lib::ensures(|_| match Self::tls_deserialize_bytes(bytes) {
+            Ok((value, remainder)) => {
+                remainder != rest
+                    || Self::tls_deserialize_bytes(other)
+                        .is_ok_and(|(out, remainder)| out == value && remainder == other_rest)
+            }
+            Err(_) => true,
+        })]
+        #[allow(unused_variables)]
+        fn bytes_prefix_only(
+            prefix: &[u8],
+            rest: &[u8],
+            bytes: &[u8],
+            other_rest: &[u8],
+            other: &[u8],
+        ) {
+        }
+    }
+
+    /// Types whose `std` encoding round-trips through the byte-slice decoder.
+    #[hax_lib::attributes]
+    pub trait RoundTripMixed: RoundTripStd + DecodersAgree {
+        /// Lemma method (empty body): the byte-slice decoder gives back `self` from its `std`
+        /// encoding followed by `rest`, and leaves exactly `rest`.
+        #[hax_lib::requires(encode(self).is_ok_and(|bytes| is_concat(&bytes, rest, whole)))]
+        #[hax_lib::ensures(|_| Self::tls_deserialize_bytes(whole)
+            .is_ok_and(|(out, remainder)| out == *self && remainder == rest))]
+        #[allow(unused_variables)]
+        fn round_trip_mixed(&self, rest: &[u8], whole: &[u8]) {}
+    }
+
     impl RoundTripStd for u8 {}
     impl RoundTripStd for VLBytes {}
     impl<T: NonEmptyStd + core::fmt::Debug> RoundTripStd for Vec<T> {}
@@ -492,4 +548,16 @@ pub mod io {
 
     impl SameBytes for u8 {}
     impl SameBytes for VLBytes {}
+
+    impl DecodersAgree for u8 {}
+    impl DecodersAgree for u16 {}
+    impl DecodersAgree for u32 {}
+    impl DecodersAgree for u64 {}
+    impl<const LEN: usize> DecodersAgree for [u8; LEN] {}
+    impl DecodersAgree for VLBytes {}
+    impl DecodersAgree for crate::SecretVLBytes {}
+    impl<T: DecodersAgree> DecodersAgree for Vec<T> {}
+
+    impl RoundTripMixed for u8 {}
+    impl RoundTripMixed for VLBytes {}
 }
