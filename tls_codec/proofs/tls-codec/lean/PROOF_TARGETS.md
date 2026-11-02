@@ -687,9 +687,9 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `varint.TlsVarInt.Insts.Tls_codecDeserialize.Lawful`
 - `varint.TlsVarInt.Insts.Tls_codecSerialize.Lawful`
 
-## 2d. Per-impl `Lawful`: core / third-party traits (414)
+## 2d. Per-impl `Lawful`: core / third-party traits (428)
 
-#### `core.ops.function.FnOnce` (110)
+#### `core.ops.function.FnOnce` (114)
 
 - `arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU8LENSharedSliceU8Bool.Lawful`
 - `arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.Lawful`
@@ -768,6 +768,10 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `spec.io.__3.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful`
 - `spec.io.__4.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful`
 - `spec.io.__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful`
+- `spec.io.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.Lawful`
+- `spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.Lawful`
+- `spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.Lawful`
+- `spec.io.__8.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful`
 - `string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLByteVecSharedSliceU8Bool.Lawful`
 - `string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairStringSharedSliceU8Bool.Lawful`
 - `string.std_only.DeserializeString.tls_deserialize.closure.Insts.CoreOpsFunctionFnOnceTupleFromUtf8ErrorError.Lawful`
@@ -1097,6 +1101,17 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `tls_vec.TlsByteVecU24.Insts.CoreOpsIndexIndexUsizeU8.Lawful`
 - `tls_vec.TlsByteVecU32.Insts.CoreOpsIndexIndexUsizeU8.Lawful`
 
+#### `spec.io.DecodersAgree` (8)
+
+- `U8.Insts.Tls_codecSpecIoDecodersAgree.Lawful`
+- `U16.Insts.Tls_codecSpecIoDecodersAgree.Lawful`
+- `U32.Insts.Tls_codecSpecIoDecodersAgree.Lawful`
+- `U64.Insts.Tls_codecSpecIoDecodersAgree.Lawful`
+- `ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree.Lawful`
+- `quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.Lawful`
+- `quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.Lawful`
+- `alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.Lawful`
+
 #### `zeroize.Zeroize` (8)
 
 - `quic_vec.VLBytes.Insts.ZeroizeZeroize.Lawful`
@@ -1171,6 +1186,11 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 
 - `U24.Insts.CoreMarkerCopy.Lawful`
 - `varint.TlsVarInt.Insts.CoreMarkerCopy.Lawful`
+
+#### `spec.io.RoundTripMixed` (2)
+
+- `U8.Insts.Tls_codecSpecIoRoundTripMixed.Lawful`
+- `quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.Lawful`
 
 #### `spec.io.SameBytes` (2)
 

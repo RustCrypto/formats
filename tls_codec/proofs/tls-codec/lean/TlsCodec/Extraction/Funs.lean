@@ -11322,8 +11322,164 @@ def spec.io.SameBytes.same_bytes.default
   {Self : Type} (self : Self) : RustM Unit := do
   ok ()
 
+/-- [tls_codec::spec::io::_#5::ensures::{impl core::ops::function::FnOnce<(Self_,), bool> for tls_codec::spec::io::_#5::ensures::closure<'_0, Self_, R>}::call_once]:
+    Source: 'tls_codec/src/spec.rs', lines 496:34-496:52 -/
+def
+  spec.io.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once
+  {Self_ : Type} {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+  (DeserializeInst : Deserialize Self_) (DeserializeBytesInst :
+  DeserializeBytes Self_) (corecmpPartialEqInst : core.cmp.PartialEq Self_
+  Self_) (DecodersAgreeInst : spec.io.DecodersAgree Self_)
+  (c : spec.io.__5.ensures.closure Self_ R) (tupled_args : Self_) :
+  RustM Bool
+  := do
+  corecmpPartialEqInst.eq tupled_args c
+
+/-- Trait implementation: [tls_codec::spec::io::_#5::ensures::{impl core::ops::function::FnOnce<(Self_,), bool> for tls_codec::spec::io::_#5::ensures::closure<'_0, Self_, R>}]
+    Source: 'tls_codec/src/spec.rs', lines 496:34-496:52 -/
+@[reducible]
+def spec.io.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool
+  {Self_ : Type} {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+  (DeserializeInst : Deserialize Self_) (DeserializeBytesInst :
+  DeserializeBytes Self_) (corecmpPartialEqInst : core.cmp.PartialEq Self_
+  Self_) (DecodersAgreeInst : spec.io.DecodersAgree Self_) :
+  core.ops.function.FnOnce (spec.io.__5.ensures.closure Self_ R) Self_ Bool
+  := {
+  call_once :=
+    spec.io.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once
+    allocioreadReadInst DeserializeInst DeserializeBytesInst
+    corecmpPartialEqInst DecodersAgreeInst
+}
+
+/-- [tls_codec::spec::io::_#7::ensures::{impl core::ops::function::FnOnce<((Self_, &'_ [u8]),), bool> for tls_codec::spec::io::_#7::ensures::closure<'_0, '_1, '_2, Self_>}::call_once]:
+    Source: 'tls_codec/src/spec.rs', lines 514:35-514:93 -/
+def
+  spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.call_once
+  {Self_ : Type} (DeserializeInst : Deserialize Self_) (DeserializeBytesInst :
+  DeserializeBytes Self_) (corecmpPartialEqInst : core.cmp.PartialEq Self_
+  Self_) (DecodersAgreeInst : spec.io.DecodersAgree Self_)
+  (c : spec.io.__7.ensures.closure Self_)
+  (tupled_args : (Self_ × (Slice Std.U8))) :
+  RustM Bool
+  := do
+  let (t, s) := c
+  let (out, remainder) := tupled_args
+  let b ← corecmpPartialEqInst.eq out t
+  if b
+  then
+    core.Slice.Insts.CoreCmpPartialEqSlice.eq core.U8.Insts.CoreCmpPartialEqU8
+      remainder s
+  else ok false
+
+/-- Trait implementation: [tls_codec::spec::io::_#7::ensures::{impl core::ops::function::FnOnce<((Self_, &'_ [u8]),), bool> for tls_codec::spec::io::_#7::ensures::closure<'_0, '_1, '_2, Self_>}]
+    Source: 'tls_codec/src/spec.rs', lines 514:35-514:93 -/
+@[reducible]
+def
+  spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool
+  {Self_ : Type} (DeserializeInst : Deserialize Self_) (DeserializeBytesInst :
+  DeserializeBytes Self_) (corecmpPartialEqInst : core.cmp.PartialEq Self_
+  Self_) (DecodersAgreeInst : spec.io.DecodersAgree Self_) :
+  core.ops.function.FnOnce (spec.io.__7.ensures.closure Self_) (Self_ × (Slice
+  Std.U8)) Bool := {
+  call_once :=
+    spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.call_once
+    DeserializeInst DeserializeBytesInst corecmpPartialEqInst DecodersAgreeInst
+}
+
+/-- [tls_codec::spec::io::DecodersAgree::decoders_agree]:
+    Source: 'tls_codec/src/spec.rs', lines 502:8-502:48
+    Visibility: public -/
+@[trait_default]
+def spec.io.DecodersAgree.decoders_agree.default
+  (Self : Type) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+  (reader : R) :
+  RustM Unit
+  := do
+  ok ()
+
+/-- [tls_codec::spec::io::DecodersAgree::bytes_prefix_only]:
+    Source: 'tls_codec/src/spec.rs', lines 519:8-526:9
+    Visibility: public -/
+@[trait_default]
+def spec.io.DecodersAgree.bytes_prefix_only.default
+  (Self : Type) («prefix» : Slice Std.U8) (rest : Slice Std.U8)
+  (bytes : Slice Std.U8) (other_rest : Slice Std.U8) (other : Slice Std.U8) :
+  RustM Unit
+  := do
+  ok ()
+
+/-- [tls_codec::spec::io::_#9::ensures::{impl core::ops::function::FnOnce<((Self_, &'_ [u8]),), bool> for tls_codec::spec::io::_#9::ensures::closure<'_0, '_1, '_2, Self_>}::call_once]:
+    Source: 'tls_codec/src/spec.rs', lines 530:4-530:26 -/
+def
+  spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.call_once
+  {Self_ : Type} (RoundTripStdInst : spec.io.RoundTripStd Self_)
+  (DecodersAgreeInst : spec.io.DecodersAgree Self_) (RoundTripMixedInst :
+  spec.io.RoundTripMixed Self_) (c : spec.io.__9.ensures.closure Self_)
+  (tupled_args : (Self_ × (Slice Std.U8))) :
+  RustM Bool
+  := do
+  let (t, s) := c
+  let (out, remainder) := tupled_args
+  let b ← RoundTripStdInst.corecmpPartialEqInst.eq out t
+  if b
+  then
+    core.Slice.Insts.CoreCmpPartialEqSlice.eq core.U8.Insts.CoreCmpPartialEqU8
+      remainder s
+  else ok false
+
+/-- Trait implementation: [tls_codec::spec::io::_#9::ensures::{impl core::ops::function::FnOnce<((Self_, &'_ [u8]),), bool> for tls_codec::spec::io::_#9::ensures::closure<'_0, '_1, '_2, Self_>}]
+    Source: 'tls_codec/src/spec.rs', lines 530:4-530:26 -/
+@[reducible]
+def
+  spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool
+  {Self_ : Type} (RoundTripStdInst : spec.io.RoundTripStd Self_)
+  (DecodersAgreeInst : spec.io.DecodersAgree Self_) (RoundTripMixedInst :
+  spec.io.RoundTripMixed Self_) : core.ops.function.FnOnce
+  (spec.io.__9.ensures.closure Self_) (Self_ × (Slice Std.U8)) Bool := {
+  call_once :=
+    spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.call_once
+    RoundTripStdInst DecodersAgreeInst RoundTripMixedInst
+}
+
+/-- [tls_codec::spec::io::_#8::requires::{impl core::ops::function::FnOnce<(alloc::vec::Vec<u8>,), bool> for tls_codec::spec::io::_#8::requires::closure<'_0, '_1, Self_>}::call_once]:
+    Source: 'tls_codec/src/spec.rs', lines 534:51-534:89 -/
+def
+  spec.io.__8.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once
+  {Self_ : Type} (RoundTripStdInst : spec.io.RoundTripStd Self_)
+  (DecodersAgreeInst : spec.io.DecodersAgree Self_) (RoundTripMixedInst :
+  spec.io.RoundTripMixed Self_) (c : spec.io.__8.requires.closure Self_)
+  (tupled_args : alloc.vec.Vec Std.U8) :
+  RustM Bool
+  := do
+  let (s, s1) := c
+  let s2 ← alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref tupled_args
+  spec.io.is_concat s2 s s1
+
+/-- Trait implementation: [tls_codec::spec::io::_#8::requires::{impl core::ops::function::FnOnce<(alloc::vec::Vec<u8>,), bool> for tls_codec::spec::io::_#8::requires::closure<'_0, '_1, Self_>}]
+    Source: 'tls_codec/src/spec.rs', lines 534:51-534:89 -/
+@[reducible]
+def spec.io.__8.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool
+  {Self_ : Type} (RoundTripStdInst : spec.io.RoundTripStd Self_)
+  (DecodersAgreeInst : spec.io.DecodersAgree Self_) (RoundTripMixedInst :
+  spec.io.RoundTripMixed Self_) : core.ops.function.FnOnce
+  (spec.io.__8.requires.closure Self_) (alloc.vec.Vec Std.U8) Bool := {
+  call_once :=
+    spec.io.__8.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once
+    RoundTripStdInst DecodersAgreeInst RoundTripMixedInst
+}
+
+/-- [tls_codec::spec::io::RoundTripMixed::round_trip_mixed]:
+    Source: 'tls_codec/src/spec.rs', lines 538:8-538:64
+    Visibility: public -/
+@[trait_default]
+def spec.io.RoundTripMixed.round_trip_mixed.default
+  {Self : Type} (self : Self) (rest : Slice Std.U8) (whole : Slice Std.U8) :
+  RustM Unit
+  := do
+  ok ()
+
 /-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::RoundTripStd for u8}]
-    Source: 'tls_codec/src/spec.rs', lines 485:4-485:31 -/
+    Source: 'tls_codec/src/spec.rs', lines 541:4-541:31 -/
 @[reducible]
 def U8.Insts.Tls_codecSpecIoRoundTripStd : spec.io.RoundTripStd Std.U8 := {
   SerializeInst := U8.Insts.Tls_codecSerialize
@@ -11335,7 +11491,7 @@ def U8.Insts.Tls_codecSpecIoRoundTripStd : spec.io.RoundTripStd Std.U8 := {
 }
 
 /-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::RoundTripStd for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/spec.rs', lines 486:4-486:36 -/
+    Source: 'tls_codec/src/spec.rs', lines 542:4-542:36 -/
 @[reducible]
 def quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripStd : spec.io.RoundTripStd
   quic_vec.VLBytes := {
@@ -11348,7 +11504,7 @@ def quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripStd : spec.io.RoundTripStd
 }
 
 /-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::RoundTripStd for alloc::vec::Vec<T>}]
-    Source: 'tls_codec/src/spec.rs', lines 487:4-487:70 -/
+    Source: 'tls_codec/src/spec.rs', lines 543:4-543:70 -/
 @[reducible]
 def alloc.vec.Vec.Insts.Tls_codecSpecIoRoundTripStd {T : Type} (NonEmptyStdInst
   : spec.io.NonEmptyStd T) (corefmtDebugInst : core.fmt.Debug T) :
@@ -11365,7 +11521,7 @@ def alloc.vec.Vec.Insts.Tls_codecSpecIoRoundTripStd {T : Type} (NonEmptyStdInst
 }
 
 /-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::NonEmptyStd for u8}]
-    Source: 'tls_codec/src/spec.rs', lines 489:4-489:30 -/
+    Source: 'tls_codec/src/spec.rs', lines 545:4-545:30 -/
 @[reducible]
 def U8.Insts.Tls_codecSpecIoNonEmptyStd : spec.io.NonEmptyStd Std.U8 := {
   RoundTripStdInst := U8.Insts.Tls_codecSpecIoRoundTripStd
@@ -11373,7 +11529,7 @@ def U8.Insts.Tls_codecSpecIoNonEmptyStd : spec.io.NonEmptyStd Std.U8 := {
 }
 
 /-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::NonEmptyStd for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/spec.rs', lines 490:4-490:35 -/
+    Source: 'tls_codec/src/spec.rs', lines 546:4-546:35 -/
 @[reducible]
 def quic_vec.VLBytes.Insts.Tls_codecSpecIoNonEmptyStd : spec.io.NonEmptyStd
   quic_vec.VLBytes := {
@@ -11382,7 +11538,7 @@ def quic_vec.VLBytes.Insts.Tls_codecSpecIoNonEmptyStd : spec.io.NonEmptyStd
 }
 
 /-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::NonEmptyStd for alloc::vec::Vec<T>}]
-    Source: 'tls_codec/src/spec.rs', lines 491:4-491:69 -/
+    Source: 'tls_codec/src/spec.rs', lines 547:4-547:69 -/
 @[reducible]
 def alloc.vec.Vec.Insts.Tls_codecSpecIoNonEmptyStd {T : Type} (NonEmptyStdInst
   : spec.io.NonEmptyStd T) (corefmtDebugInst : core.fmt.Debug T) :
@@ -11393,7 +11549,7 @@ def alloc.vec.Vec.Insts.Tls_codecSpecIoNonEmptyStd {T : Type} (NonEmptyStdInst
 }
 
 /-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::SameBytes for u8}]
-    Source: 'tls_codec/src/spec.rs', lines 493:4-493:28 -/
+    Source: 'tls_codec/src/spec.rs', lines 549:4-549:28 -/
 @[reducible]
 def U8.Insts.Tls_codecSpecIoSameBytes : spec.io.SameBytes Std.U8 := {
   SerializeInst := U8.Insts.Tls_codecSerialize
@@ -11402,13 +11558,148 @@ def U8.Insts.Tls_codecSpecIoSameBytes : spec.io.SameBytes Std.U8 := {
 }
 
 /-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::SameBytes for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/spec.rs', lines 494:4-494:33 -/
+    Source: 'tls_codec/src/spec.rs', lines 550:4-550:33 -/
 @[reducible]
 def quic_vec.VLBytes.Insts.Tls_codecSpecIoSameBytes : spec.io.SameBytes
   quic_vec.VLBytes := {
   SerializeInst := quic_vec.VLBytes.Insts.Tls_codecSerialize
   SerializeBytesInst := quic_vec.VLBytes.Insts.Tls_codecSerializeBytes
   same_bytes := spec.io.SameBytes.same_bytes.default
+}
+
+/-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::DecodersAgree for u8}]
+    Source: 'tls_codec/src/spec.rs', lines 552:4-552:32 -/
+@[reducible]
+def U8.Insts.Tls_codecSpecIoDecodersAgree : spec.io.DecodersAgree Std.U8 := {
+  DeserializeInst := U8.Insts.Tls_codecDeserialize
+  DeserializeBytesInst := U8.Insts.Tls_codecDeserializeBytes
+  corecmpPartialEqInst := core.U8.Insts.CoreCmpPartialEqU8
+  decoders_agree := fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    => spec.io.DecodersAgree.decoders_agree.default Std.U8 allocioreadReadInst
+  bytes_prefix_only := spec.io.DecodersAgree.bytes_prefix_only.default Std.U8
+}
+
+/-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::DecodersAgree for u16}]
+    Source: 'tls_codec/src/spec.rs', lines 553:4-553:33 -/
+@[reducible]
+def U16.Insts.Tls_codecSpecIoDecodersAgree : spec.io.DecodersAgree Std.U16 := {
+  DeserializeInst := U16.Insts.Tls_codecDeserialize
+  DeserializeBytesInst := U16.Insts.Tls_codecDeserializeBytes
+  corecmpPartialEqInst := core.U16.Insts.CoreCmpPartialEqU16
+  decoders_agree := fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    => spec.io.DecodersAgree.decoders_agree.default Std.U16 allocioreadReadInst
+  bytes_prefix_only := spec.io.DecodersAgree.bytes_prefix_only.default Std.U16
+}
+
+/-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::DecodersAgree for u32}]
+    Source: 'tls_codec/src/spec.rs', lines 554:4-554:33 -/
+@[reducible]
+def U32.Insts.Tls_codecSpecIoDecodersAgree : spec.io.DecodersAgree Std.U32 := {
+  DeserializeInst := U32.Insts.Tls_codecDeserialize
+  DeserializeBytesInst := U32.Insts.Tls_codecDeserializeBytes
+  corecmpPartialEqInst := core.U32.Insts.CoreCmpPartialEqU32
+  decoders_agree := fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    => spec.io.DecodersAgree.decoders_agree.default Std.U32 allocioreadReadInst
+  bytes_prefix_only := spec.io.DecodersAgree.bytes_prefix_only.default Std.U32
+}
+
+/-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::DecodersAgree for u64}]
+    Source: 'tls_codec/src/spec.rs', lines 555:4-555:33 -/
+@[reducible]
+def U64.Insts.Tls_codecSpecIoDecodersAgree : spec.io.DecodersAgree Std.U64 := {
+  DeserializeInst := U64.Insts.Tls_codecDeserialize
+  DeserializeBytesInst := U64.Insts.Tls_codecDeserializeBytes
+  corecmpPartialEqInst := core.U64.Insts.CoreCmpPartialEqU64
+  decoders_agree := fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    => spec.io.DecodersAgree.decoders_agree.default Std.U64 allocioreadReadInst
+  bytes_prefix_only := spec.io.DecodersAgree.bytes_prefix_only.default Std.U64
+}
+
+/-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::DecodersAgree for [u8; LEN]}]
+    Source: 'tls_codec/src/spec.rs', lines 556:4-556:57 -/
+@[reducible]
+def ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree (LEN : Std.Usize) :
+  spec.io.DecodersAgree (Array Std.U8 LEN) := {
+  DeserializeInst := ArrayU8LEN.Insts.Tls_codecDeserialize LEN
+  DeserializeBytesInst := ArrayU8LEN.Insts.Tls_codecDeserializeBytes LEN
+  corecmpPartialEqInst := core.Array.Insts.CoreCmpPartialEqArray LEN
+    core.U8.Insts.CoreCmpPartialEqU8
+  decoders_agree := fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    => spec.io.DecodersAgree.decoders_agree.default (Array Std.U8 LEN)
+    allocioreadReadInst
+  bytes_prefix_only := spec.io.DecodersAgree.bytes_prefix_only.default (Array
+    Std.U8 LEN)
+}
+
+/-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::DecodersAgree for tls_codec::quic_vec::VLBytes}]
+    Source: 'tls_codec/src/spec.rs', lines 557:4-557:37 -/
+@[reducible]
+def quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree : spec.io.DecodersAgree
+  quic_vec.VLBytes := {
+  DeserializeInst := quic_vec.VLBytes.Insts.Tls_codecDeserialize
+  DeserializeBytesInst := quic_vec.VLBytes.Insts.Tls_codecDeserializeBytes
+  corecmpPartialEqInst := quic_vec.VLBytes.Insts.CoreCmpPartialEqVLBytes
+  decoders_agree := fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    => spec.io.DecodersAgree.decoders_agree.default quic_vec.VLBytes
+    allocioreadReadInst
+  bytes_prefix_only := spec.io.DecodersAgree.bytes_prefix_only.default
+    quic_vec.VLBytes
+}
+
+/-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::DecodersAgree for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
+    Source: 'tls_codec/src/spec.rs', lines 558:4-558:50 -/
+@[reducible]
+def quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree :
+  spec.io.DecodersAgree quic_vec.secret_bytes.SecretVLBytes := {
+  DeserializeInst :=
+    quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecDeserialize
+  DeserializeBytesInst :=
+    quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecDeserializeBytes
+  corecmpPartialEqInst :=
+    quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpPartialEqSecretVLBytes
+  decoders_agree := fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    => spec.io.DecodersAgree.decoders_agree.default
+    quic_vec.secret_bytes.SecretVLBytes allocioreadReadInst
+  bytes_prefix_only := spec.io.DecodersAgree.bytes_prefix_only.default
+    quic_vec.secret_bytes.SecretVLBytes
+}
+
+/-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::DecodersAgree for alloc::vec::Vec<T>}]
+    Source: 'tls_codec/src/spec.rs', lines 559:4-559:54 -/
+@[reducible]
+def alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree {T : Type}
+  (DecodersAgreeInst : spec.io.DecodersAgree T) : spec.io.DecodersAgree
+  (alloc.vec.Vec T) := {
+  DeserializeInst := alloc.vec.Vec.Insts.Tls_codecDeserialize
+    DecodersAgreeInst.DeserializeInst
+  DeserializeBytesInst := alloc.vec.Vec.Insts.Tls_codecDeserializeBytes
+    DecodersAgreeInst.DeserializeBytesInst
+  corecmpPartialEqInst := alloc.vec.Vec.Insts.CoreCmpPartialEqVec
+    DecodersAgreeInst.corecmpPartialEqInst
+  decoders_agree := fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    => spec.io.DecodersAgree.decoders_agree.default (alloc.vec.Vec T)
+    allocioreadReadInst
+  bytes_prefix_only := spec.io.DecodersAgree.bytes_prefix_only.default
+    (alloc.vec.Vec T)
+}
+
+/-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::RoundTripMixed for u8}]
+    Source: 'tls_codec/src/spec.rs', lines 561:4-561:33 -/
+@[reducible]
+def U8.Insts.Tls_codecSpecIoRoundTripMixed : spec.io.RoundTripMixed Std.U8 := {
+  RoundTripStdInst := U8.Insts.Tls_codecSpecIoRoundTripStd
+  DecodersAgreeInst := U8.Insts.Tls_codecSpecIoDecodersAgree
+  round_trip_mixed := spec.io.RoundTripMixed.round_trip_mixed.default
+}
+
+/-- Trait implementation: [tls_codec::spec::io::{impl tls_codec::spec::io::RoundTripMixed for tls_codec::quic_vec::VLBytes}]
+    Source: 'tls_codec/src/spec.rs', lines 562:4-562:38 -/
+@[reducible]
+def quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed :
+  spec.io.RoundTripMixed quic_vec.VLBytes := {
+  RoundTripStdInst := quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripStd
+  DecodersAgreeInst := quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree
+  round_trip_mixed := spec.io.RoundTripMixed.round_trip_mixed.default
 }
 
 /-- [tls_codec::string::{impl tls_codec::Size for str}::tls_serialized_len]:

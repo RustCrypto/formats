@@ -1182,7 +1182,7 @@
       "reducible": false
     },
     {
-      "def_id": 2370,
+      "def_id": 2394,
       "lean_name": "tls_codec.arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU8LENSharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU8LENSharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -1220,7 +1220,7 @@
       "reducible": false
     },
     {
-      "def_id": 1280,
+      "def_id": 1296,
       "lean_name": "tls_codec.arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.call_once",
       "extract_name": "tls_codec.arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -1391,7 +1391,7 @@
       "reducible": false
     },
     {
-      "def_id": 1234,
+      "def_id": 1250,
       "lean_name": "tls_codec.__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once",
       "extract_name": "tls_codec.__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -1410,7 +1410,7 @@
       "reducible": false
     },
     {
-      "def_id": 2368,
+      "def_id": 2392,
       "lean_name": "tls_codec.__5.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.__5.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -1429,7 +1429,7 @@
       "reducible": false
     },
     {
-      "def_id": 1236,
+      "def_id": 1252,
       "lean_name": "tls_codec.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -1448,7 +1448,7 @@
       "reducible": false
     },
     {
-      "def_id": 1238,
+      "def_id": 1254,
       "lean_name": "tls_codec.__6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.__6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -1467,7 +1467,7 @@
       "reducible": false
     },
     {
-      "def_id": 1248,
+      "def_id": 1264,
       "lean_name": "tls_codec.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once",
       "extract_name": "tls_codec.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -1486,7 +1486,7 @@
       "reducible": false
     },
     {
-      "def_id": 1250,
+      "def_id": 1266,
       "lean_name": "tls_codec.__8.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once",
       "extract_name": "tls_codec.__8.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -1505,7 +1505,7 @@
       "reducible": false
     },
     {
-      "def_id": 1252,
+      "def_id": 1268,
       "lean_name": "tls_codec.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -1524,7 +1524,7 @@
       "reducible": false
     },
     {
-      "def_id": 1254,
+      "def_id": 1270,
       "lean_name": "tls_codec.__10.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once",
       "extract_name": "tls_codec.__10.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -1733,7 +1733,7 @@
       "reducible": false
     },
     {
-      "def_id": 1288,
+      "def_id": 1304,
       "lean_name": "tls_codec.primitives.SerializeOption.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize.call_once",
       "extract_name": "tls_codec.primitives.SerializeOption.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -1771,7 +1771,7 @@
       "reducible": false
     },
     {
-      "def_id": 2373,
+      "def_id": 2397,
       "lean_name": "tls_codec.primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -1790,7 +1790,7 @@
       "reducible": false
     },
     {
-      "def_id": 2374,
+      "def_id": 2398,
       "lean_name": "tls_codec.primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -1885,7 +1885,7 @@
       "reducible": false
     },
     {
-      "def_id": 2377,
+      "def_id": 2401,
       "lean_name": "tls_codec.primitives.DeserializeBytesOption.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionSharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.primitives.DeserializeBytesOption.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionSharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -1904,7 +1904,7 @@
       "reducible": false
     },
     {
-      "def_id": 1307,
+      "def_id": 1323,
       "lean_name": "tls_codec.primitives.DeserializeBytesU8.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.call_once",
       "extract_name": "tls_codec.primitives.DeserializeBytesU8.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -2151,7 +2151,7 @@
       "reducible": false
     },
     {
-      "def_id": 1312,
+      "def_id": 1328,
       "lean_name": "tls_codec.primitives.DeserializeBytesU16.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.call_once",
       "extract_name": "tls_codec.primitives.DeserializeBytesU16.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -2189,7 +2189,7 @@
       "reducible": false
     },
     {
-      "def_id": 1317,
+      "def_id": 1333,
       "lean_name": "tls_codec.primitives.DeserializeBytesU24.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.call_once",
       "extract_name": "tls_codec.primitives.DeserializeBytesU24.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -2227,7 +2227,7 @@
       "reducible": false
     },
     {
-      "def_id": 1322,
+      "def_id": 1338,
       "lean_name": "tls_codec.primitives.DeserializeBytesU32.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.call_once",
       "extract_name": "tls_codec.primitives.DeserializeBytesU32.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -2265,7 +2265,7 @@
       "reducible": false
     },
     {
-      "def_id": 1327,
+      "def_id": 1343,
       "lean_name": "tls_codec.primitives.DeserializeBytesU64.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.call_once",
       "extract_name": "tls_codec.primitives.DeserializeBytesU64.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -2303,7 +2303,7 @@
       "reducible": false
     },
     {
-      "def_id": 2379,
+      "def_id": 2403,
       "lean_name": "tls_codec.primitives.DeserializeBytesU8.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU8SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.primitives.DeserializeBytesU8.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU8SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -2322,7 +2322,7 @@
       "reducible": false
     },
     {
-      "def_id": 2382,
+      "def_id": 2406,
       "lean_name": "tls_codec.primitives.DeserializeBytesU16.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU16SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.primitives.DeserializeBytesU16.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU16SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -2341,7 +2341,7 @@
       "reducible": false
     },
     {
-      "def_id": 2385,
+      "def_id": 2409,
       "lean_name": "tls_codec.primitives.DeserializeBytesU24.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU24SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.primitives.DeserializeBytesU24.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU24SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -2360,7 +2360,7 @@
       "reducible": false
     },
     {
-      "def_id": 2388,
+      "def_id": 2412,
       "lean_name": "tls_codec.primitives.DeserializeBytesU32.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.primitives.DeserializeBytesU32.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -2379,7 +2379,7 @@
       "reducible": false
     },
     {
-      "def_id": 2391,
+      "def_id": 2415,
       "lean_name": "tls_codec.primitives.DeserializeBytesU64.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU64SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.primitives.DeserializeBytesU64.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU64SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -2930,7 +2930,7 @@
       "reducible": false
     },
     {
-      "def_id": 1329,
+      "def_id": 1345,
       "lean_name": "tls_codec.primitives.SerializePair.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize.call_once",
       "extract_name": "tls_codec.primitives.SerializePair.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -3025,7 +3025,7 @@
       "reducible": false
     },
     {
-      "def_id": 1332,
+      "def_id": 1348,
       "lean_name": "tls_codec.primitives.SerializeTupleTUV.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize.call_once",
       "extract_name": "tls_codec.primitives.SerializeTupleTUV.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -3329,7 +3329,7 @@
       "reducible": false
     },
     {
-      "def_id": 2394,
+      "def_id": 2418,
       "lean_name": "tls_codec.quic_vec.ContentLength.from_usize._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool.call_once",
       "extract_name": "tls_codec.quic_vec.ContentLength.from_usize._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -3500,7 +3500,7 @@
       "reducible": false
     },
     {
-      "def_id": 1523,
+      "def_id": 1539,
       "lean_name": "tls_codec.varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once",
       "extract_name": "tls_codec.varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -3618,7 +3618,7 @@
       "reducible": false
     },
     {
-      "def_id": 1352,
+      "def_id": 1368,
       "lean_name": "tls_codec.quic_vec.SizeShared0Slice.tls_serialized_len.closure_1.Insts.CoreOpsFunctionFnOnceTupleContentLengthUsize.call_once",
       "extract_name": "tls_codec.quic_vec.SizeShared0Slice.tls_serialized_len.closure_1.Insts.CoreOpsFunctionFnOnceTupleContentLengthUsize.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -3637,7 +3637,7 @@
       "reducible": false
     },
     {
-      "def_id": 1351,
+      "def_id": 1367,
       "lean_name": "tls_codec.quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "extract_name": "tls_codec.quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -3656,7 +3656,7 @@
       "reducible": false
     },
     {
-      "def_id": 1350,
+      "def_id": 1366,
       "lean_name": "tls_codec.quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "extract_name": "tls_codec.quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -3888,7 +3888,7 @@
       "reducible": false
     },
     {
-      "def_id": 2398,
+      "def_id": 2422,
       "lean_name": "tls_codec.quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -3907,7 +3907,7 @@
       "reducible": false
     },
     {
-      "def_id": 2397,
+      "def_id": 2421,
       "lean_name": "tls_codec.quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool.call_once",
       "extract_name": "tls_codec.quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -5291,7 +5291,7 @@
       "reducible": false
     },
     {
-      "def_id": 2403,
+      "def_id": 2427,
       "lean_name": "tls_codec.quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -5310,7 +5310,7 @@
       "reducible": false
     },
     {
-      "def_id": 2402,
+      "def_id": 2426,
       "lean_name": "tls_codec.quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool.call_once",
       "extract_name": "tls_codec.quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -5348,7 +5348,7 @@
       "reducible": false
     },
     {
-      "def_id": 2290,
+      "def_id": 2306,
       "lean_name": "tls_codec.varint.DeserializeTlsVarInt.tls_deserialize.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once",
       "extract_name": "tls_codec.varint.DeserializeTlsVarInt.tls_deserialize.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -6291,7 +6291,7 @@
       "reducible": false
     },
     {
-      "def_id": 2406,
+      "def_id": 2430,
       "lean_name": "tls_codec.spec.__1.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_VecU8Bool.call_once",
       "extract_name": "tls_codec.spec.__1.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_VecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -6310,7 +6310,7 @@
       "reducible": false
     },
     {
-      "def_id": 1483,
+      "def_id": 1499,
       "lean_name": "tls_codec.spec.__1.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleOptionPairSelf_VecU8Bool.call_once",
       "extract_name": "tls_codec.spec.__1.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleOptionPairSelf_VecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -6348,7 +6348,7 @@
       "reducible": false
     },
     {
-      "def_id": 1485,
+      "def_id": 1501,
       "lean_name": "tls_codec.spec.__2.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.spec.__2.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7089,7 +7089,7 @@
       "reducible": false
     },
     {
-      "def_id": 1556,
+      "def_id": 1572,
       "lean_name": "tls_codec.string.DeserializeBytesString.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleFromUtf8ErrorError.call_once",
       "extract_name": "tls_codec.string.DeserializeBytesString.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleFromUtf8ErrorError.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7165,7 +7165,7 @@
       "reducible": false
     },
     {
-      "def_id": 1487,
+      "def_id": 1503,
       "lean_name": "tls_codec.spec.__3.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU8UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__3.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU8UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7203,7 +7203,7 @@
       "reducible": false
     },
     {
-      "def_id": 1489,
+      "def_id": 1505,
       "lean_name": "tls_codec.spec.__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7241,7 +7241,7 @@
       "reducible": false
     },
     {
-      "def_id": 1491,
+      "def_id": 1507,
       "lean_name": "tls_codec.spec.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU16UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU16UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7279,7 +7279,7 @@
       "reducible": false
     },
     {
-      "def_id": 1493,
+      "def_id": 1509,
       "lean_name": "tls_codec.spec.__6.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__6.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7317,7 +7317,7 @@
       "reducible": false
     },
     {
-      "def_id": 1495,
+      "def_id": 1511,
       "lean_name": "tls_codec.spec.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7355,7 +7355,7 @@
       "reducible": false
     },
     {
-      "def_id": 1497,
+      "def_id": 1513,
       "lean_name": "tls_codec.spec.__8.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__8.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7393,7 +7393,7 @@
       "reducible": false
     },
     {
-      "def_id": 1499,
+      "def_id": 1515,
       "lean_name": "tls_codec.spec.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU64UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU64UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7431,7 +7431,7 @@
       "reducible": false
     },
     {
-      "def_id": 1501,
+      "def_id": 1517,
       "lean_name": "tls_codec.spec.__10.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__10.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7469,7 +7469,7 @@
       "reducible": false
     },
     {
-      "def_id": 1503,
+      "def_id": 1519,
       "lean_name": "tls_codec.spec.__11.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU24UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__11.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU24UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7507,7 +7507,7 @@
       "reducible": false
     },
     {
-      "def_id": 1505,
+      "def_id": 1521,
       "lean_name": "tls_codec.spec.__12.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__12.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7545,7 +7545,7 @@
       "reducible": false
     },
     {
-      "def_id": 1507,
+      "def_id": 1523,
       "lean_name": "tls_codec.spec.__13.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU84UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__13.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU84UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7583,7 +7583,7 @@
       "reducible": false
     },
     {
-      "def_id": 1509,
+      "def_id": 1525,
       "lean_name": "tls_codec.spec.__14.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__14.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7621,7 +7621,7 @@
       "reducible": false
     },
     {
-      "def_id": 1511,
+      "def_id": 1527,
       "lean_name": "tls_codec.spec.__15.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionU16UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__15.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionU16UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7659,7 +7659,7 @@
       "reducible": false
     },
     {
-      "def_id": 1513,
+      "def_id": 1529,
       "lean_name": "tls_codec.spec.__16.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__16.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7697,7 +7697,7 @@
       "reducible": false
     },
     {
-      "def_id": 1515,
+      "def_id": 1531,
       "lean_name": "tls_codec.spec.__18.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVarIntUsizeBool.call_once",
       "extract_name": "tls_codec.spec.__18.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVarIntUsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7735,7 +7735,7 @@
       "reducible": false
     },
     {
-      "def_id": 1525,
+      "def_id": 1541,
       "lean_name": "tls_codec.spec.__19.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__19.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7773,7 +7773,7 @@
       "reducible": false
     },
     {
-      "def_id": 1527,
+      "def_id": 1543,
       "lean_name": "tls_codec.spec.__20.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLBytesUsizeBool.call_once",
       "extract_name": "tls_codec.spec.__20.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLBytesUsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7811,7 +7811,7 @@
       "reducible": false
     },
     {
-      "def_id": 1529,
+      "def_id": 1545,
       "lean_name": "tls_codec.spec.__21.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__21.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7849,7 +7849,7 @@
       "reducible": false
     },
     {
-      "def_id": 1531,
+      "def_id": 1547,
       "lean_name": "tls_codec.spec.__22.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU8UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__22.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU8UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7887,7 +7887,7 @@
       "reducible": false
     },
     {
-      "def_id": 1533,
+      "def_id": 1549,
       "lean_name": "tls_codec.spec.__23.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__23.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7925,7 +7925,7 @@
       "reducible": false
     },
     {
-      "def_id": 1535,
+      "def_id": 1551,
       "lean_name": "tls_codec.spec.__24.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU16UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__24.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU16UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -7963,7 +7963,7 @@
       "reducible": false
     },
     {
-      "def_id": 1537,
+      "def_id": 1553,
       "lean_name": "tls_codec.spec.__25.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__25.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8001,7 +8001,7 @@
       "reducible": false
     },
     {
-      "def_id": 1539,
+      "def_id": 1555,
       "lean_name": "tls_codec.spec.__26.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU24UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__26.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU24UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8039,7 +8039,7 @@
       "reducible": false
     },
     {
-      "def_id": 1541,
+      "def_id": 1557,
       "lean_name": "tls_codec.spec.__27.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__27.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8077,7 +8077,7 @@
       "reducible": false
     },
     {
-      "def_id": 1543,
+      "def_id": 1559,
       "lean_name": "tls_codec.spec.__28.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU32UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__28.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU32UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8115,7 +8115,7 @@
       "reducible": false
     },
     {
-      "def_id": 1545,
+      "def_id": 1561,
       "lean_name": "tls_codec.spec.__29.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__29.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8153,7 +8153,7 @@
       "reducible": false
     },
     {
-      "def_id": 1547,
+      "def_id": 1563,
       "lean_name": "tls_codec.spec.__30.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU16UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__30.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU16UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8191,7 +8191,7 @@
       "reducible": false
     },
     {
-      "def_id": 1549,
+      "def_id": 1565,
       "lean_name": "tls_codec.spec.__31.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__31.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8229,7 +8229,7 @@
       "reducible": false
     },
     {
-      "def_id": 1551,
+      "def_id": 1567,
       "lean_name": "tls_codec.spec.__32.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairStringUsizeBool.call_once",
       "extract_name": "tls_codec.spec.__32.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairStringUsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8267,7 +8267,7 @@
       "reducible": false
     },
     {
-      "def_id": 1558,
+      "def_id": 1574,
       "lean_name": "tls_codec.spec.__33.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "extract_name": "tls_codec.spec.__33.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8324,7 +8324,7 @@
       "reducible": false
     },
     {
-      "def_id": 2347,
+      "def_id": 2363,
       "lean_name": "tls_codec.spec.io.__1.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once",
       "extract_name": "tls_codec.spec.io.__1.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8343,7 +8343,7 @@
       "reducible": false
     },
     {
-      "def_id": 2464,
+      "def_id": 2488,
       "lean_name": "tls_codec.spec.io.__2.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once",
       "extract_name": "tls_codec.spec.io.__2.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8362,7 +8362,7 @@
       "reducible": false
     },
     {
-      "def_id": 2345,
+      "def_id": 2361,
       "lean_name": "tls_codec.spec.io._.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.spec.io._.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8381,7 +8381,7 @@
       "reducible": false
     },
     {
-      "def_id": 2350,
+      "def_id": 2366,
       "lean_name": "tls_codec.spec.io.__2.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.spec.io.__2.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8438,7 +8438,7 @@
       "reducible": false
     },
     {
-      "def_id": 2352,
+      "def_id": 2368,
       "lean_name": "tls_codec.spec.io.__3.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.spec.io.__3.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8476,7 +8476,7 @@
       "reducible": false
     },
     {
-      "def_id": 2467,
+      "def_id": 2491,
       "lean_name": "tls_codec.spec.io.__4.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.spec.io.__4.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8495,7 +8495,7 @@
       "reducible": false
     },
     {
-      "def_id": 2354,
+      "def_id": 2370,
       "lean_name": "tls_codec.spec.io.__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.spec.io.__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8525,6 +8525,139 @@
         "file": "tls_codec/src/spec.rs",
         "begin_line": 482,
         "end_line": 482
+      },
+      "is_opaque": false,
+      "can_fail": true,
+      "can_diverge": false,
+      "is_rec": false,
+      "reducible": false
+    },
+    {
+      "def_id": 2372,
+      "lean_name": "tls_codec.spec.io.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once",
+      "extract_name": "tls_codec.spec.io.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::_#5::ensures::{impl core::ops::function::FnOnce<(Self_,), bool> for tls_codec::spec::io::_#5::ensures::closure<'_0, Self_, R>}::call_once",
+      "rust_pattern": "tls_codec::spec::io::_#5::ensures::{core::ops::function::FnOnce<tls_codec::spec::io::_#5::ensures::closure<'0, @Self_, @R>, (@Self_), bool>}::call_once",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 496,
+        "end_line": 496
+      },
+      "is_opaque": false,
+      "can_fail": true,
+      "can_diverge": false,
+      "is_rec": false,
+      "reducible": false
+    },
+    {
+      "def_id": 2374,
+      "lean_name": "tls_codec.spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.call_once",
+      "extract_name": "tls_codec.spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.call_once",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::_#7::ensures::{impl core::ops::function::FnOnce<((Self_, &'_ [u8]),), bool> for tls_codec::spec::io::_#7::ensures::closure<'_0, '_1, '_2, Self_>}::call_once",
+      "rust_pattern": "tls_codec::spec::io::_#7::ensures::{core::ops::function::FnOnce<tls_codec::spec::io::_#7::ensures::closure<'0, '1, '2, @Self_>, ((@Self_, &'_ [u8])), bool>}::call_once",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 514,
+        "end_line": 514
+      },
+      "is_opaque": false,
+      "can_fail": true,
+      "can_diverge": false,
+      "is_rec": false,
+      "reducible": false
+    },
+    {
+      "def_id": 1187,
+      "lean_name": "tls_codec.spec.io.DecodersAgree.decoders_agree.default",
+      "extract_name": "tls_codec.spec.io.DecodersAgree.decoders_agree.default",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::DecodersAgree::decoders_agree",
+      "rust_pattern": "tls_codec::spec::io::DecodersAgree::decoders_agree",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 502,
+        "end_line": 502
+      },
+      "is_opaque": false,
+      "can_fail": true,
+      "can_diverge": false,
+      "is_rec": false,
+      "reducible": false
+    },
+    {
+      "def_id": 1188,
+      "lean_name": "tls_codec.spec.io.DecodersAgree.bytes_prefix_only.default",
+      "extract_name": "tls_codec.spec.io.DecodersAgree.bytes_prefix_only.default",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::DecodersAgree::bytes_prefix_only",
+      "rust_pattern": "tls_codec::spec::io::DecodersAgree::bytes_prefix_only",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 519,
+        "end_line": 526
+      },
+      "is_opaque": false,
+      "can_fail": true,
+      "can_diverge": false,
+      "is_rec": false,
+      "reducible": false
+    },
+    {
+      "def_id": 2378,
+      "lean_name": "tls_codec.spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.call_once",
+      "extract_name": "tls_codec.spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.call_once",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::_#9::ensures::{impl core::ops::function::FnOnce<((Self_, &'_ [u8]),), bool> for tls_codec::spec::io::_#9::ensures::closure<'_0, '_1, '_2, Self_>}::call_once",
+      "rust_pattern": "tls_codec::spec::io::_#9::ensures::{core::ops::function::FnOnce<tls_codec::spec::io::_#9::ensures::closure<'0, '1, '2, @Self_>, ((@Self_, &'_ [u8])), bool>}::call_once",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 530,
+        "end_line": 530
+      },
+      "is_opaque": false,
+      "can_fail": true,
+      "can_diverge": false,
+      "is_rec": false,
+      "reducible": false
+    },
+    {
+      "def_id": 2376,
+      "lean_name": "tls_codec.spec.io.__8.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
+      "extract_name": "tls_codec.spec.io.__8.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::_#8::requires::{impl core::ops::function::FnOnce<(alloc::vec::Vec<u8>,), bool> for tls_codec::spec::io::_#8::requires::closure<'_0, '_1, Self_>}::call_once",
+      "rust_pattern": "tls_codec::spec::io::_#8::requires::{core::ops::function::FnOnce<tls_codec::spec::io::_#8::requires::closure<'0, '1, @Self_>, (alloc::vec::Vec<u8>), bool>}::call_once",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 534,
+        "end_line": 534
+      },
+      "is_opaque": false,
+      "can_fail": true,
+      "can_diverge": false,
+      "is_rec": false,
+      "reducible": false
+    },
+    {
+      "def_id": 1197,
+      "lean_name": "tls_codec.spec.io.RoundTripMixed.round_trip_mixed.default",
+      "extract_name": "tls_codec.spec.io.RoundTripMixed.round_trip_mixed.default",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::RoundTripMixed::round_trip_mixed",
+      "rust_pattern": "tls_codec::spec::io::RoundTripMixed::round_trip_mixed",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 538,
+        "end_line": 538
       },
       "is_opaque": false,
       "can_fail": true,
@@ -8609,7 +8742,7 @@
       "reducible": false
     },
     {
-      "def_id": 2476,
+      "def_id": 2500,
       "lean_name": "tls_codec.string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLByteVecSharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLByteVecSharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8628,7 +8761,7 @@
       "reducible": false
     },
     {
-      "def_id": 2412,
+      "def_id": 2436,
       "lean_name": "tls_codec.string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairStringSharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairStringSharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8647,7 +8780,7 @@
       "reducible": false
     },
     {
-      "def_id": 1188,
+      "def_id": 1204,
       "lean_name": "tls_codec.alloc.string.String.Insts.Tls_codecSerialize.tls_serialize",
       "extract_name": "tls_codec.alloc.string.String.Insts.Tls_codecSerialize.tls_serialize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8666,7 +8799,7 @@
       "reducible": false
     },
     {
-      "def_id": 1189,
+      "def_id": 1205,
       "lean_name": "tls_codec.Str.Insts.Tls_codecSerialize.tls_serialize",
       "extract_name": "tls_codec.Str.Insts.Tls_codecSerialize.tls_serialize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8685,7 +8818,7 @@
       "reducible": false
     },
     {
-      "def_id": 1190,
+      "def_id": 1206,
       "lean_name": "tls_codec.Shared0Str.Insts.Tls_codecSerialize.tls_serialize",
       "extract_name": "tls_codec.Shared0Str.Insts.Tls_codecSerialize.tls_serialize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8704,7 +8837,7 @@
       "reducible": false
     },
     {
-      "def_id": 2357,
+      "def_id": 2381,
       "lean_name": "tls_codec.string.std_only.DeserializeString.tls_deserialize.closure.Insts.CoreOpsFunctionFnOnceTupleFromUtf8ErrorError.call_once",
       "extract_name": "tls_codec.string.std_only.DeserializeString.tls_deserialize.closure.Insts.CoreOpsFunctionFnOnceTupleFromUtf8ErrorError.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8723,7 +8856,7 @@
       "reducible": false
     },
     {
-      "def_id": 1191,
+      "def_id": 1207,
       "lean_name": "tls_codec.alloc.string.String.Insts.Tls_codecDeserialize.tls_deserialize",
       "extract_name": "tls_codec.alloc.string.String.Insts.Tls_codecDeserialize.tls_deserialize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8761,7 +8894,7 @@
       "reducible": false
     },
     {
-      "def_id": 1614,
+      "def_id": 1630,
       "lean_name": "tls_codec.tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "extract_name": "tls_codec.tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8780,7 +8913,7 @@
       "reducible": false
     },
     {
-      "def_id": 1613,
+      "def_id": 1629,
       "lean_name": "tls_codec.tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "extract_name": "tls_codec.tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8837,7 +8970,7 @@
       "reducible": false
     },
     {
-      "def_id": 1666,
+      "def_id": 1682,
       "lean_name": "tls_codec.tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "extract_name": "tls_codec.tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8856,7 +8989,7 @@
       "reducible": false
     },
     {
-      "def_id": 1665,
+      "def_id": 1681,
       "lean_name": "tls_codec.tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "extract_name": "tls_codec.tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8913,7 +9046,7 @@
       "reducible": false
     },
     {
-      "def_id": 1717,
+      "def_id": 1733,
       "lean_name": "tls_codec.tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "extract_name": "tls_codec.tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8932,7 +9065,7 @@
       "reducible": false
     },
     {
-      "def_id": 1716,
+      "def_id": 1732,
       "lean_name": "tls_codec.tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "extract_name": "tls_codec.tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -8989,7 +9122,7 @@
       "reducible": false
     },
     {
-      "def_id": 1767,
+      "def_id": 1783,
       "lean_name": "tls_codec.tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "extract_name": "tls_codec.tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9008,7 +9141,7 @@
       "reducible": false
     },
     {
-      "def_id": 1766,
+      "def_id": 1782,
       "lean_name": "tls_codec.tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "extract_name": "tls_codec.tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9065,7 +9198,7 @@
       "reducible": false
     },
     {
-      "def_id": 2034,
+      "def_id": 2050,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9084,7 +9217,7 @@
       "reducible": false
     },
     {
-      "def_id": 2033,
+      "def_id": 2049,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9141,7 +9274,7 @@
       "reducible": false
     },
     {
-      "def_id": 2084,
+      "def_id": 2100,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9160,7 +9293,7 @@
       "reducible": false
     },
     {
-      "def_id": 2083,
+      "def_id": 2099,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9217,7 +9350,7 @@
       "reducible": false
     },
     {
-      "def_id": 2134,
+      "def_id": 2150,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9236,7 +9369,7 @@
       "reducible": false
     },
     {
-      "def_id": 2133,
+      "def_id": 2149,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9293,7 +9426,7 @@
       "reducible": false
     },
     {
-      "def_id": 2184,
+      "def_id": 2200,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9312,7 +9445,7 @@
       "reducible": false
     },
     {
-      "def_id": 2183,
+      "def_id": 2199,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9369,7 +9502,7 @@
       "reducible": false
     },
     {
-      "def_id": 2231,
+      "def_id": 2247,
       "lean_name": "tls_codec.tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "extract_name": "tls_codec.tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9388,7 +9521,7 @@
       "reducible": false
     },
     {
-      "def_id": 2230,
+      "def_id": 2246,
       "lean_name": "tls_codec.tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "extract_name": "tls_codec.tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9445,7 +9578,7 @@
       "reducible": false
     },
     {
-      "def_id": 2242,
+      "def_id": 2258,
       "lean_name": "tls_codec.tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "extract_name": "tls_codec.tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9464,7 +9597,7 @@
       "reducible": false
     },
     {
-      "def_id": 2241,
+      "def_id": 2257,
       "lean_name": "tls_codec.tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "extract_name": "tls_codec.tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9521,7 +9654,7 @@
       "reducible": false
     },
     {
-      "def_id": 2253,
+      "def_id": 2269,
       "lean_name": "tls_codec.tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "extract_name": "tls_codec.tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9540,7 +9673,7 @@
       "reducible": false
     },
     {
-      "def_id": 2252,
+      "def_id": 2268,
       "lean_name": "tls_codec.tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "extract_name": "tls_codec.tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9597,7 +9730,7 @@
       "reducible": false
     },
     {
-      "def_id": 2264,
+      "def_id": 2280,
       "lean_name": "tls_codec.tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "extract_name": "tls_codec.tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9616,7 +9749,7 @@
       "reducible": false
     },
     {
-      "def_id": 2263,
+      "def_id": 2279,
       "lean_name": "tls_codec.tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "extract_name": "tls_codec.tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9901,7 +10034,7 @@
       "reducible": false
     },
     {
-      "def_id": 2430,
+      "def_id": 2454,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU8.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU8SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU8.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU8SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9939,7 +10072,7 @@
       "reducible": false
     },
     {
-      "def_id": 2434,
+      "def_id": 2458,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU16.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU16SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU16.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU16SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -9977,7 +10110,7 @@
       "reducible": false
     },
     {
-      "def_id": 2438,
+      "def_id": 2462,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU24.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU24SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU24.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU24SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -10015,7 +10148,7 @@
       "reducible": false
     },
     {
-      "def_id": 2442,
+      "def_id": 2466,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU32.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU32SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU32.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU32SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -10845,7 +10978,7 @@
       "reducible": false
     },
     {
-      "def_id": 2417,
+      "def_id": 2441,
       "lean_name": "tls_codec.tls_vec.TlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU8SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.tls_vec.TlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU8SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -10883,7 +11016,7 @@
       "reducible": false
     },
     {
-      "def_id": 2420,
+      "def_id": 2444,
       "lean_name": "tls_codec.tls_vec.TlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU16SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.tls_vec.TlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU16SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -10921,7 +11054,7 @@
       "reducible": false
     },
     {
-      "def_id": 2423,
+      "def_id": 2447,
       "lean_name": "tls_codec.tls_vec.TlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU24SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.tls_vec.TlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU24SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -10959,7 +11092,7 @@
       "reducible": false
     },
     {
-      "def_id": 2426,
+      "def_id": 2450,
       "lean_name": "tls_codec.tls_vec.TlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU32SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.tls_vec.TlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU32SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -10997,7 +11130,7 @@
       "reducible": false
     },
     {
-      "def_id": 2445,
+      "def_id": 2469,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU8SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU8SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -11035,7 +11168,7 @@
       "reducible": false
     },
     {
-      "def_id": 2448,
+      "def_id": 2472,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU16SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU16SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -11073,7 +11206,7 @@
       "reducible": false
     },
     {
-      "def_id": 2451,
+      "def_id": 2475,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU24SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU24SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -11111,7 +11244,7 @@
       "reducible": false
     },
     {
-      "def_id": 2454,
+      "def_id": 2478,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU32SharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU32SharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -12302,7 +12435,7 @@
       "reducible": false
     },
     {
-      "def_id": 2428,
+      "def_id": 2452,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU8.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU8.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -12321,7 +12454,7 @@
       "reducible": false
     },
     {
-      "def_id": 2432,
+      "def_id": 2456,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU16.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU16.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -12340,7 +12473,7 @@
       "reducible": false
     },
     {
-      "def_id": 2436,
+      "def_id": 2460,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU24.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU24.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -12359,7 +12492,7 @@
       "reducible": false
     },
     {
-      "def_id": 2440,
+      "def_id": 2464,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU32.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU32.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -19123,7 +19256,7 @@
       "reducible": false
     },
     {
-      "def_id": 2410,
+      "def_id": 2434,
       "lean_name": "tls_codec.varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVarIntSharedSliceU8Bool.call_once",
       "extract_name": "tls_codec.varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVarIntSharedSliceU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -19142,7 +19275,7 @@
       "reducible": false
     },
     {
-      "def_id": 2408,
+      "def_id": 2432,
       "lean_name": "tls_codec.varint.SerializeBytesTlsVarInt.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "extract_name": "tls_codec.varint.SerializeBytesTlsVarInt.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -19177,7 +19310,7 @@
       }
     },
     {
-      "def_id": 196,
+      "def_id": 200,
       "lean_name": "tls_codec.arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -19233,7 +19366,7 @@
       }
     },
     {
-      "def_id": 195,
+      "def_id": 199,
       "lean_name": "tls_codec.__5.ensures.closure.closure",
       "extract_name": "tls_codec.__5.ensures.closure.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -19345,7 +19478,7 @@
       }
     },
     {
-      "def_id": 197,
+      "def_id": 201,
       "lean_name": "tls_codec.primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -19359,7 +19492,7 @@
       }
     },
     {
-      "def_id": 198,
+      "def_id": 202,
       "lean_name": "tls_codec.primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure_1",
       "extract_name": "tls_codec.primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure_1",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -19373,7 +19506,7 @@
       }
     },
     {
-      "def_id": 199,
+      "def_id": 203,
       "lean_name": "tls_codec.primitives.DeserializeBytesOption.tls_deserialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.primitives.DeserializeBytesOption.tls_deserialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -19457,7 +19590,7 @@
       }
     },
     {
-      "def_id": 200,
+      "def_id": 204,
       "lean_name": "tls_codec.primitives.DeserializeBytesU8.tls_deserialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.primitives.DeserializeBytesU8.tls_deserialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -19471,7 +19604,7 @@
       }
     },
     {
-      "def_id": 201,
+      "def_id": 205,
       "lean_name": "tls_codec.primitives.DeserializeBytesU16.tls_deserialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.primitives.DeserializeBytesU16.tls_deserialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -19485,7 +19618,7 @@
       }
     },
     {
-      "def_id": 202,
+      "def_id": 206,
       "lean_name": "tls_codec.primitives.DeserializeBytesU24.tls_deserialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.primitives.DeserializeBytesU24.tls_deserialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -19499,7 +19632,7 @@
       }
     },
     {
-      "def_id": 203,
+      "def_id": 207,
       "lean_name": "tls_codec.primitives.DeserializeBytesU32.tls_deserialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.primitives.DeserializeBytesU32.tls_deserialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -19513,7 +19646,7 @@
       }
     },
     {
-      "def_id": 204,
+      "def_id": 208,
       "lean_name": "tls_codec.primitives.DeserializeBytesU64.tls_deserialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.primitives.DeserializeBytesU64.tls_deserialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -19583,7 +19716,7 @@
       }
     },
     {
-      "def_id": 205,
+      "def_id": 209,
       "lean_name": "tls_codec.quic_vec.ContentLength.from_usize._.ensures.closure",
       "extract_name": "tls_codec.quic_vec.ContentLength.from_usize._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -19653,7 +19786,7 @@
       }
     },
     {
-      "def_id": 207,
+      "def_id": 211,
       "lean_name": "tls_codec.quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure_1",
       "extract_name": "tls_codec.quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure_1",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -19681,7 +19814,7 @@
       }
     },
     {
-      "def_id": 206,
+      "def_id": 210,
       "lean_name": "tls_codec.quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -19751,7 +19884,7 @@
       }
     },
     {
-      "def_id": 213,
+      "def_id": 217,
       "lean_name": "tls_codec.quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure_1",
       "extract_name": "tls_codec.quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure_1",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -19765,7 +19898,7 @@
       }
     },
     {
-      "def_id": 212,
+      "def_id": 216,
       "lean_name": "tls_codec.quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -19793,7 +19926,7 @@
       }
     },
     {
-      "def_id": 214,
+      "def_id": 218,
       "lean_name": "tls_codec.spec.__1.ensures.closure.closure",
       "extract_name": "tls_codec.spec.__1.ensures.closure.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -20339,7 +20472,7 @@
       }
     },
     {
-      "def_id": 237,
+      "def_id": 241,
       "lean_name": "tls_codec.spec.io.__2.ensures.closure.closure",
       "extract_name": "tls_codec.spec.io.__2.ensures.closure.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -20409,7 +20542,7 @@
       }
     },
     {
-      "def_id": 238,
+      "def_id": 242,
       "lean_name": "tls_codec.spec.io.__4.ensures.closure.closure",
       "extract_name": "tls_codec.spec.io.__4.ensures.closure.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -20423,7 +20556,63 @@
       }
     },
     {
-      "def_id": 217,
+      "def_id": 194,
+      "lean_name": "tls_codec.spec.io.__5.ensures.closure",
+      "extract_name": "tls_codec.spec.io.__5.ensures.closure",
+      "lean_file": "TlsCodec/Extraction/Types.lean",
+      "rust_name": "tls_codec::spec::io::_#5::ensures::closure",
+      "rust_pattern": "tls_codec::spec::io::_#5::ensures::closure",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 496,
+        "end_line": 496
+      }
+    },
+    {
+      "def_id": 195,
+      "lean_name": "tls_codec.spec.io.__7.ensures.closure",
+      "extract_name": "tls_codec.spec.io.__7.ensures.closure",
+      "lean_file": "TlsCodec/Extraction/Types.lean",
+      "rust_name": "tls_codec::spec::io::_#7::ensures::closure",
+      "rust_pattern": "tls_codec::spec::io::_#7::ensures::closure",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 514,
+        "end_line": 514
+      }
+    },
+    {
+      "def_id": 197,
+      "lean_name": "tls_codec.spec.io.__9.ensures.closure",
+      "extract_name": "tls_codec.spec.io.__9.ensures.closure",
+      "lean_file": "TlsCodec/Extraction/Types.lean",
+      "rust_name": "tls_codec::spec::io::_#9::ensures::closure",
+      "rust_pattern": "tls_codec::spec::io::_#9::ensures::closure",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 530,
+        "end_line": 530
+      }
+    },
+    {
+      "def_id": 196,
+      "lean_name": "tls_codec.spec.io.__8.requires.closure",
+      "extract_name": "tls_codec.spec.io.__8.requires.closure",
+      "lean_file": "TlsCodec/Extraction/Types.lean",
+      "rust_name": "tls_codec::spec::io::_#8::requires::closure",
+      "rust_pattern": "tls_codec::spec::io::_#8::requires::closure",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 534,
+        "end_line": 534
+      }
+    },
+    {
+      "def_id": 221,
       "lean_name": "tls_codec.string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -20437,7 +20626,7 @@
       }
     },
     {
-      "def_id": 240,
+      "def_id": 244,
       "lean_name": "tls_codec.string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.closure",
       "extract_name": "tls_codec.string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -20451,7 +20640,7 @@
       }
     },
     {
-      "def_id": 194,
+      "def_id": 198,
       "lean_name": "tls_codec.string.std_only.DeserializeString.tls_deserialize.closure",
       "extract_name": "tls_codec.string.std_only.DeserializeString.tls_deserialize.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -20857,7 +21046,7 @@
       }
     },
     {
-      "def_id": 223,
+      "def_id": 227,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU8.deserialize_bytes_bytes._.ensures.closure",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU8.deserialize_bytes_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -20871,7 +21060,7 @@
       }
     },
     {
-      "def_id": 225,
+      "def_id": 229,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU16.deserialize_bytes_bytes._.ensures.closure",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU16.deserialize_bytes_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -20885,7 +21074,7 @@
       }
     },
     {
-      "def_id": 227,
+      "def_id": 231,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU24.deserialize_bytes_bytes._.ensures.closure",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU24.deserialize_bytes_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -20899,7 +21088,7 @@
       }
     },
     {
-      "def_id": 229,
+      "def_id": 233,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU32.deserialize_bytes_bytes._.ensures.closure",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU32.deserialize_bytes_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -20913,7 +21102,7 @@
       }
     },
     {
-      "def_id": 218,
+      "def_id": 222,
       "lean_name": "tls_codec.tls_vec.TlsVecU8.deserialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.tls_vec.TlsVecU8.deserialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -20927,7 +21116,7 @@
       }
     },
     {
-      "def_id": 219,
+      "def_id": 223,
       "lean_name": "tls_codec.tls_vec.TlsVecU16.deserialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.tls_vec.TlsVecU16.deserialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -20941,7 +21130,7 @@
       }
     },
     {
-      "def_id": 220,
+      "def_id": 224,
       "lean_name": "tls_codec.tls_vec.TlsVecU24.deserialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.tls_vec.TlsVecU24.deserialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -20955,7 +21144,7 @@
       }
     },
     {
-      "def_id": 221,
+      "def_id": 225,
       "lean_name": "tls_codec.tls_vec.TlsVecU32.deserialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.tls_vec.TlsVecU32.deserialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -20969,7 +21158,7 @@
       }
     },
     {
-      "def_id": 230,
+      "def_id": 234,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU8.deserialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU8.deserialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -20983,7 +21172,7 @@
       }
     },
     {
-      "def_id": 231,
+      "def_id": 235,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU16.deserialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU16.deserialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -20997,7 +21186,7 @@
       }
     },
     {
-      "def_id": 232,
+      "def_id": 236,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU24.deserialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU24.deserialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -21011,7 +21200,7 @@
       }
     },
     {
-      "def_id": 233,
+      "def_id": 237,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU32.deserialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU32.deserialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -21025,7 +21214,7 @@
       }
     },
     {
-      "def_id": 222,
+      "def_id": 226,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU8.serialize_bytes_bytes._.ensures.closure",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU8.serialize_bytes_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -21039,7 +21228,7 @@
       }
     },
     {
-      "def_id": 224,
+      "def_id": 228,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU16.serialize_bytes_bytes._.ensures.closure",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU16.serialize_bytes_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -21053,7 +21242,7 @@
       }
     },
     {
-      "def_id": 226,
+      "def_id": 230,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU24.serialize_bytes_bytes._.ensures.closure",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU24.serialize_bytes_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -21067,7 +21256,7 @@
       }
     },
     {
-      "def_id": 228,
+      "def_id": 232,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU32.serialize_bytes_bytes._.ensures.closure",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU32.serialize_bytes_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -21081,7 +21270,7 @@
       }
     },
     {
-      "def_id": 216,
+      "def_id": 220,
       "lean_name": "tls_codec.varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -21095,7 +21284,7 @@
       }
     },
     {
-      "def_id": 215,
+      "def_id": 219,
       "lean_name": "tls_codec.varint.SerializeBytesTlsVarInt.tls_serialize_bytes._.ensures.closure",
       "extract_name": "tls_codec.varint.SerializeBytesTlsVarInt.tls_serialize_bytes._.ensures.closure",
       "lean_file": "TlsCodec/Extraction/Types.lean",
@@ -21156,7 +21345,7 @@
       "can_fail": false
     },
     {
-      "def_id": 317,
+      "def_id": 322,
       "lean_name": "tls_codec.FromUsizeU24.from.LEN",
       "extract_name": "tls_codec.FromUsizeU24.from.LEN",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -21171,7 +21360,7 @@
       "can_fail": true
     },
     {
-      "def_id": 319,
+      "def_id": 324,
       "lean_name": "tls_codec.TryFromU24UsizeError.try_from.LEN",
       "extract_name": "tls_codec.TryFromU24UsizeError.try_from.LEN",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -21216,7 +21405,7 @@
       "can_fail": true
     },
     {
-      "def_id": 305,
+      "def_id": 310,
       "lean_name": "tls_codec.varint.TlsVarInt.MAX",
       "extract_name": "tls_codec.varint.TlsVarInt.MAX",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -21231,7 +21420,7 @@
       "can_fail": true
     },
     {
-      "def_id": 306,
+      "def_id": 311,
       "lean_name": "tls_codec.varint.TlsVarInt.MAX_LOG",
       "extract_name": "tls_codec.varint.TlsVarInt.MAX_LOG",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -21386,6 +21575,34 @@
         "begin_line": 474,
         "end_line": 483
       }
+    },
+    {
+      "def_id": 34,
+      "lean_name": "tls_codec.spec.io.DecodersAgree",
+      "extract_name": "tls_codec.spec.io.DecodersAgree",
+      "lean_file": "TlsCodec/Extraction/Types.lean",
+      "rust_name": "tls_codec::spec::io::DecodersAgree",
+      "rust_pattern": "tls_codec::spec::io::DecodersAgree",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 487,
+        "end_line": 527
+      }
+    },
+    {
+      "def_id": 35,
+      "lean_name": "tls_codec.spec.io.RoundTripMixed",
+      "extract_name": "tls_codec.spec.io.RoundTripMixed",
+      "lean_file": "TlsCodec/Extraction/Types.lean",
+      "rust_name": "tls_codec::spec::io::RoundTripMixed",
+      "rust_pattern": "tls_codec::spec::io::RoundTripMixed",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 531,
+        "end_line": 539
+      }
     }
   ],
   "trait_impls": [
@@ -21475,7 +21692,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 799,
+      "def_id": 817,
       "lean_name": "tls_codec.arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU8LENSharedSliceU8Bool",
       "extract_name": "tls_codec.arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU8LENSharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -21492,7 +21709,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 603,
+      "def_id": 613,
       "lean_name": "tls_codec.arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError",
       "extract_name": "tls_codec.arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -21645,7 +21862,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 578,
+      "def_id": 588,
       "lean_name": "tls_codec.__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool",
       "extract_name": "tls_codec.__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -21662,7 +21879,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 797,
+      "def_id": 815,
       "lean_name": "tls_codec.__5.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.__5.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -21679,7 +21896,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 580,
+      "def_id": 590,
       "lean_name": "tls_codec.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -21696,7 +21913,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 582,
+      "def_id": 592,
       "lean_name": "tls_codec.__6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.__6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -21713,7 +21930,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 585,
+      "def_id": 595,
       "lean_name": "tls_codec.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool",
       "extract_name": "tls_codec.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -21730,7 +21947,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 587,
+      "def_id": 597,
       "lean_name": "tls_codec.__8.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool",
       "extract_name": "tls_codec.__8.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -21747,7 +21964,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 589,
+      "def_id": 599,
       "lean_name": "tls_codec.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool",
       "extract_name": "tls_codec.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -21764,7 +21981,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 591,
+      "def_id": 601,
       "lean_name": "tls_codec.__10.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool",
       "extract_name": "tls_codec.__10.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -21968,7 +22185,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 606,
+      "def_id": 616,
       "lean_name": "tls_codec.primitives.SerializeOption.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize",
       "extract_name": "tls_codec.primitives.SerializeOption.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -22002,7 +22219,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 801,
+      "def_id": 819,
       "lean_name": "tls_codec.primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -22019,7 +22236,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 802,
+      "def_id": 820,
       "lean_name": "tls_codec.primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.primitives.SerializeBytesOption.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -22104,7 +22321,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 805,
+      "def_id": 823,
       "lean_name": "tls_codec.primitives.DeserializeBytesOption.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionSharedSliceU8Bool",
       "extract_name": "tls_codec.primitives.DeserializeBytesOption.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionSharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -22121,7 +22338,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 611,
+      "def_id": 621,
       "lean_name": "tls_codec.primitives.DeserializeBytesU8.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError",
       "extract_name": "tls_codec.primitives.DeserializeBytesU8.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -22342,7 +22559,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 614,
+      "def_id": 624,
       "lean_name": "tls_codec.primitives.DeserializeBytesU16.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError",
       "extract_name": "tls_codec.primitives.DeserializeBytesU16.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -22376,7 +22593,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 616,
+      "def_id": 626,
       "lean_name": "tls_codec.primitives.DeserializeBytesU24.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError",
       "extract_name": "tls_codec.primitives.DeserializeBytesU24.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -22410,7 +22627,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 619,
+      "def_id": 629,
       "lean_name": "tls_codec.primitives.DeserializeBytesU32.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError",
       "extract_name": "tls_codec.primitives.DeserializeBytesU32.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -22444,7 +22661,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 622,
+      "def_id": 632,
       "lean_name": "tls_codec.primitives.DeserializeBytesU64.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError",
       "extract_name": "tls_codec.primitives.DeserializeBytesU64.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -22478,7 +22695,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 807,
+      "def_id": 825,
       "lean_name": "tls_codec.primitives.DeserializeBytesU8.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU8SharedSliceU8Bool",
       "extract_name": "tls_codec.primitives.DeserializeBytesU8.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU8SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -22495,7 +22712,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 809,
+      "def_id": 827,
       "lean_name": "tls_codec.primitives.DeserializeBytesU16.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU16SharedSliceU8Bool",
       "extract_name": "tls_codec.primitives.DeserializeBytesU16.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU16SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -22512,7 +22729,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 811,
+      "def_id": 829,
       "lean_name": "tls_codec.primitives.DeserializeBytesU24.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU24SharedSliceU8Bool",
       "extract_name": "tls_codec.primitives.DeserializeBytesU24.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU24SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -22529,7 +22746,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 813,
+      "def_id": 831,
       "lean_name": "tls_codec.primitives.DeserializeBytesU32.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32SharedSliceU8Bool",
       "extract_name": "tls_codec.primitives.DeserializeBytesU32.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -22546,7 +22763,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 815,
+      "def_id": 833,
       "lean_name": "tls_codec.primitives.DeserializeBytesU64.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU64SharedSliceU8Bool",
       "extract_name": "tls_codec.primitives.DeserializeBytesU64.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU64SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -23039,7 +23256,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 624,
+      "def_id": 634,
       "lean_name": "tls_codec.primitives.SerializePair.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize",
       "extract_name": "tls_codec.primitives.SerializePair.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -23124,7 +23341,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 627,
+      "def_id": 637,
       "lean_name": "tls_codec.primitives.SerializeTupleTUV.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize",
       "extract_name": "tls_codec.primitives.SerializeTupleTUV.tls_serialize.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -23396,7 +23613,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 817,
+      "def_id": 835,
       "lean_name": "tls_codec.quic_vec.ContentLength.from_usize._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool",
       "extract_name": "tls_codec.quic_vec.ContentLength.from_usize._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -23447,7 +23664,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 686,
+      "def_id": 696,
       "lean_name": "tls_codec.varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError",
       "extract_name": "tls_codec.varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -23481,7 +23698,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 638,
+      "def_id": 648,
       "lean_name": "tls_codec.quic_vec.SizeShared0Slice.tls_serialized_len.closure_1.Insts.CoreOpsFunctionFnOnceTupleContentLengthUsize",
       "extract_name": "tls_codec.quic_vec.SizeShared0Slice.tls_serialized_len.closure_1.Insts.CoreOpsFunctionFnOnceTupleContentLengthUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -23498,7 +23715,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 636,
+      "def_id": 646,
       "lean_name": "tls_codec.quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "extract_name": "tls_codec.quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -23515,7 +23732,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 637,
+      "def_id": 647,
       "lean_name": "tls_codec.quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "extract_name": "tls_codec.quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -23527,7 +23744,7 @@
         "begin_line": 244,
         "end_line": 244
       },
-      "impl_trait_def_id": 45,
+      "impl_trait_def_id": 47,
       "impl_trait_rust_name": "core::ops::function::FnMut",
       "impl_trait_is_builtin": false
     },
@@ -23600,7 +23817,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 821,
+      "def_id": 839,
       "lean_name": "tls_codec.quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -23617,7 +23834,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 820,
+      "def_id": 838,
       "lean_name": "tls_codec.quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool",
       "extract_name": "tls_codec.quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -24552,7 +24769,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 829,
+      "def_id": 847,
       "lean_name": "tls_codec.quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -24569,7 +24786,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 828,
+      "def_id": 846,
       "lean_name": "tls_codec.quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool",
       "extract_name": "tls_codec.quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -24603,7 +24820,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 771,
+      "def_id": 781,
       "lean_name": "tls_codec.varint.DeserializeTlsVarInt.tls_deserialize.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError",
       "extract_name": "tls_codec.varint.DeserializeTlsVarInt.tls_deserialize.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorError",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -24989,7 +25206,7 @@
         "begin_line": 933,
         "end_line": 937
       },
-      "impl_trait_def_id": 39,
+      "impl_trait_def_id": 41,
       "impl_trait_rust_name": "core::ops::drop::Drop",
       "impl_trait_is_builtin": false
     },
@@ -25006,7 +25223,7 @@
         "begin_line": 939,
         "end_line": 939
       },
-      "impl_trait_def_id": 47,
+      "impl_trait_def_id": 49,
       "impl_trait_rust_name": "zeroize::ZeroizeOnDrop",
       "impl_trait_is_builtin": false
     },
@@ -25227,7 +25444,7 @@
         "begin_line": 1019,
         "end_line": 1023
       },
-      "impl_trait_def_id": 39,
+      "impl_trait_def_id": 41,
       "impl_trait_rust_name": "core::ops::drop::Drop",
       "impl_trait_is_builtin": false
     },
@@ -25244,7 +25461,7 @@
         "begin_line": 1025,
         "end_line": 1025
       },
-      "impl_trait_def_id": 47,
+      "impl_trait_def_id": 49,
       "impl_trait_rust_name": "zeroize::ZeroizeOnDrop",
       "impl_trait_is_builtin": false
     },
@@ -25317,7 +25534,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 832,
+      "def_id": 850,
       "lean_name": "tls_codec.spec.__1.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_VecU8Bool",
       "extract_name": "tls_codec.spec.__1.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_VecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -25334,7 +25551,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 652,
+      "def_id": 662,
       "lean_name": "tls_codec.spec.__1.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleOptionPairSelf_VecU8Bool",
       "extract_name": "tls_codec.spec.__1.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleOptionPairSelf_VecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -25351,7 +25568,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 654,
+      "def_id": 664,
       "lean_name": "tls_codec.spec.__2.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.spec.__2.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -25929,7 +26146,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 717,
+      "def_id": 727,
       "lean_name": "tls_codec.string.DeserializeBytesString.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleFromUtf8ErrorError",
       "extract_name": "tls_codec.string.DeserializeBytesString.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleFromUtf8ErrorError",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26286,7 +26503,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 656,
+      "def_id": 666,
       "lean_name": "tls_codec.spec.__3.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU8UsizeBool",
       "extract_name": "tls_codec.spec.__3.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU8UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26303,7 +26520,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 658,
+      "def_id": 668,
       "lean_name": "tls_codec.spec.__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "extract_name": "tls_codec.spec.__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26320,7 +26537,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 660,
+      "def_id": 670,
       "lean_name": "tls_codec.spec.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU16UsizeBool",
       "extract_name": "tls_codec.spec.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU16UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26337,7 +26554,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 662,
+      "def_id": 672,
       "lean_name": "tls_codec.spec.__6.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "extract_name": "tls_codec.spec.__6.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26354,7 +26571,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 664,
+      "def_id": 674,
       "lean_name": "tls_codec.spec.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32UsizeBool",
       "extract_name": "tls_codec.spec.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU32UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26371,7 +26588,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 666,
+      "def_id": 676,
       "lean_name": "tls_codec.spec.__8.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "extract_name": "tls_codec.spec.__8.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26388,7 +26605,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 668,
+      "def_id": 678,
       "lean_name": "tls_codec.spec.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU64UsizeBool",
       "extract_name": "tls_codec.spec.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU64UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26405,7 +26622,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 670,
+      "def_id": 680,
       "lean_name": "tls_codec.spec.__10.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "extract_name": "tls_codec.spec.__10.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26422,7 +26639,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 672,
+      "def_id": 682,
       "lean_name": "tls_codec.spec.__11.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU24UsizeBool",
       "extract_name": "tls_codec.spec.__11.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairU24UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26439,7 +26656,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 674,
+      "def_id": 684,
       "lean_name": "tls_codec.spec.__12.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "extract_name": "tls_codec.spec.__12.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26456,7 +26673,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 676,
+      "def_id": 686,
       "lean_name": "tls_codec.spec.__13.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU84UsizeBool",
       "extract_name": "tls_codec.spec.__13.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU84UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26473,7 +26690,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 678,
+      "def_id": 688,
       "lean_name": "tls_codec.spec.__14.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "extract_name": "tls_codec.spec.__14.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26490,7 +26707,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 680,
+      "def_id": 690,
       "lean_name": "tls_codec.spec.__15.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionU16UsizeBool",
       "extract_name": "tls_codec.spec.__15.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairOptionU16UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26507,7 +26724,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 682,
+      "def_id": 692,
       "lean_name": "tls_codec.spec.__16.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "extract_name": "tls_codec.spec.__16.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26524,7 +26741,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 684,
+      "def_id": 694,
       "lean_name": "tls_codec.spec.__18.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVarIntUsizeBool",
       "extract_name": "tls_codec.spec.__18.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVarIntUsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26541,7 +26758,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 689,
+      "def_id": 699,
       "lean_name": "tls_codec.spec.__19.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "extract_name": "tls_codec.spec.__19.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26558,7 +26775,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 691,
+      "def_id": 701,
       "lean_name": "tls_codec.spec.__20.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLBytesUsizeBool",
       "extract_name": "tls_codec.spec.__20.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLBytesUsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26575,7 +26792,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 693,
+      "def_id": 703,
       "lean_name": "tls_codec.spec.__21.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "extract_name": "tls_codec.spec.__21.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26592,7 +26809,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 695,
+      "def_id": 705,
       "lean_name": "tls_codec.spec.__22.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU8UsizeBool",
       "extract_name": "tls_codec.spec.__22.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU8UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26609,7 +26826,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 697,
+      "def_id": 707,
       "lean_name": "tls_codec.spec.__23.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "extract_name": "tls_codec.spec.__23.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26626,7 +26843,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 699,
+      "def_id": 709,
       "lean_name": "tls_codec.spec.__24.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU16UsizeBool",
       "extract_name": "tls_codec.spec.__24.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU16UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26643,7 +26860,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 701,
+      "def_id": 711,
       "lean_name": "tls_codec.spec.__25.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "extract_name": "tls_codec.spec.__25.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26660,7 +26877,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 703,
+      "def_id": 713,
       "lean_name": "tls_codec.spec.__26.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU24UsizeBool",
       "extract_name": "tls_codec.spec.__26.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU24UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26677,7 +26894,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 705,
+      "def_id": 715,
       "lean_name": "tls_codec.spec.__27.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "extract_name": "tls_codec.spec.__27.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26694,7 +26911,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 707,
+      "def_id": 717,
       "lean_name": "tls_codec.spec.__28.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU32UsizeBool",
       "extract_name": "tls_codec.spec.__28.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU32UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26711,7 +26928,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 709,
+      "def_id": 719,
       "lean_name": "tls_codec.spec.__29.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "extract_name": "tls_codec.spec.__29.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26728,7 +26945,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 711,
+      "def_id": 721,
       "lean_name": "tls_codec.spec.__30.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU16UsizeBool",
       "extract_name": "tls_codec.spec.__30.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU16UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26745,7 +26962,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 713,
+      "def_id": 723,
       "lean_name": "tls_codec.spec.__31.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "extract_name": "tls_codec.spec.__31.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26762,7 +26979,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 715,
+      "def_id": 725,
       "lean_name": "tls_codec.spec.__32.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairStringUsizeBool",
       "extract_name": "tls_codec.spec.__32.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairStringUsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26779,7 +26996,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 719,
+      "def_id": 729,
       "lean_name": "tls_codec.spec.__33.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "extract_name": "tls_codec.spec.__33.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairVecU8UsizeBool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26796,7 +27013,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 783,
+      "def_id": 793,
       "lean_name": "tls_codec.spec.io.__1.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool",
       "extract_name": "tls_codec.spec.io.__1.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26813,7 +27030,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 888,
+      "def_id": 906,
       "lean_name": "tls_codec.spec.io.__2.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool",
       "extract_name": "tls_codec.spec.io.__2.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26830,7 +27047,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 781,
+      "def_id": 791,
       "lean_name": "tls_codec.spec.io._.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.spec.io._.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26847,7 +27064,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 786,
+      "def_id": 796,
       "lean_name": "tls_codec.spec.io.__2.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.spec.io.__2.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26864,7 +27081,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 788,
+      "def_id": 798,
       "lean_name": "tls_codec.spec.io.__3.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.spec.io.__3.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26881,7 +27098,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 891,
+      "def_id": 909,
       "lean_name": "tls_codec.spec.io.__4.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.spec.io.__4.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26898,7 +27115,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 790,
+      "def_id": 800,
       "lean_name": "tls_codec.spec.io.__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.spec.io.__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -26915,6 +27132,74 @@
       "impl_trait_is_builtin": false
     },
     {
+      "def_id": 802,
+      "lean_name": "tls_codec.spec.io.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool",
+      "extract_name": "tls_codec.spec.io.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::_#5::ensures::{impl core::ops::function::FnOnce<(Self_,), bool> for tls_codec::spec::io::_#5::ensures::closure<'_0, Self_, R>}",
+      "rust_pattern": "core::ops::function::FnOnce<tls_codec::spec::io::_#5::ensures::closure<'_, @Self, @Args>, (@Self), bool>",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 496,
+        "end_line": 496
+      },
+      "impl_trait_def_id": 30,
+      "impl_trait_rust_name": "core::ops::function::FnOnce",
+      "impl_trait_is_builtin": false
+    },
+    {
+      "def_id": 804,
+      "lean_name": "tls_codec.spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool",
+      "extract_name": "tls_codec.spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::_#7::ensures::{impl core::ops::function::FnOnce<((Self_, &'_ [u8]),), bool> for tls_codec::spec::io::_#7::ensures::closure<'_0, '_1, '_2, Self_>}",
+      "rust_pattern": "core::ops::function::FnOnce<tls_codec::spec::io::_#7::ensures::closure<'_, '_, '_, @Self>, ((@Self, &'_ [u8])), bool>",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 514,
+        "end_line": 514
+      },
+      "impl_trait_def_id": 30,
+      "impl_trait_rust_name": "core::ops::function::FnOnce",
+      "impl_trait_is_builtin": false
+    },
+    {
+      "def_id": 808,
+      "lean_name": "tls_codec.spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool",
+      "extract_name": "tls_codec.spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::_#9::ensures::{impl core::ops::function::FnOnce<((Self_, &'_ [u8]),), bool> for tls_codec::spec::io::_#9::ensures::closure<'_0, '_1, '_2, Self_>}",
+      "rust_pattern": "core::ops::function::FnOnce<tls_codec::spec::io::_#9::ensures::closure<'_, '_, '_, @Self>, ((@Self, &'_ [u8])), bool>",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 530,
+        "end_line": 530
+      },
+      "impl_trait_def_id": 30,
+      "impl_trait_rust_name": "core::ops::function::FnOnce",
+      "impl_trait_is_builtin": false
+    },
+    {
+      "def_id": 806,
+      "lean_name": "tls_codec.spec.io.__8.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
+      "extract_name": "tls_codec.spec.io.__8.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::_#8::requires::{impl core::ops::function::FnOnce<(alloc::vec::Vec<u8>,), bool> for tls_codec::spec::io::_#8::requires::closure<'_0, '_1, Self_>}",
+      "rust_pattern": "core::ops::function::FnOnce<tls_codec::spec::io::_#8::requires::closure<'_, '_, @Self>, (alloc::vec::Vec<u8>), bool>",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 534,
+        "end_line": 534
+      },
+      "impl_trait_def_id": 30,
+      "impl_trait_rust_name": "core::ops::function::FnOnce",
+      "impl_trait_is_builtin": false
+    },
+    {
       "def_id": 552,
       "lean_name": "tls_codec.U8.Insts.Tls_codecSpecIoRoundTripStd",
       "extract_name": "tls_codec.U8.Insts.Tls_codecSpecIoRoundTripStd",
@@ -26924,8 +27209,8 @@
       "is_local": true,
       "source": {
         "file": "tls_codec/src/spec.rs",
-        "begin_line": 485,
-        "end_line": 485
+        "begin_line": 541,
+        "end_line": 541
       },
       "impl_trait_def_id": 31,
       "impl_trait_rust_name": "tls_codec::spec::io::RoundTripStd",
@@ -26941,8 +27226,8 @@
       "is_local": true,
       "source": {
         "file": "tls_codec/src/spec.rs",
-        "begin_line": 486,
-        "end_line": 486
+        "begin_line": 542,
+        "end_line": 542
       },
       "impl_trait_def_id": 31,
       "impl_trait_rust_name": "tls_codec::spec::io::RoundTripStd",
@@ -26958,8 +27243,8 @@
       "is_local": true,
       "source": {
         "file": "tls_codec/src/spec.rs",
-        "begin_line": 487,
-        "end_line": 487
+        "begin_line": 543,
+        "end_line": 543
       },
       "impl_trait_def_id": 31,
       "impl_trait_rust_name": "tls_codec::spec::io::RoundTripStd",
@@ -26975,8 +27260,8 @@
       "is_local": true,
       "source": {
         "file": "tls_codec/src/spec.rs",
-        "begin_line": 489,
-        "end_line": 489
+        "begin_line": 545,
+        "end_line": 545
       },
       "impl_trait_def_id": 32,
       "impl_trait_rust_name": "tls_codec::spec::io::NonEmptyStd",
@@ -26992,8 +27277,8 @@
       "is_local": true,
       "source": {
         "file": "tls_codec/src/spec.rs",
-        "begin_line": 490,
-        "end_line": 490
+        "begin_line": 546,
+        "end_line": 546
       },
       "impl_trait_def_id": 32,
       "impl_trait_rust_name": "tls_codec::spec::io::NonEmptyStd",
@@ -27009,8 +27294,8 @@
       "is_local": true,
       "source": {
         "file": "tls_codec/src/spec.rs",
-        "begin_line": 491,
-        "end_line": 491
+        "begin_line": 547,
+        "end_line": 547
       },
       "impl_trait_def_id": 32,
       "impl_trait_rust_name": "tls_codec::spec::io::NonEmptyStd",
@@ -27026,8 +27311,8 @@
       "is_local": true,
       "source": {
         "file": "tls_codec/src/spec.rs",
-        "begin_line": 493,
-        "end_line": 493
+        "begin_line": 549,
+        "end_line": 549
       },
       "impl_trait_def_id": 33,
       "impl_trait_rust_name": "tls_codec::spec::io::SameBytes",
@@ -27043,11 +27328,181 @@
       "is_local": true,
       "source": {
         "file": "tls_codec/src/spec.rs",
-        "begin_line": 494,
-        "end_line": 494
+        "begin_line": 550,
+        "end_line": 550
       },
       "impl_trait_def_id": 33,
       "impl_trait_rust_name": "tls_codec::spec::io::SameBytes",
+      "impl_trait_is_builtin": false
+    },
+    {
+      "def_id": 560,
+      "lean_name": "tls_codec.U8.Insts.Tls_codecSpecIoDecodersAgree",
+      "extract_name": "tls_codec.U8.Insts.Tls_codecSpecIoDecodersAgree",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::{impl tls_codec::spec::io::DecodersAgree for u8}",
+      "rust_pattern": "tls_codec::spec::io::DecodersAgree<u8>",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 552,
+        "end_line": 552
+      },
+      "impl_trait_def_id": 34,
+      "impl_trait_rust_name": "tls_codec::spec::io::DecodersAgree",
+      "impl_trait_is_builtin": false
+    },
+    {
+      "def_id": 561,
+      "lean_name": "tls_codec.U16.Insts.Tls_codecSpecIoDecodersAgree",
+      "extract_name": "tls_codec.U16.Insts.Tls_codecSpecIoDecodersAgree",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::{impl tls_codec::spec::io::DecodersAgree for u16}",
+      "rust_pattern": "tls_codec::spec::io::DecodersAgree<u16>",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 553,
+        "end_line": 553
+      },
+      "impl_trait_def_id": 34,
+      "impl_trait_rust_name": "tls_codec::spec::io::DecodersAgree",
+      "impl_trait_is_builtin": false
+    },
+    {
+      "def_id": 562,
+      "lean_name": "tls_codec.U32.Insts.Tls_codecSpecIoDecodersAgree",
+      "extract_name": "tls_codec.U32.Insts.Tls_codecSpecIoDecodersAgree",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::{impl tls_codec::spec::io::DecodersAgree for u32}",
+      "rust_pattern": "tls_codec::spec::io::DecodersAgree<u32>",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 554,
+        "end_line": 554
+      },
+      "impl_trait_def_id": 34,
+      "impl_trait_rust_name": "tls_codec::spec::io::DecodersAgree",
+      "impl_trait_is_builtin": false
+    },
+    {
+      "def_id": 563,
+      "lean_name": "tls_codec.U64.Insts.Tls_codecSpecIoDecodersAgree",
+      "extract_name": "tls_codec.U64.Insts.Tls_codecSpecIoDecodersAgree",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::{impl tls_codec::spec::io::DecodersAgree for u64}",
+      "rust_pattern": "tls_codec::spec::io::DecodersAgree<u64>",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 555,
+        "end_line": 555
+      },
+      "impl_trait_def_id": 34,
+      "impl_trait_rust_name": "tls_codec::spec::io::DecodersAgree",
+      "impl_trait_is_builtin": false
+    },
+    {
+      "def_id": 564,
+      "lean_name": "tls_codec.ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree",
+      "extract_name": "tls_codec.ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::{impl tls_codec::spec::io::DecodersAgree for [u8; LEN]}",
+      "rust_pattern": "tls_codec::spec::io::DecodersAgree<[u8; @]>",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 556,
+        "end_line": 556
+      },
+      "impl_trait_def_id": 34,
+      "impl_trait_rust_name": "tls_codec::spec::io::DecodersAgree",
+      "impl_trait_is_builtin": false
+    },
+    {
+      "def_id": 565,
+      "lean_name": "tls_codec.quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree",
+      "extract_name": "tls_codec.quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::{impl tls_codec::spec::io::DecodersAgree for tls_codec::quic_vec::VLBytes}",
+      "rust_pattern": "tls_codec::spec::io::DecodersAgree<tls_codec::quic_vec::VLBytes>",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 557,
+        "end_line": 557
+      },
+      "impl_trait_def_id": 34,
+      "impl_trait_rust_name": "tls_codec::spec::io::DecodersAgree",
+      "impl_trait_is_builtin": false
+    },
+    {
+      "def_id": 566,
+      "lean_name": "tls_codec.quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree",
+      "extract_name": "tls_codec.quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::{impl tls_codec::spec::io::DecodersAgree for tls_codec::quic_vec::secret_bytes::SecretVLBytes}",
+      "rust_pattern": "tls_codec::spec::io::DecodersAgree<tls_codec::quic_vec::secret_bytes::SecretVLBytes>",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 558,
+        "end_line": 558
+      },
+      "impl_trait_def_id": 34,
+      "impl_trait_rust_name": "tls_codec::spec::io::DecodersAgree",
+      "impl_trait_is_builtin": false
+    },
+    {
+      "def_id": 567,
+      "lean_name": "tls_codec.alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree",
+      "extract_name": "tls_codec.alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::{impl tls_codec::spec::io::DecodersAgree for alloc::vec::Vec<T>}",
+      "rust_pattern": "tls_codec::spec::io::DecodersAgree<alloc::vec::Vec<@Self>>",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 559,
+        "end_line": 559
+      },
+      "impl_trait_def_id": 34,
+      "impl_trait_rust_name": "tls_codec::spec::io::DecodersAgree",
+      "impl_trait_is_builtin": false
+    },
+    {
+      "def_id": 568,
+      "lean_name": "tls_codec.U8.Insts.Tls_codecSpecIoRoundTripMixed",
+      "extract_name": "tls_codec.U8.Insts.Tls_codecSpecIoRoundTripMixed",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::{impl tls_codec::spec::io::RoundTripMixed for u8}",
+      "rust_pattern": "tls_codec::spec::io::RoundTripMixed<u8>",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 561,
+        "end_line": 561
+      },
+      "impl_trait_def_id": 35,
+      "impl_trait_rust_name": "tls_codec::spec::io::RoundTripMixed",
+      "impl_trait_is_builtin": false
+    },
+    {
+      "def_id": 569,
+      "lean_name": "tls_codec.quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed",
+      "extract_name": "tls_codec.quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed",
+      "lean_file": "TlsCodec/Extraction/Funs.lean",
+      "rust_name": "tls_codec::spec::io::{impl tls_codec::spec::io::RoundTripMixed for tls_codec::quic_vec::VLBytes}",
+      "rust_pattern": "tls_codec::spec::io::RoundTripMixed<tls_codec::quic_vec::VLBytes>",
+      "is_local": true,
+      "source": {
+        "file": "tls_codec/src/spec.rs",
+        "begin_line": 562,
+        "end_line": 562
+      },
+      "impl_trait_def_id": 35,
+      "impl_trait_rust_name": "tls_codec::spec::io::RoundTripMixed",
       "impl_trait_is_builtin": false
     },
     {
@@ -27119,7 +27574,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 894,
+      "def_id": 912,
       "lean_name": "tls_codec.string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLByteVecSharedSliceU8Bool",
       "extract_name": "tls_codec.string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLByteVecSharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27136,7 +27591,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 838,
+      "def_id": 856,
       "lean_name": "tls_codec.string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairStringSharedSliceU8Bool",
       "extract_name": "tls_codec.string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairStringSharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27153,7 +27608,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 560,
+      "def_id": 570,
       "lean_name": "tls_codec.alloc.string.String.Insts.Tls_codecSerialize",
       "extract_name": "tls_codec.alloc.string.String.Insts.Tls_codecSerialize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27170,7 +27625,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 561,
+      "def_id": 571,
       "lean_name": "tls_codec.Str.Insts.Tls_codecSerialize",
       "extract_name": "tls_codec.Str.Insts.Tls_codecSerialize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27187,7 +27642,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 562,
+      "def_id": 572,
       "lean_name": "tls_codec.Shared0Str.Insts.Tls_codecSerialize",
       "extract_name": "tls_codec.Shared0Str.Insts.Tls_codecSerialize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27204,7 +27659,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 793,
+      "def_id": 811,
       "lean_name": "tls_codec.string.std_only.DeserializeString.tls_deserialize.closure.Insts.CoreOpsFunctionFnOnceTupleFromUtf8ErrorError",
       "extract_name": "tls_codec.string.std_only.DeserializeString.tls_deserialize.closure.Insts.CoreOpsFunctionFnOnceTupleFromUtf8ErrorError",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27221,7 +27676,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 563,
+      "def_id": 573,
       "lean_name": "tls_codec.alloc.string.String.Insts.Tls_codecDeserialize",
       "extract_name": "tls_codec.alloc.string.String.Insts.Tls_codecDeserialize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27238,7 +27693,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 729,
+      "def_id": 739,
       "lean_name": "tls_codec.tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27255,7 +27710,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 730,
+      "def_id": 740,
       "lean_name": "tls_codec.tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.TlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27267,12 +27722,12 @@
         "begin_line": 56,
         "end_line": 56
       },
-      "impl_trait_def_id": 45,
+      "impl_trait_def_id": 47,
       "impl_trait_rust_name": "core::ops::function::FnMut",
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 735,
+      "def_id": 745,
       "lean_name": "tls_codec.tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27289,7 +27744,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 736,
+      "def_id": 746,
       "lean_name": "tls_codec.tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.TlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27301,12 +27756,12 @@
         "begin_line": 56,
         "end_line": 56
       },
-      "impl_trait_def_id": 45,
+      "impl_trait_def_id": 47,
       "impl_trait_rust_name": "core::ops::function::FnMut",
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 739,
+      "def_id": 749,
       "lean_name": "tls_codec.tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27323,7 +27778,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 740,
+      "def_id": 750,
       "lean_name": "tls_codec.tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.TlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27335,12 +27790,12 @@
         "begin_line": 56,
         "end_line": 56
       },
-      "impl_trait_def_id": 45,
+      "impl_trait_def_id": 47,
       "impl_trait_rust_name": "core::ops::function::FnMut",
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 743,
+      "def_id": 753,
       "lean_name": "tls_codec.tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27357,7 +27812,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 744,
+      "def_id": 754,
       "lean_name": "tls_codec.tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.TlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27369,12 +27824,12 @@
         "begin_line": 56,
         "end_line": 56
       },
-      "impl_trait_def_id": 45,
+      "impl_trait_def_id": 47,
       "impl_trait_rust_name": "core::ops::function::FnMut",
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 749,
+      "def_id": 759,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27391,7 +27846,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 750,
+      "def_id": 760,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27403,12 +27858,12 @@
         "begin_line": 56,
         "end_line": 56
       },
-      "impl_trait_def_id": 45,
+      "impl_trait_def_id": 47,
       "impl_trait_rust_name": "core::ops::function::FnMut",
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 752,
+      "def_id": 762,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27425,7 +27880,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 753,
+      "def_id": 763,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27437,12 +27892,12 @@
         "begin_line": 56,
         "end_line": 56
       },
-      "impl_trait_def_id": 45,
+      "impl_trait_def_id": 47,
       "impl_trait_rust_name": "core::ops::function::FnMut",
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 755,
+      "def_id": 765,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27459,7 +27914,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 756,
+      "def_id": 766,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27471,12 +27926,12 @@
         "begin_line": 56,
         "end_line": 56
       },
-      "impl_trait_def_id": 45,
+      "impl_trait_def_id": 47,
       "impl_trait_rust_name": "core::ops::function::FnMut",
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 758,
+      "def_id": 768,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27493,7 +27948,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 759,
+      "def_id": 769,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27505,12 +27960,12 @@
         "begin_line": 56,
         "end_line": 56
       },
-      "impl_trait_def_id": 45,
+      "impl_trait_def_id": 47,
       "impl_trait_rust_name": "core::ops::function::FnMut",
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 760,
+      "def_id": 770,
       "lean_name": "tls_codec.tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27527,7 +27982,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 761,
+      "def_id": 771,
       "lean_name": "tls_codec.tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.TlsSliceU8.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27539,12 +27994,12 @@
         "begin_line": 56,
         "end_line": 56
       },
-      "impl_trait_def_id": 45,
+      "impl_trait_def_id": 47,
       "impl_trait_rust_name": "core::ops::function::FnMut",
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 762,
+      "def_id": 772,
       "lean_name": "tls_codec.tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27561,7 +28016,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 763,
+      "def_id": 773,
       "lean_name": "tls_codec.tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.TlsSliceU16.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27573,12 +28028,12 @@
         "begin_line": 56,
         "end_line": 56
       },
-      "impl_trait_def_id": 45,
+      "impl_trait_def_id": 47,
       "impl_trait_rust_name": "core::ops::function::FnMut",
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 764,
+      "def_id": 774,
       "lean_name": "tls_codec.tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27595,7 +28050,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 765,
+      "def_id": 775,
       "lean_name": "tls_codec.tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.TlsSliceU24.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27607,12 +28062,12 @@
         "begin_line": 56,
         "end_line": 56
       },
-      "impl_trait_def_id": 45,
+      "impl_trait_def_id": 47,
       "impl_trait_rust_name": "core::ops::function::FnMut",
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 766,
+      "def_id": 776,
       "lean_name": "tls_codec.tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27629,7 +28084,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 767,
+      "def_id": 777,
       "lean_name": "tls_codec.tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "extract_name": "tls_codec.tls_vec.TlsSliceU32.tls_serialized_length.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27641,12 +28096,12 @@
         "begin_line": 56,
         "end_line": 56
       },
-      "impl_trait_def_id": 45,
+      "impl_trait_def_id": 47,
       "impl_trait_rust_name": "core::ops::function::FnMut",
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 856,
+      "def_id": 874,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU8.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU8SharedSliceU8Bool",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU8.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU8SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27663,7 +28118,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 860,
+      "def_id": 878,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU16.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU16SharedSliceU8Bool",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU16.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU16SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27680,7 +28135,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 864,
+      "def_id": 882,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU24.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU24SharedSliceU8Bool",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU24.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU24SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27697,7 +28152,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 868,
+      "def_id": 886,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU32.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU32SharedSliceU8Bool",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU32.deserialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsByteVecU32SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27714,7 +28169,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 843,
+      "def_id": 861,
       "lean_name": "tls_codec.tls_vec.TlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU8SharedSliceU8Bool",
       "extract_name": "tls_codec.tls_vec.TlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU8SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27731,7 +28186,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 846,
+      "def_id": 864,
       "lean_name": "tls_codec.tls_vec.TlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU16SharedSliceU8Bool",
       "extract_name": "tls_codec.tls_vec.TlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU16SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27748,7 +28203,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 849,
+      "def_id": 867,
       "lean_name": "tls_codec.tls_vec.TlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU24SharedSliceU8Bool",
       "extract_name": "tls_codec.tls_vec.TlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU24SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27765,7 +28220,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 852,
+      "def_id": 870,
       "lean_name": "tls_codec.tls_vec.TlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU32SharedSliceU8Bool",
       "extract_name": "tls_codec.tls_vec.TlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVecU32SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27782,7 +28237,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 871,
+      "def_id": 889,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU8SharedSliceU8Bool",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU8.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU8SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27799,7 +28254,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 874,
+      "def_id": 892,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU16SharedSliceU8Bool",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU16.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU16SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27816,7 +28271,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 877,
+      "def_id": 895,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU24SharedSliceU8Bool",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU24.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU24SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27833,7 +28288,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 880,
+      "def_id": 898,
       "lean_name": "tls_codec.tls_vec.SecretTlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU32SharedSliceU8Bool",
       "extract_name": "tls_codec.tls_vec.SecretTlsVecU32.deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSecretTlsVecU32SharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27850,7 +28305,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 854,
+      "def_id": 872,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU8.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU8.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27867,7 +28322,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 858,
+      "def_id": 876,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU16.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU16.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27884,7 +28339,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 862,
+      "def_id": 880,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU24.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU24.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -27901,7 +28356,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 866,
+      "def_id": 884,
       "lean_name": "tls_codec.tls_vec.TlsByteVecU32.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.tls_vec.TlsByteVecU32.serialize_bytes_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -29698,7 +30153,7 @@
         "begin_line": 580,
         "end_line": 588
       },
-      "impl_trait_def_id": 34,
+      "impl_trait_def_id": 36,
       "impl_trait_rust_name": "core::ops::index::Index",
       "impl_trait_is_builtin": false
     },
@@ -29715,7 +30170,7 @@
         "begin_line": 580,
         "end_line": 588
       },
-      "impl_trait_def_id": 34,
+      "impl_trait_def_id": 36,
       "impl_trait_rust_name": "core::ops::index::Index",
       "impl_trait_is_builtin": false
     },
@@ -29732,7 +30187,7 @@
         "begin_line": 580,
         "end_line": 588
       },
-      "impl_trait_def_id": 34,
+      "impl_trait_def_id": 36,
       "impl_trait_rust_name": "core::ops::index::Index",
       "impl_trait_is_builtin": false
     },
@@ -29749,7 +30204,7 @@
         "begin_line": 580,
         "end_line": 588
       },
-      "impl_trait_def_id": 34,
+      "impl_trait_def_id": 36,
       "impl_trait_rust_name": "core::ops::index::Index",
       "impl_trait_is_builtin": false
     },
@@ -29766,7 +30221,7 @@
         "begin_line": 580,
         "end_line": 588
       },
-      "impl_trait_def_id": 34,
+      "impl_trait_def_id": 36,
       "impl_trait_rust_name": "core::ops::index::Index",
       "impl_trait_is_builtin": false
     },
@@ -29783,7 +30238,7 @@
         "begin_line": 580,
         "end_line": 588
       },
-      "impl_trait_def_id": 34,
+      "impl_trait_def_id": 36,
       "impl_trait_rust_name": "core::ops::index::Index",
       "impl_trait_is_builtin": false
     },
@@ -29800,7 +30255,7 @@
         "begin_line": 580,
         "end_line": 588
       },
-      "impl_trait_def_id": 34,
+      "impl_trait_def_id": 36,
       "impl_trait_rust_name": "core::ops::index::Index",
       "impl_trait_is_builtin": false
     },
@@ -29817,7 +30272,7 @@
         "begin_line": 580,
         "end_line": 588
       },
-      "impl_trait_def_id": 34,
+      "impl_trait_def_id": 36,
       "impl_trait_rust_name": "core::ops::index::Index",
       "impl_trait_is_builtin": false
     },
@@ -29834,7 +30289,7 @@
         "begin_line": 597,
         "end_line": 603
       },
-      "impl_trait_def_id": 35,
+      "impl_trait_def_id": 37,
       "impl_trait_rust_name": "core::ops::index::IndexMut",
       "impl_trait_is_builtin": false
     },
@@ -29851,7 +30306,7 @@
         "begin_line": 597,
         "end_line": 603
       },
-      "impl_trait_def_id": 35,
+      "impl_trait_def_id": 37,
       "impl_trait_rust_name": "core::ops::index::IndexMut",
       "impl_trait_is_builtin": false
     },
@@ -29868,7 +30323,7 @@
         "begin_line": 597,
         "end_line": 603
       },
-      "impl_trait_def_id": 35,
+      "impl_trait_def_id": 37,
       "impl_trait_rust_name": "core::ops::index::IndexMut",
       "impl_trait_is_builtin": false
     },
@@ -29885,7 +30340,7 @@
         "begin_line": 597,
         "end_line": 603
       },
-      "impl_trait_def_id": 35,
+      "impl_trait_def_id": 37,
       "impl_trait_rust_name": "core::ops::index::IndexMut",
       "impl_trait_is_builtin": false
     },
@@ -29902,7 +30357,7 @@
         "begin_line": 597,
         "end_line": 603
       },
-      "impl_trait_def_id": 35,
+      "impl_trait_def_id": 37,
       "impl_trait_rust_name": "core::ops::index::IndexMut",
       "impl_trait_is_builtin": false
     },
@@ -29919,7 +30374,7 @@
         "begin_line": 597,
         "end_line": 603
       },
-      "impl_trait_def_id": 35,
+      "impl_trait_def_id": 37,
       "impl_trait_rust_name": "core::ops::index::IndexMut",
       "impl_trait_is_builtin": false
     },
@@ -29936,7 +30391,7 @@
         "begin_line": 597,
         "end_line": 603
       },
-      "impl_trait_def_id": 35,
+      "impl_trait_def_id": 37,
       "impl_trait_rust_name": "core::ops::index::IndexMut",
       "impl_trait_is_builtin": false
     },
@@ -29953,7 +30408,7 @@
         "begin_line": 597,
         "end_line": 603
       },
-      "impl_trait_def_id": 35,
+      "impl_trait_def_id": 37,
       "impl_trait_rust_name": "core::ops::index::IndexMut",
       "impl_trait_is_builtin": false
     },
@@ -29970,7 +30425,7 @@
         "begin_line": 605,
         "end_line": 610
       },
-      "impl_trait_def_id": 36,
+      "impl_trait_def_id": 38,
       "impl_trait_rust_name": "core::borrow::Borrow",
       "impl_trait_is_builtin": false
     },
@@ -29987,7 +30442,7 @@
         "begin_line": 605,
         "end_line": 610
       },
-      "impl_trait_def_id": 36,
+      "impl_trait_def_id": 38,
       "impl_trait_rust_name": "core::borrow::Borrow",
       "impl_trait_is_builtin": false
     },
@@ -30004,7 +30459,7 @@
         "begin_line": 605,
         "end_line": 610
       },
-      "impl_trait_def_id": 36,
+      "impl_trait_def_id": 38,
       "impl_trait_rust_name": "core::borrow::Borrow",
       "impl_trait_is_builtin": false
     },
@@ -30021,7 +30476,7 @@
         "begin_line": 605,
         "end_line": 610
       },
-      "impl_trait_def_id": 36,
+      "impl_trait_def_id": 38,
       "impl_trait_rust_name": "core::borrow::Borrow",
       "impl_trait_is_builtin": false
     },
@@ -30038,7 +30493,7 @@
         "begin_line": 605,
         "end_line": 610
       },
-      "impl_trait_def_id": 36,
+      "impl_trait_def_id": 38,
       "impl_trait_rust_name": "core::borrow::Borrow",
       "impl_trait_is_builtin": false
     },
@@ -30055,7 +30510,7 @@
         "begin_line": 605,
         "end_line": 610
       },
-      "impl_trait_def_id": 36,
+      "impl_trait_def_id": 38,
       "impl_trait_rust_name": "core::borrow::Borrow",
       "impl_trait_is_builtin": false
     },
@@ -30072,7 +30527,7 @@
         "begin_line": 605,
         "end_line": 610
       },
-      "impl_trait_def_id": 36,
+      "impl_trait_def_id": 38,
       "impl_trait_rust_name": "core::borrow::Borrow",
       "impl_trait_is_builtin": false
     },
@@ -30089,7 +30544,7 @@
         "begin_line": 605,
         "end_line": 610
       },
-      "impl_trait_def_id": 36,
+      "impl_trait_def_id": 38,
       "impl_trait_rust_name": "core::borrow::Borrow",
       "impl_trait_is_builtin": false
     },
@@ -30106,7 +30561,7 @@
         "begin_line": 612,
         "end_line": 621
       },
-      "impl_trait_def_id": 37,
+      "impl_trait_def_id": 39,
       "impl_trait_rust_name": "core::iter::traits::collect::FromIterator",
       "impl_trait_is_builtin": false
     },
@@ -30123,7 +30578,7 @@
         "begin_line": 612,
         "end_line": 621
       },
-      "impl_trait_def_id": 37,
+      "impl_trait_def_id": 39,
       "impl_trait_rust_name": "core::iter::traits::collect::FromIterator",
       "impl_trait_is_builtin": false
     },
@@ -30140,7 +30595,7 @@
         "begin_line": 612,
         "end_line": 621
       },
-      "impl_trait_def_id": 37,
+      "impl_trait_def_id": 39,
       "impl_trait_rust_name": "core::iter::traits::collect::FromIterator",
       "impl_trait_is_builtin": false
     },
@@ -30157,7 +30612,7 @@
         "begin_line": 612,
         "end_line": 621
       },
-      "impl_trait_def_id": 37,
+      "impl_trait_def_id": 39,
       "impl_trait_rust_name": "core::iter::traits::collect::FromIterator",
       "impl_trait_is_builtin": false
     },
@@ -30174,7 +30629,7 @@
         "begin_line": 612,
         "end_line": 621
       },
-      "impl_trait_def_id": 37,
+      "impl_trait_def_id": 39,
       "impl_trait_rust_name": "core::iter::traits::collect::FromIterator",
       "impl_trait_is_builtin": false
     },
@@ -30191,7 +30646,7 @@
         "begin_line": 612,
         "end_line": 621
       },
-      "impl_trait_def_id": 37,
+      "impl_trait_def_id": 39,
       "impl_trait_rust_name": "core::iter::traits::collect::FromIterator",
       "impl_trait_is_builtin": false
     },
@@ -30208,7 +30663,7 @@
         "begin_line": 612,
         "end_line": 621
       },
-      "impl_trait_def_id": 37,
+      "impl_trait_def_id": 39,
       "impl_trait_rust_name": "core::iter::traits::collect::FromIterator",
       "impl_trait_is_builtin": false
     },
@@ -30225,7 +30680,7 @@
         "begin_line": 612,
         "end_line": 621
       },
-      "impl_trait_def_id": 37,
+      "impl_trait_def_id": 39,
       "impl_trait_rust_name": "core::iter::traits::collect::FromIterator",
       "impl_trait_is_builtin": false
     },
@@ -31058,7 +31513,7 @@
         "begin_line": 780,
         "end_line": 788
       },
-      "impl_trait_def_id": 34,
+      "impl_trait_def_id": 36,
       "impl_trait_rust_name": "core::ops::index::Index",
       "impl_trait_is_builtin": false
     },
@@ -31075,7 +31530,7 @@
         "begin_line": 780,
         "end_line": 788
       },
-      "impl_trait_def_id": 34,
+      "impl_trait_def_id": 36,
       "impl_trait_rust_name": "core::ops::index::Index",
       "impl_trait_is_builtin": false
     },
@@ -31092,7 +31547,7 @@
         "begin_line": 780,
         "end_line": 788
       },
-      "impl_trait_def_id": 34,
+      "impl_trait_def_id": 36,
       "impl_trait_rust_name": "core::ops::index::Index",
       "impl_trait_is_builtin": false
     },
@@ -31109,7 +31564,7 @@
         "begin_line": 780,
         "end_line": 788
       },
-      "impl_trait_def_id": 34,
+      "impl_trait_def_id": 36,
       "impl_trait_rust_name": "core::ops::index::Index",
       "impl_trait_is_builtin": false
     },
@@ -31126,7 +31581,7 @@
         "begin_line": 797,
         "end_line": 803
       },
-      "impl_trait_def_id": 35,
+      "impl_trait_def_id": 37,
       "impl_trait_rust_name": "core::ops::index::IndexMut",
       "impl_trait_is_builtin": false
     },
@@ -31143,7 +31598,7 @@
         "begin_line": 797,
         "end_line": 803
       },
-      "impl_trait_def_id": 35,
+      "impl_trait_def_id": 37,
       "impl_trait_rust_name": "core::ops::index::IndexMut",
       "impl_trait_is_builtin": false
     },
@@ -31160,7 +31615,7 @@
         "begin_line": 797,
         "end_line": 803
       },
-      "impl_trait_def_id": 35,
+      "impl_trait_def_id": 37,
       "impl_trait_rust_name": "core::ops::index::IndexMut",
       "impl_trait_is_builtin": false
     },
@@ -31177,7 +31632,7 @@
         "begin_line": 797,
         "end_line": 803
       },
-      "impl_trait_def_id": 35,
+      "impl_trait_def_id": 37,
       "impl_trait_rust_name": "core::ops::index::IndexMut",
       "impl_trait_is_builtin": false
     },
@@ -31194,7 +31649,7 @@
         "begin_line": 805,
         "end_line": 810
       },
-      "impl_trait_def_id": 36,
+      "impl_trait_def_id": 38,
       "impl_trait_rust_name": "core::borrow::Borrow",
       "impl_trait_is_builtin": false
     },
@@ -31211,7 +31666,7 @@
         "begin_line": 805,
         "end_line": 810
       },
-      "impl_trait_def_id": 36,
+      "impl_trait_def_id": 38,
       "impl_trait_rust_name": "core::borrow::Borrow",
       "impl_trait_is_builtin": false
     },
@@ -31228,7 +31683,7 @@
         "begin_line": 805,
         "end_line": 810
       },
-      "impl_trait_def_id": 36,
+      "impl_trait_def_id": 38,
       "impl_trait_rust_name": "core::borrow::Borrow",
       "impl_trait_is_builtin": false
     },
@@ -31245,7 +31700,7 @@
         "begin_line": 805,
         "end_line": 810
       },
-      "impl_trait_def_id": 36,
+      "impl_trait_def_id": 38,
       "impl_trait_rust_name": "core::borrow::Borrow",
       "impl_trait_is_builtin": false
     },
@@ -31262,7 +31717,7 @@
         "begin_line": 812,
         "end_line": 821
       },
-      "impl_trait_def_id": 37,
+      "impl_trait_def_id": 39,
       "impl_trait_rust_name": "core::iter::traits::collect::FromIterator",
       "impl_trait_is_builtin": false
     },
@@ -31279,7 +31734,7 @@
         "begin_line": 812,
         "end_line": 821
       },
-      "impl_trait_def_id": 37,
+      "impl_trait_def_id": 39,
       "impl_trait_rust_name": "core::iter::traits::collect::FromIterator",
       "impl_trait_is_builtin": false
     },
@@ -31296,7 +31751,7 @@
         "begin_line": 812,
         "end_line": 821
       },
-      "impl_trait_def_id": 37,
+      "impl_trait_def_id": 39,
       "impl_trait_rust_name": "core::iter::traits::collect::FromIterator",
       "impl_trait_is_builtin": false
     },
@@ -31313,7 +31768,7 @@
         "begin_line": 812,
         "end_line": 821
       },
-      "impl_trait_def_id": 37,
+      "impl_trait_def_id": 39,
       "impl_trait_rust_name": "core::iter::traits::collect::FromIterator",
       "impl_trait_is_builtin": false
     },
@@ -31670,7 +32125,7 @@
         "begin_line": 974,
         "end_line": 978
       },
-      "impl_trait_def_id": 39,
+      "impl_trait_def_id": 41,
       "impl_trait_rust_name": "core::ops::drop::Drop",
       "impl_trait_is_builtin": false
     },
@@ -31687,7 +32142,7 @@
         "begin_line": 974,
         "end_line": 978
       },
-      "impl_trait_def_id": 39,
+      "impl_trait_def_id": 41,
       "impl_trait_rust_name": "core::ops::drop::Drop",
       "impl_trait_is_builtin": false
     },
@@ -31704,7 +32159,7 @@
         "begin_line": 974,
         "end_line": 978
       },
-      "impl_trait_def_id": 39,
+      "impl_trait_def_id": 41,
       "impl_trait_rust_name": "core::ops::drop::Drop",
       "impl_trait_is_builtin": false
     },
@@ -31721,7 +32176,7 @@
         "begin_line": 974,
         "end_line": 978
       },
-      "impl_trait_def_id": 39,
+      "impl_trait_def_id": 41,
       "impl_trait_rust_name": "core::ops::drop::Drop",
       "impl_trait_is_builtin": false
     },
@@ -32474,7 +32929,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 836,
+      "def_id": 854,
       "lean_name": "tls_codec.varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVarIntSharedSliceU8Bool",
       "extract_name": "tls_codec.varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairTlsVarIntSharedSliceU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",
@@ -32508,7 +32963,7 @@
       "impl_trait_is_builtin": false
     },
     {
-      "def_id": 834,
+      "def_id": 852,
       "lean_name": "tls_codec.varint.SerializeBytesTlsVarInt.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "extract_name": "tls_codec.varint.SerializeBytesTlsVarInt.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool",
       "lean_file": "TlsCodec/Extraction/Funs.lean",

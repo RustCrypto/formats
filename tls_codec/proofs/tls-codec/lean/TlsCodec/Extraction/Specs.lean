@@ -655,6 +655,186 @@ structure spec.io.SameBytes.Lawful (Self : Type) (SameBytesInst :
       ⌜ (spec.io.SameBytes.same_bytes.post SameBytesInst.SerializeInst
           SameBytesInst.SerializeBytesInst SameBytesInst self_ res).holds ⌝ ⦄
 
+/-- [tls_codec::spec::io::DecodersAgree::decoders_agree::pre]:
+    Source: 'tls_codec/src/spec.rs', lines 502:8-502:48 -/
+@[reducible]
+def spec.io.DecodersAgree.decoders_agree.pre
+  {Self_ : Type} {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+  (DeserializeInst : Deserialize Self_) (DeserializeBytesInst :
+  DeserializeBytes Self_) (corecmpPartialEqInst : core.cmp.PartialEq Self_
+  Self_) (DecodersAgreeInst : spec.io.DecodersAgree Self_) (reader : R) :
+  RustM Bool
+  := do
+  ok true
+
+/-- [tls_codec::spec::io::DecodersAgree::decoders_agree::post]:
+    Source: 'tls_codec/src/spec.rs', lines 486:4-486:26 -/
+@[reducible]
+def spec.io.DecodersAgree.decoders_agree.post
+  {Self_ : Type} {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+  (DeserializeInst : Deserialize Self_) (DeserializeBytesInst :
+  DeserializeBytes Self_) (corecmpPartialEqInst : core.cmp.PartialEq Self_
+  Self_) (DecodersAgreeInst : spec.io.DecodersAgree Self_) (reader : R)
+  (_ : Unit) :
+  RustM Bool
+  := do
+  let bytes ← spec.io.stream allocioreadReadInst reader
+  let (res, after) ←
+    spec.io.decode_std DeserializeInst allocioreadReadInst reader
+  let s ← alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref bytes
+  let r ← DeserializeBytesInst.tls_deserialize_bytes s
+  match r with
+  | core.result.Result.Ok p =>
+    let (value, rest) := p
+    let b ←
+      core.result.Result.is_ok_and
+        (spec.io.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool
+        allocioreadReadInst DeserializeInst DeserializeBytesInst
+        corecmpPartialEqInst DecodersAgreeInst) res value
+    if b
+    then
+      let v ← spec.io.stream allocioreadReadInst after
+      let s1 ← alloc.vec.Vec.as_slice v
+      core.Slice.Insts.CoreCmpPartialEqSlice.eq
+        core.U8.Insts.CoreCmpPartialEqU8 s1 rest
+    else ok false
+  | core.result.Result.Err _ => core.result.Result.is_err res
+
+/-- [tls_codec::spec::io::DecodersAgree::bytes_prefix_only::pre]:
+    Source: 'tls_codec/src/spec.rs', lines 486:4-486:26 -/
+@[reducible]
+def spec.io.DecodersAgree.bytes_prefix_only.pre
+  {Self_ : Type} (DeserializeInst : Deserialize Self_) (DeserializeBytesInst :
+  DeserializeBytes Self_) (corecmpPartialEqInst : core.cmp.PartialEq Self_
+  Self_) (DecodersAgreeInst : spec.io.DecodersAgree Self_)
+  («prefix» : Slice Std.U8) (rest : Slice Std.U8) (bytes : Slice Std.U8)
+  (other_rest : Slice Std.U8) (other : Slice Std.U8) :
+  RustM Bool
+  := do
+  let b ← spec.io.is_concat «prefix» rest bytes
+  if b
+  then spec.io.is_concat «prefix» other_rest other
+  else ok false
+
+/-- [tls_codec::spec::io::DecodersAgree::bytes_prefix_only::post]:
+    Source: 'tls_codec/src/spec.rs', lines 486:4-486:26 -/
+@[reducible]
+def spec.io.DecodersAgree.bytes_prefix_only.post
+  {Self_ : Type} (DeserializeInst : Deserialize Self_) (DeserializeBytesInst :
+  DeserializeBytes Self_) (corecmpPartialEqInst : core.cmp.PartialEq Self_
+  Self_) (DecodersAgreeInst : spec.io.DecodersAgree Self_)
+  («prefix» : Slice Std.U8) (rest : Slice Std.U8) (bytes : Slice Std.U8)
+  (other_rest : Slice Std.U8) (other : Slice Std.U8) (_ : Unit) :
+  RustM Bool
+  := do
+  let r ← DeserializeBytesInst.tls_deserialize_bytes bytes
+  match r with
+  | core.result.Result.Ok p =>
+    let (value, remainder) := p
+    let b ←
+      core.Shared1A.Insts.CoreCmpPartialEqShared0B.ne
+        (core.Slice.Insts.CoreCmpPartialEqSlice
+        core.U8.Insts.CoreCmpPartialEqU8) remainder rest
+    if b
+    then ok true
+    else
+      let r1 ← DeserializeBytesInst.tls_deserialize_bytes other
+      core.result.Result.is_ok_and
+        (spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool
+        DeserializeInst DeserializeBytesInst corecmpPartialEqInst
+        DecodersAgreeInst) r1 (value, other_rest)
+  | core.result.Result.Err _ => ok true
+
+/-- Lawful structure of trait: [tls_codec::spec::io::DecodersAgree]
+    Source: 'tls_codec/src/spec.rs', lines 487:4-527:5 -/
+structure spec.io.DecodersAgree.Lawful (Self : Type) (DecodersAgreeInst :
+  spec.io.DecodersAgree Self) : Prop where
+  DeserializeInstLawful : Deserialize.Lawful Self
+    DecodersAgreeInst.DeserializeInst
+  DeserializeBytesInstLawful : DeserializeBytes.Lawful Self
+    DecodersAgreeInst.DeserializeBytesInst
+  corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful Self Self
+    DecodersAgreeInst.corecmpPartialEqInst
+  decoders_agree_spec {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (reader : R) :
+    (spec.io.DecodersAgree.decoders_agree.pre allocioreadReadInst
+    DecodersAgreeInst.DeserializeInst DecodersAgreeInst.DeserializeBytesInst
+    DecodersAgreeInst.corecmpPartialEqInst DecodersAgreeInst reader).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    DecodersAgreeInst.decoders_agree allocioreadReadInst reader
+    ⦃ ⇓ res =>
+      ⌜ (spec.io.DecodersAgree.decoders_agree.post allocioreadReadInst
+          DecodersAgreeInst.DeserializeInst
+          DecodersAgreeInst.DeserializeBytesInst
+          DecodersAgreeInst.corecmpPartialEqInst DecodersAgreeInst reader
+          res).holds ⌝ ⦄
+  bytes_prefix_only_spec («prefix» : Slice Std.U8) (rest : Slice Std.U8)
+    (bytes : Slice Std.U8) (other_rest : Slice Std.U8) (other : Slice Std.U8) :
+    (spec.io.DecodersAgree.bytes_prefix_only.pre
+    DecodersAgreeInst.DeserializeInst DecodersAgreeInst.DeserializeBytesInst
+    DecodersAgreeInst.corecmpPartialEqInst DecodersAgreeInst «prefix» rest
+    bytes other_rest other).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    DecodersAgreeInst.bytes_prefix_only «prefix» rest bytes other_rest other
+    ⦃ ⇓ res =>
+      ⌜ (spec.io.DecodersAgree.bytes_prefix_only.post
+          DecodersAgreeInst.DeserializeInst
+          DecodersAgreeInst.DeserializeBytesInst
+          DecodersAgreeInst.corecmpPartialEqInst DecodersAgreeInst «prefix»
+          rest bytes other_rest other res).holds ⌝ ⦄
+
+/-- [tls_codec::spec::io::RoundTripMixed::round_trip_mixed::pre]:
+    Source: 'tls_codec/src/spec.rs', lines 530:4-530:26 -/
+@[reducible]
+def spec.io.RoundTripMixed.round_trip_mixed.pre
+  {Self_ : Type} (RoundTripStdInst : spec.io.RoundTripStd Self_)
+  (DecodersAgreeInst : spec.io.DecodersAgree Self_) (RoundTripMixedInst :
+  spec.io.RoundTripMixed Self_) (self_ : Self_) (rest : Slice Std.U8)
+  (whole : Slice Std.U8) :
+  RustM Bool
+  := do
+  let r ← spec.io.encode RoundTripStdInst.SerializeInst self_
+  core.result.Result.is_ok_and
+    (spec.io.__8.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool
+    RoundTripStdInst DecodersAgreeInst RoundTripMixedInst) r (rest, whole)
+
+/-- [tls_codec::spec::io::RoundTripMixed::round_trip_mixed::post]:
+    Source: 'tls_codec/src/spec.rs', lines 530:4-530:26 -/
+@[reducible]
+def spec.io.RoundTripMixed.round_trip_mixed.post
+  {Self_ : Type} (RoundTripStdInst : spec.io.RoundTripStd Self_)
+  (DecodersAgreeInst : spec.io.DecodersAgree Self_) (RoundTripMixedInst :
+  spec.io.RoundTripMixed Self_) (self_ : Self_) (rest : Slice Std.U8)
+  (whole : Slice Std.U8) (_ : Unit) :
+  RustM Bool
+  := do
+  let r ← DecodersAgreeInst.DeserializeBytesInst.tls_deserialize_bytes whole
+  core.result.Result.is_ok_and
+    (spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool
+    RoundTripStdInst DecodersAgreeInst RoundTripMixedInst) r (self_, rest)
+
+/-- Lawful structure of trait: [tls_codec::spec::io::RoundTripMixed]
+    Source: 'tls_codec/src/spec.rs', lines 531:4-539:5 -/
+structure spec.io.RoundTripMixed.Lawful (Self : Type) (RoundTripMixedInst :
+  spec.io.RoundTripMixed Self) : Prop where
+  RoundTripStdInstLawful : spec.io.RoundTripStd.Lawful Self
+    RoundTripMixedInst.RoundTripStdInst
+  DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful Self
+    RoundTripMixedInst.DecodersAgreeInst
+  round_trip_mixed_spec (self_ : Self) (rest : Slice Std.U8)
+    (whole : Slice Std.U8) :
+    (spec.io.RoundTripMixed.round_trip_mixed.pre
+    RoundTripMixedInst.RoundTripStdInst RoundTripMixedInst.DecodersAgreeInst
+    RoundTripMixedInst self_ rest whole).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    RoundTripMixedInst.round_trip_mixed self_ rest whole
+    ⦃ ⇓ res =>
+      ⌜ (spec.io.RoundTripMixed.round_trip_mixed.post
+          RoundTripMixedInst.RoundTripStdInst
+          RoundTripMixedInst.DecodersAgreeInst RoundTripMixedInst self_ rest
+          whole res).holds ⌝ ⦄
+
 /-- [tls_codec::checked_capacity::post]:
     Source: 'tls_codec/src/lib.rs', lines 216:16-216:42 -/
 @[reducible]

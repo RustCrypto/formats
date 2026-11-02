@@ -105,6 +105,23 @@ macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.spec.io.Sam
 macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.Serialize.Lawful.SizeInstLawful (tls_codec.spec.io.SameBytes.Lawful.SerializeInstLawful ‹_›))
 macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.spec.io.SameBytes.Lawful.SerializeBytesInstLawful ‹_›)
 macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.SerializeBytes.Lawful.SizeInstLawful (tls_codec.spec.io.SameBytes.Lawful.SerializeBytesInstLawful ‹_›))
+macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.spec.io.DecodersAgree.Lawful.DeserializeInstLawful ‹_›)
+macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.Deserialize.Lawful.SizeInstLawful (tls_codec.spec.io.DecodersAgree.Lawful.DeserializeInstLawful ‹_›))
+macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.spec.io.DecodersAgree.Lawful.DeserializeBytesInstLawful ‹_›)
+macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.DeserializeBytes.Lawful.SizeInstLawful (tls_codec.spec.io.DecodersAgree.Lawful.DeserializeBytesInstLawful ‹_›))
+macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.spec.io.DecodersAgree.Lawful.corecmpPartialEqInstLawful ‹_›)
+macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.spec.io.RoundTripMixed.Lawful.RoundTripStdInstLawful ‹_›)
+macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.spec.io.RoundTripStd.Lawful.SerializeInstLawful (tls_codec.spec.io.RoundTripMixed.Lawful.RoundTripStdInstLawful ‹_›))
+macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.Serialize.Lawful.SizeInstLawful (tls_codec.spec.io.RoundTripStd.Lawful.SerializeInstLawful (tls_codec.spec.io.RoundTripMixed.Lawful.RoundTripStdInstLawful ‹_›)))
+macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.spec.io.RoundTripStd.Lawful.DeserializeInstLawful (tls_codec.spec.io.RoundTripMixed.Lawful.RoundTripStdInstLawful ‹_›))
+macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.Deserialize.Lawful.SizeInstLawful (tls_codec.spec.io.RoundTripStd.Lawful.DeserializeInstLawful (tls_codec.spec.io.RoundTripMixed.Lawful.RoundTripStdInstLawful ‹_›)))
+macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.spec.io.RoundTripStd.Lawful.corecmpPartialEqInstLawful (tls_codec.spec.io.RoundTripMixed.Lawful.RoundTripStdInstLawful ‹_›))
+macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.spec.io.RoundTripMixed.Lawful.DecodersAgreeInstLawful ‹_›)
+macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.spec.io.DecodersAgree.Lawful.DeserializeInstLawful (tls_codec.spec.io.RoundTripMixed.Lawful.DecodersAgreeInstLawful ‹_›))
+macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.Deserialize.Lawful.SizeInstLawful (tls_codec.spec.io.DecodersAgree.Lawful.DeserializeInstLawful (tls_codec.spec.io.RoundTripMixed.Lawful.DecodersAgreeInstLawful ‹_›)))
+macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.spec.io.DecodersAgree.Lawful.DeserializeBytesInstLawful (tls_codec.spec.io.RoundTripMixed.Lawful.DecodersAgreeInstLawful ‹_›))
+macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.DeserializeBytes.Lawful.SizeInstLawful (tls_codec.spec.io.DecodersAgree.Lawful.DeserializeBytesInstLawful (tls_codec.spec.io.RoundTripMixed.Lawful.DecodersAgreeInstLawful ‹_›)))
+macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| exact tls_codec.spec.io.DecodersAgree.Lawful.corecmpPartialEqInstLawful (tls_codec.spec.io.RoundTripMixed.Lawful.DecodersAgreeInstLawful ‹_›))
 macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| (apply alloc.string.String.Insts.CoreCmpPartialEqString.Lawful <;> lawful_hyp))
 macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| (apply alloc.vec.Vec.Insts.CoreCmpPartialEqVec.Lawful <;> lawful_hyp))
 macro_rules | `(tactic| lawful_hyp_aux) => `(tactic| (apply core.Array.Insts.CoreCmpPartialEqArray.Lawful <;> lawful_hyp))
@@ -6123,6 +6140,76 @@ theorem
   := ⟨⟩
 
 theorem
+  spec.io.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.Lawful
+  {Self_ : Type} {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+  (DeserializeInst : Deserialize Self_) (DeserializeBytesInst :
+  DeserializeBytes Self_) (corecmpPartialEqInst : core.cmp.PartialEq Self_
+  Self_) (DecodersAgreeInst : spec.io.DecodersAgree Self_)
+  (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R allocioreadReadInst)
+  (DeserializeInstLawful : Deserialize.Lawful Self_ DeserializeInst)
+  (DeserializeBytesInstLawful : DeserializeBytes.Lawful Self_
+  DeserializeBytesInst)
+  (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful Self_ Self_
+  corecmpPartialEqInst)
+  (DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful Self_
+  DecodersAgreeInst) :
+  core.ops.function.FnOnce.Lawful (spec.io.__5.ensures.closure Self_ R) Self_
+  Bool (spec.io.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool
+  allocioreadReadInst DeserializeInst DeserializeBytesInst corecmpPartialEqInst
+  DecodersAgreeInst)
+  := ⟨⟩
+
+theorem
+  spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.Lawful
+  {Self_ : Type} (DeserializeInst : Deserialize Self_) (DeserializeBytesInst :
+  DeserializeBytes Self_) (corecmpPartialEqInst : core.cmp.PartialEq Self_
+  Self_) (DecodersAgreeInst : spec.io.DecodersAgree Self_)
+  (DeserializeInstLawful : Deserialize.Lawful Self_ DeserializeInst)
+  (DeserializeBytesInstLawful : DeserializeBytes.Lawful Self_
+  DeserializeBytesInst)
+  (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful Self_ Self_
+  corecmpPartialEqInst)
+  (DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful Self_
+  DecodersAgreeInst) :
+  core.ops.function.FnOnce.Lawful (spec.io.__7.ensures.closure Self_) (Self_ ×
+  (Slice Std.U8)) Bool
+  (spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool
+  DeserializeInst DeserializeBytesInst corecmpPartialEqInst DecodersAgreeInst)
+  := ⟨⟩
+
+theorem
+  spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.Lawful
+  {Self_ : Type} (RoundTripStdInst : spec.io.RoundTripStd Self_)
+  (DecodersAgreeInst : spec.io.DecodersAgree Self_) (RoundTripMixedInst :
+  spec.io.RoundTripMixed Self_)
+  (RoundTripStdInstLawful : spec.io.RoundTripStd.Lawful Self_ RoundTripStdInst)
+  (DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful Self_
+  DecodersAgreeInst)
+  (RoundTripMixedInstLawful : spec.io.RoundTripMixed.Lawful Self_
+  RoundTripMixedInst) :
+  core.ops.function.FnOnce.Lawful (spec.io.__9.ensures.closure Self_) (Self_ ×
+  (Slice Std.U8)) Bool
+  (spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool
+  RoundTripStdInst DecodersAgreeInst RoundTripMixedInst)
+  := ⟨⟩
+
+theorem
+  spec.io.__8.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
+  {Self_ : Type} (RoundTripStdInst : spec.io.RoundTripStd Self_)
+  (DecodersAgreeInst : spec.io.DecodersAgree Self_) (RoundTripMixedInst :
+  spec.io.RoundTripMixed Self_)
+  (RoundTripStdInstLawful : spec.io.RoundTripStd.Lawful Self_ RoundTripStdInst)
+  (DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful Self_
+  DecodersAgreeInst)
+  (RoundTripMixedInstLawful : spec.io.RoundTripMixed.Lawful Self_
+  RoundTripMixedInst) :
+  core.ops.function.FnOnce.Lawful (spec.io.__8.requires.closure Self_)
+  (alloc.vec.Vec Std.U8) Bool
+  (spec.io.__8.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool
+  RoundTripStdInst DecodersAgreeInst RoundTripMixedInst)
+  := ⟨⟩
+
+theorem
   string.DeserializeBytesString.tls_deserialize_bytes._.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTuplePairVLByteVecSharedSliceU8Bool.Lawful
   :
   core.ops.function.FnOnce.Lawful
@@ -7869,6 +7956,117 @@ theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoSameBytes.Lawful :
   SerializeInstLawful := by lawful_parent quic_vec.VLBytes.Insts.Tls_codecSerialize.Lawful
   SerializeBytesInstLawful := by lawful_parent quic_vec.VLBytes.Insts.Tls_codecSerializeBytes.Lawful
   same_bytes_spec := by pf_fc_combine quic_vec.VLBytes.Insts.Tls_codecSpecIoSameBytes.same_bytes_spec.panic_freedom quic_vec.VLBytes.Insts.Tls_codecSpecIoSameBytes.same_bytes_spec.functional_correctness
+}
+
+/-! ### spec.io.DecodersAgree -/
+
+theorem U8.Insts.Tls_codecSpecIoDecodersAgree.Lawful :
+  spec.io.DecodersAgree.Lawful Std.U8 U8.Insts.Tls_codecSpecIoDecodersAgree
+  := {
+  DeserializeInstLawful := by lawful_parent U8.Insts.Tls_codecDeserialize.Lawful
+  DeserializeBytesInstLawful := by lawful_parent U8.Insts.Tls_codecDeserializeBytes.Lawful
+  corecmpPartialEqInstLawful := by lawful_parent core.U8.Insts.CoreCmpPartialEqU8.Lawful
+  decoders_agree_spec := by pf_fc_combine U8.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.panic_freedom U8.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness
+  bytes_prefix_only_spec := by pf_fc_combine U8.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.panic_freedom U8.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness
+}
+
+theorem U16.Insts.Tls_codecSpecIoDecodersAgree.Lawful :
+  spec.io.DecodersAgree.Lawful Std.U16 U16.Insts.Tls_codecSpecIoDecodersAgree
+  := {
+  DeserializeInstLawful := by lawful_parent U16.Insts.Tls_codecDeserialize.Lawful
+  DeserializeBytesInstLawful := by lawful_parent U16.Insts.Tls_codecDeserializeBytes.Lawful
+  corecmpPartialEqInstLawful := by lawful_parent core.U16.Insts.CoreCmpPartialEqU16.Lawful
+  decoders_agree_spec := by pf_fc_combine U16.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.panic_freedom U16.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness
+  bytes_prefix_only_spec := by pf_fc_combine U16.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.panic_freedom U16.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness
+}
+
+theorem U32.Insts.Tls_codecSpecIoDecodersAgree.Lawful :
+  spec.io.DecodersAgree.Lawful Std.U32 U32.Insts.Tls_codecSpecIoDecodersAgree
+  := {
+  DeserializeInstLawful := by lawful_parent U32.Insts.Tls_codecDeserialize.Lawful
+  DeserializeBytesInstLawful := by lawful_parent U32.Insts.Tls_codecDeserializeBytes.Lawful
+  corecmpPartialEqInstLawful := by lawful_parent core.U32.Insts.CoreCmpPartialEqU32.Lawful
+  decoders_agree_spec := by pf_fc_combine U32.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.panic_freedom U32.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness
+  bytes_prefix_only_spec := by pf_fc_combine U32.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.panic_freedom U32.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness
+}
+
+theorem U64.Insts.Tls_codecSpecIoDecodersAgree.Lawful :
+  spec.io.DecodersAgree.Lawful Std.U64 U64.Insts.Tls_codecSpecIoDecodersAgree
+  := {
+  DeserializeInstLawful := by lawful_parent U64.Insts.Tls_codecDeserialize.Lawful
+  DeserializeBytesInstLawful := by lawful_parent U64.Insts.Tls_codecDeserializeBytes.Lawful
+  corecmpPartialEqInstLawful := by lawful_parent core.U64.Insts.CoreCmpPartialEqU64.Lawful
+  decoders_agree_spec := by pf_fc_combine U64.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.panic_freedom U64.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness
+  bytes_prefix_only_spec := by pf_fc_combine U64.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.panic_freedom U64.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness
+}
+
+theorem ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree.Lawful (LEN : Std.Usize)
+  :
+  spec.io.DecodersAgree.Lawful (Array Std.U8 LEN)
+  (ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree LEN)
+  := {
+  DeserializeInstLawful := by lawful_parent ArrayU8LEN.Insts.Tls_codecDeserialize.Lawful
+  DeserializeBytesInstLawful := by lawful_parent ArrayU8LEN.Insts.Tls_codecDeserializeBytes.Lawful
+  corecmpPartialEqInstLawful := by lawful_parent core.Array.Insts.CoreCmpPartialEqArray.Lawful
+  decoders_agree_spec := by pf_fc_combine ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.panic_freedom ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness
+  bytes_prefix_only_spec := by pf_fc_combine ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.panic_freedom ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness
+}
+
+theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.Lawful :
+  spec.io.DecodersAgree.Lawful quic_vec.VLBytes
+  quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree
+  := {
+  DeserializeInstLawful := by lawful_parent quic_vec.VLBytes.Insts.Tls_codecDeserialize.Lawful
+  DeserializeBytesInstLawful := by lawful_parent quic_vec.VLBytes.Insts.Tls_codecDeserializeBytes.Lawful
+  corecmpPartialEqInstLawful := by lawful_parent quic_vec.VLBytes.Insts.CoreCmpPartialEqVLBytes.Lawful
+  decoders_agree_spec := by pf_fc_combine quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.panic_freedom quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness
+  bytes_prefix_only_spec := by pf_fc_combine quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.panic_freedom quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness
+}
+
+theorem
+  quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.Lawful
+  :
+  spec.io.DecodersAgree.Lawful quic_vec.secret_bytes.SecretVLBytes
+  quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree
+  := {
+  DeserializeInstLawful := by lawful_parent quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecDeserialize.Lawful
+  DeserializeBytesInstLawful := by lawful_parent quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecDeserializeBytes.Lawful
+  corecmpPartialEqInstLawful := by lawful_parent quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpPartialEqSecretVLBytes.Lawful
+  decoders_agree_spec := by pf_fc_combine quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.panic_freedom quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness
+  bytes_prefix_only_spec := by pf_fc_combine quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.panic_freedom quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness
+}
+
+theorem alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.Lawful {T : Type}
+  (DecodersAgreeInst : spec.io.DecodersAgree T)
+  (DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful T DecodersAgreeInst)
+  :
+  spec.io.DecodersAgree.Lawful (alloc.vec.Vec T)
+  (alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree DecodersAgreeInst)
+  := {
+  DeserializeInstLawful := by lawful_parent alloc.vec.Vec.Insts.Tls_codecDeserialize.Lawful
+  DeserializeBytesInstLawful := by lawful_parent alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.Lawful
+  corecmpPartialEqInstLawful := by lawful_parent alloc.vec.Vec.Insts.CoreCmpPartialEqVec.Lawful
+  decoders_agree_spec := by pf_fc_combine alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.panic_freedom alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness
+  bytes_prefix_only_spec := by pf_fc_combine alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.panic_freedom alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness
+}
+
+/-! ### spec.io.RoundTripMixed -/
+
+theorem U8.Insts.Tls_codecSpecIoRoundTripMixed.Lawful :
+  spec.io.RoundTripMixed.Lawful Std.U8 U8.Insts.Tls_codecSpecIoRoundTripMixed
+  := {
+  RoundTripStdInstLawful := by lawful_parent U8.Insts.Tls_codecSpecIoRoundTripStd.Lawful
+  DecodersAgreeInstLawful := by lawful_parent U8.Insts.Tls_codecSpecIoDecodersAgree.Lawful
+  round_trip_mixed_spec := by pf_fc_combine U8.Insts.Tls_codecSpecIoRoundTripMixed.round_trip_mixed_spec.panic_freedom U8.Insts.Tls_codecSpecIoRoundTripMixed.round_trip_mixed_spec.functional_correctness
+}
+
+theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.Lawful :
+  spec.io.RoundTripMixed.Lawful quic_vec.VLBytes
+  quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed
+  := {
+  RoundTripStdInstLawful := by lawful_parent quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripStd.Lawful
+  DecodersAgreeInstLawful := by lawful_parent quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.Lawful
+  round_trip_mixed_spec := by pf_fc_combine quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.round_trip_mixed_spec.panic_freedom quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.round_trip_mixed_spec.functional_correctness
 }
 
 /-! ### core.ops.index.Index -/

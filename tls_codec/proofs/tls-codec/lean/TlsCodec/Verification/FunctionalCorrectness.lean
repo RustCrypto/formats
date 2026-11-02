@@ -26,6 +26,7 @@ import TlsCodec.Verification.Std.String
 import TlsCodec.Verification.PanicFreedom
 import TlsCodec.Verification.Helpers.RoundTrip
 import TlsCodec.Verification.Helpers.DeserializeSuffix
+import TlsCodec.Verification.Std.Agree
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM ControlFlow Error
@@ -10652,6 +10653,302 @@ theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoSameBytes.same_bytes_spec.function
       ⌜ (spec.io.SameBytes.same_bytes.post quic_vec.VLBytes.Insts.Tls_codecSpecIoSameBytes.SerializeInst
           quic_vec.VLBytes.Insts.Tls_codecSpecIoSameBytes.SerializeBytesInst quic_vec.VLBytes.Insts.Tls_codecSpecIoSameBytes self_ res).holds ⌝ ⦄ := by
   exact partial_of_total (VLBytes.same_bytes self_)
+
+/-! ### spec.io.DecodersAgree -/
+
+theorem U8.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (reader : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => spec.io.DecodersAgree.decoders_agree.default Std.U8 allocioreadReadInst) allocioreadReadInst reader
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.DecodersAgree.decoders_agree.post allocioreadReadInst
+          U8.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst
+          U8.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+          U8.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst U8.Insts.Tls_codecSpecIoDecodersAgree reader
+          res).holds ⌝ ⦄ := by
+  exact partial_of_total (ok_triple_of (decoders_agree_post_of _ core.U8.Insts.CoreCmpPartialEqU8.Lawful U8.agree.1
+    allocioreadReadInst allocioreadReadInstLawful reader))
+
+theorem U8.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness («prefix» : Slice Std.U8) (rest : Slice Std.U8)
+    (bytes : Slice Std.U8) (other_rest : Slice Std.U8) (other : Slice Std.U8) :
+  (spec.io.DecodersAgree.bytes_prefix_only.pre
+    U8.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst U8.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+    U8.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst U8.Insts.Tls_codecSpecIoDecodersAgree «prefix» rest
+    bytes other_rest other).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    U8.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only «prefix» rest bytes other_rest other
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.DecodersAgree.bytes_prefix_only.post
+          U8.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst
+          U8.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+          U8.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst U8.Insts.Tls_codecSpecIoDecodersAgree «prefix»
+          rest bytes other_rest other res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (ok_triple_of (bytes_prefix_only_post_of _ U8.agree.1 core.U8.Insts.CoreCmpPartialEqU8.Lawful U8.agree.2
+    «prefix» rest bytes other_rest other hpre))
+
+theorem U16.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (reader : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => spec.io.DecodersAgree.decoders_agree.default Std.U16 allocioreadReadInst) allocioreadReadInst reader
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.DecodersAgree.decoders_agree.post allocioreadReadInst
+          U16.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst
+          U16.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+          U16.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst U16.Insts.Tls_codecSpecIoDecodersAgree reader
+          res).holds ⌝ ⦄ := by
+  exact partial_of_total (ok_triple_of (decoders_agree_post_of _ core.U16.Insts.CoreCmpPartialEqU16.Lawful U16.agree.1
+    allocioreadReadInst allocioreadReadInstLawful reader))
+
+theorem U16.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness («prefix» : Slice Std.U8) (rest : Slice Std.U8)
+    (bytes : Slice Std.U8) (other_rest : Slice Std.U8) (other : Slice Std.U8) :
+  (spec.io.DecodersAgree.bytes_prefix_only.pre
+    U16.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst U16.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+    U16.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst U16.Insts.Tls_codecSpecIoDecodersAgree «prefix» rest
+    bytes other_rest other).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    U16.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only «prefix» rest bytes other_rest other
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.DecodersAgree.bytes_prefix_only.post
+          U16.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst
+          U16.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+          U16.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst U16.Insts.Tls_codecSpecIoDecodersAgree «prefix»
+          rest bytes other_rest other res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (ok_triple_of (bytes_prefix_only_post_of _ U16.agree.1 core.U16.Insts.CoreCmpPartialEqU16.Lawful U16.agree.2
+    «prefix» rest bytes other_rest other hpre))
+
+theorem U32.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (reader : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => spec.io.DecodersAgree.decoders_agree.default Std.U32 allocioreadReadInst) allocioreadReadInst reader
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.DecodersAgree.decoders_agree.post allocioreadReadInst
+          U32.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst
+          U32.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+          U32.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst U32.Insts.Tls_codecSpecIoDecodersAgree reader
+          res).holds ⌝ ⦄ := by
+  exact partial_of_total (ok_triple_of (decoders_agree_post_of _ core.U32.Insts.CoreCmpPartialEqU32.Lawful U32.agree.1
+    allocioreadReadInst allocioreadReadInstLawful reader))
+
+theorem U32.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness («prefix» : Slice Std.U8) (rest : Slice Std.U8)
+    (bytes : Slice Std.U8) (other_rest : Slice Std.U8) (other : Slice Std.U8) :
+  (spec.io.DecodersAgree.bytes_prefix_only.pre
+    U32.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst U32.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+    U32.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst U32.Insts.Tls_codecSpecIoDecodersAgree «prefix» rest
+    bytes other_rest other).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    U32.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only «prefix» rest bytes other_rest other
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.DecodersAgree.bytes_prefix_only.post
+          U32.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst
+          U32.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+          U32.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst U32.Insts.Tls_codecSpecIoDecodersAgree «prefix»
+          rest bytes other_rest other res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (ok_triple_of (bytes_prefix_only_post_of _ U32.agree.1 core.U32.Insts.CoreCmpPartialEqU32.Lawful U32.agree.2
+    «prefix» rest bytes other_rest other hpre))
+
+theorem U64.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (reader : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => spec.io.DecodersAgree.decoders_agree.default Std.U64 allocioreadReadInst) allocioreadReadInst reader
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.DecodersAgree.decoders_agree.post allocioreadReadInst
+          U64.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst
+          U64.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+          U64.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst U64.Insts.Tls_codecSpecIoDecodersAgree reader
+          res).holds ⌝ ⦄ := by
+  exact partial_of_total (ok_triple_of (decoders_agree_post_of _ core.U64.Insts.CoreCmpPartialEqU64.Lawful U64.agree.1
+    allocioreadReadInst allocioreadReadInstLawful reader))
+
+theorem U64.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness («prefix» : Slice Std.U8) (rest : Slice Std.U8)
+    (bytes : Slice Std.U8) (other_rest : Slice Std.U8) (other : Slice Std.U8) :
+  (spec.io.DecodersAgree.bytes_prefix_only.pre
+    U64.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst U64.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+    U64.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst U64.Insts.Tls_codecSpecIoDecodersAgree «prefix» rest
+    bytes other_rest other).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    U64.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only «prefix» rest bytes other_rest other
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.DecodersAgree.bytes_prefix_only.post
+          U64.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst
+          U64.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+          U64.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst U64.Insts.Tls_codecSpecIoDecodersAgree «prefix»
+          rest bytes other_rest other res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (ok_triple_of (bytes_prefix_only_post_of _ U64.agree.1 core.U64.Insts.CoreCmpPartialEqU64.Lawful U64.agree.2
+    «prefix» rest bytes other_rest other hpre))
+
+theorem ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness (LEN : Std.Usize) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (reader : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => spec.io.DecodersAgree.decoders_agree.default (Array Std.U8 LEN) allocioreadReadInst) allocioreadReadInst reader
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.DecodersAgree.decoders_agree.post allocioreadReadInst
+          (ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree LEN).DeserializeInst
+          (ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree LEN).DeserializeBytesInst
+          (ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree LEN).corecmpPartialEqInst (ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree LEN) reader
+          res).holds ⌝ ⦄ := by
+  exact partial_of_total (ok_triple_of (decoders_agree_post_of _ (core.Array.Insts.CoreCmpPartialEqArray.Lawful (N := LEN) _ core.U8.Insts.CoreCmpPartialEqU8.Lawful) (ArrayU8.agree LEN).1
+    allocioreadReadInst allocioreadReadInstLawful reader))
+
+theorem ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness (LEN : Std.Usize) («prefix» : Slice Std.U8) (rest : Slice Std.U8)
+    (bytes : Slice Std.U8) (other_rest : Slice Std.U8) (other : Slice Std.U8) :
+  (spec.io.DecodersAgree.bytes_prefix_only.pre
+    (ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree LEN).DeserializeInst (ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree LEN).DeserializeBytesInst
+    (ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree LEN).corecmpPartialEqInst (ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree LEN) «prefix» rest
+    bytes other_rest other).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree LEN).bytes_prefix_only «prefix» rest bytes other_rest other
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.DecodersAgree.bytes_prefix_only.post
+          (ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree LEN).DeserializeInst
+          (ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree LEN).DeserializeBytesInst
+          (ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree LEN).corecmpPartialEqInst (ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree LEN) «prefix»
+          rest bytes other_rest other res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (ok_triple_of (bytes_prefix_only_post_of _ (ArrayU8.agree LEN).1 (core.Array.Insts.CoreCmpPartialEqArray.Lawful (N := LEN) _ core.U8.Insts.CoreCmpPartialEqU8.Lawful) (ArrayU8.agree LEN).2
+    «prefix» rest bytes other_rest other hpre))
+
+theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (reader : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => spec.io.DecodersAgree.decoders_agree.default quic_vec.VLBytes allocioreadReadInst) allocioreadReadInst reader
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.DecodersAgree.decoders_agree.post allocioreadReadInst
+          quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst
+          quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+          quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree reader
+          res).holds ⌝ ⦄ := by
+  exact partial_of_total (ok_triple_of (decoders_agree_post_of _ VLBytes.partialEq_lawful VLBytes.agree.1
+    allocioreadReadInst allocioreadReadInstLawful reader))
+
+theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness («prefix» : Slice Std.U8) (rest : Slice Std.U8)
+    (bytes : Slice Std.U8) (other_rest : Slice Std.U8) (other : Slice Std.U8) :
+  (spec.io.DecodersAgree.bytes_prefix_only.pre
+    quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+    quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree «prefix» rest
+    bytes other_rest other).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only «prefix» rest bytes other_rest other
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.DecodersAgree.bytes_prefix_only.post
+          quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst
+          quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+          quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree «prefix»
+          rest bytes other_rest other res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (ok_triple_of (bytes_prefix_only_post_of _ VLBytes.agree.1 VLBytes.partialEq_lawful VLBytes.agree.2
+    «prefix» rest bytes other_rest other hpre))
+
+theorem quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (reader : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => spec.io.DecodersAgree.decoders_agree.default quic_vec.secret_bytes.SecretVLBytes allocioreadReadInst) allocioreadReadInst reader
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.DecodersAgree.decoders_agree.post allocioreadReadInst
+          quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst
+          quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+          quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree reader
+          res).holds ⌝ ⦄ := by
+  exact partial_of_total (ok_triple_of (decoders_agree_post_of _ VLBytes.partialEq_lawful SecretVLBytes.agree.1
+    allocioreadReadInst allocioreadReadInstLawful reader))
+
+theorem quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness («prefix» : Slice Std.U8) (rest : Slice Std.U8)
+    (bytes : Slice Std.U8) (other_rest : Slice Std.U8) (other : Slice Std.U8) :
+  (spec.io.DecodersAgree.bytes_prefix_only.pre
+    quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+    quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree «prefix» rest
+    bytes other_rest other).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only «prefix» rest bytes other_rest other
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.DecodersAgree.bytes_prefix_only.post
+          quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.DeserializeInst
+          quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.DeserializeBytesInst
+          quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.corecmpPartialEqInst quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree «prefix»
+          rest bytes other_rest other res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (ok_triple_of (bytes_prefix_only_post_of _ SecretVLBytes.agree.1 VLBytes.partialEq_lawful SecretVLBytes.agree.2
+    «prefix» rest bytes other_rest other hpre))
+
+theorem alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.decoders_agree_spec.functional_correctness {T : Type}
+  (DecodersAgreeInst : spec.io.DecodersAgree T)
+  (DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful T DecodersAgreeInst) {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+    (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R
+    allocioreadReadInst) (reader : R) :
+  ⦃ ⌜ True ⌝ ⦄
+    (fun {R : Type} (allocioreadReadInst : alloc.io.read.Read R) => spec.io.DecodersAgree.decoders_agree.default (alloc.vec.Vec T) allocioreadReadInst) allocioreadReadInst reader
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.DecodersAgree.decoders_agree.post allocioreadReadInst
+          (alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree DecodersAgreeInst).DeserializeInst
+          (alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree DecodersAgreeInst).DeserializeBytesInst
+          (alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree DecodersAgreeInst).corecmpPartialEqInst (alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree DecodersAgreeInst) reader
+          res).holds ⌝ ⦄ := by
+  exact partial_of_total (ok_triple_of (decoders_agree_post_of _ (alloc.vec.Vec.Insts.CoreCmpPartialEqVec.Lawful _ DecodersAgreeInstLawful.corecmpPartialEqInstLawful) (Vec.agree DecodersAgreeInstLawful.DeserializeInstLawful DecodersAgreeInstLawful.DeserializeBytesInstLawful DecodersAgreeInstLawful.agree DecodersAgreeInstLawful.bindep).1
+    allocioreadReadInst allocioreadReadInstLawful reader))
+
+theorem alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.bytes_prefix_only_spec.functional_correctness {T : Type}
+  (DecodersAgreeInst : spec.io.DecodersAgree T)
+  (DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful T DecodersAgreeInst) («prefix» : Slice Std.U8) (rest : Slice Std.U8)
+    (bytes : Slice Std.U8) (other_rest : Slice Std.U8) (other : Slice Std.U8) :
+  (spec.io.DecodersAgree.bytes_prefix_only.pre
+    (alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree DecodersAgreeInst).DeserializeInst (alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree DecodersAgreeInst).DeserializeBytesInst
+    (alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree DecodersAgreeInst).corecmpPartialEqInst (alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree DecodersAgreeInst) «prefix» rest
+    bytes other_rest other).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    (alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree DecodersAgreeInst).bytes_prefix_only «prefix» rest bytes other_rest other
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.DecodersAgree.bytes_prefix_only.post
+          (alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree DecodersAgreeInst).DeserializeInst
+          (alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree DecodersAgreeInst).DeserializeBytesInst
+          (alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree DecodersAgreeInst).corecmpPartialEqInst (alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree DecodersAgreeInst) «prefix»
+          rest bytes other_rest other res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (ok_triple_of (bytes_prefix_only_post_of _ (Vec.agree DecodersAgreeInstLawful.DeserializeInstLawful DecodersAgreeInstLawful.DeserializeBytesInstLawful DecodersAgreeInstLawful.agree DecodersAgreeInstLawful.bindep).1 (alloc.vec.Vec.Insts.CoreCmpPartialEqVec.Lawful _ DecodersAgreeInstLawful.corecmpPartialEqInstLawful) (Vec.agree DecodersAgreeInstLawful.DeserializeInstLawful DecodersAgreeInstLawful.DeserializeBytesInstLawful DecodersAgreeInstLawful.agree DecodersAgreeInstLawful.bindep).2
+    «prefix» rest bytes other_rest other hpre))
+
+/-! ### spec.io.RoundTripMixed -/
+
+theorem U8.Insts.Tls_codecSpecIoRoundTripMixed.round_trip_mixed_spec.functional_correctness (self_ : Std.U8) (rest : Slice Std.U8)
+    (whole : Slice Std.U8) :
+  (spec.io.RoundTripMixed.round_trip_mixed.pre
+    U8.Insts.Tls_codecSpecIoRoundTripMixed.RoundTripStdInst U8.Insts.Tls_codecSpecIoRoundTripMixed.DecodersAgreeInst
+    U8.Insts.Tls_codecSpecIoRoundTripMixed self_ rest whole).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    U8.Insts.Tls_codecSpecIoRoundTripMixed.round_trip_mixed self_ rest whole
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.RoundTripMixed.round_trip_mixed.post
+          U8.Insts.Tls_codecSpecIoRoundTripMixed.RoundTripStdInst
+          U8.Insts.Tls_codecSpecIoRoundTripMixed.DecodersAgreeInst U8.Insts.Tls_codecSpecIoRoundTripMixed self_ rest
+          whole res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (ok_triple_of (round_trip_mixed_post_of _ _ _ core.U8.Insts.CoreCmpPartialEqU8.Lawful U8.encode_decodes
+    U8.agree.1 self_ rest whole hpre))
+
+theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.round_trip_mixed_spec.functional_correctness (self_ : quic_vec.VLBytes) (rest : Slice Std.U8)
+    (whole : Slice Std.U8) :
+  (spec.io.RoundTripMixed.round_trip_mixed.pre
+    quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.RoundTripStdInst quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.DecodersAgreeInst
+    quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed self_ rest whole).holds →
+    ⦃ ⌜ True ⌝ ⦄
+    quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.round_trip_mixed self_ rest whole
+    ⦃ ⇓? res =>
+      ⌜ (spec.io.RoundTripMixed.round_trip_mixed.post
+          quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.RoundTripStdInst
+          quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.DecodersAgreeInst quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed self_ rest
+          whole res).holds ⌝ ⦄ := by
+  intro hpre
+  exact partial_of_total (ok_triple_of (round_trip_mixed_post_of _ _ _ VLBytes.partialEq_lawful VLBytes.encode_decodes
+    VLBytes.agree.1 self_ rest whole hpre))
 
 end tls_codec
 

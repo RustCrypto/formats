@@ -2078,6 +2078,76 @@ theorem
   SerializeInst SerializeBytesInst SameBytesInst)
   := by sorry
 
+theorem
+  spec.io.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.Lawful
+  {Self_ : Type} {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
+  (DeserializeInst : Deserialize Self_) (DeserializeBytesInst :
+  DeserializeBytes Self_) (corecmpPartialEqInst : core.cmp.PartialEq Self_
+  Self_) (DecodersAgreeInst : spec.io.DecodersAgree Self_)
+  (allocioreadReadInstLawful : alloc.io.read.Read.Lawful R allocioreadReadInst)
+  (DeserializeInstLawful : Deserialize.Lawful Self_ DeserializeInst)
+  (DeserializeBytesInstLawful : DeserializeBytes.Lawful Self_
+  DeserializeBytesInst)
+  (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful Self_ Self_
+  corecmpPartialEqInst)
+  (DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful Self_
+  DecodersAgreeInst) :
+  core.ops.function.FnOnce.Lawful (spec.io.__5.ensures.closure Self_ R) Self_
+  Bool (spec.io.__5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool
+  allocioreadReadInst DeserializeInst DeserializeBytesInst corecmpPartialEqInst
+  DecodersAgreeInst)
+  := by sorry
+
+theorem
+  spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.Lawful
+  {Self_ : Type} (DeserializeInst : Deserialize Self_) (DeserializeBytesInst :
+  DeserializeBytes Self_) (corecmpPartialEqInst : core.cmp.PartialEq Self_
+  Self_) (DecodersAgreeInst : spec.io.DecodersAgree Self_)
+  (DeserializeInstLawful : Deserialize.Lawful Self_ DeserializeInst)
+  (DeserializeBytesInstLawful : DeserializeBytes.Lawful Self_
+  DeserializeBytesInst)
+  (corecmpPartialEqInstLawful : core.cmp.PartialEq.Lawful Self_ Self_
+  corecmpPartialEqInst)
+  (DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful Self_
+  DecodersAgreeInst) :
+  core.ops.function.FnOnce.Lawful (spec.io.__7.ensures.closure Self_) (Self_ ×
+  (Slice Std.U8)) Bool
+  (spec.io.__7.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool
+  DeserializeInst DeserializeBytesInst corecmpPartialEqInst DecodersAgreeInst)
+  := by sorry
+
+theorem
+  spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.Lawful
+  {Self_ : Type} (RoundTripStdInst : spec.io.RoundTripStd Self_)
+  (DecodersAgreeInst : spec.io.DecodersAgree Self_) (RoundTripMixedInst :
+  spec.io.RoundTripMixed Self_)
+  (RoundTripStdInstLawful : spec.io.RoundTripStd.Lawful Self_ RoundTripStdInst)
+  (DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful Self_
+  DecodersAgreeInst)
+  (RoundTripMixedInstLawful : spec.io.RoundTripMixed.Lawful Self_
+  RoundTripMixedInst) :
+  core.ops.function.FnOnce.Lawful (spec.io.__9.ensures.closure Self_) (Self_ ×
+  (Slice Std.U8)) Bool
+  (spec.io.__9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool
+  RoundTripStdInst DecodersAgreeInst RoundTripMixedInst)
+  := by sorry
+
+theorem
+  spec.io.__8.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.Lawful
+  {Self_ : Type} (RoundTripStdInst : spec.io.RoundTripStd Self_)
+  (DecodersAgreeInst : spec.io.DecodersAgree Self_) (RoundTripMixedInst :
+  spec.io.RoundTripMixed Self_)
+  (RoundTripStdInstLawful : spec.io.RoundTripStd.Lawful Self_ RoundTripStdInst)
+  (DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful Self_
+  DecodersAgreeInst)
+  (RoundTripMixedInstLawful : spec.io.RoundTripMixed.Lawful Self_
+  RoundTripMixedInst) :
+  core.ops.function.FnOnce.Lawful (spec.io.__8.requires.closure Self_)
+  (alloc.vec.Vec Std.U8) Bool
+  (spec.io.__8.requires.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool
+  RoundTripStdInst DecodersAgreeInst RoundTripMixedInst)
+  := by sorry
+
 theorem U8.Insts.Tls_codecSpecIoRoundTripStd.Lawful :
   spec.io.RoundTripStd.Lawful Std.U8 U8.Insts.Tls_codecSpecIoRoundTripStd
   := by sorry
@@ -2121,6 +2191,57 @@ theorem U8.Insts.Tls_codecSpecIoSameBytes.Lawful :
 theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoSameBytes.Lawful :
   spec.io.SameBytes.Lawful quic_vec.VLBytes
   quic_vec.VLBytes.Insts.Tls_codecSpecIoSameBytes
+  := by sorry
+
+theorem U8.Insts.Tls_codecSpecIoDecodersAgree.Lawful :
+  spec.io.DecodersAgree.Lawful Std.U8 U8.Insts.Tls_codecSpecIoDecodersAgree
+  := by sorry
+
+theorem U16.Insts.Tls_codecSpecIoDecodersAgree.Lawful :
+  spec.io.DecodersAgree.Lawful Std.U16 U16.Insts.Tls_codecSpecIoDecodersAgree
+  := by sorry
+
+theorem U32.Insts.Tls_codecSpecIoDecodersAgree.Lawful :
+  spec.io.DecodersAgree.Lawful Std.U32 U32.Insts.Tls_codecSpecIoDecodersAgree
+  := by sorry
+
+theorem U64.Insts.Tls_codecSpecIoDecodersAgree.Lawful :
+  spec.io.DecodersAgree.Lawful Std.U64 U64.Insts.Tls_codecSpecIoDecodersAgree
+  := by sorry
+
+theorem ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree.Lawful (LEN : Std.Usize)
+  :
+  spec.io.DecodersAgree.Lawful (Array Std.U8 LEN)
+  (ArrayU8LEN.Insts.Tls_codecSpecIoDecodersAgree LEN)
+  := by sorry
+
+theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree.Lawful :
+  spec.io.DecodersAgree.Lawful quic_vec.VLBytes
+  quic_vec.VLBytes.Insts.Tls_codecSpecIoDecodersAgree
+  := by sorry
+
+theorem
+  quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree.Lawful
+  :
+  spec.io.DecodersAgree.Lawful quic_vec.secret_bytes.SecretVLBytes
+  quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSpecIoDecodersAgree
+  := by sorry
+
+theorem alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree.Lawful {T : Type}
+  (DecodersAgreeInst : spec.io.DecodersAgree T)
+  (DecodersAgreeInstLawful : spec.io.DecodersAgree.Lawful T DecodersAgreeInst)
+  :
+  spec.io.DecodersAgree.Lawful (alloc.vec.Vec T)
+  (alloc.vec.Vec.Insts.Tls_codecSpecIoDecodersAgree DecodersAgreeInst)
+  := by sorry
+
+theorem U8.Insts.Tls_codecSpecIoRoundTripMixed.Lawful :
+  spec.io.RoundTripMixed.Lawful Std.U8 U8.Insts.Tls_codecSpecIoRoundTripMixed
+  := by sorry
+
+theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.Lawful :
+  spec.io.RoundTripMixed.Lawful quic_vec.VLBytes
+  quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed
   := by sorry
 
 theorem Str.Insts.Tls_codecSize.Lawful :

@@ -604,6 +604,43 @@ structure spec.io.SameBytes (Self : Type) where
 @[reducible]
 def spec.io.__4.ensures.closure.closure (Self_ : Type) := alloc.vec.Vec Std.U8
 
+/-- [tls_codec::spec::io::_#5::ensures::closure]
+    Source: 'tls_codec/src/spec.rs', lines 496:34-496:52 -/
+@[reducible]
+def spec.io.__5.ensures.closure (Self_ : Type) (R : Type) := Self_
+
+/-- Trait declaration: [tls_codec::spec::io::DecodersAgree]
+    Source: 'tls_codec/src/spec.rs', lines 487:4-527:5
+    Visibility: public -/
+structure spec.io.DecodersAgree (Self : Type) where
+  DeserializeInst : Deserialize Self
+  DeserializeBytesInst : DeserializeBytes Self
+  corecmpPartialEqInst : core.cmp.PartialEq Self Self
+  decoders_agree : forall {R : Type} (allocioreadReadInst : alloc.io.read.Read
+    R), R → RustM Unit
+  bytes_prefix_only : Slice Std.U8 → Slice Std.U8 → Slice Std.U8 → Slice
+    Std.U8 → Slice Std.U8 → RustM Unit
+
+/-- [tls_codec::spec::io::_#7::ensures::closure]
+    Source: 'tls_codec/src/spec.rs', lines 514:35-514:93 -/
+def spec.io.__7.ensures.closure (Self_ : Type) := Self_ × Slice Std.U8
+
+/-- [tls_codec::spec::io::_#9::ensures::closure]
+    Source: 'tls_codec/src/spec.rs', lines 530:4-530:26 -/
+def spec.io.__9.ensures.closure (Self_ : Type) := Self_ × Slice Std.U8
+
+/-- Trait declaration: [tls_codec::spec::io::RoundTripMixed]
+    Source: 'tls_codec/src/spec.rs', lines 531:4-539:5
+    Visibility: public -/
+structure spec.io.RoundTripMixed (Self : Type) where
+  RoundTripStdInst : spec.io.RoundTripStd Self
+  DecodersAgreeInst : spec.io.DecodersAgree Self
+  round_trip_mixed : Self → Slice Std.U8 → Slice Std.U8 → RustM Unit
+
+/-- [tls_codec::spec::io::_#8::requires::closure]
+    Source: 'tls_codec/src/spec.rs', lines 534:51-534:89 -/
+def spec.io.__8.requires.closure (Self_ : Type) := Slice Std.U8 × Slice Std.U8
+
 /-- [tls_codec::string::{impl tls_codec::DeserializeBytes for alloc::string::String}::tls_deserialize_bytes::_::ensures::closure]
     Source: 'tls_codec/src/string.rs', lines 47:25-53:83 -/
 @[reducible]
