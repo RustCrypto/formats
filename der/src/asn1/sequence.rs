@@ -78,7 +78,7 @@ impl<'a> DecodeValue<'a> for &'a SequenceRef {
     }
 }
 
-impl EncodeValue for SequenceRef {
+impl EncodeValue for &SequenceRef {
     fn value_len(&self) -> Result<Length> {
         Ok(self.body.len())
     }

@@ -99,6 +99,44 @@ mod sequence {
         assert_eq!(obj, obj_decoded);
     }
 }
+
+/// Custom derive test cases for the `Sequence` macro with oid support.
+#[cfg(feature = "oid")]
+mod sequence_oid {
+    use const_oid::ObjectIdentifier;
+    use der::Decode;
+    use der::Encode;
+    use der::Sequence;
+    use der::asn1::SequenceRef;
+    use hex_literal::hex;
+
+    /// Example from: <https://github.com/RustCrypto/formats/issues/1976>
+    #[derive(Debug, Sequence)]
+    pub struct OidAndImplicitSequence<'a> {
+        pub oid: ObjectIdentifier,
+        #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
+        pub data: &'a SequenceRef,
+    }
+
+    #[test]
+    fn roundtrip_oid_and_implicit_sequence() {
+        let obj_data: &[u8] = &hex!(
+            "30 09" // SEQUENCE
+                "06 03" // OBJECT IDENTIFIER
+                    "29 01 01" // oid "1.1.1.1"
+                "A0 02" // CONTEXT-SPECIFIC [0] (constructed)
+                    "AA BB"
+        );
+        let obj = OidAndImplicitSequence::from_der(obj_data).unwrap();
+
+        let mut buf = [0u8; 11];
+        let reencoded = obj.encode_to_slice(&mut buf).unwrap();
+
+        assert_eq!(obj.data.as_bytes(), &hex!("AA BB"));
+        assert_eq!(obj_data, reencoded);
+    }
+}
+
 /// Custom derive test cases for the `Sequence` macro with heapless crate.
 #[cfg(all(feature = "oid", feature = "heapless"))]
 mod sequence_heapless_vec {
