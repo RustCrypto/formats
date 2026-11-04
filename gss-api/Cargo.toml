@@ -1,6 +1,6 @@
 [package]
 name = "gss-api"
-version = "0.2.0-pre"
+version = "0.2.0-rc.0"
 description = """
 Pure Rust implementation for Generic Security Service Application Program
 Interface (GSS-API)
