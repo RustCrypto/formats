@@ -17,7 +17,7 @@ rust-version = "1.87"
 [dependencies]
 der = { version = "0.8", features = ["alloc", "derive", "oid", "pem"] }
 cms = { version = "0.3.0-rc.1" }
-cmpv2 = { version = "=0.3.0-pre.0", features = ["alloc"] }
+cmpv2 = { version = "0.3.0-rc.0", features = ["alloc"] }
 x509-cert = { version = "0.3", default-features = false }
 
 [dev-dependencies]
