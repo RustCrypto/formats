@@ -1,6 +1,6 @@
 [package]
 name = "x509-tsp"
-version = "0.2.0-pre"
+version = "0.2.0-rc.0"
 edition = "2024"
 description = """
 Pure Rust implementation of the Timestamping Protocol as described in RFC 3161.
