@@ -576,6 +576,9 @@ fn parse_ast(ast: DeriveInput) -> Result<TlsStruct> {
             }
             let repr =
                 repr.ok_or_else(|| syn::Error::new(call_site, "missing #[repr(...)] attribute"))?;
+            for variant in &variants {
+                reject_raw_ident(&variant.ident, "enum variant names")?;
+            }
             let discriminant_constants = define_discriminant_constants(&ident, &repr, &variants)?;
             let variants = variants
                 .into_iter()
@@ -643,7 +646,10 @@ pub fn deserialize_bytes_macro_derive(input: TokenStream) -> TokenStream {
         Ok(ast) => ast,
         Err(err_ts) => return err_ts.into_compile_error().into(),
     };
-    impl_deserialize_bytes(parsed_ast).into()
+    match impl_deserialize_bytes(parsed_ast) {
+        Ok(ts) => ts.into(),
+        Err(err) => err.into_compile_error().into(),
+    }
 }
 
 #[proc_macro_derive(TlsSerializeBytes, attributes(tls_codec))]
@@ -663,9 +669,43 @@ fn make_n_ids(n: usize) -> Vec<Ident> {
         .collect()
 }
 
+/// Rejects raw identifiers with a proper error message.
+///
+/// The derive macros build helper identifiers (discriminant constants, binding
+/// names) by pasting a user identifier into a `format!`. `Ident::new` panics on
+/// the `r#` prefix of a raw identifier, so without this check the macro aborts
+/// with a message that points at neither the crate nor the offending
+/// identifier. `kind` names the identifiers being checked, e.g. `"field names"`.
+fn reject_raw_ident(ident: &Ident, kind: &str) -> Result<()> {
+    if ident.to_string().starts_with("r#") {
+        return Err(syn::Error::new(
+            ident.span(),
+            format!("raw identifiers are not supported in {kind} by the tls_codec derive macros"),
+        ));
+    }
+    Ok(())
+}
+
 /// Returns identifier to define a constant equal to the discriminant of a variant
+///
+/// The variant identifier must not be a raw identifier; `parse_ast` rejects
+/// those for every variant before any of this is reached.
 fn discriminant_id(variant: &Ident) -> Ident {
     Ident::new(&format!("__TLS_CODEC_{variant}"), Span::call_site())
+}
+
+/// Returns the identifier of the local binding holding a member's deserialized value
+fn value_binding(member: &Member) -> Result<Member> {
+    let ident = match member {
+        Member::Named(named) => {
+            reject_raw_ident(named, "field names")?;
+            Ident::new(&format!("value_{named}"), Span::call_site())
+        }
+        Member::Unnamed(unnamed) => {
+            Ident::new(&format!("value_{}", unnamed.index), Span::call_site())
+        }
+    };
+    Ok(Member::Named(ident))
 }
 
 /// Returns definitions of constants equal to the discriminants of each variant
@@ -1228,8 +1268,8 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
 }
 
 #[allow(unused_variables)]
-fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
-    match parsed_ast {
+fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> Result<TokenStream2> {
+    Ok(match parsed_ast {
         TlsStruct::Struct(Struct {
             call_site,
             ident,
@@ -1242,16 +1282,8 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
                 partition_skipped(members, member_prefixes, member_skips);
             let members_values = members
                 .iter()
-                .map(|m| match m {
-                    Member::Named(named) => {
-                        Member::Named(Ident::new(&format!("value_{named}"), Span::call_site()))
-                    }
-                    Member::Unnamed(unnamed) => Member::Named(Ident::new(
-                        &format!("value_{}", unnamed.index),
-                        Span::call_site(),
-                    )),
-                })
-                .collect::<Vec<_>>();
+                .map(value_binding)
+                .collect::<Result<Vec<_>>>()?;
 
             let prefixes = member_prefixes
                 .iter()
@@ -1289,31 +1321,22 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
                     let members = &variant.members;
                     let member_values = members
                         .iter()
-                        .map(|m| match m {
-                            Member::Named(named) => Member::Named(Ident::new(
-                                &format!("value_{named}"),
-                                Span::call_site(),
-                            )),
-                            Member::Unnamed(unnamed) => Member::Named(Ident::new(
-                                &format!("value_{}", unnamed.index),
-                                Span::call_site(),
-                            )),
-                        })
-                        .collect::<Vec<_>>();
+                        .map(value_binding)
+                        .collect::<Result<Vec<_>>>()?;
                     let prefixes = variant
                         .member_prefixes
                         .iter()
                         .map(|p| p.for_trait("DeserializeBytes"))
                         .collect::<Vec<_>>();
-                    quote! {
+                    Ok(quote! {
                         #discriminant => {
                             #(let (#member_values, remainder) = #prefixes::tls_deserialize_bytes(remainder)?;)*
                             let result = #ident::#variant_id { #(#members: #member_values,)* };
                             Ok((result, remainder))
                         },
-                    }
+                    })
                 })
-                .collect::<Vec<_>>();
+                .collect::<Result<Vec<_>>>()?;
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
                 impl #impl_generics tls_codec::DeserializeBytes for #ident #ty_generics #where_clause {
@@ -1330,7 +1353,7 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
                 }
             }
         }
-    }
+    })
 }
 
 #[allow(clippy::type_complexity)]
@@ -1470,8 +1493,12 @@ fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStr
     let annotated_item = set_cd_fields_generic(annotated_item, quote!(IS_DESERIALIZABLE));
 
     // Derive both TlsDeserialize and TlsDeserializeBytes
-    let deserialize_bytes_implementation =
-        impl_deserialize_bytes(parse_ast(item_for_deserialize_impl.clone().into()).unwrap());
+    let deserialize_bytes_implementation = match parse_ast(item_for_deserialize_impl.clone().into())
+        .and_then(impl_deserialize_bytes)
+    {
+        Ok(implementation) => implementation,
+        Err(err) => return err.into_compile_error(),
+    };
     let deserialize_implementation =
         impl_deserialize(parse_ast(item_for_deserialize_impl.clone().into()).unwrap());
     let (impl_generics, ty_generics, _) = annotated_item.generics.split_for_impl();

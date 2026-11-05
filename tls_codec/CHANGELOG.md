@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - `tls_codec_derive`: an implicit enum discriminant following an explicit `usize::MAX` no longer wraps around to 0 (which could give two variants the same discriminant); it is now a compile error.
+- `tls_codec_derive`: raw identifiers (`r#type`) as enum variant names, or as field names with `TlsDeserializeBytes`, now give a compile error instead of panicking inside the macro.
 
 ## 0.5.0
 
