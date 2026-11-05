@@ -123,11 +123,12 @@
 //! if the provided value fits within the bounds of the `enum_repr` to avoid
 //! misuse.
 //!
-//! Note: When using paths *once* in your enum discriminants, as we do not have
-//! enough information to deduce the next implicit discriminant (the constant
-//! expressions those paths resolve is only evaluated at a later compilation
-//! stage than macros), you will be forced to use explicit discriminants for all
-//! the other Variants of your enum.
+//! Note: The value a path resolves to is only known at a later compilation
+//! stage than macro expansion, so the macro can't deduce an implicit
+//! discriminant from it. A variant directly following one with a path
+//! discriminant must therefore have an explicit discriminant itself. Once a
+//! variant has an integer literal discriminant again, implicit discriminants
+//! continue from that literal.
 //!
 //! ```
 //! # #[cfg(feature = "std")]
@@ -744,26 +745,54 @@ fn repr_max(repr: &Ident) -> Result<u64> {
     })
 }
 
-/// Errors if `value` does not fit into `repr`, whose largest value is `max`.
-fn check_discriminant_fits(variant: &Ident, value: usize, repr: &Ident, max: u64) -> Result<()> {
-    if value as u128 > u128::from(max) {
-        return Err(syn::Error::new(
-            variant.span(),
-            format!(
-                "The discriminant {value} of this variant does not fit into the enum \
-                representation `{repr}`, whose largest value is {max}."
-            ),
-        ));
+/// Returns the literal discriminant `value`, or an error if it does not fit into
+/// `repr`, whose largest value is `max`.
+fn literal_discriminant(variant: &Ident, value: usize, repr: &Ident, max: u64) -> Result<u64> {
+    u64::try_from(value)
+        .ok()
+        .filter(|value| *value <= max)
+        .ok_or_else(|| {
+            syn::Error::new(
+                variant.span(),
+                format!(
+                    "The discriminant {value} of this variant does not fit into the enum \
+                    representation `{repr}`, whose largest value is {max}."
+                ),
+            )
+        })
+}
+
+/// What is known at expansion time about the implicit discriminant, i.e. the
+/// one the next variant gets if it has no explicit discriminant.
+enum DiscriminantState {
+    /// The implicit discriminant is this number, which fits into the repr.
+    Number(u64),
+    /// The previous discriminant was the largest value of the repr, so there
+    /// is no implicit discriminant.
+    Exhausted,
+    /// The previous discriminant was a path. Its value is only known after
+    /// macro expansion, so the implicit discriminant isn't known either.
+    Path,
+}
+
+impl DiscriminantState {
+    /// Returns the state after a variant with discriminant `value`, given the
+    /// largest value `max` of the repr.
+    fn after(value: u64, max: u64) -> Self {
+        if value < max {
+            DiscriminantState::Number(value + 1)
+        } else {
+            DiscriminantState::Exhausted
+        }
     }
-    Ok(())
 }
 
 /// Errors if another variant in `used` already has the discriminant `value`,
 /// and records `variant` as having it otherwise.
 fn check_discriminant_unused<'a>(
-    used: &mut HashMap<usize, &'a Ident>,
+    used: &mut HashMap<u64, &'a Ident>,
     variant: &'a Ident,
-    value: usize,
+    value: u64,
 ) -> Result<()> {
     if let Some(other) = used.insert(value, variant) {
         return Err(syn::Error::new(
@@ -830,12 +859,7 @@ fn define_discriminant_constants(
             .collect::<Result<Vec<_>>>()?
     } else {
         let mut spans = Vec::with_capacity(variants.len());
-        // `None` once the running implicit discriminant has passed `usize::MAX`.
-        // Wrapping it back around would silently give two variants the same
-        // discriminant, so the next variant that needs an implicit value errors
-        // out instead.
-        let mut implicit_discriminant = Some(0usize);
-        let mut discriminant_has_paths = false;
+        let mut state = DiscriminantState::Number(0);
         // Discriminants known at expansion time, and the variant using each.
         let mut used_discriminants = HashMap::new();
         // Path discriminants are only known once the constants are evaluated,
@@ -848,78 +872,7 @@ fn define_discriminant_constants(
         let mut earlier_paths: Vec<(&Ident, Span)> = Vec::new();
         for (index, variant) in variants.iter().enumerate() {
             let constant_id = discriminant_id(&variant.ident);
-
-            let tokens = if let Some(value) = discriminant_value(&variant.attrs)? {
-                match value {
-                    DiscriminantValue::Literal(value) => {
-                        check_discriminant_fits(&variant.ident, value, repr, repr_max)?;
-                        check_discriminant_unused(&mut used_discriminants, &variant.ident, value)?;
-                        for &(earlier, span) in &earlier_paths {
-                            duplicate_checks.push(duplicate_discriminant_check(
-                                earlier,
-                                &variant.ident,
-                                span,
-                            ));
-                        }
-                        implicit_discriminant = Some(value);
-                        quote! {
-                            #[allow(non_upper_case_globals)]
-                            const #constant_id: #repr = #value as #repr;
-                        }
-                    }
-                    DiscriminantValue::Path(pathexpr) => {
-                        discriminant_has_paths = true;
-                        for earlier in variants.iter().take(index) {
-                            duplicate_checks.push(duplicate_discriminant_check(
-                                &earlier.ident,
-                                &variant.ident,
-                                pathexpr.span(),
-                            ));
-                        }
-                        earlier_paths.push((&variant.ident, pathexpr.span()));
-                        // The value behind the path is only known once the
-                        // constant is evaluated, after macro expansion, so the
-                        // range check has to happen there. Spanning it with the
-                        // path (i.e. the string literal in the attribute) makes
-                        // a failing check point at the offending discriminant
-                        // rather than at the derive.
-                        let range_check = quote_spanned! { pathexpr.span() =>
-                            if (#pathexpr as u64) > #repr::MAX as u64 {
-                                panic!(concat!(
-                                    "The discriminant `",
-                                    stringify!(#pathexpr),
-                                    "` does not fit into the enum representation `",
-                                    stringify!(#repr),
-                                    "`.",
-                                ));
-                            }
-                        };
-                        quote! {
-                            #[allow(clippy::unnecessary_cast, non_upper_case_globals)]
-                            const #constant_id: #repr = {
-                                #range_check
-                                #pathexpr as #repr
-                            };
-                        }
-                    }
-                }
-            } else if discriminant_has_paths {
-                return Err(syn::Error::new(
-                    Span::call_site(),
-                    "The tls_codec discriminant attribute is missing. \
-                    Once you start using paths in #[tls_codec(discriminant = \"path::to::const::or::enum::variant\"], \
-                    You **have** to provide the discriminant attribute on every single variant.",
-                ));
-            } else {
-                let value = implicit_discriminant.ok_or_else(|| {
-                    syn::Error::new(
-                        variant.ident.span(),
-                        "The implicit discriminant of this variant is larger than `usize::MAX`. \
-                        Assign it a discriminant explicitly, or lower the discriminant of a \
-                        preceding variant.",
-                    )
-                })?;
-                check_discriminant_fits(&variant.ident, value, repr, repr_max)?;
+            let mut number_constant = |value: u64| {
                 check_discriminant_unused(&mut used_discriminants, &variant.ident, value)?;
                 for &(earlier, span) in &earlier_paths {
                     duplicate_checks.push(duplicate_discriminant_check(
@@ -928,14 +881,79 @@ fn define_discriminant_constants(
                         span,
                     ));
                 }
-                quote! {
+                Ok::<_, syn::Error>(quote! {
                     #[allow(non_upper_case_globals)]
                     const #constant_id: #repr = #value as #repr;
-                }
+                })
             };
 
-            implicit_discriminant = implicit_discriminant.and_then(|d| d.checked_add(1));
-
+            let tokens = match discriminant_value(&variant.attrs)? {
+                Some(DiscriminantValue::Literal(value)) => {
+                    let value = literal_discriminant(&variant.ident, value, repr, repr_max)?;
+                    state = DiscriminantState::after(value, repr_max);
+                    number_constant(value)?
+                }
+                Some(DiscriminantValue::Path(pathexpr)) => {
+                    state = DiscriminantState::Path;
+                    for earlier in variants.iter().take(index) {
+                        duplicate_checks.push(duplicate_discriminant_check(
+                            &earlier.ident,
+                            &variant.ident,
+                            pathexpr.span(),
+                        ));
+                    }
+                    earlier_paths.push((&variant.ident, pathexpr.span()));
+                    // The value behind the path is only known once the
+                    // constant is evaluated, after macro expansion, so the
+                    // range check has to happen there. Spanning it with the
+                    // path (i.e. the string literal in the attribute) makes
+                    // a failing check point at the offending discriminant
+                    // rather than at the derive.
+                    let range_check = quote_spanned! { pathexpr.span() =>
+                        if (#pathexpr as u64) > #repr::MAX as u64 {
+                            panic!(concat!(
+                                "The discriminant `",
+                                stringify!(#pathexpr),
+                                "` does not fit into the enum representation `",
+                                stringify!(#repr),
+                                "`.",
+                            ));
+                        }
+                    };
+                    quote! {
+                        #[allow(clippy::unnecessary_cast, non_upper_case_globals)]
+                        const #constant_id: #repr = {
+                            #range_check
+                            #pathexpr as #repr
+                        };
+                    }
+                }
+                None => match state {
+                    DiscriminantState::Number(value) => {
+                        state = DiscriminantState::after(value, repr_max);
+                        number_constant(value)?
+                    }
+                    DiscriminantState::Exhausted => {
+                        return Err(syn::Error::new(
+                            variant.ident.span(),
+                            format!(
+                                "This variant needs an explicit discriminant: the previous \
+                                variant's discriminant is {repr_max}, the largest value of the \
+                                enum representation `{repr}`, so there is no next implicit \
+                                discriminant."
+                            ),
+                        ));
+                    }
+                    DiscriminantState::Path => {
+                        return Err(syn::Error::new(
+                            variant.ident.span(),
+                            "This variant needs an explicit discriminant: the previous variant's \
+                            discriminant is a path, whose value is not known during macro \
+                            expansion. Add #[tls_codec(discriminant = ...)] to this variant.",
+                        ));
+                    }
+                },
+            };
             spans.push(tokens);
         }
 

@@ -1,6 +1,6 @@
 use tls_codec_derive::{TlsDeserialize, TlsSerialize, TlsSize};
 
-// The explicit discriminant of `A` is `usize::MAX`, so the implicit
+// The explicit discriminant of `A` is `u64::MAX`, so the implicit
 // discriminant of `B` cannot be represented. Wrapping around would silently
 // give `B` the same discriminant as a variant with discriminant 0.
 #[derive(TlsDeserialize, TlsSerialize, TlsSize)]

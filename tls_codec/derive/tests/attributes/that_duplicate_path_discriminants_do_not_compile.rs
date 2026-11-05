@@ -21,4 +21,15 @@ enum TwoPaths {
     B(u8),
 }
 
+// `C` implicitly gets 1, which is also the value of `A`'s path.
+#[derive(TlsSerializeBytes, TlsSize)]
+#[repr(u8)]
+enum ImplicitAfterPath {
+    #[tls_codec(discriminant = "ONE")]
+    A(u8),
+    #[tls_codec(discriminant = 0)]
+    B(u8),
+    C(u8),
+}
+
 fn main() {}

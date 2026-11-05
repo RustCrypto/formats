@@ -9,3 +9,9 @@ error[E0080]: evaluation panicked: The variants `A` and `B` have the same discri
    |
 20 |     #[tls_codec(discriminant = "ALSO_ONE")]
    |                                ^^^^^^^^^^ evaluation of `<TwoPaths as tls_codec::SerializeBytes>::tls_serialize_bytes::_` failed here
+
+error[E0080]: evaluation panicked: The variants `A` and `C` have the same discriminant.
+  --> tests/attributes/that_duplicate_path_discriminants_do_not_compile.rs:28:32
+   |
+28 |     #[tls_codec(discriminant = "ONE")]
+   |                                ^^^^^ evaluation of `<ImplicitAfterPath as tls_codec::SerializeBytes>::tls_serialize_bytes::_` failed here
