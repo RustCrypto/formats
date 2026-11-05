@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `tls_codec_derive`: an implicit enum discriminant following an explicit `usize::MAX` no longer wraps around to 0 (which could give two variants the same discriminant); it is now a compile error.
+
 ## 0.5.0
 
 - BREAKING: Rename `SerializeBytes::tls_serialize` to `SerializeBytes::tls_serialize_bytes` to resolve a method-name collision with `Serialize::tls_serialize` (this matches the existing `DeserializeBytes::tls_deserialize_bytes` convention). Any type using `#[tls_codec(with = "...")]` together with `TlsSerializeBytes` must rename its module's `tls_serialize` function to `tls_serialize_bytes` accordingly.

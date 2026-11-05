@@ -700,7 +700,11 @@ fn define_discriminant_constants(
             .collect::<Result<Vec<_>>>()?
     } else {
         let mut spans = Vec::with_capacity(variants.len());
-        let mut implicit_discriminant = 0usize;
+        // `None` once the running implicit discriminant has passed `usize::MAX`.
+        // Wrapping it back around would silently give two variants the same
+        // discriminant, so the next variant that needs an implicit value errors
+        // out instead.
+        let mut implicit_discriminant = Some(0usize);
         let mut discriminant_has_paths = false;
         for variant in variants.iter() {
             let constant_id = discriminant_id(&variant.ident);
@@ -708,7 +712,7 @@ fn define_discriminant_constants(
             let tokens = if let Some(value) = discriminant_value(&variant.attrs)? {
                 match value {
                     DiscriminantValue::Literal(value) => {
-                        implicit_discriminant = value;
+                        implicit_discriminant = Some(value);
                         quote! {
                             #[allow(non_upper_case_globals)]
                             const #constant_id: #repr = {
@@ -741,18 +745,26 @@ fn define_discriminant_constants(
                     You **have** to provide the discriminant attribute on every single variant.",
                 ));
             } else {
+                let value = implicit_discriminant.ok_or_else(|| {
+                    syn::Error::new(
+                        variant.ident.span(),
+                        "The implicit discriminant of this variant is larger than `usize::MAX`. \
+                        Assign it a discriminant explicitly, or lower the discriminant of a \
+                        preceding variant.",
+                    )
+                })?;
                 quote! {
                     #[allow(non_upper_case_globals)]
                     const #constant_id: #repr = {
-                        if #implicit_discriminant > #repr::MAX as usize {
+                        if #value > #repr::MAX as usize {
                             panic!("The value corresponding to that expression is outside the bounds of the enum representation");
                         }
-                        #implicit_discriminant as #repr
+                        #value as #repr
                     };
                 }
             };
 
-            implicit_discriminant += 1;
+            implicit_discriminant = implicit_discriminant.and_then(|d| d.checked_add(1));
 
             spans.push(tokens);
         }
