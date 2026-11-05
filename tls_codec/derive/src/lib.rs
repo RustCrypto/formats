@@ -274,10 +274,19 @@ use syn::{
 };
 
 #[cfg(feature = "conditional_deserialization")]
-use syn::{ConstParam, ImplGenerics, ItemStruct, TypeGenerics, parse_quote};
+use quote::ToTokens;
+#[cfg(feature = "conditional_deserialization")]
+use syn::{ConstParam, GenericParam, ItemStruct, parse_quote};
 
 /// Attribute name to identify attributes to be processed by derive-macros in this crate.
 const ATTR_IDENT: &str = "tls_codec";
+
+/// Name of the const generic parameter added by `#[conditionally_deserializable]`.
+///
+/// The derives recognize the parameter by this name, so it is chosen to be
+/// unlikely to clash with the struct's own generic parameters.
+#[cfg(feature = "conditional_deserialization")]
+const CONDITIONAL_PARAM: &str = "__TLS_CODEC_IS_DESERIALIZABLE";
 
 /// Prefix to add to `tls_codec` functions
 ///
@@ -1201,26 +1210,41 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
     }
 }
 
+/// Returns the impl and type generics for an impl on the variant of a
+/// conditionally deserializable struct whose [`CONDITIONAL_PARAM`] parameter is
+/// `deserializable`.
+///
+/// The parameter is removed from the impl generics and replaced by
+/// `deserializable` in the type generics. It is identified by its exact name,
+/// so other generic parameters are left alone even if their names contain
+/// [`CONDITIONAL_PARAM`]. Generics without the parameter are returned unchanged.
 #[cfg(feature = "conditional_deserialization")]
 fn restrict_conditional_generic(
-    impl_generics: ImplGenerics,
-    ty_generics: TypeGenerics,
+    generics: &Generics,
     deserializable: bool,
 ) -> (TokenStream2, TokenStream2) {
-    let impl_generics = quote! { #impl_generics }
-        .to_string()
-        // Make string replacement easier by replacing newlines with spaces.
-        .replace('\n', " ")
-        .replace(" const IS_DESERIALIZABLE : bool ", "")
-        .replace("<>", "")
-        .parse()
-        .unwrap();
-    let deserializable_string = if deserializable { "true" } else { "false" };
-    let ty_generics = quote! { #ty_generics }
-        .to_string()
-        .replace("IS_DESERIALIZABLE", deserializable_string)
-        .parse()
-        .unwrap();
+    let is_conditional = |param: &GenericParam| matches!(param, GenericParam::Const(c) if c.ident == CONDITIONAL_PARAM);
+
+    let mut impl_generics = generics.clone();
+    impl_generics.params = generics
+        .params
+        .iter()
+        .filter(|param| !is_conditional(param))
+        .cloned()
+        .collect();
+    let impl_generics = impl_generics.split_for_impl().0.to_token_stream();
+
+    let ty_args = generics.params.iter().map(|param| match param {
+        _ if is_conditional(param) => quote! { #deserializable },
+        GenericParam::Lifetime(l) => l.lifetime.to_token_stream(),
+        GenericParam::Type(t) => t.ident.to_token_stream(),
+        GenericParam::Const(c) => c.ident.to_token_stream(),
+    });
+    let ty_generics = if generics.params.is_empty() {
+        quote! {}
+    } else {
+        quote! { <#(#ty_args),*> }
+    };
     (impl_generics, ty_generics)
 }
 
@@ -1244,8 +1268,7 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                 .collect::<Vec<_>>();
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             #[cfg(feature = "conditional_deserialization")]
-            let (impl_generics, ty_generics) =
-                restrict_conditional_generic(impl_generics, ty_generics, true);
+            let (impl_generics, ty_generics) = restrict_conditional_generic(&generics, true);
             if cfg!(feature = "std") {
                 quote! {
                     impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {
@@ -1338,8 +1361,7 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> Result<TokenStream2> {
                 .collect::<Vec<_>>();
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             #[cfg(feature = "conditional_deserialization")]
-            let (impl_generics, ty_generics) =
-                restrict_conditional_generic(impl_generics, ty_generics, true);
+            let (impl_generics, ty_generics) = restrict_conditional_generic(&generics, true);
             quote! {
                 impl #impl_generics tls_codec::DeserializeBytes for #ident #ty_generics #where_clause {
                     fn tls_deserialize_bytes(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
@@ -1520,7 +1542,29 @@ fn set_cd_fields_generic(
 
 #[cfg(feature = "conditional_deserialization")]
 fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStream2 {
-    let deserializable_const_generic: ConstParam = parse_quote! {const IS_DESERIALIZABLE: bool};
+    // The derives recognize the parameter added below by its name, so a
+    // parameter of the same name on the original struct would be mistaken for it.
+    for param in &annotated_item.generics.params {
+        let ident = match param {
+            GenericParam::Type(t) => &t.ident,
+            GenericParam::Const(c) => &c.ident,
+            GenericParam::Lifetime(_) => continue,
+        };
+        if ident == CONDITIONAL_PARAM {
+            return syn::Error::new(
+                ident.span(),
+                format!(
+                    "The generic parameter name `{CONDITIONAL_PARAM}` is reserved by \
+                    #[conditionally_deserializable], which adds a const generic parameter \
+                    of that name. Rename this parameter."
+                ),
+            )
+            .into_compile_error();
+        }
+    }
+
+    let conditional_param = Ident::new(CONDITIONAL_PARAM, Span::call_site());
+    let deserializable_const_generic: ConstParam = parse_quote! {const #conditional_param: bool};
     // Get all the original generics of the annotated item before we modify
     // them.
     let original_annotated_item = annotated_item.clone();
@@ -1531,13 +1575,13 @@ fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStr
         .params
         .push(deserializable_const_generic.into());
     // Look through struct fields and if a field has an `cd_field` attribute,
-    // add the `IS_DESERIALIZABLE` const generic to the field type (set to true
+    // add the `CONDITIONAL_PARAM` const generic to the field type (set to true
     // for the deserialize implementation).
     let item_for_deserialize_impl = set_cd_fields_generic(annotated_item.clone(), quote!(true));
     // Look through struct fields and if a field has an `cd_field` attribute,
-    // add the `IS_DESERIALIZABLE` const generic to the field type (set to the
-    // value IS_DESERIALIZABLE from the struct definition).
-    let annotated_item = set_cd_fields_generic(annotated_item, quote!(IS_DESERIALIZABLE));
+    // add the `CONDITIONAL_PARAM` const generic to the field type (set to the
+    // value of that parameter from the struct definition).
+    let annotated_item = set_cd_fields_generic(annotated_item, quote!(#conditional_param));
 
     // Derive both TlsDeserialize and TlsDeserializeBytes
     let deserialize_bytes_implementation = match parse_ast(item_for_deserialize_impl.clone().into())
@@ -1548,12 +1592,11 @@ fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStr
     };
     let deserialize_implementation =
         impl_deserialize(parse_ast(item_for_deserialize_impl.clone().into()).unwrap());
-    let (impl_generics, ty_generics, _) = annotated_item.generics.split_for_impl();
     // Patch generics for use by the type aliases
-    let (_deserializable_impl_generics, deserializable_ty_generics) =
-        restrict_conditional_generic(impl_generics.clone(), ty_generics.clone(), true);
-    let (_undeserializable_impl_generics, undeserializable_ty_generics) =
-        restrict_conditional_generic(impl_generics.clone(), ty_generics.clone(), false);
+    let (_, deserializable_ty_generics) =
+        restrict_conditional_generic(&annotated_item.generics, true);
+    let (_, undeserializable_ty_generics) =
+        restrict_conditional_generic(&annotated_item.generics, false);
     let annotated_item_ident = annotated_item.ident.clone();
     // Create Alias Idents by adding prefixes
     let deserializable_ident = Ident::new(
