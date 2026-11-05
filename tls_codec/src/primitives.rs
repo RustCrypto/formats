@@ -35,11 +35,11 @@ impl<T: Serialize> Serialize for Option<T> {
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
         match self {
             Some(e) => {
-                writer.write_all(&[1])?;
+                crate::write_all(writer, &[1])?;
                 e.tls_serialize(writer).map(|l| l + 1)
             }
             None => {
-                writer.write_all(&[0])?;
+                crate::write_all(writer, &[0])?;
                 Ok(1)
             }
         }
@@ -187,7 +187,7 @@ macro_rules! impl_unsigned {
             #[inline]
             fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
                 let bytes = &self.to_be_bytes();
-                writer.write_all(bytes)?;
+                crate::write_all(writer, bytes)?;
                 Ok($bytes)
             }
         }

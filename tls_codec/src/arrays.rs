@@ -11,7 +11,7 @@ impl<const LEN: usize> Serialize for [u8; LEN] {
     #[cfg(feature = "std")]
     #[inline]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error> {
-        writer.write_all(self)?;
+        crate::write_all(writer, self)?;
         Ok(LEN)
     }
 }

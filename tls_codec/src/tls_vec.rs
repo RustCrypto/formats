@@ -267,7 +267,7 @@ macro_rules! impl_byte_serialize {
 
                 // Now serialize the elements
                 let bytes = $self.as_slice();
-                writer.write_all(bytes)?;
+                crate::write_all(writer, bytes)?;
                 written += bytes.len();
 
                 $self.assert_written_bytes(tls_serialized_len, written)?;

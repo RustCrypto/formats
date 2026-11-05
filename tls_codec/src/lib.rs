@@ -114,6 +114,10 @@ impl Display for Error {
     }
 }
 
+/// Converts an error from reading the input of a deserialization.
+///
+/// Errors from writing the output of a serialization are not converted with
+/// this impl; this crate reports them as [`Error::EncodingError`].
 #[cfg(feature = "std")]
 impl From<std::io::Error> for Error {
     fn from(e: std::io::Error) -> Self {
@@ -122,6 +126,22 @@ impl From<std::io::Error> for Error {
             _ => Self::DecodingError(format!("io error: {e:?}")),
         }
     }
+}
+
+/// Writes all of `bytes` to `writer`, reporting a failure as
+/// [`Error::EncodingError`].
+///
+/// Use this instead of `writer.write_all(bytes)?`, which would go through the
+/// `From<std::io::Error>` impl meant for reading and report the failure as an
+/// [`Error::DecodingError`] (or as [`Error::EndOfStream`]).
+#[cfg(feature = "std")]
+pub(crate) fn write_all<W: std::io::Write + ?Sized>(
+    writer: &mut W,
+    bytes: &[u8],
+) -> Result<(), Error> {
+    writer
+        .write_all(bytes)
+        .map_err(|e| Error::EncodingError(format!("io error: {e:?}")))
 }
 
 /// Upper bound on an up-front allocation sized from an untrusted length hint, so

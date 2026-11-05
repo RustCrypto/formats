@@ -813,7 +813,7 @@ mod rw_bytes {
             Serialize::tls_serialize(&ContentLength::from_usize(content_length)?, writer)?;
 
         // Now serialize the elements
-        writer.write_all(bytes)?;
+        crate::write_all(writer, bytes)?;
 
         Ok(content_length + len_len)
     }

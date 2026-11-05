@@ -218,7 +218,7 @@ impl Serialize for TlsVarInt {
     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
         let mut bytes = [0u8; 8];
         let len = self.write_bytes(&mut bytes)?;
-        writer.write_all(&bytes[..len])?;
+        crate::write_all(writer, &bytes[..len])?;
         Ok(len)
     }
 }
