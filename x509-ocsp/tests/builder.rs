@@ -4,10 +4,10 @@
 use const_oid::AssociatedOid;
 use der::{DateTime, Decode, Encode};
 use hex_literal::hex;
-use lazy_static::lazy_static;
 use rsa::{RsaPrivateKey, pkcs1v15::SigningKey, pkcs8::DecodePrivateKey};
 use sha1::Sha1;
 use sha2::{Sha224, Sha256, Sha384, Sha512};
+use std::sync::LazyLock;
 use x509_cert::{
     Certificate, crl::CertificateList, ext::pkix::CrlReason, name::Name,
     serial_number::SerialNumber,
@@ -15,45 +15,50 @@ use x509_cert::{
 use x509_ocsp::builder::*;
 use x509_ocsp::{ext::*, *};
 
-lazy_static! {
-    static ref ISSUER: Certificate = Certificate::from_der(
-        &std::fs::read("tests/examples/rsa-2048-sha256-ca.der").unwrap()
-    )
-    .unwrap();
+static ISSUER: LazyLock<Certificate> = LazyLock::new(|| {
+    Certificate::from_der(&std::fs::read("tests/examples/rsa-2048-sha256-ca.der").unwrap()).unwrap()
+});
 
-    static ref ISSUER_KEY: RsaPrivateKey = RsaPrivateKey::from_pkcs8_der(
-        &std::fs::read("tests/examples/rsa-2048-sha256-ca-key.der").unwrap()
+static ISSUER_KEY: LazyLock<RsaPrivateKey> = LazyLock::new(|| {
+    RsaPrivateKey::from_pkcs8_der(
+        &std::fs::read("tests/examples/rsa-2048-sha256-ca-key.der").unwrap(),
     )
-    .unwrap();
+    .unwrap()
+});
 
-    static ref CERT: Certificate = Certificate::from_der(
-        &std::fs::read("tests/examples/rsa-2048-sha256-crt.der").unwrap()
-    )
-    .unwrap();
-
-    static ref CERT_KEY: RsaPrivateKey = RsaPrivateKey::from_pkcs8_der(
-        &std::fs::read("tests/examples/rsa-2048-sha256-crt-key.der").unwrap()
-    )
-    .unwrap();
-
-    static ref OCSP: Certificate = Certificate::from_der(
-        &std::fs::read("tests/examples/rsa-2048-sha256-ocsp-crt.der").unwrap()
-    )
-    .unwrap();
-
-    static ref OCSP_KEY: RsaPrivateKey = RsaPrivateKey::from_pkcs8_der(
-        &std::fs::read("tests/examples/rsa-2048-sha256-ocsp-crt-key.der").unwrap()
-    )
-    .unwrap();
-
-    // PrintableString: CN = rsa-2048-sha256-ocsp-crt
-    static ref RESPONDER_ID: ResponderId = ResponderId::ByName(
-        Name::from_der(
-            &hex!("30233121301f060355040313187273612d323034382d7368613235362d6f6373702d637274")[..]
-        )
+static CERT: LazyLock<Certificate> = LazyLock::new(|| {
+    Certificate::from_der(&std::fs::read("tests/examples/rsa-2048-sha256-crt.der").unwrap())
         .unwrap()
-    );
-}
+});
+
+static CERT_KEY: LazyLock<RsaPrivateKey> = LazyLock::new(|| {
+    RsaPrivateKey::from_pkcs8_der(
+        &std::fs::read("tests/examples/rsa-2048-sha256-crt-key.der").unwrap(),
+    )
+    .unwrap()
+});
+
+static OCSP: LazyLock<Certificate> = LazyLock::new(|| {
+    Certificate::from_der(&std::fs::read("tests/examples/rsa-2048-sha256-ocsp-crt.der").unwrap())
+        .unwrap()
+});
+
+static OCSP_KEY: LazyLock<RsaPrivateKey> = LazyLock::new(|| {
+    RsaPrivateKey::from_pkcs8_der(
+        &std::fs::read("tests/examples/rsa-2048-sha256-ocsp-crt-key.der").unwrap(),
+    )
+    .unwrap()
+});
+
+// PrintableString: CN = rsa-2048-sha256-ocsp-crt
+static RESPONDER_ID: LazyLock<ResponderId> = LazyLock::new(|| {
+    ResponderId::ByName(
+        Name::from_der(
+            &hex!("30233121301f060355040313187273612d323034382d7368613235362d6f6373702d637274")[..],
+        )
+        .unwrap(),
+    )
+});
 
 #[test]
 fn encode_ocsp_req_sha1_certid() {

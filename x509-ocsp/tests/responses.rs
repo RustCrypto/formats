@@ -5,8 +5,8 @@ use der::{
     asn1::{Null, ObjectIdentifier, OctetString},
 };
 use hex_literal::hex;
-use lazy_static::lazy_static;
 use spki::AlgorithmIdentifierOwned;
+use std::sync::LazyLock;
 use x509_cert::{
     ext::{Extension, pkix::CrlReason},
     name::Name,
@@ -27,20 +27,19 @@ const SHA_256_WITH_RSA_ENCRYPTION: ObjectIdentifier =
 const ECDSA_WITH_SHA_384: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.10045.4.3.3");
 const ID_EC_PUBLIC_KEY: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.10045.2.1");
 
-lazy_static! {
-    // PrintableString: CN = rsa-2048-sha256-ocsp-crt
-    static ref RESPONDER_ID: ResponderId = ResponderId::ByName(
+// PrintableString: CN = rsa-2048-sha256-ocsp-crt
+static RESPONDER_ID: LazyLock<ResponderId> = LazyLock::new(|| {
+    ResponderId::ByName(
         Name::from_der(
-            &hex!("30233121301f060355040313187273612d323034382d7368613235362d6f6373702d637274")[..]
+            &hex!("30233121301f060355040313187273612d323034382d7368613235362d6f6373702d637274")[..],
         )
-        .unwrap()
-    );
+        .unwrap(),
+    )
+});
 
-    // Time used almost everywhere in these tests
-    static ref TIME: OcspGeneralizedTime = OcspGeneralizedTime::from(
-        DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()
-    );
-}
+// Time used almost everywhere in these tests
+static TIME: LazyLock<OcspGeneralizedTime> =
+    LazyLock::new(|| OcspGeneralizedTime::from(DateTime::new(2020, 1, 1, 0, 0, 0).unwrap()));
 
 fn assert_ocsp_response(ocsp_res: &OcspResponse) -> BasicOcspResponse {
     assert_eq!(ocsp_res.response_status, OcspResponseStatus::Successful);
