@@ -266,10 +266,11 @@ extern crate proc_macro2;
 
 use proc_macro::TokenStream;
 use proc_macro2::{Span, TokenStream as TokenStream2};
-use quote::quote;
+use quote::{quote, quote_spanned};
 use syn::{
     self, Attribute, Data, DeriveInput, Expr, ExprLit, ExprPath, Field, Generics, Ident, Lit,
-    Member, Meta, Result, Token, Type, parse_macro_input, punctuated::Punctuated, token::Comma,
+    Member, Meta, Result, Token, Type, parse_macro_input, punctuated::Punctuated, spanned::Spanned,
+    token::Comma,
 };
 
 #[cfg(feature = "conditional_deserialization")]
@@ -579,7 +580,9 @@ fn parse_ast(ast: DeriveInput) -> Result<TlsStruct> {
             for variant in &variants {
                 reject_raw_ident(&variant.ident, "enum variant names")?;
             }
-            let discriminant_constants = define_discriminant_constants(&ident, &repr, &variants)?;
+            let repr_max = repr_max(&repr)?;
+            let discriminant_constants =
+                define_discriminant_constants(&ident, &repr, repr_max, &variants)?;
             let variants = variants
                 .into_iter()
                 .map(|variant| {
@@ -708,10 +711,48 @@ fn value_binding(member: &Member) -> Result<Member> {
     Ok(Member::Named(ident))
 }
 
+/// Returns the largest value of `repr`, or an error if `repr` is not supported.
+///
+/// The discriminant is (de)serialized as a value of type `repr`, and `tls_codec`
+/// only implements its traits for `u8`, `u16`, `u32` and `u64` among the types
+/// `#[repr(...)]` accepts. Rejecting everything else here gives a clear error
+/// instead of a missing trait impl in the generated code, and makes the range of
+/// every supported repr known at expansion time.
+fn repr_max(repr: &Ident) -> Result<u64> {
+    Ok(match repr.to_string().as_str() {
+        "u8" => u8::MAX.into(),
+        "u16" => u16::MAX.into(),
+        "u32" => u32::MAX.into(),
+        "u64" => u64::MAX,
+        _ => {
+            return Err(syn::Error::new(
+                repr.span(),
+                "The tls_codec derive macros only support enums with \
+                #[repr(u8)], #[repr(u16)], #[repr(u32)] or #[repr(u64)].",
+            ));
+        }
+    })
+}
+
+/// Errors if `value` does not fit into `repr`, whose largest value is `max`.
+fn check_discriminant_fits(variant: &Ident, value: usize, repr: &Ident, max: u64) -> Result<()> {
+    if value as u128 > u128::from(max) {
+        return Err(syn::Error::new(
+            variant.span(),
+            format!(
+                "The discriminant {value} of this variant does not fit into the enum \
+                representation `{repr}`, whose largest value is {max}."
+            ),
+        ));
+    }
+    Ok(())
+}
+
 /// Returns definitions of constants equal to the discriminants of each variant
 fn define_discriminant_constants(
     enum_ident: &Ident,
     repr: &Ident,
+    repr_max: u64,
     variants: &Punctuated<syn::Variant, Comma>,
 ) -> Result<TokenStream2> {
     let all_variants_are_unit = variants
@@ -752,26 +793,36 @@ fn define_discriminant_constants(
             let tokens = if let Some(value) = discriminant_value(&variant.attrs)? {
                 match value {
                     DiscriminantValue::Literal(value) => {
+                        check_discriminant_fits(&variant.ident, value, repr, repr_max)?;
                         implicit_discriminant = Some(value);
                         quote! {
                             #[allow(non_upper_case_globals)]
-                            const #constant_id: #repr = {
-                                if #value < #repr::MIN as usize || #value > #repr::MAX as usize {
-                                    panic!("The value corresponding to that expression is outside the bounds of the enum representation");
-                                }
-                                #value as #repr
-                            };
+                            const #constant_id: #repr = #value as #repr;
                         }
                     }
                     DiscriminantValue::Path(pathexpr) => {
                         discriminant_has_paths = true;
+                        // The value behind the path is only known once the
+                        // constant is evaluated, after macro expansion, so the
+                        // range check has to happen there. Spanning it with the
+                        // path (i.e. the string literal in the attribute) makes
+                        // a failing check point at the offending discriminant
+                        // rather than at the derive.
+                        let range_check = quote_spanned! { pathexpr.span() =>
+                            if (#pathexpr as u64) > #repr::MAX as u64 {
+                                panic!(concat!(
+                                    "The discriminant `",
+                                    stringify!(#pathexpr),
+                                    "` does not fit into the enum representation `",
+                                    stringify!(#repr),
+                                    "`.",
+                                ));
+                            }
+                        };
                         quote! {
                             #[allow(clippy::unnecessary_cast, non_upper_case_globals)]
                             const #constant_id: #repr = {
-                                let pathexpr_usize = #pathexpr as usize;
-                                if pathexpr_usize < #repr::MIN as usize || pathexpr_usize > #repr::MAX as usize {
-                                    panic!("The value corresponding to that expression is outside the bounds of the enum representation");
-                                }
+                                #range_check
                                 #pathexpr as #repr
                             };
                         }
@@ -793,14 +844,10 @@ fn define_discriminant_constants(
                         preceding variant.",
                     )
                 })?;
+                check_discriminant_fits(&variant.ident, value, repr, repr_max)?;
                 quote! {
                     #[allow(non_upper_case_globals)]
-                    const #constant_id: #repr = {
-                        if #value > #repr::MAX as usize {
-                            panic!("The value corresponding to that expression is outside the bounds of the enum representation");
-                        }
-                        #value as #repr
-                    };
+                    const #constant_id: #repr = #value as #repr;
                 }
             };
 
