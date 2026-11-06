@@ -3,10 +3,7 @@ use const_oid::db::{
     rfc5911::{ID_DATA, ID_ENCRYPTED_DATA},
     rfc5912::ID_SHA_256,
 };
-use der::{
-    Decode, Encode,
-    asn1::{ContextSpecific, OctetString},
-};
+use der::{Decode, Encode, asn1::OctetString};
 use hex_literal::hex;
 use pkcs8::{
     EncryptedPrivateKeyInfoRef,
@@ -21,7 +18,7 @@ use pkcs12::{
     pbe_params::Pbkdf2Params,
     pfx::Pfx,
     pfx::Version,
-    safe_bag::SafeContents,
+    safe_bag::{SafeBag, SafeContents},
     {AuthenticatedSafe, CertBag},
 };
 
@@ -199,9 +196,7 @@ fn decode_sample_pfx() {
     for cert_bag in cert_bags {
         match cert_bag.bag_id {
             pkcs12::PKCS_12_CERT_BAG_OID => {
-                let cs: der::asn1::ContextSpecific<CertBag> =
-                    ContextSpecific::from_der(&cert_bag.bag_value).unwrap();
-                let cb = cs.value;
+                let cb: CertBag = cert_bag.bag_value.decode_as().unwrap();
                 assert_eq!(
                     include_bytes!("examples/cert.der"),
                     cb.cert_value.as_bytes()
@@ -242,11 +237,9 @@ fn decode_sample_pfx() {
     for safe_bag in safe_bags {
         match safe_bag.bag_id {
             pkcs12::PKCS_12_PKCS8_KEY_BAG_OID => {
-                let cs: ContextSpecific<EncryptedPrivateKeyInfoRef<'_>> =
-                    ContextSpecific::from_der(&safe_bag.bag_value).unwrap();
-                let mut ciphertext = cs.value.encrypted_data.as_bytes().to_vec();
-                let plaintext = cs
-                    .value
+                let epki: EncryptedPrivateKeyInfoRef<'_> = safe_bag.bag_value.decode_as().unwrap();
+                let mut ciphertext = epki.encrypted_data.as_bytes().to_vec();
+                let plaintext = epki
                     .encryption_algorithm
                     .decrypt_in_place("", &mut ciphertext)
                     .unwrap();
@@ -611,11 +604,10 @@ fn decode_sample_pfx2() {
     for safe_bag in safe_bags {
         match safe_bag.bag_id {
             pkcs12::PKCS_12_CERT_BAG_OID => {
-                let cs: ContextSpecific<CertBag> =
-                    ContextSpecific::from_der(&safe_bag.bag_value).unwrap();
+                let cb: CertBag = safe_bag.bag_value.decode_as().unwrap();
                 assert_eq!(
                     include_bytes!("examples/cert.der"),
-                    cs.value.cert_value.as_bytes()
+                    cb.cert_value.as_bytes()
                 );
             }
             _ => panic!(),
@@ -633,11 +625,9 @@ fn decode_sample_pfx2() {
     for safe_bag in safe_bags {
         match safe_bag.bag_id {
             pkcs12::PKCS_12_PKCS8_KEY_BAG_OID => {
-                let cs: ContextSpecific<EncryptedPrivateKeyInfoRef<'_>> =
-                    ContextSpecific::from_der(&safe_bag.bag_value).unwrap();
-                let mut ciphertext = cs.value.encrypted_data.as_bytes().to_vec();
-                let plaintext = cs
-                    .value
+                let epki: EncryptedPrivateKeyInfoRef<'_> = safe_bag.bag_value.decode_as().unwrap();
+                let mut ciphertext = epki.encrypted_data.as_bytes().to_vec();
+                let plaintext = epki
                     .encryption_algorithm
                     .decrypt_in_place("1234", &mut ciphertext)
                     .unwrap();
@@ -664,4 +654,37 @@ fn decode_sample_pfx2() {
         mac_data.mac_salt.as_bytes()
     );
     assert_eq!(2048, mac_data.iterations);
+}
+
+/// SafeContents decoded from a PFX encode back to the same bytes, and a bag built in memory from a
+/// `CertBag` encodes with a single `[0]` around it and decodes back to the same value.
+#[test]
+fn safe_bags_round_trip() {
+    let pfx = Pfx::from_der(include_bytes!("examples/example.pfx")).unwrap();
+    let auth_safes_os = OctetString::from_der(&pfx.auth_safe.content.to_der().unwrap()).unwrap();
+    let auth_safes = AuthenticatedSafe::from_der(auth_safes_os.as_bytes()).unwrap();
+    let auth_safe1 = auth_safes.get(1).unwrap();
+    assert_eq!(ID_DATA, auth_safe1.content_type);
+    let safe_contents_os = OctetString::from_der(&auth_safe1.content.to_der().unwrap()).unwrap();
+    let safe_bags = SafeContents::from_der(safe_contents_os.as_bytes()).unwrap();
+    assert_eq!(
+        safe_contents_os.as_bytes(),
+        safe_bags.to_der().unwrap().as_slice()
+    );
+
+    let cert_bag = CertBag {
+        cert_id: pkcs12::PKCS_12_X509_CERT_OID,
+        cert_value: OctetString::new(include_bytes!("examples/cert.der").to_vec()).unwrap(),
+    };
+    let safe_bag = SafeBag {
+        bag_id: pkcs12::PKCS_12_CERT_BAG_OID,
+        bag_value: der::Any::encode_from(&cert_bag).unwrap(),
+        bag_attributes: None,
+    };
+    let encoded = safe_bag.to_der().unwrap();
+    let decoded = SafeBag::from_der(&encoded).unwrap();
+    assert_eq!(safe_bag, decoded);
+    assert_eq!(cert_bag, decoded.bag_value.decode_as::<CertBag>().unwrap());
+    // The value is the CertBag itself, not still wrapped in [0].
+    assert_eq!(der::Tag::Sequence, der::Tagged::tag(&decoded.bag_value));
 }
