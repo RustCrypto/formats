@@ -4,6 +4,7 @@ use crate::cert::{CertificateChoices, IssuerAndSerialNumber};
 use crate::content_info::CmsVersion;
 use crate::revocation::RevocationInfoChoices;
 
+use alloc::vec;
 use core::cmp::Ordering;
 use der::asn1::{ObjectIdentifier, OctetString, SetOfVec};
 use der::{Any, Choice, DerOrd, Sequence, ValueOrd};
@@ -45,7 +46,7 @@ pub struct SignedData {
 /// DigestAlgorithmIdentifiers ::= SET OF DigestAlgorithmIdentifier
 /// ```
 ///
-/// [RFC 5652 Section 5.1]: https://datatracker.ietf.org/doc/html/rfc5652#section-5.1
+/// [RFC 5652 Section 5.1]: https://www.rfc-editor.org/info/rfc5652#section-5.1
 pub type DigestAlgorithmIdentifiers = SetOfVec<AlgorithmIdentifierOwned>;
 
 /// CertificateSet structure as defined in [RFC 5652 Section 10.2.3].
@@ -54,16 +55,15 @@ pub type DigestAlgorithmIdentifiers = SetOfVec<AlgorithmIdentifierOwned>;
 ///   CertificateSet ::= SET OF CertificateChoices
 /// ```
 ///
-/// [RFC 5652 Section 10.2.3]: https://datatracker.ietf.org/doc/html/rfc5652#section-10.2.3
+/// [RFC 5652 Section 10.2.3]: https://www.rfc-editor.org/info/rfc5652#section-10.2.3
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct CertificateSet(pub SetOfVec<CertificateChoices>);
 impl_newtype!(CertificateSet, SetOfVec<CertificateChoices>);
 
-#[cfg(feature = "std")]
-impl TryFrom<std::vec::Vec<CertificateChoices>> for CertificateSet {
+impl TryFrom<vec::Vec<CertificateChoices>> for CertificateSet {
     type Error = der::Error;
 
-    fn try_from(vec: std::vec::Vec<CertificateChoices>) -> der::Result<CertificateSet> {
+    fn try_from(vec: vec::Vec<CertificateChoices>) -> der::Result<CertificateSet> {
         Ok(CertificateSet(SetOfVec::try_from(vec)?))
     }
 }
@@ -79,11 +79,10 @@ impl TryFrom<std::vec::Vec<CertificateChoices>> for CertificateSet {
 pub struct SignerInfos(pub SetOfVec<SignerInfo>);
 impl_newtype!(SignerInfos, SetOfVec<SignerInfo>);
 
-#[cfg(feature = "std")]
-impl TryFrom<std::vec::Vec<SignerInfo>> for SignerInfos {
+impl TryFrom<vec::Vec<SignerInfo>> for SignerInfos {
     type Error = der::Error;
 
-    fn try_from(vec: std::vec::Vec<SignerInfo>) -> der::Result<SignerInfos> {
+    fn try_from(vec: vec::Vec<SignerInfo>) -> der::Result<SignerInfos> {
         Ok(SignerInfos(SetOfVec::try_from(vec)?))
     }
 }
@@ -152,7 +151,7 @@ pub struct SignerInfo {
 /// SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
 /// ```
 ///
-/// [RFC 5652 Section 5.3]: https://datatracker.ietf.org/doc/html/rfc5652#section-5.3
+/// [RFC 5652 Section 5.3]: https://www.rfc-editor.org/info/rfc5652#section-5.3
 pub type SignedAttributes = Attributes;
 
 /// The `SignerIdentifier` type is defined in [RFC 5652 Section 5.3].
@@ -163,7 +162,7 @@ pub type SignedAttributes = Attributes;
 ///   subjectKeyIdentifier \[0\] SubjectKeyIdentifier }
 /// ```
 ///
-/// [RFC 5652 Section 5.3]: https://datatracker.ietf.org/doc/html/rfc5652#section-5.3
+/// [RFC 5652 Section 5.3]: https://www.rfc-editor.org/info/rfc5652#section-5.3
 #[derive(Clone, Debug, Eq, PartialEq, Choice)]
 #[allow(missing_docs)]
 pub enum SignerIdentifier {
@@ -204,7 +203,7 @@ impl From<&Certificate> for SignerIdentifier {
 /// UnsignedAttributes ::= SET SIZE (1..MAX) OF Attribute
 /// ```
 ///
-/// [RFC 5652 Section 5.3]: https://datatracker.ietf.org/doc/html/rfc5652#section-5.3
+/// [RFC 5652 Section 5.3]: https://www.rfc-editor.org/info/rfc5652#section-5.3
 pub type UnsignedAttributes = Attributes;
 
 /// The `SignatureValue` type is defined in [RFC 5652 Section 5.3].
@@ -213,5 +212,5 @@ pub type UnsignedAttributes = Attributes;
 ///   SignatureValue ::= OCTET STRING
 /// ```
 ///
-/// [RFC 5652 Section 5.3]: https://datatracker.ietf.org/doc/html/rfc5652#section-5.3
+/// [RFC 5652 Section 5.3]: https://www.rfc-editor.org/info/rfc5652#section-5.3
 pub type SignatureValue = OctetString;

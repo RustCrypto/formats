@@ -7,7 +7,7 @@ use der::{
     oid::AssociatedOid,
 };
 use hex_literal::hex;
-use pkcs1::{RsaOaepParams, RsaPssParams, TrailerField};
+use pkcs1::{RsaOaepParamsRef, RsaPssParamsRef, TrailerField};
 
 /// Default PSS parameters using all default values (SHA1, MGF1)
 const RSA_PSS_PARAMETERS_DEFAULTS: &[u8] = &hex!("3000");
@@ -35,7 +35,7 @@ impl AssociatedOid for Sha256Mock {
 
 #[test]
 fn decode_pss_param() {
-    let param = RsaPssParams::try_from(RSA_PSS_PARAMETERS_SHA2_256).unwrap();
+    let param = RsaPssParamsRef::try_from(RSA_PSS_PARAMETERS_SHA2_256).unwrap();
 
     assert!(
         param
@@ -65,7 +65,7 @@ fn decode_pss_param() {
 #[test]
 fn encode_pss_param() {
     let mut buf = [0_u8; 256];
-    let param = RsaPssParams::try_from(RSA_PSS_PARAMETERS_SHA2_256).unwrap();
+    let param = RsaPssParamsRef::try_from(RSA_PSS_PARAMETERS_SHA2_256).unwrap();
     assert_eq!(
         param.encode_to_slice(&mut buf).unwrap(),
         RSA_PSS_PARAMETERS_SHA2_256
@@ -74,7 +74,7 @@ fn encode_pss_param() {
 
 #[test]
 fn decode_pss_param_default() {
-    let param = RsaPssParams::try_from(RSA_PSS_PARAMETERS_DEFAULTS).unwrap();
+    let param = RsaPssParamsRef::try_from(RSA_PSS_PARAMETERS_DEFAULTS).unwrap();
 
     assert!(
         param
@@ -110,7 +110,9 @@ fn decode_pss_param_default() {
 fn encode_pss_param_default() {
     let mut buf = [0_u8; 256];
     assert_eq!(
-        RsaPssParams::default().encode_to_slice(&mut buf).unwrap(),
+        RsaPssParamsRef::default()
+            .encode_to_slice(&mut buf)
+            .unwrap(),
         RSA_PSS_PARAMETERS_DEFAULTS
     );
 }
@@ -119,13 +121,13 @@ fn encode_pss_param_default() {
 fn new_pss_param() {
     let mut buf = [0_u8; 256];
 
-    let param = RsaPssParams::new::<Sha1Mock>(20);
+    let param = RsaPssParamsRef::new::<Sha1Mock>(20);
     assert_eq!(
         param.encode_to_slice(&mut buf).unwrap(),
         RSA_PSS_PARAMETERS_DEFAULTS
     );
 
-    let param = RsaPssParams::new::<Sha256Mock>(32);
+    let param = RsaPssParamsRef::new::<Sha256Mock>(32);
     assert_eq!(
         param.encode_to_slice(&mut buf).unwrap(),
         RSA_PSS_PARAMETERS_SHA2_256
@@ -134,7 +136,7 @@ fn new_pss_param() {
 
 #[test]
 fn decode_oaep_param() {
-    let param = RsaOaepParams::try_from(RSA_OAEP_PARAMETERS_SHA2_256).unwrap();
+    let param = RsaOaepParamsRef::try_from(RSA_OAEP_PARAMETERS_SHA2_256).unwrap();
 
     assert!(
         param
@@ -177,7 +179,7 @@ fn decode_oaep_param() {
 #[test]
 fn encode_oaep_param() {
     let mut buf = [0_u8; 256];
-    let param = RsaOaepParams::try_from(RSA_OAEP_PARAMETERS_SHA2_256).unwrap();
+    let param = RsaOaepParamsRef::try_from(RSA_OAEP_PARAMETERS_SHA2_256).unwrap();
     assert_eq!(
         param.encode_to_slice(&mut buf).unwrap(),
         RSA_OAEP_PARAMETERS_SHA2_256
@@ -186,7 +188,7 @@ fn encode_oaep_param() {
 
 #[test]
 fn decode_oaep_param_default() {
-    let param = RsaOaepParams::try_from(RSA_OAEP_PARAMETERS_DEFAULTS).unwrap();
+    let param = RsaOaepParamsRef::try_from(RSA_OAEP_PARAMETERS_DEFAULTS).unwrap();
 
     assert!(
         param
@@ -235,7 +237,9 @@ fn decode_oaep_param_default() {
 fn encode_oaep_param_default() {
     let mut buf = [0_u8; 256];
     assert_eq!(
-        RsaOaepParams::default().encode_to_slice(&mut buf).unwrap(),
+        RsaOaepParamsRef::default()
+            .encode_to_slice(&mut buf)
+            .unwrap(),
         RSA_OAEP_PARAMETERS_DEFAULTS
     );
 }
@@ -244,16 +248,40 @@ fn encode_oaep_param_default() {
 fn new_oaep_param() {
     let mut buf = [0_u8; 256];
 
-    let param = RsaOaepParams::new::<Sha1Mock>();
+    let param = RsaOaepParamsRef::new::<Sha1Mock>();
     assert_eq!(
         param.encode_to_slice(&mut buf).unwrap(),
         RSA_OAEP_PARAMETERS_DEFAULTS
     );
 
-    let param = RsaOaepParams::new::<Sha256Mock>();
+    let param = RsaOaepParamsRef::new::<Sha256Mock>();
     println!("{:02x?}", param.encode_to_slice(&mut buf).unwrap());
     assert_eq!(
         param.encode_to_slice(&mut buf).unwrap(),
         RSA_OAEP_PARAMETERS_SHA2_256
     );
+}
+
+#[cfg(feature = "alloc")]
+mod test_alloc_trait_bounds {
+    use der::{Decode, Encode};
+    use pkcs1::{RsaOaepParamsOwned, RsaPssParamsOwned};
+
+    #[test]
+    fn rsapssparamsowned_trait_bounds_from_der() {
+        let _ = RsaPssParamsOwned::from_der(&[]);
+    }
+    #[test]
+    fn rsapssparamsowned_trait_bounds_to_der() {
+        let _ = RsaPssParamsOwned::default().encode_to_slice(&mut []);
+    }
+
+    #[test]
+    fn rsaoaepparamsowned_trait_bounds_from_der() {
+        let _ = RsaOaepParamsOwned::from_der(&[]);
+    }
+    #[test]
+    fn rsaoaepparamsowned_trait_bounds_to_der() {
+        let _ = RsaOaepParamsOwned::default().encode_to_slice(&mut []);
+    }
 }

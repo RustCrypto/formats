@@ -276,7 +276,7 @@
 //! - [A Layman's Guide to a Subset of ASN.1, BER, and DER] (RSA Laboratories)
 //! - [A Warm Welcome to ASN.1 and DER] (Let's Encrypt)
 //!
-//! [RFC 5280 Section 4.1.1.2]: https://tools.ietf.org/html/rfc5280#section-4.1.1.2
+//! [RFC 5280 Section 4.1.1.2]: https://www.rfc-editor.org/info/rfc5280#section-4.1.1.2
 //! [A Layman's Guide to a Subset of ASN.1, BER, and DER]: https://luca.ntop.org/Teaching/Appunti/asn1.html
 //! [A Warm Welcome to ASN.1 and DER]: https://letsencrypt.org/docs/a-warm-welcome-to-asn1-and-der/
 //!

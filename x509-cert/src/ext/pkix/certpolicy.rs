@@ -13,7 +13,7 @@ use der::{Any, Choice, Sequence, ValueOrd};
 /// CertificatePolicies ::= SEQUENCE SIZE (1..MAX) OF PolicyInformation
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
+/// [RFC 5280 Section 4.2.1.4]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.4
 //  If this extension is
 //  critical, the path validation software MUST be able to interpret this
 //  extension (including the optional qualifier), or MUST reject the
@@ -39,7 +39,7 @@ impl_extension!(CertificatePolicies);
 /// CertPolicyId ::= OBJECT IDENTIFIER
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
+/// [RFC 5280 Section 4.2.1.4]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct PolicyInformation {
@@ -56,7 +56,7 @@ pub struct PolicyInformation {
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
+/// [RFC 5280 Section 4.2.1.4]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct PolicyQualifierInfo {
@@ -70,7 +70,7 @@ pub struct PolicyQualifierInfo {
 /// CPSuri ::= IA5String
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
+/// [RFC 5280 Section 4.2.1.4]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.4
 pub type CpsUri = Ia5String;
 
 /// UserNotice as defined in [RFC 5280 Section 4.2.1.4].
@@ -82,7 +82,7 @@ pub type CpsUri = Ia5String;
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
+/// [RFC 5280 Section 4.2.1.4]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct UserNotice {
@@ -98,7 +98,7 @@ pub struct UserNotice {
 ///      noticeNumbers    SEQUENCE OF INTEGER }
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
+/// [RFC 5280 Section 4.2.1.4]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct NoticeReference {
@@ -119,7 +119,7 @@ pub struct NoticeReference {
 ///
 /// Only the ia5String and utf8String options are currently supported.
 ///
-/// [RFC 5280 Section 4.2.1.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.4
+/// [RFC 5280 Section 4.2.1.4]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.4
 #[derive(Choice, Clone, Debug, Eq, PartialEq)]
 #[allow(missing_docs)]
 pub enum DisplayText {

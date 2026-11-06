@@ -16,7 +16,7 @@ use der::{Decode, Encode, FixedTag, Reader, Tag, Tagged, Writer};
 ///    {-- version must be multi if otherPrimeInfos present --})
 /// ```
 ///
-/// [RFC 8017 Appendix 1.2]: https://datatracker.ietf.org/doc/html/rfc8017#appendix-A.1.2
+/// [RFC 8017 Appendix 1.2]: https://www.rfc-editor.org/info/rfc8017#appendix-A.1.2
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u8)]
 pub enum Version {

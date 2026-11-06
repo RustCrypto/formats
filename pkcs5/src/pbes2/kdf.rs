@@ -35,7 +35,7 @@ pub const HMAC_WITH_SHA512_OID: ObjectIdentifier =
 
 /// `id-scrypt` ([RFC 7914])
 ///
-/// [RFC 7914]: https://datatracker.ietf.org/doc/html/rfc7914#section-7
+/// [RFC 7914]: https://www.rfc-editor.org/info/rfc7914#section-7
 pub const SCRYPT_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.4.1.11591.4.11");
 
 /// Type used for expressing scrypt cost
@@ -184,7 +184,7 @@ impl TryFrom<AlgorithmIdentifierRef<'_>> for Kdf {
 ///     algid-hmacWithSHA1 }
 /// ```
 ///
-/// [RFC 8018 Appendix A.2]: https://tools.ietf.org/html/rfc8018#appendix-A.2
+/// [RFC 8018 Appendix A.2]: https://www.rfc-editor.org/info/rfc8018#appendix-A.2
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Pbkdf2Params {
     /// PBKDF2 salt
@@ -209,8 +209,8 @@ impl Pbkdf2Params {
     /// > performance is not critical, an iteration count of 10,000,000 may
     /// > be appropriate.
     ///
-    /// See [RFC 8018, §4.2](https://datatracker.ietf.org/doc/html/rfc8018#section-4.2)
-    /// and [RFC 8018, §A.2](https://datatracker.ietf.org/doc/html/rfc8018#appendix-A.2)
+    /// See [RFC 8018, §4.2](https://www.rfc-editor.org/info/rfc8018#section-4.2)
+    /// and [RFC 8018, §A.2](https://www.rfc-editor.org/info/rfc8018#appendix-A.2)
     pub const MAX_ITERATION_COUNT: u32 = 100_000_000;
 
     /// OWASP recommended number of iterations for PBKDF2-HMAC-SHA256.
@@ -396,7 +396,7 @@ impl Encode for Pbkdf2Prf {
 /// }
 /// ```
 ///
-/// [RFC 7914 Section 7.1]: https://datatracker.ietf.org/doc/html/rfc7914#section-7.1
+/// [RFC 7914 Section 7.1]: https://www.rfc-editor.org/info/rfc7914#section-7.1
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct ScryptParams {
     /// scrypt salt

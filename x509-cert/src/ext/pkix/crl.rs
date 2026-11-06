@@ -19,7 +19,7 @@ use der::{Enumerated, asn1::Uint};
 /// CRLNumber ::= INTEGER (0..MAX)
 /// ```
 ///
-/// [RFC 5280 Section 5.2.3]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.3
+/// [RFC 5280 Section 5.2.3]: https://www.rfc-editor.org/info/rfc5280#section-5.2.3
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CrlNumber(pub Uint);
 
@@ -52,7 +52,7 @@ impl_from_traits!(u8, u16, u32, u64, u128);
 /// BaseCRLNumber ::= CRLNumber
 /// ```
 ///
-/// [RFC 5280 Section 5.2.4]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.4
+/// [RFC 5280 Section 5.2.4]: https://www.rfc-editor.org/info/rfc5280#section-5.2.4
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BaseCrlNumber(pub Uint);
 
@@ -69,7 +69,7 @@ impl_extension!(BaseCrlNumber, critical = true);
 /// CRLDistributionPoints ::= SEQUENCE SIZE (1..MAX) OF DistributionPoint
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
+/// [RFC 5280 Section 4.2.1.13]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.13
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct CrlDistributionPoints(pub Vec<dp::DistributionPoint>);
 
@@ -86,7 +86,7 @@ impl_extension!(CrlDistributionPoints, critical = false);
 /// FreshestCRL ::= CRLDistributionPoints
 /// ```
 ///
-/// [RFC 5280 Section 5.2.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.2.6
+/// [RFC 5280 Section 5.2.6]: https://www.rfc-editor.org/info/rfc5280#section-5.2.6
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct FreshestCrl(pub Vec<dp::DistributionPoint>);
 
@@ -114,7 +114,7 @@ impl_extension!(FreshestCrl, critical = false);
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 5.3.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-5.3.1
+/// [RFC 5280 Section 5.3.1]: https://www.rfc-editor.org/info/rfc5280#section-5.3.1
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Enumerated, Ord, PartialOrd)]
 #[allow(missing_docs)]
 #[repr(u32)]

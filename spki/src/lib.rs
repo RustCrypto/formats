@@ -40,7 +40,10 @@ mod traits;
 mod digest;
 
 pub use crate::{
-    algorithm::{AlgorithmIdentifier, AlgorithmIdentifierRef, AlgorithmIdentifierWithOid},
+    algorithm::{
+        AlgorithmIdentifier, AlgorithmIdentifierRef, AlgorithmIdentifierWithOid,
+        AsAlgorithmIdentifierRef,
+    },
     error::{Error, Result},
     spki::{SubjectPublicKeyInfo, SubjectPublicKeyInfoRef},
     traits::{AssociatedAlgorithmIdentifier, DecodePublicKey, SignatureAlgorithmIdentifier},
@@ -72,6 +75,6 @@ pub(crate) const SIZE: usize = 32;
 ///
 /// See [RFC7469 § 2.1.1] for more information.
 ///
-/// [RFC7469 § 2.1.1]: https://datatracker.ietf.org/doc/html/rfc7469#section-2.1.1
+/// [RFC7469 § 2.1.1]: https://www.rfc-editor.org/info/rfc7469#section-2.1.1
 #[cfg(feature = "fingerprint")]
 pub type FingerprintBytes = [u8; SIZE];

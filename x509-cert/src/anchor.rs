@@ -102,7 +102,7 @@ flags! {
     /// }
     /// ```
     ///
-    /// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
+    /// [RFC 5280 Section 4.2.1.13]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.13
     #[allow(missing_docs)]
     pub enum CertPolicies: u8 {
         InhibitPolicyMapping = 1 << 0,
@@ -113,7 +113,7 @@ flags! {
 
 /// Certificate policy flags as defined in [RFC 5280 Section 4.2.1.13].
 ///
-/// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
+/// [RFC 5280 Section 4.2.1.13]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.13
 pub type CertPolicyFlags = FlagSet<CertPolicies>;
 
 /// TrustAnchorInfo allows for the representation of a single trust anchor.

@@ -47,7 +47,7 @@ pub fn encapsulated_len(label: &str, line_ending: LineEnding, input_len: usize) 
 /// > will encode the remainder of the data (within the 64-character line
 /// > boundary)
 ///
-/// [RFC7468 § 2]: https://datatracker.ietf.org/doc/html/rfc7468#section-2
+/// [RFC7468 § 2]: https://www.rfc-editor.org/info/rfc7468#section-2
 pub fn encapsulated_len_wrapped(
     label: &str,
     line_width: usize,
@@ -202,7 +202,7 @@ impl<'l, 'o> Encoder<'l, 'o> {
     /// This method is provided with the intended purpose of implementing the
     /// OpenSSH private key format, which uses a non-standard wrap width of 70.
     ///
-    /// [RFC7468 § 2]: https://datatracker.ietf.org/doc/html/rfc7468#section-2
+    /// [RFC7468 § 2]: https://www.rfc-editor.org/info/rfc7468#section-2
     pub fn new_wrapped(
         type_label: &'l str,
         line_width: usize,

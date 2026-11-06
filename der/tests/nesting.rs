@@ -15,11 +15,9 @@ fn walk<'a>(reader: &mut SliceReader<'a>) -> Result<AnyRef<'a>, Error> {
     }
 }
 
-#[test]
+/// Wrap an innermost `NULL` in `depth` nested `SEQUENCE`s.
 #[allow(clippy::cast_possible_truncation, reason = "test")]
-fn returns_nesting_depth_error_when_max_depth_encountered() {
-    let depth = MAX_DEPTH + 1;
-
+fn nested_sequences(depth: usize) -> Vec<u8> {
     let mut buf = vec![0x05, 0x00]; // innermost NULL
     for _ in 0..depth {
         let len = buf.len();
@@ -43,7 +41,19 @@ fn returns_nesting_depth_error_when_max_depth_encountered() {
         next.extend_from_slice(&buf);
         buf = next;
     }
+    buf
+}
 
+#[test]
+fn accepts_documented_max_depth() {
+    let buf = nested_sequences(MAX_DEPTH);
+    let mut reader = SliceReader::new(&buf).unwrap();
+    walk(&mut reader).expect("MAX_DEPTH levels of nesting should decode");
+}
+
+#[test]
+fn returns_nesting_depth_error_when_max_depth_encountered() {
+    let buf = nested_sequences(MAX_DEPTH + 1);
     let mut reader = SliceReader::new(&buf).unwrap();
     let err = walk(&mut reader).expect_err("should return ErrorKind::NestingDepth");
     assert_eq!(err.kind(), ErrorKind::NestingDepth);

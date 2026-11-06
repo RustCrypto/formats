@@ -76,7 +76,7 @@ impl Nonce {
 ///
 /// This does not seem to be its own type and just another name for CrlID
 ///
-/// [RFC 6960 Section 4.4.2]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.2
+/// [RFC 6960 Section 4.4.2]: https://www.rfc-editor.org/info/rfc6960#section-4.4.2
 pub type CrlReferences = CrlId;
 
 /// CrlID structure as defined in [RFC 6960 Section 4.4.2].
@@ -88,7 +88,7 @@ pub type CrlReferences = CrlId;
 ///     crlTime              [2] EXPLICIT GeneralizedTime OPTIONAL }
 /// ```
 ///
-/// [RFC 6960 Section 4.4.2]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.2
+/// [RFC 6960 Section 4.4.2]: https://www.rfc-editor.org/info/rfc6960#section-4.4.2
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct CrlId {
@@ -122,7 +122,7 @@ impl AssociatedOid for CrlId {
 /// AcceptableResponses ::= SEQUENCE OF OBJECT IDENTIFIER
 /// ```
 ///
-/// [RFC 6960 Section 4.4.3]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.3
+/// [RFC 6960 Section 4.4.3]: https://www.rfc-editor.org/info/rfc6960#section-4.4.3
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AcceptableResponses(pub Vec<ObjectIdentifier>);
 
@@ -144,7 +144,7 @@ impl AssociatedOid for AcceptableResponses {
 /// ArchiveCutoff ::= GeneralizedTime
 /// ```
 ///
-/// [RFC 6960 Section 4.4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.4
+/// [RFC 6960 Section 4.4.4]: https://www.rfc-editor.org/info/rfc6960#section-4.4.4
 pub struct ArchiveCutoff(pub OcspGeneralizedTime);
 
 impl_newtype!(ArchiveCutoff, OcspGeneralizedTime);
@@ -162,7 +162,7 @@ impl AssociatedOid for ArchiveCutoff {
 ///    locator                 AuthorityInfoAccessSyntax }
 /// ```
 ///
-/// [RFC 6960 Section 4.4.6]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.6
+/// [RFC 6960 Section 4.4.6]: https://www.rfc-editor.org/info/rfc6960#section-4.4.6
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct ServiceLocator {
@@ -182,7 +182,7 @@ impl_extension!(ServiceLocator, critical = false);
 /// PreferredSignatureAlgorithms ::= SEQUENCE OF PreferredSignatureAlgorithm
 /// ```
 ///
-/// [RFC 6960 Section 4.4.7.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.7.1
+/// [RFC 6960 Section 4.4.7.1]: https://www.rfc-editor.org/info/rfc6960#section-4.4.7.1
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PreferredSignatureAlgorithms(pub Vec<PreferredSignatureAlgorithm>);
 
@@ -204,7 +204,7 @@ impl AssociatedOid for PreferredSignatureAlgorithms {
 ///    certIdentifier  AlgorithmIdentifier OPTIONAL }
 /// ```
 ///
-/// [RFC 6960 Section 4.4.7.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4.7.1
+/// [RFC 6960 Section 4.4.7.1]: https://www.rfc-editor.org/info/rfc6960#section-4.4.7.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct PreferredSignatureAlgorithm {

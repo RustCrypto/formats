@@ -19,7 +19,7 @@ use x509_cert::{
 ///    optionalSignature   [0] EXPLICIT Signature OPTIONAL }
 /// ```
 ///
-/// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
+/// [RFC 6960 Section 4.1.1]: https://www.rfc-editor.org/info/rfc6960#section-4.1.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct OcspRequest<P: Profile + 'static = Rfc5280> {
@@ -47,7 +47,7 @@ impl OcspRequest {
 ///    requestExtensions   [2] EXPLICIT Extensions OPTIONAL }
 /// ```
 ///
-/// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
+/// [RFC 6960 Section 4.1.1]: https://www.rfc-editor.org/info/rfc6960#section-4.1.1
 #[derive(Clone, Debug, Default, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct TbsRequest<P: Profile + 'static = Rfc5280> {
@@ -93,7 +93,7 @@ impl TbsRequest {
 ///    certs                  [0] EXPLICIT SEQUENCE OF Certificate OPTIONAL }
 /// ```
 ///
-/// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
+/// [RFC 6960 Section 4.1.1]: https://www.rfc-editor.org/info/rfc6960#section-4.1.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct Signature<P: Profile + 'static = Rfc5280> {
@@ -112,7 +112,7 @@ pub struct Signature<P: Profile + 'static = Rfc5280> {
 ///    singleRequestExtensions     [0] EXPLICIT Extensions OPTIONAL }
 /// ```
 ///
-/// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
+/// [RFC 6960 Section 4.1.1]: https://www.rfc-editor.org/info/rfc6960#section-4.1.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct Request<P: Profile + 'static = Rfc5280> {
@@ -143,7 +143,7 @@ mod builder {
         ///
         /// [RFC 6960 Section 4.1.1]
         ///
-        /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
+        /// [RFC 6960 Section 4.1.1]: https://www.rfc-editor.org/info/rfc6960#section-4.1.1
         pub fn from_issuer<D>(
             issuer: &Certificate,
             serial_number: SerialNumber,
@@ -160,7 +160,7 @@ mod builder {
         ///
         /// [RFC 6960 Section 4.1.1]
         ///
-        /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
+        /// [RFC 6960 Section 4.1.1]: https://www.rfc-editor.org/info/rfc6960#section-4.1.1
         pub fn from_cert<D>(issuer: &Certificate, cert: &Certificate) -> Result<Self, Error>
         where
             D: Digest + AssociatedOid,
@@ -171,7 +171,7 @@ mod builder {
         /// Adds a single request extension as specified in [RFC 6960 Section 4.4]. Errors when the
         /// extension encoding fails.
         ///
-        /// [RFC 6960 Section 4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4
+        /// [RFC 6960 Section 4.4]: https://www.rfc-editor.org/info/rfc6960#section-4.4
         pub fn with_extension<E: ToExtension>(mut self, ext: E) -> Result<Self, E::Error> {
             let ext = ext.to_extension(&Name::default(), &[])?;
             match self.single_request_extensions {

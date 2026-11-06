@@ -91,7 +91,7 @@ impl OcspResponseBuilder {
 
     /// Adds a [`SingleResponse`] to the builder as defined in [RFC 6960 Section 4.2.1].
     ///
-    /// [RFC 6960 Section 4.2.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.2.1
+    /// [RFC 6960 Section 4.2.1]: https://www.rfc-editor.org/info/rfc6960#section-4.2.1
     pub fn with_single_response(mut self, single_response: SingleResponse) -> Self {
         self.responses.push(single_response);
         self
@@ -100,7 +100,7 @@ impl OcspResponseBuilder {
     /// Adds a response extension as specified in [RFC 6960 Section 4.4]. Errors when the
     /// extension encoding fails.
     ///
-    /// [RFC 6960 Section 4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4
+    /// [RFC 6960 Section 4.4]: https://www.rfc-editor.org/info/rfc6960#section-4.4
     pub fn with_extension<E: ToExtension>(mut self, ext: E) -> Result<Self, E::Error> {
         let ext = ext.to_extension(&Name::default(), &[])?;
         match self.response_extensions {
@@ -127,7 +127,7 @@ impl OcspResponseBuilder {
     /// Per [RFC 6960 Section 2.4], the `producedAt` value must be the time the request was
     /// signed.
     ///
-    /// [RFC 6960 Section 2.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-2.4
+    /// [RFC 6960 Section 2.4]: https://www.rfc-editor.org/info/rfc6960#section-2.4
     pub fn sign<S, Sig>(
         self,
         signer: &mut S,
@@ -157,7 +157,7 @@ impl OcspResponseBuilder {
     /// Per [RFC 6960 Section 2.4], the `producedAt` value must be the time the request was
     /// signed.
     ///
-    /// [RFC 6960 Section 2.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-2.4
+    /// [RFC 6960 Section 2.4]: https://www.rfc-editor.org/info/rfc6960#section-2.4
     pub fn sign_with_rng<S, Sig, R>(
         self,
         signer: &mut S,

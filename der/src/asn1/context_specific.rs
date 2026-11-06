@@ -33,6 +33,23 @@ mod tests {
     #[cfg(feature = "heapless")]
     use crate::asn1::{ContextSpecificRef, SetOf, Utf8StringRef};
 
+    #[test]
+    fn value_ord() {
+        use crate::{DerOrd, ValueOrd};
+        use core::cmp::Ordering;
+
+        for tag_mode in [TagMode::Explicit, TagMode::Implicit] {
+            let field = |value: u8| ContextSpecific {
+                tag_number: TagNumber(1),
+                tag_mode,
+                value,
+            };
+            assert_eq!(field(5).value_cmp(&field(6)), Ok(Ordering::Less));
+            assert_eq!(field(6).der_cmp(&field(5)), Ok(Ordering::Greater));
+            assert_eq!(field(5).der_cmp(&field(5)), Ok(Ordering::Equal));
+        }
+    }
+
     // Public key data from `pkcs8` crate's `ed25519-pkcs8-v2.der`
     const EXAMPLE_BYTES: &[u8] =
         &hex!("A123032100A3A7EAE3A8373830BC47E1167BC50E1DB551999651E0E2DC587623438EAC3F31");
@@ -83,7 +100,7 @@ mod tests {
     #[test]
     fn context_specific_with_implicit_field() {
         // From RFC8410 Section 10.3:
-        // <https://datatracker.ietf.org/doc/html/rfc8410#section-10.3>
+        // <https://www.rfc-editor.org/info/rfc8410#section-10.3>
         //
         //    81  33:   [1] 00 19 BF 44 09 69 84 CD FE 85 41 BA C1 67 DC 3B
         //                  96 C8 50 86 AA 30 B6 B6 CB 0C 5C 38 AD 70 31 66

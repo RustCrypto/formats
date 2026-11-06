@@ -4,7 +4,7 @@ use der::{
 };
 
 /// Elliptic curve parameters as described in
-/// [RFC5480 Section 2.1.1](https://datatracker.ietf.org/doc/html/rfc5480#section-2.1.1):
+/// [RFC5480 Section 2.1.1](https://www.rfc-editor.org/info/rfc5480#section-2.1.1):
 ///
 /// ```text
 /// ECParameters ::= CHOICE {

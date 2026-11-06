@@ -56,13 +56,13 @@ dual licensed as above, without any additional terms or conditions.
 [build-image]: https://github.com/RustCrypto/formats/actions/workflows/cms.yml/badge.svg
 [build-link]: https://github.com/RustCrypto/formats/actions/workflows/cms.yml
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.87+-blue.svg
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
 [chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/300570-formats
 
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
-[RFC 3274]: https://datatracker.ietf.org/doc/html/rfc3274
-[RFC 5652]: https://datatracker.ietf.org/doc/html/rfc5652
-[RFC 5911]: https://datatracker.ietf.org/doc/html/rfc5652
+[RFC 3274]: https://www.rfc-editor.org/info/rfc3274
+[RFC 5652]: https://www.rfc-editor.org/info/rfc5652
+[RFC 5911]: https://www.rfc-editor.org/info/rfc5652

@@ -564,10 +564,15 @@ impl Encode for Tag {
 }
 
 impl DerOrd for Tag {
+    /// Compare the identifier octets as octet strings (X.690 11.6: `SET OF` components are
+    /// ordered by their encodings). The constructed bit is part of the first octet, so it
+    /// orders before the tag number within a class.
     fn der_cmp(&self, other: &Self) -> Result<Ordering> {
-        Ok((self.class().cmp(&other.class()))
-            .then_with(|| self.number().cmp(&other.number()))
-            .then_with(|| self.is_constructed().cmp(&other.is_constructed())))
+        let mut buf1 = [0u8; Tag::MAX_SIZE];
+        let mut buf2 = [0u8; Tag::MAX_SIZE];
+        let a = self.encode_to_slice(&mut buf1)?;
+        let b = other.encode_to_slice(&mut buf2)?;
+        Ok(a.cmp(b))
     }
 }
 
@@ -770,7 +775,11 @@ mod tests {
         assert_eq!(Tag::Boolean.der_cmp(&Tag::Integer), Ok(Ordering::Less));
         assert_eq!(Tag::Integer.der_cmp(&Tag::Null), Ok(Ordering::Less));
         assert_eq!(Tag::Null.der_cmp(&Tag::Sequence), Ok(Ordering::Less));
-        assert_eq!(Tag::Sequence.der_cmp(&Tag::Ia5String), Ok(Ordering::Less));
+        // SEQUENCE is constructed: 0x30 > 0x16
+        assert_eq!(
+            Tag::Sequence.der_cmp(&Tag::Ia5String),
+            Ok(Ordering::Greater)
+        );
         assert_eq!(Tag::Ia5String.der_cmp(&Tag::BmpString), Ok(Ordering::Less));
 
         // universal class, then application class
@@ -794,7 +803,7 @@ mod tests {
             Ok(Ordering::Less)
         );
 
-        // ignore constructed bit
+        // the constructed bit (0x20) is compared before the tag number: 0x42 < 0x61
         assert_eq!(
             Tag::Application {
                 constructed: true,
@@ -804,7 +813,24 @@ mod tests {
                 constructed: false,
                 number: TagNumber(2)
             }),
+            Ok(Ordering::Greater)
+        );
+        // PrintableString (0x13) before SEQUENCE (0x30)
+        assert_eq!(
+            Tag::PrintableString.der_cmp(&Tag::Sequence),
             Ok(Ordering::Less)
+        );
+        // long form: [16383] = 9F FF 7F, [16384] = 9F 81 80 00
+        assert_eq!(
+            Tag::ContextSpecific {
+                constructed: false,
+                number: TagNumber(16383)
+            }
+            .der_cmp(&Tag::ContextSpecific {
+                constructed: false,
+                number: TagNumber(16384)
+            }),
+            Ok(Ordering::Greater)
         );
 
         // for same tag numbers, order by constructed bit

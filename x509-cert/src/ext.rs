@@ -22,7 +22,7 @@ pub mod pkix;
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 4.1.2.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.9
+/// [RFC 5280 Section 4.1.2.9]: https://www.rfc-editor.org/info/rfc5280#section-4.1.2.9
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
@@ -53,7 +53,7 @@ impl ToExtension for Extension {
 /// Extensions  ::=  SEQUENCE SIZE (1..MAX) OF Extension
 /// ```
 ///
-/// [RFC 5280 Section 4.1.2.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.9
+/// [RFC 5280 Section 4.1.2.9]: https://www.rfc-editor.org/info/rfc5280#section-4.1.2.9
 pub type Extensions = alloc::vec::Vec<Extension>;
 
 /// Trait for types that define their default criticality as an extension.
@@ -92,7 +92,7 @@ pub trait Criticality {
 /// }
 ///
 /// impl AssociatedOid for CaptainAge {
-/// # // https://datatracker.ietf.org/doc/html/rfc5612
+/// # // https://www.rfc-editor.org/info/rfc5612
 /// # // 32473 is the private OID reserved for documentation.
 ///     const OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.3.6.1.4.1.32473.1");
 /// }

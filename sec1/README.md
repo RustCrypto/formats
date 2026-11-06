@@ -47,7 +47,7 @@ dual licensed as above, without any additional terms or conditions.
 [build-image]: https://github.com/RustCrypto/formats/actions/workflows/sec1.yml/badge.svg
 [build-link]: https://github.com/RustCrypto/formats/actions/workflows/sec1.yml
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.87+-blue.svg
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
 [chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/300570-formats
 
@@ -55,4 +55,4 @@ dual licensed as above, without any additional terms or conditions.
 
 [RustCrypto]: https://github.com/rustcrypto
 [SEC1: Elliptic Curve Cryptography]: https://www.secg.org/sec1-v2.pdf
-[RFC5915]: https://datatracker.ietf.org/doc/html/rfc5915
+[RFC5915]: https://www.rfc-editor.org/info/rfc5915

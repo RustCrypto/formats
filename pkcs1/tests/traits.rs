@@ -1,9 +1,12 @@
 //! Tests for PKCS#1 encoding/decoding traits.
 
-#![cfg(any(feature = "pem", feature = "std"))]
+#![cfg(feature = "alloc")]
 
 use der::SecretDocument;
-use pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey, Result};
+use pkcs1::{
+    DecodeRsaPrivateKey, DecodeRsaPublicKey, EncodeRsaPrivateKey, EncodeRsaPublicKey, Result,
+    RsaPrivateKeyOwned, RsaPrivateKeyRef, RsaPublicKeyOwned, RsaPublicKeyRef,
+};
 
 #[cfg(feature = "pem")]
 use pkcs1::der::pem::LineEnding;
@@ -20,6 +23,68 @@ const RSA_2048_PRIV_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-priv.d
 /// PKCS#1 `RsaPrivateKey` encoded as PEM
 #[cfg(feature = "pem")]
 const RSA_2048_PRIV_PEM_EXAMPLE: &str = include_str!("examples/rsa2048-priv.pem");
+
+#[test]
+fn private_key_der_round_trip() {
+    for bytes in [
+        RSA_2048_PRIV_DER_EXAMPLE,
+        include_bytes!("examples/rsa4096-priv.der"),
+        include_bytes!("examples/rsa2048-priv-3prime.der"),
+    ] {
+        let owned = RsaPrivateKeyOwned::from_pkcs1_der(bytes).unwrap();
+        assert_eq!(owned.to_pkcs1_der().unwrap().as_bytes(), bytes);
+
+        let borrowed = RsaPrivateKeyRef::try_from(bytes).unwrap();
+        assert_eq!(borrowed.to_pkcs1_der().unwrap().as_bytes(), bytes);
+    }
+}
+
+#[test]
+fn public_key_der_round_trip() {
+    for bytes in [
+        include_bytes!("examples/rsa2048-pub.der").as_slice(),
+        include_bytes!("examples/rsa4096-pub.der"),
+    ] {
+        let owned = RsaPublicKeyOwned::from_pkcs1_der(bytes).unwrap();
+        assert_eq!(owned.to_pkcs1_der().unwrap().as_bytes(), bytes);
+
+        let borrowed = RsaPublicKeyRef::try_from(bytes).unwrap();
+        assert_eq!(borrowed.to_pkcs1_der().unwrap().as_bytes(), bytes);
+    }
+}
+
+#[cfg(feature = "pem")]
+#[test]
+fn private_key_pem_round_trip() {
+    for pem in [
+        RSA_2048_PRIV_PEM_EXAMPLE,
+        include_str!("examples/rsa4096-priv.pem"),
+        include_str!("examples/rsa2048-priv-3prime.pem"),
+    ] {
+        let owned = RsaPrivateKeyOwned::from_pkcs1_pem(pem).unwrap();
+        assert_eq!(&*owned.to_pkcs1_pem(LineEnding::LF).unwrap(), pem);
+
+        let doc = owned.to_pkcs1_der().unwrap();
+        let borrowed = RsaPrivateKeyRef::try_from(doc.as_bytes()).unwrap();
+        assert_eq!(&*borrowed.to_pkcs1_pem(LineEnding::LF).unwrap(), pem);
+    }
+}
+
+#[cfg(feature = "pem")]
+#[test]
+fn public_key_pem_round_trip() {
+    for pem in [
+        include_str!("examples/rsa2048-pub.pem"),
+        include_str!("examples/rsa4096-pub.pem"),
+    ] {
+        let owned = RsaPublicKeyOwned::from_pkcs1_pem(pem).unwrap();
+        assert_eq!(owned.to_pkcs1_pem(LineEnding::LF).unwrap(), pem);
+
+        let doc = owned.to_pkcs1_der().unwrap();
+        let borrowed = RsaPublicKeyRef::try_from(doc.as_bytes()).unwrap();
+        assert_eq!(borrowed.to_pkcs1_pem(LineEnding::LF).unwrap(), pem);
+    }
+}
 
 /// Mock RSA private key type for testing trait impls against.
 pub struct MockPrivateKey(Vec<u8>);

@@ -12,7 +12,7 @@ use der::{Choice, ValueOrd};
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.13]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.13
+/// [RFC 5280 Section 4.2.1.13]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.13
 #[derive(Clone, Debug, Eq, PartialEq, Choice, ValueOrd)]
 #[allow(missing_docs)]
 pub enum DistributionPointName {

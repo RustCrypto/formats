@@ -80,7 +80,7 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
-[RFC 4648]: https://tools.ietf.org/html/rfc4648
+[RFC 4648]: https://www.rfc-editor.org/info/rfc4648
 [`pem-rfc7468`]: https://github.com/RustCrypto/formats/tree/master/pem-rfc7468
 [Util::Lookup]: https://arxiv.org/pdf/2108.04600.pdf
 [`Decoder::new_wrapped`]: https://docs.rs/base64ct/latest/base64ct/struct.Decoder.html#method.new_wrapped

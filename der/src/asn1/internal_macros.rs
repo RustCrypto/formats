@@ -278,9 +278,11 @@ macro_rules! impl_custom_class {
             T: EncodeValue + ValueOrd + Tagged,
         {
             fn value_cmp(&self, other: &Self) -> Result<Ordering, Error> {
+                // Compare the contents octets: the inner TLV for EXPLICIT, the inner value for
+                // IMPLICIT. (`self.der_cmp` / `self.value_cmp` here would recurse forever.)
                 match self.tag_mode {
-                    TagMode::Explicit => self.der_cmp(other),
-                    TagMode::Implicit => self.value_cmp(other),
+                    TagMode::Explicit => self.value.der_cmp(&other.value),
+                    TagMode::Implicit => self.value.value_cmp(&other.value),
                 }
             }
         }

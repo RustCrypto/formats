@@ -19,7 +19,7 @@ use der::asn1::Any;
 ///      parameters              ANY DEFINED BY algorithm OPTIONAL  }
 /// ```
 ///
-/// [RFC 5280 Section 4.1.1.2]: https://tools.ietf.org/html/rfc5280#section-4.1.1.2
+/// [RFC 5280 Section 4.1.1.2]: https://www.rfc-editor.org/info/rfc5280#section-4.1.1.2
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct AlgorithmIdentifier<Params> {
@@ -186,6 +186,18 @@ impl<'a> AlgorithmIdentifierRef<'a> {
     }
 }
 
+/// Borrow the owned or ref `AlgorithmIdentifier` as [`AlgorithmIdentifierRef`].
+pub trait AsAlgorithmIdentifierRef {
+    /// Borrow the owned or ref `AlgorithmIdentifier` as [`AlgorithmIdentifierRef`].
+    fn as_algo_ref<'a>(&'a self) -> AlgorithmIdentifierRef<'a>;
+}
+
+impl<'a> AsAlgorithmIdentifierRef for AlgorithmIdentifierRef<'a> {
+    fn as_algo_ref(&self) -> AlgorithmIdentifierRef<'a> {
+        *self
+    }
+}
+
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::*;
@@ -207,6 +219,33 @@ mod allocating {
             AlgorithmIdentifier {
                 oid: self.oid,
                 parameters: self.parameters.owned_to_ref(),
+            }
+        }
+    }
+
+    impl AsAlgorithmIdentifierRef for AlgorithmIdentifierOwned {
+        fn as_algo_ref<'a>(&'a self) -> AlgorithmIdentifierRef<'a> {
+            AlgorithmIdentifier {
+                oid: self.oid,
+                parameters: self.parameters.owned_to_ref(),
+            }
+        }
+    }
+
+    impl<'a> From<AlgorithmIdentifierRef<'a>> for AlgorithmIdentifierOwned {
+        fn from(value: AlgorithmIdentifierRef) -> Self {
+            Self {
+                oid: value.oid,
+                parameters: value.parameters.map(Into::into),
+            }
+        }
+    }
+
+    impl<'a> From<&'a AlgorithmIdentifierOwned> for AlgorithmIdentifierRef<'a> {
+        fn from(value: &'a AlgorithmIdentifierOwned) -> Self {
+            Self {
+                oid: value.oid,
+                parameters: value.parameters.as_ref().map(|p| p.to_ref()),
             }
         }
     }

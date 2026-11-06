@@ -9,7 +9,7 @@
 //!
 //! Adapted from: <https://github.com/paragonie/constant_time_encoding/blob/master/src/Base32.php>
 //!
-//! [RFC 4648]: https://tools.ietf.org/html/rfc4648
+//! [RFC 4648]: https://www.rfc-editor.org/info/rfc4648
 
 // Copyright (c) 2016 - 2018 Paragon Initiative Enterprises.
 // Copyright (c) 2014 Steve "Sc00bz" Thomas (steve at tobtu dot com).

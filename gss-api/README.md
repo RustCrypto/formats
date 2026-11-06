@@ -73,7 +73,7 @@ dual licensed as above, without any additional terms or conditions.
 [docs-image]: https://docs.rs/gss-api/badge.svg
 [docs-link]: https://docs.rs/gss-api/
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.87+-blue.svg
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
 [chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/300570-formats
 [build-image]: https://github.com/RustCrypto/formats/actions/workflows/gss-api.yml/badge.svg
@@ -83,7 +83,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [RustCrypto]: https://github.com/rustcrypto
 [MS-SPNG]: https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-spng
-[RFC1509]: https://datatracker.ietf.org/doc/html/rfc1509
-[RFC2478]: https://datatracker.ietf.org/doc/html/rfc2478
-[RFC4178]: https://datatracker.ietf.org/doc/html/rfc4178
+[RFC1509]: https://www.rfc-editor.org/info/rfc1509
+[RFC2478]: https://www.rfc-editor.org/info/rfc2478
+[RFC4178]: https://www.rfc-editor.org/info/rfc4178
 [Kerberos]: https://en.wikipedia.org/wiki/Kerberos_(protocol)

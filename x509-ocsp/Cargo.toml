@@ -1,6 +1,6 @@
 [package]
 name = "x509-ocsp"
-version = "0.3.0-pre"
+version = "0.3.0-rc.0"
 description = """
 Pure Rust implementation of the X.509 Internet Public Key Infrastructure
 Online Certificate Status Protocol - OCSP formats as described in RFC 6960
@@ -13,7 +13,7 @@ categories = ["cryptography", "data-structures", "encoding", "no-std"]
 keywords = ["crypto", "x509"]
 readme = "README.md"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.87"
 
 [dependencies]
 const-oid = { version = "0.10", default-features = false, features = ["db"] }
@@ -28,9 +28,8 @@ signature = { version = "3", optional = true, default-features = false, features
 
 [dev-dependencies]
 hex-literal = "1"
-lazy_static = "1.5.0"
 rand = "0.10"
-rsa = { version = "0.10.0-rc.18", default-features = false, features = ["encoding", "sha2"] }
+rsa = { version = "0.10.0-rc.20", default-features = false, features = ["encoding"] }
 sha1 = { version = "0.11", default-features = false, features = ["oid"] }
 sha2 = { version = "0.11", default-features = false, features = ["oid"] }
 

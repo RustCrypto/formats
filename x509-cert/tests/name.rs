@@ -70,7 +70,7 @@ fn decode_name() {
 
     #[cfg(feature = "std")]
     {
-        // https://datatracker.ietf.org/doc/html/rfc4514.html#section-2.1
+        // https://www.rfc-editor.org/info/rfc4514.html#section-2.1
         // If the RDNSequence is an empty sequence, the result is the empty or
         // zero-length string.
         // Otherwise, the output consists of the string encodings of each

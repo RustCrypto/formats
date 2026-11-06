@@ -104,8 +104,7 @@ pub enum Error {
     LibraryError,
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for Error {}
+impl core::error::Error for Error {}
 
 impl Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -358,7 +357,7 @@ pub trait DeserializeBytes: Size {
 
 /// A 3 byte wide unsigned integer type as defined in [RFC 5246].
 ///
-/// [RFC 5246]: https://datatracker.ietf.org/doc/html/rfc5246#section-4.4
+/// [RFC 5246]: https://www.rfc-editor.org/info/rfc5246#section-4.4
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct U24([u8; 3]);
 

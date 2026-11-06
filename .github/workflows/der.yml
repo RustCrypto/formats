@@ -167,7 +167,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: nightly-2026-02-11 # pinned due to rust-lang/miri#4855
+          toolchain: nightly-2026-08-23
       - run: rustup component add miri && cargo miri setup
       - run: cargo miri test --target ${{ matrix.target }} --no-default-features --lib
 

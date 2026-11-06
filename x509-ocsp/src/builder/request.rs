@@ -78,7 +78,7 @@ impl OcspRequestBuilder {
 
     /// Sets the requestor name as specified in [RFC 6960 Section 4.1.1]
     ///
-    /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
+    /// [RFC 6960 Section 4.1.1]: https://www.rfc-editor.org/info/rfc6960#section-4.1.1
     pub fn with_requestor_name(mut self, requestor_name: GeneralName) -> Self {
         self.tbs.requestor_name = Some(requestor_name);
         self
@@ -86,7 +86,7 @@ impl OcspRequestBuilder {
 
     /// Adds a [`Request`] to the builder as defined in [RFC 6960 Section 4.1.1].
     ///
-    /// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
+    /// [RFC 6960 Section 4.1.1]: https://www.rfc-editor.org/info/rfc6960#section-4.1.1
     pub fn with_request(mut self, request: Request) -> Self {
         self.tbs.request_list.push(request);
         self
@@ -95,7 +95,7 @@ impl OcspRequestBuilder {
     /// Adds a request extension as specified in [RFC 6960 Section 4.4]. Errors when the
     /// extension encoding fails.
     ///
-    /// [RFC 6960 Section 4.4]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.4
+    /// [RFC 6960 Section 4.4]: https://www.rfc-editor.org/info/rfc6960#section-4.4
     pub fn with_extension<E: ToExtension>(mut self, ext: E) -> Result<Self, E::Error> {
         let ext = ext.to_extension(&Name::default(), &[])?;
         match self.tbs.request_extensions {

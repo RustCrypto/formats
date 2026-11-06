@@ -67,7 +67,7 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
-[rfc 8446]: https://tools.ietf.org/html/rfc8446
+[rfc 8446]: https://www.rfc-editor.org/info/rfc8446
 [mls]: https://www.rfc-editor.org/rfc/rfc9420.html
 [tls_codec-ci]: https://img.shields.io/github/actions/workflow/status/RustCrypto/formats/tls_codec.yml?branch=master&style=for-the-badge
 [tls_codec-ci-link]: https://github.com/RustCrypto/formats/actions/workflows/tls_codec.yml

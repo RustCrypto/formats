@@ -1,6 +1,6 @@
 //! Password-Based Encryption Scheme 2 as defined in [RFC 8018 Section 6.2].
 //!
-//! [RFC 8018 Section 6.2]: https://tools.ietf.org/html/rfc8018#section-6.2
+//! [RFC 8018 Section 6.2]: https://www.rfc-editor.org/info/rfc8018#section-6.2
 
 mod kdf;
 
@@ -57,7 +57,7 @@ pub const DES_EDE3_CBC_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2
 
 /// Password-Based Encryption Scheme 2 (PBES2) OID.
 ///
-/// <https://tools.ietf.org/html/rfc8018#section-6.2>
+/// <https://www.rfc-editor.org/info/rfc8018#section-6.2>
 pub const PBES2_OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.5.13");
 
 /// AES cipher block size
@@ -90,7 +90,7 @@ const DES_BLOCK_SIZE: usize = 8;
 /// Instead, new values should be randomly generated for every usage.
 /// </div>
 ///
-/// [RFC 8018 Appendix A.4]: https://tools.ietf.org/html/rfc8018#appendix-A.4
+/// [RFC 8018 Appendix A.4]: https://www.rfc-editor.org/info/rfc8018#appendix-A.4
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Parameters {
     /// Key derivation function
@@ -543,15 +543,11 @@ impl TryFrom<AlgorithmIdentifierRef<'_>> for EncryptionScheme {
             }),
             #[cfg(feature = "des-insecure")]
             DES_CBC_OID => Ok(Self::DesCbc {
-                iv: iv[0..DES_BLOCK_SIZE]
-                    .try_into()
-                    .map_err(|_| Tag::OctetString.value_error())?,
+                iv: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
             }),
             #[cfg(feature = "3des")]
             DES_EDE3_CBC_OID => Ok(Self::DesEde3Cbc {
-                iv: iv[0..DES_BLOCK_SIZE]
-                    .try_into()
-                    .map_err(|_| Tag::OctetString.value_error())?,
+                iv: iv.try_into().map_err(|_| Tag::OctetString.value_error())?,
             }),
             oid => Err(ErrorKind::OidUnknown { oid }.into()),
         }

@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.8.0 (2026-11-02)
+### Added
+- `DecodeRsa*Key`/`EncodeRsa*Key` impls for `Rsa*Key*` types ([#2504])
+
+### Changed
+- Upgrade to the 2024 edition; MSRV 1.85 ([#1670])
+- Bump `der` dependency to v0.8 ([#2234])
+- Split `RsaPublicKey` into `RsaPublicKeyRef` and `RsaPublicKeyOwned` ([#2411])
+
+### Removed
+- `pkcs8` integration/feature ([#1927])
+
+### Fixed
+- Reject empty `otherPrimeInfos` ([#2457])
+
+[#1670]: https://github.com/RustCrypto/formats/pull/1670
+[#1927]: https://github.com/RustCrypto/formats/pull/1927
+[#2234]: https://github.com/RustCrypto/formats/pull/2234
+[#2411]: https://github.com/RustCrypto/formats/pull/2411
+[#2457]: https://github.com/RustCrypto/formats/pull/2457
+[#2504]: https://github.com/RustCrypto/formats/pull/2504
+
 ## 0.7.5 (2023-04-24)
 ### Fixed
 - Import failure ([#1021])

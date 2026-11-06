@@ -10,7 +10,7 @@ use der::Sequence;
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.9]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.9
+/// [RFC 5280 Section 4.2.1.9]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.9
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct BasicConstraints {
@@ -29,7 +29,7 @@ impl crate::ext::Criticality for BasicConstraints {
         _subject: &crate::name::Name,
         _extensions: &[crate::ext::Extension],
     ) -> bool {
-        // https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.9
+        // https://www.rfc-editor.org/info/rfc5280#section-4.2.1.9
         //   Conforming CAs MUST include this extension in all CA certificates
         //   that contain public keys used to validate digital signatures on
         //   certificates and MUST mark the extension as critical in such

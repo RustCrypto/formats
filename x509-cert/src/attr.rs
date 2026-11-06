@@ -24,7 +24,7 @@ use der::{
 /// AttributeType           ::= OBJECT IDENTIFIER
 /// ```
 ///
-/// [RFC 5280 Appendix A.1]: https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
+/// [RFC 5280 Appendix A.1]: https://www.rfc-editor.org/info/rfc5280#appendix-A.1
 pub type AttributeType = ObjectIdentifier;
 
 /// X.501 `AttributeValue` as defined in [RFC 5280 Appendix A.1].
@@ -33,7 +33,7 @@ pub type AttributeType = ObjectIdentifier;
 /// AttributeValue          ::= ANY
 /// ```
 ///
-/// [RFC 5280 Appendix A.1]: https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
+/// [RFC 5280 Appendix A.1]: https://www.rfc-editor.org/info/rfc5280#appendix-A.1
 pub type AttributeValue = Any;
 
 /// X.501 `Attribute` as defined in [RFC 5280 Appendix A.1].
@@ -56,8 +56,8 @@ pub type AttributeValue = Any;
 ///
 /// The unconstrained version should be preferred.
 ///
-/// [RFC 2986 Section 4]: https://datatracker.ietf.org/doc/html/rfc2986#section-4
-/// [RFC 5280 Appendix A.1]: https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
+/// [RFC 2986 Section 4]: https://www.rfc-editor.org/info/rfc2986#section-4
+/// [RFC 5280 Appendix A.1]: https://www.rfc-editor.org/info/rfc5280#appendix-A.1
 #[derive(Clone, Debug, PartialEq, Eq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct Attribute {
@@ -71,7 +71,7 @@ pub struct Attribute {
 /// Attributes { ATTRIBUTE:IOSet } ::= SET OF Attribute{{ IOSet }}
 /// ```
 ///
-/// [RFC 2986 Section 4]: https://datatracker.ietf.org/doc/html/rfc2986#section-4
+/// [RFC 2986 Section 4]: https://www.rfc-editor.org/info/rfc2986#section-4
 pub type Attributes = SetOfVec<Attribute>;
 
 /// X.501 `AttributeTypeAndValue` as defined in [RFC 5280 Appendix A.1].
@@ -83,7 +83,7 @@ pub type Attributes = SetOfVec<Attribute>;
 /// }
 /// ```
 ///
-/// [RFC 5280 Appendix A.1]: https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
+/// [RFC 5280 Appendix A.1]: https://www.rfc-editor.org/info/rfc5280#appendix-A.1
 #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Sequence, ValueOrd, Hash)]
 #[allow(missing_docs)]
@@ -190,10 +190,10 @@ impl AttributeTypeAndValue {
             COUNTRY_NAME => Tag::PrintableString,
             DOMAIN_COMPONENT => Tag::Ia5String,
             // Serial numbers are formatted as Printable String as per RFC 5280 Appendix A.1:
-            // https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
+            // https://www.rfc-editor.org/info/rfc5280#appendix-A.1
             SERIAL_NUMBER => Tag::PrintableString,
             // Email addresses are formatted as Ia5String as per RFC 5280 Appendix A.1:
-            // https://datatracker.ietf.org/doc/html/rfc5280#appendix-A.1
+            // https://www.rfc-editor.org/info/rfc5280#appendix-A.1
             EMAIL_ADDRESS => Tag::Ia5String,
             _ => Tag::Utf8String,
         };
@@ -208,7 +208,7 @@ impl AttributeTypeAndValue {
     ///
     /// This function follows the rules in [RFC 4514].
     ///
-    /// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
+    /// [RFC 4514]: https://www.rfc-editor.org/info/rfc4514
     #[deprecated(
         since = "0.2.1",
         note = "use AttributeTypeAndValue::from_str(...)?.to_der()"
@@ -222,7 +222,7 @@ impl AttributeTypeAndValue {
 ///
 /// This function follows the rules in [RFC 4514].
 ///
-/// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
+/// [RFC 4514]: https://www.rfc-editor.org/info/rfc4514
 impl FromStr for AttributeTypeAndValue {
     type Err = Error;
 
@@ -247,7 +247,7 @@ impl FromStr for AttributeTypeAndValue {
 
 /// Serializes the structure according to the rules in [RFC 4514].
 ///
-/// [RFC 4514]: https://datatracker.ietf.org/doc/html/rfc4514
+/// [RFC 4514]: https://www.rfc-editor.org/info/rfc4514
 impl fmt::Display for AttributeTypeAndValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let val = match self.value.tag() {

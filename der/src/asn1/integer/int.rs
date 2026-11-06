@@ -3,7 +3,7 @@
 use super::{is_highest_bit_set, uint, value_cmp};
 use crate::{
     AnyRef, BytesRef, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
-    Result, Tag, ValueOrd, Writer, ord::OrdIsValueOrd,
+    Result, Tag, ValueOrd, Writer, asn1::integer::AsIntRef, ord::OrdIsValueOrd,
 };
 use core::cmp::Ordering;
 
@@ -180,13 +180,19 @@ impl FixedTag for IntRef<'_> {
 
 impl OrdIsValueOrd for IntRef<'_> {}
 
+impl AsIntRef for IntRef<'_> {
+    fn as_int_ref<'a>(&'a self) -> IntRef<'a> {
+        *self
+    }
+}
+
 #[cfg(feature = "alloc")]
 mod allocating {
     use super::{IntRef, strip_leading_ones, validate_canonical};
     use crate::{
         BytesOwned, DecodeValue, EncodeValue, Error, ErrorKind, FixedTag, Header, Length, Reader,
         Result, Tag, Writer,
-        asn1::Uint,
+        asn1::{Uint, integer::AsIntRef},
         ord::OrdIsValueOrd,
         referenced::{OwnedToRef, RefToOwned},
     };
@@ -234,6 +240,14 @@ mod allocating {
         #[must_use]
         pub fn is_empty(&self) -> bool {
             self.inner.is_empty()
+        }
+    }
+
+    impl AsIntRef for Int {
+        fn as_int_ref<'a>(&'a self) -> IntRef<'a> {
+            let inner = self.inner.as_ref();
+
+            IntRef { inner }
         }
     }
 

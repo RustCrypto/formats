@@ -43,11 +43,11 @@ dual licensed as above, without any additional terms or conditions.
 [build-image]: https://github.com/RustCrypto/formats/actions/workflows/x509-ocsp.yml/badge.svg
 [build-link]: https://github.com/RustCrypto/formats/actions/workflows/x509-ocsp.yml
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.87+-blue.svg
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
 [chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/300570-formats
 
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
-[RFC 6960]: https://datatracker.ietf.org/doc/html/rfc6960
+[RFC 6960]: https://www.rfc-editor.org/info/rfc6960

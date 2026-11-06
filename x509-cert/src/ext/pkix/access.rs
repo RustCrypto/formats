@@ -14,7 +14,7 @@ use der::{Sequence, ValueOrd, asn1::ObjectIdentifier};
 /// AuthorityInfoAccessSyntax ::= SEQUENCE SIZE (1..MAX) OF AccessDescription
 /// ```
 ///
-/// [RFC 5280 Section 4.2.2.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.2.1
+/// [RFC 5280 Section 4.2.2.1]: https://www.rfc-editor.org/info/rfc5280#section-4.2.2.1
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct AuthorityInfoAccessSyntax(pub Vec<AccessDescription>);
 
@@ -31,7 +31,7 @@ impl_extension!(AuthorityInfoAccessSyntax, critical = false);
 /// SubjectInfoAccessSyntax ::= SEQUENCE SIZE (1..MAX) OF AccessDescription
 /// ```
 ///
-/// [RFC 5280 Section 4.2.2.2]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.2.2
+/// [RFC 5280 Section 4.2.2.2]: https://www.rfc-editor.org/info/rfc5280#section-4.2.2.2
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SubjectInfoAccessSyntax(pub Vec<AccessDescription>);
 
@@ -51,7 +51,7 @@ impl_extension!(SubjectInfoAccessSyntax, critical = false);
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 4.2.2.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.2.1
+/// [RFC 5280 Section 4.2.2.1]: https://www.rfc-editor.org/info/rfc5280#section-4.2.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence, ValueOrd)]
 #[allow(missing_docs)]
 pub struct AccessDescription {

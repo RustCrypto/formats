@@ -45,7 +45,7 @@ use der::Enumerated;
 /// Version ::= INTEGER { v1(0) }
 /// ```
 ///
-/// [RFC 6960 Section 4.1.1]: https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1
+/// [RFC 6960 Section 4.1.1]: https://www.rfc-editor.org/info/rfc6960#section-4.1.1
 #[derive(Clone, Debug, Default, Copy, PartialEq, Eq, Enumerated)]
 #[asn1(type = "INTEGER")]
 #[repr(u8)]

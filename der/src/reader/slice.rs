@@ -99,8 +99,20 @@ impl<'a> Reader<'a> for SliceReader<'a> {
 
         let resumption = self.position.split_nested(len)?;
         let ret = f(self);
+        let finished = self.is_finished();
+        let decoded = self.position.current();
+        let remaining = self.remaining_len();
+
         self.bytes = bytes;
         self.position.resume_nested(resumption);
+
+        if ret.is_ok() && !finished {
+            self.failed = true;
+            return Err(self
+                .error(ErrorKind::TrailingData { decoded, remaining })
+                .into());
+        };
+
         ret
     }
 
@@ -153,10 +165,10 @@ impl<'a> Reader<'a> for SliceReader<'a> {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used, clippy::panic)]
+#[allow(clippy::unwrap_used, clippy::panic, reason = "tests")]
 mod tests {
     use super::SliceReader;
-    use crate::{Decode, ErrorKind, Length, Reader};
+    use crate::{Decode, Error, ErrorKind, Length, Reader};
     use hex_literal::hex;
 
     // INTEGER: 42
@@ -212,6 +224,28 @@ mod tests {
         assert_eq!(
             ErrorKind::TrailingData {
                 decoded: 3u8.into(),
+                remaining: 1u8.into(),
+            },
+            err.kind()
+        );
+    }
+
+    #[test]
+    fn nested_trailing_data() {
+        let der = hex!("0102");
+        let mut reader = SliceReader::new(&der).unwrap();
+
+        let err: Error = reader
+            .read_nested(2u8.into(), |reader| {
+                reader.read_slice(1u8.into())?;
+                Ok(())
+            })
+            .expect_err("read_nested should return Err when the callback did not consume the complete contents of the nested value");
+
+        assert_eq!(Length::ONE, err.position().unwrap());
+        assert_eq!(
+            ErrorKind::TrailingData {
+                decoded: 1u8.into(),
                 remaining: 1u8.into(),
             },
             err.kind()

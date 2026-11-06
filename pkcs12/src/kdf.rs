@@ -1,5 +1,5 @@
 //! Implementation of the PKCS#12 key derivation function as described in
-//! [RFC 7292 Appendix B](https://datatracker.ietf.org/doc/html/rfc7292#appendix-B).
+//! [RFC 7292 Appendix B](https://www.rfc-editor.org/info/rfc7292#appendix-B).
 //!
 //! ## ⚠️ Security Warning
 //!

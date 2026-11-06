@@ -113,7 +113,7 @@ macro_rules! impl_key_identifier {
                 type Error = der::Error;
 
                 fn try_from(issuer: SubjectPublicKeyInfoRef<'a>) -> Result<Self, Self::Error> {
-                    // https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.2
+                    // https://www.rfc-editor.org/info/rfc5280#section-4.2.1.2
                     //
                     //  For CA certificates, subject key identifiers SHOULD be derived from
                     //  the public key or a method that generates unique values.  Two common

@@ -5,6 +5,7 @@ use crate::content_info::CmsVersion;
 use crate::revocation::RevocationInfoChoices;
 use crate::signed_data::CertificateSet;
 
+use alloc::vec;
 use core::cmp::Ordering;
 use der::asn1::{BitString, GeneralizedTime, ObjectIdentifier, OctetString, SetOfVec};
 use der::{Any, Choice, Sequence, ValueOrd};
@@ -88,11 +89,10 @@ pub struct OriginatorInfo {
 pub struct RecipientInfos(pub SetOfVec<RecipientInfo>);
 impl_newtype!(RecipientInfos, SetOfVec<RecipientInfo>);
 
-#[cfg(feature = "std")]
-impl TryFrom<std::vec::Vec<RecipientInfo>> for RecipientInfos {
+impl TryFrom<vec::Vec<RecipientInfo>> for RecipientInfos {
     type Error = der::Error;
 
-    fn try_from(vec: std::vec::Vec<RecipientInfo>) -> der::Result<RecipientInfos> {
+    fn try_from(vec: vec::Vec<RecipientInfo>) -> der::Result<RecipientInfos> {
         Ok(RecipientInfos(SetOfVec::try_from(vec)?))
     }
 }
@@ -268,7 +268,7 @@ pub struct OriginatorPublicKey {
 /// ```
 ///
 /// [RFC 5652 Section 6.2.2]: https://www.rfc-editor.org/rfc/rfc5652#section-6.2.2
-pub type RecipientEncryptedKeys = alloc::vec::Vec<RecipientEncryptedKey>;
+pub type RecipientEncryptedKeys = vec::Vec<RecipientEncryptedKey>;
 
 /// The `RecipientEncryptedKey` type is defined in [RFC 5652 Section 6.2.2].
 ///

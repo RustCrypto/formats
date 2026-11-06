@@ -42,11 +42,19 @@ impl<'a> DecodeValue<'a> for f64 {
             let exponent = match mnth_bits_to_u8::<1, 0>(bytes) {
                 0 => {
                     mantissa_start = 2;
+                    // Section 8.5.7.4: the exponent octet must follow the control octet
+                    if bytes.len() < 2 {
+                        return Err(reader.error(Tag::Real.value_error()));
+                    }
                     let ebytes = (i16::from_be_bytes([0x0, bytes[1]])).to_be_bytes();
                     u64::from_be_bytes([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, ebytes[0], ebytes[1]])
                 }
                 1 => {
                     mantissa_start = 3;
+                    // Section 8.5.7.4: both exponent octets must follow the control octet
+                    if bytes.len() < 3 {
+                        return Err(reader.error(Tag::Real.value_error()));
+                    }
                     let ebytes = (i16::from_be_bytes([bytes[1], bytes[2]])).to_be_bytes();
                     u64::from_be_bytes([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, ebytes[0], ebytes[1]])
                 }
@@ -55,14 +63,29 @@ impl<'a> DecodeValue<'a> for f64 {
                     return Err(reader.error(Tag::Real.value_error()));
                 }
             };
+            // Real related error: exponent outside the range of an IEEE-754 double
+            let exponent_value =
+                i16::from_be_bytes([exponent.to_be_bytes()[6], exponent.to_be_bytes()[7]]);
+            if !(-1023..=1023).contains(&exponent_value) {
+                return Err(reader.error(Tag::Real.value_error()));
+            }
             // Section 8.5.7.5: Read the remaining bytes for the mantissa
+            let mantissa_bytes = &bytes[mantissa_start..];
+            if mantissa_bytes.len() > 8 {
+                // Real related error: mantissa does not fit in a u64
+                return Err(reader.error(Tag::Real.value_error()));
+            }
             let mut n_bytes = [0x0; 8];
-            for (pos, byte) in bytes[mantissa_start..].iter().rev().enumerate() {
+            for (pos, byte) in mantissa_bytes.iter().rev().enumerate() {
                 n_bytes[7 - pos] = *byte;
             }
             let n = u64::from_be_bytes(n_bytes);
             // Multiply byte 2^F corresponds to just a left shift
             let mantissa = n << scaling_factor;
+            if mantissa == 0 {
+                // Section 8.5.2: zero is encoded with no contents octets
+                return Err(reader.error(Tag::Real.value_error()));
+            }
             // Create the f64
             Ok(encode_f64(sign, exponent, mantissa))
         } else if is_nth_bit_one::<6>(bytes) {
@@ -888,5 +911,38 @@ mod tests {
                 "wanted: {expect}\tgot: {decoded}"
             );
         }
+    }
+
+    #[test]
+    fn decode_malformed_binary_encoding_is_an_error() {
+        // A mantissa longer than eight octets does not fit in a u64.
+        assert!(f64::from_der(&[0x09, 0x0b, 0x80, 0x00, 1, 1, 1, 1, 1, 1, 1, 1, 1]).is_err());
+        // A zero mantissa, with no octets or a zero octet: zero has no contents octets.
+        assert!(f64::from_der(&[0x09, 0x02, 0x80, 0x00]).is_err());
+        assert!(f64::from_der(&[0x09, 0x03, 0x80, 0x00, 0x00]).is_err());
+        // A mantissa that the scaling factor (F = 1) shifts to zero.
+        assert!(f64::from_der(&[0x09, 0x0a, 0x84, 0x00, 0x80, 0, 0, 0, 0, 0, 0, 0]).is_err());
+        // Exponents outside the range of an IEEE-754 double.
+        assert!(f64::from_der(&[0x09, 0x04, 0x81, 0x7f, 0xff, 0x01]).is_err());
+        assert!(f64::from_der(&[0x09, 0x04, 0x81, 0x04, 0x00, 0x01]).is_err());
+        assert!(f64::from_der(&[0x09, 0x04, 0x81, 0x80, 0x00, 0x01]).is_err());
+    }
+
+    #[test]
+    fn decode_truncated_binary_encoding_is_an_error() {
+        // GHSA-27m6-7r55-vwr2: the binary-encoding branch reads the exponent
+        // octets at a fixed offset in the value content without checking that
+        // the content is long enough to hold them. Truncated content must be
+        // an error, not a panic.
+        //
+        // One content octet in the one-octet exponent form (bits 1-0 = 00):
+        // reading `bytes[1]` is out of bounds.
+        assert!(f64::from_der(&[0x09, 0x01, 0x80]).is_err());
+        // One content octet in the two-octet exponent form (bits 1-0 = 01):
+        // reading `bytes[1]` is out of bounds.
+        assert!(f64::from_der(&[0x09, 0x01, 0x81]).is_err());
+        // Two content octets in the two-octet exponent form:
+        // reading `bytes[2]` is out of bounds.
+        assert!(f64::from_der(&[0x09, 0x02, 0x81, 0x00]).is_err());
     }
 }

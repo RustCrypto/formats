@@ -1,6 +1,6 @@
 //! Password-Based Encryption Scheme 1 as defined in [RFC 8018 Section 6.1].
 //!
-//! [RFC 8018 Section 6.1]: https://tools.ietf.org/html/rfc8018#section-6.1
+//! [RFC 8018 Section 6.1]: https://www.rfc-editor.org/info/rfc8018#section-6.1
 
 use crate::AlgorithmIdentifierRef;
 use der::{
@@ -49,7 +49,7 @@ pub const SALT_LENGTH: usize = 8;
 /// }
 /// ```
 ///
-/// [RFC 8018 Appendix A.C]: https://datatracker.ietf.org/doc/html/rfc8018#appendix-C
+/// [RFC 8018 Appendix A.C]: https://www.rfc-editor.org/info/rfc8018#appendix-C
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Algorithm {
     /// Encryption scheme.
@@ -117,7 +117,7 @@ impl<'a> TryFrom<AlgorithmIdentifierRef<'a>> for Algorithm {
 ///    iterationCount INTEGER }
 /// ```
 ///
-/// [RFC 8018 Appendix A.3]: https://tools.ietf.org/html/rfc8018#appendix-A.3
+/// [RFC 8018 Appendix A.3]: https://www.rfc-editor.org/info/rfc8018#appendix-A.3
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Parameters {
     /// Salt value
@@ -167,7 +167,7 @@ impl TryFrom<AnyRef<'_>> for Parameters {
 
 /// Password-Based Encryption Scheme 1 ciphersuites as defined in [RFC 8018 Appendix A.3].
 ///
-/// [RFC 8018 Appendix A.3]: https://tools.ietf.org/html/rfc8018#appendix-A.3
+/// [RFC 8018 Appendix A.3]: https://www.rfc-editor.org/info/rfc8018#appendix-A.3
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum EncryptionScheme {
     /// `pbeWithMD2AndDES-CBC`

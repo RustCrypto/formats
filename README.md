@@ -47,18 +47,18 @@ dual licensed as above, without any additional terms or conditions.
 [rustcrypto]: https://github.com/rustcrypto
 [itu x.660]: https://www.itu.int/rec/T-REC-X.660
 [itu x.690]: https://www.itu.int/rec/T-REC-X.690
-[rfc 2986]: https://datatracker.ietf.org/doc/html/rfc2986
-[rfc 3274]: https://datatracker.ietf.org/doc/html/rfc3274
-[rfc 4251]: https://datatracker.ietf.org/doc/html/rfc4251
-[rfc 4253]: https://datatracker.ietf.org/doc/html/rfc4253
-[rfc 5208]: https://datatracker.ietf.org/doc/html/rfc5208
-[rfc 5280 section 4.1]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.1
-[rfc 5280]: https://datatracker.ietf.org/doc/html/rfc5280
-[rfc 5652]: https://datatracker.ietf.org/doc/html/rfc5652
-[rfc 5911]: https://datatracker.ietf.org/doc/html/rfc5911
-[rfc 5958]: https://datatracker.ietf.org/doc/html/rfc5958
-[rfc 8017]: https://datatracker.ietf.org/doc/html/rfc8017
-[rfc 8018]: https://datatracker.ietf.org/doc/html/rfc8018
-[rfc 8933]: https://datatracker.ietf.org/doc/html/rfc8933
-[rfc 8446 section 3]: https://datatracker.ietf.org/doc/html/rfc8446#section-3
+[rfc 2986]: https://www.rfc-editor.org/info/rfc2986
+[rfc 3274]: https://www.rfc-editor.org/info/rfc3274
+[rfc 4251]: https://www.rfc-editor.org/info/rfc4251
+[rfc 4253]: https://www.rfc-editor.org/info/rfc4253
+[rfc 5208]: https://www.rfc-editor.org/info/rfc5208
+[rfc 5280 section 4.1]: https://www.rfc-editor.org/info/rfc5280#section-4.1
+[rfc 5280]: https://www.rfc-editor.org/info/rfc5280
+[rfc 5652]: https://www.rfc-editor.org/info/rfc5652
+[rfc 5911]: https://www.rfc-editor.org/info/rfc5911
+[rfc 5958]: https://www.rfc-editor.org/info/rfc5958
+[rfc 8017]: https://www.rfc-editor.org/info/rfc8017
+[rfc 8018]: https://www.rfc-editor.org/info/rfc8018
+[rfc 8933]: https://www.rfc-editor.org/info/rfc8933
+[rfc 8446 section 3]: https://www.rfc-editor.org/info/rfc8446#section-3
 [sec1: elliptic curve cryptography]: https://www.secg.org/sec1-v2.pdf

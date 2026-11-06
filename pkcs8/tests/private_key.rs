@@ -103,7 +103,7 @@ fn decode_ec_bignp256_der() {
 }
 
 // Test vector from RFC8410 Section 10.3:
-// https://datatracker.ietf.org/doc/html/rfc8410#section-10.3
+// https://www.rfc-editor.org/info/rfc8410#section-10.3
 #[test]
 fn decode_ed25519_der_v1() {
     let pk = PrivateKeyInfoRef::try_from(ED25519_DER_V1_EXAMPLE).unwrap();
@@ -120,7 +120,7 @@ fn decode_ed25519_der_v1() {
 }
 
 // Test vector from RFC8410 Section 10.3:
-// https://datatracker.ietf.org/doc/html/rfc8410#section-10.3
+// https://www.rfc-editor.org/info/rfc8410#section-10.3
 #[test]
 fn decode_ed25519_der_v2() {
     // Extracted with:

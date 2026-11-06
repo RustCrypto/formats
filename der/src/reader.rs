@@ -17,6 +17,9 @@ use alloc::vec::Vec;
 #[cfg(feature = "ber")]
 use crate::length::indefinite::read_eoc;
 
+/// Maximum nesting depth for readers and BER indefinite-length scanning.
+pub(crate) const MAX_NESTING_DEPTH: usize = 64;
+
 /// Reader trait which reads DER-encoded input.
 pub trait Reader<'r>: Clone {
     /// Does this reader support the `read_slice` method? (i.e. can it borrow from his input?)

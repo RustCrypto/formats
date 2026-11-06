@@ -16,7 +16,7 @@ use super::super::name::GeneralName;
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
+/// [RFC 5280 Section 4.2.1.10]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.10
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct NameConstraints {
@@ -39,7 +39,7 @@ impl_extension!(NameConstraints, critical = true);
 /// GeneralSubtrees ::= SEQUENCE SIZE (1..MAX) OF GeneralSubtree
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
+/// [RFC 5280 Section 4.2.1.10]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.10
 pub type GeneralSubtrees = Vec<GeneralSubtree>;
 
 /// GeneralSubtree as defined in [RFC 5280 Section 4.2.1.10].
@@ -52,7 +52,7 @@ pub type GeneralSubtrees = Vec<GeneralSubtree>;
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.10]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
+/// [RFC 5280 Section 4.2.1.10]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.10
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct GeneralSubtree {

@@ -95,7 +95,7 @@ const ENCAPSULATION_BOUNDARY_DELIMITER: &[u8] = b"-----";
 /// > boundary), and they MUST NOT emit extraneous whitespace.  Parsers MAY
 /// > handle other line sizes.
 ///
-/// [RFC7468 § 2]: https://datatracker.ietf.org/doc/html/rfc7468#section-2
+/// [RFC7468 § 2]: https://www.rfc-editor.org/info/rfc7468#section-2
 pub const BASE64_WRAP_WIDTH: usize = 64;
 
 /// Buffered Base64 decoder type.

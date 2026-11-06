@@ -16,7 +16,7 @@
 //! The [`pbes2::Parameters`] struct can be used to generate new encryption
 //! parameters when encrypting new keys.
 //!
-//! [RFC 8018]: https://tools.ietf.org/html/rfc8018
+//! [RFC 8018]: https://www.rfc-editor.org/info/rfc8018
 
 #[cfg(all(feature = "alloc", feature = "pbes2"))]
 extern crate alloc;
@@ -55,12 +55,12 @@ use alloc::vec::Vec;
 pub enum EncryptionScheme {
     /// Password-Based Encryption Scheme 1 as defined in [RFC 8018 Section 6.1].
     ///
-    /// [RFC 8018 Section 6.1]: https://tools.ietf.org/html/rfc8018#section-6.1
+    /// [RFC 8018 Section 6.1]: https://www.rfc-editor.org/info/rfc8018#section-6.1
     Pbes1(pbes1::Algorithm),
 
     /// Password-Based Encryption Scheme 2 as defined in [RFC 8018 Section 6.2].
     ///
-    /// [RFC 8018 Section 6.2]: https://tools.ietf.org/html/rfc8018#section-6.2
+    /// [RFC 8018 Section 6.2]: https://www.rfc-editor.org/info/rfc8018#section-6.2
     Pbes2(pbes2::Parameters),
 }
 

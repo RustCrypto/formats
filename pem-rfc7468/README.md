@@ -94,8 +94,8 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (links)
 
 [RustCrypto]: https://github.com/rustcrypto
-[RFC 1421]: https://datatracker.ietf.org/doc/html/rfc1421
-[RFC 7468]: https://datatracker.ietf.org/doc/html/rfc7468
-[RFC 7468 p6]: https://datatracker.ietf.org/doc/html/rfc7468#page-6
+[RFC 1421]: https://www.rfc-editor.org/info/rfc1421
+[RFC 7468]: https://www.rfc-editor.org/info/rfc7468
+[RFC 7468 p6]: https://www.rfc-editor.org/info/rfc7468#page-6
 [`base64ct`]: https://github.com/RustCrypto/formats/tree/master/base64ct
 [Util::Lookup]: https://arxiv.org/pdf/2108.04600.pdf

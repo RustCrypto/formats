@@ -49,7 +49,7 @@ use crate::gp::InfoTypeAndValue;
 ///     }
 /// ```
 ///
-/// [RFC 4210 Section 5.1.1]: https://datatracker.ietf.org/doc/html/rfc4210#section-5.1.1
+/// [RFC 4210 Section 5.1.1]: https://www.rfc-editor.org/info/rfc4210#section-5.1.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct PkiHeader<'a> {
@@ -128,7 +128,7 @@ pub struct PkiHeader<'a> {
 ///     pvno                INTEGER     { cmp1999(1), cmp2000(2) },
 /// ```
 ///
-/// [RFC 4210 Section 5.1.1]: https://datatracker.ietf.org/doc/html/rfc4210#section-5.1.1
+/// [RFC 4210 Section 5.1.1]: https://www.rfc-editor.org/info/rfc4210#section-5.1.1
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Enumerated, Ord, PartialOrd)]
 #[asn1(type = "INTEGER")]
 #[repr(u8)]

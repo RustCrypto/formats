@@ -19,7 +19,7 @@ use crate::header::{CmpCertificate, PkiHeader};
 ///
 /// ```
 ///
-/// [RFC 4210 Section 5.1]: https://datatracker.ietf.org/doc/html/rfc4210#section-5.1
+/// [RFC 4210 Section 5.1]: https://www.rfc-editor.org/info/rfc4210#section-5.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct PkiMessage<'a> {
@@ -47,7 +47,7 @@ pub struct PkiMessage<'a> {
 /// PKIMessages ::= SEQUENCE SIZE (1..MAX) OF PKIMessage
 /// ```
 ///
-/// [RFC 4210 Section 5.1]: https://datatracker.ietf.org/doc/html/rfc4210#section-5.1
+/// [RFC 4210 Section 5.1]: https://www.rfc-editor.org/info/rfc4210#section-5.1
 pub type PkiMessages<'a> = Vec<PkiMessage<'a>>;
 
 /// The `PKIProtection` type is defined in [RFC 4210 Section 5.1.3].

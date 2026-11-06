@@ -29,7 +29,7 @@ use x509_cert::serial_number::SerialNumber;
 #[allow(clippy::large_enum_variant)]
 pub enum CertificateChoices {
     Certificate(Certificate),
-    #[asn1(context_specific = "3", tag_mode = "EXPLICIT", constructed = "true")]
+    #[asn1(context_specific = "3", tag_mode = "IMPLICIT", constructed = "true")]
     Other(OtherCertificateFormat),
     // TODO DEFER add more choices if desired (i.e., AttributeCertificateV2)
 }
@@ -72,7 +72,7 @@ pub struct OtherCertificateFormat {
 ///   serialNumber CertificateSerialNumber }
 /// ```
 ///
-/// [RFC 5652 Section 10.2.4]: https://datatracker.ietf.org/doc/html/rfc5652#section-10.2.4
+/// [RFC 5652 Section 10.2.4]: https://www.rfc-editor.org/info/rfc5652#section-10.2.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct IssuerAndSerialNumber {

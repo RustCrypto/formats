@@ -10,7 +10,7 @@ use der::Sequence;
 /// }
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.11]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.11
+/// [RFC 5280 Section 4.2.1.11]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.11
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct PolicyConstraints {

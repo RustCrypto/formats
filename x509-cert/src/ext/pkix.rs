@@ -47,7 +47,7 @@ use der::asn1::OctetString;
 /// SubjectKeyIdentifier ::= KeyIdentifier
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.2]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.2
+/// [RFC 5280 Section 4.2.1.2]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.2
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SubjectKeyIdentifier(pub OctetString);
 
@@ -68,7 +68,7 @@ impl_key_identifier!(
 /// SubjectAltName ::= GeneralNames
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.6]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
+/// [RFC 5280 Section 4.2.1.6]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.6
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SubjectAltName(pub name::GeneralNames);
 
@@ -80,7 +80,7 @@ impl_newtype!(SubjectAltName, name::GeneralNames);
 
 impl crate::ext::Criticality for SubjectAltName {
     fn criticality(&self, subject: &crate::name::Name, _extensions: &[super::Extension]) -> bool {
-        // https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.6
+        // https://www.rfc-editor.org/info/rfc5280#section-4.2.1.6
         //   Further, if the only subject identity included in the certificate is
         //   an alternative name form (e.g., an electronic mail address), then the
         //   subject distinguished name MUST be empty (an empty sequence), and the
@@ -101,7 +101,7 @@ impl crate::ext::Criticality for SubjectAltName {
 /// IssuerAltName ::= GeneralNames
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.7]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.7
+/// [RFC 5280 Section 4.2.1.7]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.7
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct IssuerAltName(pub name::GeneralNames);
 
@@ -118,7 +118,7 @@ impl_extension!(IssuerAltName, critical = false);
 /// SubjectDirectoryAttributes ::= SEQUENCE SIZE (1..MAX) OF AttributeSet
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.8]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.8
+/// [RFC 5280 Section 4.2.1.8]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.8
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SubjectDirectoryAttributes(pub Vec<Attribute>);
 
@@ -135,7 +135,7 @@ impl_extension!(SubjectDirectoryAttributes, critical = false);
 /// InhibitAnyPolicy ::= SkipCerts
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.14]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.14
+/// [RFC 5280 Section 4.2.1.14]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.14
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
 pub struct InhibitAnyPolicy(pub u32);
 

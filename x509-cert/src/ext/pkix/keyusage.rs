@@ -26,7 +26,7 @@ flags! {
     /// }
     /// ```
     ///
-    /// [RFC 5280 Section 4.2.1.3]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.3
+    /// [RFC 5280 Section 4.2.1.3]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.3
     #[allow(missing_docs)]
     pub enum KeyUsages: u16 {
         DigitalSignature = 1 << 0,
@@ -43,7 +43,7 @@ flags! {
 
 /// KeyUsage as defined in [RFC 5280 Section 4.2.1.3].
 ///
-/// [RFC 5280 Section 4.2.1.3]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.3
+/// [RFC 5280 Section 4.2.1.3]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.3
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct KeyUsage(pub FlagSet<KeyUsages>);
 
@@ -128,7 +128,7 @@ impl KeyUsage {
 /// KeyPurposeId ::= OBJECT IDENTIFIER
 /// ```
 ///
-/// [RFC 5280 Section 4.2.1.12]: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.12
+/// [RFC 5280 Section 4.2.1.12]: https://www.rfc-editor.org/info/rfc5280#section-4.2.1.12
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ExtendedKeyUsage(pub Vec<ObjectIdentifier>);
 
@@ -151,7 +151,7 @@ impl_extension!(ExtendedKeyUsage, critical = false);
 ///      -- either notBefore or notAfter MUST be present
 /// ```
 ///
-/// [RFC 3280 Section 4.2.1.12]: https://datatracker.ietf.org/doc/html/rfc3280#section-4.2.1.4
+/// [RFC 3280 Section 4.2.1.12]: https://www.rfc-editor.org/info/rfc3280#section-4.2.1.4
 #[derive(Clone, Debug, PartialEq, Eq, Sequence)]
 #[allow(missing_docs)]
 pub struct PrivateKeyUsagePeriod {

@@ -201,7 +201,7 @@ where
             //   CAs conforming to this profile MUST NOT generate
             //   certificates with unique identifiers.
             //
-            // https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.8
+            // https://www.rfc-editor.org/info/rfc5280#section-4.1.2.8
             issuer_unique_id: None,
             subject_unique_id: None,
         };

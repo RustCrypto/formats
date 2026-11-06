@@ -16,9 +16,16 @@ use {
 use std::path::Path;
 
 #[cfg(all(feature = "alloc", feature = "pem"))]
+use crate::{RsaPrivateKeyRef, RsaPublicKeyRef};
+
+#[cfg(doc)]
 use crate::{RsaPrivateKey, RsaPublicKey};
 
-/// Parse an [`RsaPrivateKey`] from a PKCS#1-encoded document.
+/// Decode an owned type from a PKCS#1-encoded [`RsaPrivateKey`].
+///
+/// Implemented for `RsaPrivateKeyOwned` with the `alloc` feature enabled, and
+/// usable by RSA implementations for their own key types. For borrowed decoding
+/// into [`crate::RsaPrivateKeyRef`], use [`der::Decode`] instead.
 pub trait DecodeRsaPrivateKey: Sized {
     /// Deserialize PKCS#1 private key from ASN.1 DER-encoded data
     /// (binary format).
@@ -34,7 +41,7 @@ pub trait DecodeRsaPrivateKey: Sized {
     #[cfg(feature = "pem")]
     fn from_pkcs1_pem(s: &str) -> Result<Self> {
         let (label, doc) = SecretDocument::from_pem(s)?;
-        RsaPrivateKey::validate_pem_label(label)?;
+        RsaPrivateKeyRef::validate_pem_label(label)?;
         Self::from_pkcs1_der(doc.as_bytes())
     }
 
@@ -49,12 +56,16 @@ pub trait DecodeRsaPrivateKey: Sized {
     #[cfg(all(feature = "pem", feature = "std"))]
     fn read_pkcs1_pem_file(path: impl AsRef<Path>) -> Result<Self> {
         let (label, doc) = SecretDocument::read_pem_file(path)?;
-        RsaPrivateKey::validate_pem_label(&label)?;
+        RsaPrivateKeyRef::validate_pem_label(&label)?;
         Self::from_pkcs1_der(doc.as_bytes())
     }
 }
 
-/// Parse a [`RsaPublicKey`] from a PKCS#1-encoded document.
+/// Decode an owned type from a PKCS#1-encoded [`RsaPublicKey`].
+///
+/// Implemented for `RsaPublicKeyOwned` with the `alloc` feature enabled, and
+/// usable by RSA implementations for their own key types. For borrowed decoding
+/// into [`crate::RsaPublicKeyRef`], use [`der::Decode`] instead.
 pub trait DecodeRsaPublicKey: Sized {
     /// Deserialize object from ASN.1 DER-encoded [`RsaPublicKey`]
     /// (binary format).
@@ -70,7 +81,7 @@ pub trait DecodeRsaPublicKey: Sized {
     #[cfg(feature = "pem")]
     fn from_pkcs1_pem(s: &str) -> Result<Self> {
         let (label, doc) = Document::from_pem(s)?;
-        RsaPublicKey::validate_pem_label(label)?;
+        RsaPublicKeyRef::validate_pem_label(label)?;
         Self::from_pkcs1_der(doc.as_bytes())
     }
 
@@ -86,7 +97,7 @@ pub trait DecodeRsaPublicKey: Sized {
     #[cfg(all(feature = "pem", feature = "std"))]
     fn read_pkcs1_pem_file(path: impl AsRef<Path>) -> Result<Self> {
         let (label, doc) = Document::read_pem_file(path)?;
-        RsaPublicKey::validate_pem_label(&label)?;
+        RsaPublicKeyRef::validate_pem_label(&label)?;
         Self::from_pkcs1_der(doc.as_bytes())
     }
 }
@@ -101,7 +112,7 @@ pub trait EncodeRsaPrivateKey {
     #[cfg(feature = "pem")]
     fn to_pkcs1_pem(&self, line_ending: LineEnding) -> Result<Zeroizing<String>> {
         let doc = self.to_pkcs1_der()?;
-        Ok(doc.to_pem(RsaPrivateKey::PEM_LABEL, line_ending)?)
+        Ok(doc.to_pem(RsaPrivateKeyRef::PEM_LABEL, line_ending)?)
     }
 
     /// Write ASN.1 DER-encoded PKCS#1 private key to the given path.
@@ -114,7 +125,7 @@ pub trait EncodeRsaPrivateKey {
     #[cfg(all(feature = "pem", feature = "std"))]
     fn write_pkcs1_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
         let doc = self.to_pkcs1_der()?;
-        Ok(doc.write_pem_file(path, RsaPrivateKey::PEM_LABEL, line_ending)?)
+        Ok(doc.write_pem_file(path, RsaPrivateKeyRef::PEM_LABEL, line_ending)?)
     }
 }
 
@@ -128,7 +139,7 @@ pub trait EncodeRsaPublicKey {
     #[cfg(feature = "pem")]
     fn to_pkcs1_pem(&self, line_ending: LineEnding) -> Result<String> {
         let doc = self.to_pkcs1_der()?;
-        Ok(doc.to_pem(RsaPublicKey::PEM_LABEL, line_ending)?)
+        Ok(doc.to_pem(RsaPublicKeyRef::PEM_LABEL, line_ending)?)
     }
 
     /// Write ASN.1 DER-encoded public key to the given path.
@@ -141,6 +152,6 @@ pub trait EncodeRsaPublicKey {
     #[cfg(all(feature = "pem", feature = "std"))]
     fn write_pkcs1_pem_file(&self, path: impl AsRef<Path>, line_ending: LineEnding) -> Result<()> {
         let doc = self.to_pkcs1_der()?;
-        Ok(doc.write_pem_file(path, RsaPublicKey::PEM_LABEL, line_ending)?)
+        Ok(doc.write_pem_file(path, RsaPublicKeyRef::PEM_LABEL, line_ending)?)
     }
 }

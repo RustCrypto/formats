@@ -3,6 +3,9 @@
 pub(super) mod int;
 pub(super) mod uint;
 
+use int::IntRef;
+use uint::UintRef;
+
 use core::{cmp::Ordering, mem::size_of};
 
 use crate::{EncodeValue, Result, encode::encode_value_to_slice};
@@ -28,6 +31,20 @@ where
     let buf2 = encode_value_to_slice(&mut buf2, &b)?;
 
     Ok(buf1.cmp(buf2))
+}
+
+/// Borrow the owned or ref `INTEGER` as [`IntRef`]
+pub trait AsIntRef {
+    /// Borrows the owned or ref `INTEGER` as [`IntRef`]
+    #[must_use]
+    fn as_int_ref<'a>(&'a self) -> IntRef<'a>;
+}
+
+/// Borrow the owned or ref `INTEGER` as [`UintRef`]
+pub trait AsUintRef {
+    /// Borrows the owned or ref `INTEGER` as [`UintRef`]
+    #[must_use]
+    fn as_uint_ref<'a>(&'a self) -> UintRef<'a>;
 }
 
 #[cfg(test)]

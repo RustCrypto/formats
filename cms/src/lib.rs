@@ -24,9 +24,6 @@
 
 extern crate alloc;
 
-#[cfg(feature = "std")]
-extern crate std;
-
 pub mod attr;
 pub mod authenticated_data;
 pub mod authenveloped_data;
@@ -42,3 +39,8 @@ pub mod revocation;
 pub mod signed_data;
 pub mod symmetric_key;
 pub mod timestamped_data;
+
+// Re-export non-optional dependencies
+pub use der;
+pub use spki;
+pub use x509_cert;
