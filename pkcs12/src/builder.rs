@@ -717,10 +717,9 @@ impl Pkcs12Builder {
             cert_id: PKCS_12_X509_CERT_OID,
             cert_value: OctetString::new(der_cert.clone())?,
         };
-        let der_cert_bag_inner = cert_bag.to_der()?;
         let cert_safe_bag = SafeBag {
             bag_id: PKCS_12_CERT_BAG_OID,
-            bag_value: der_cert_bag_inner,
+            bag_value: Any::encode_from(&cert_bag)?,
             bag_attributes: self.cert_attributes.clone(),
         };
         let mut cert_safe_bags = vec![cert_safe_bag];
@@ -732,7 +731,7 @@ impl Pkcs12Builder {
             };
             cert_safe_bags.push(SafeBag {
                 bag_id: PKCS_12_CERT_BAG_OID,
-                bag_value: additional_bag.to_der()?,
+                bag_value: Any::encode_from(&additional_bag)?,
                 bag_attributes: None,
             });
         }
@@ -814,7 +813,7 @@ impl Pkcs12Builder {
 
         let shrouded_key_bag = SafeBag {
             bag_id: PKCS_12_PKCS8_KEY_BAG_OID,
-            bag_value: der_enc_epki,
+            bag_value: Any::from_der(&der_enc_epki)?,
             bag_attributes: self.key_attributes.clone(),
         };
         let sb = vec![shrouded_key_bag];

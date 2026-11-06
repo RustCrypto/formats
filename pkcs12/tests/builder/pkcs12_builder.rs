@@ -11,7 +11,7 @@ use cms::encrypted_data::EncryptedData;
 use const_oid::db::rfc5911::{ID_DATA, ID_ENCRYPTED_DATA};
 use der::{
     Any, AnyRef, Decode, Encode,
-    asn1::{ContextSpecific, OctetString, SetOfVec},
+    asn1::{OctetString, SetOfVec},
 };
 use pkcs5::pbes2::Salt;
 use pkcs12::{PKCS_12_PKCS8_KEY_BAG_OID, pfx::Pfx};
@@ -98,13 +98,12 @@ fn check_algs(
             for safe_bag in safe_bags {
                 match safe_bag.bag_id {
                     PKCS_12_PKCS8_KEY_BAG_OID => {
-                        let cs: ContextSpecific<EncryptedPrivateKeyInfo<OctetString>> =
-                            ContextSpecific::from_der(&safe_bag.bag_value).unwrap();
-                        assert_eq!(PBES2_OID, cs.value.encryption_algorithm.oid());
+                        let epki: EncryptedPrivateKeyInfo<OctetString> =
+                            safe_bag.bag_value.decode_as().unwrap();
+                        assert_eq!(PBES2_OID, epki.encryption_algorithm.oid());
                         assert_eq!(
                             p12_iterations,
-                            cs.value
-                                .encryption_algorithm
+                            epki.encryption_algorithm
                                 .pbes2()
                                 .unwrap()
                                 .kdf
@@ -115,8 +114,7 @@ fn check_algs(
 
                         assert_eq!(
                             kdf.oid(),
-                            cs.value
-                                .encryption_algorithm
+                            epki.encryption_algorithm
                                 .pbes2()
                                 .unwrap()
                                 .kdf
@@ -127,12 +125,7 @@ fn check_algs(
                         );
                         assert_eq!(
                             enc.oid(),
-                            cs.value
-                                .encryption_algorithm
-                                .pbes2()
-                                .unwrap()
-                                .encryption
-                                .oid()
+                            epki.encryption_algorithm.pbes2().unwrap().encryption.oid()
                         );
                     }
                     _ => {
@@ -686,22 +679,21 @@ fn legacy_pbe_key_rejected_without_feature() {
             for safe_bag in safe_bags {
                 if safe_bag.bag_id == PKCS_12_PKCS8_KEY_BAG_OID {
                     // Parse the encrypted key and replace the algorithm OID
-                    let cs: ContextSpecific<pkcs12::pbe_params::EncryptedPrivateKeyInfo> =
-                        ContextSpecific::from_der(&safe_bag.bag_value).unwrap();
+                    let epki: pkcs12::pbe_params::EncryptedPrivateKeyInfo =
+                        safe_bag.bag_value.decode_as().unwrap();
                     let legacy_oid =
                         const_oid::ObjectIdentifier::new_unwrap("1.2.840.113549.1.12.1.3");
                     let tampered_epki = pkcs12::pbe_params::EncryptedPrivateKeyInfo {
                         encryption_algorithm: AlgorithmIdentifierOwned {
                             oid: legacy_oid,
-                            parameters: cs.value.encryption_algorithm.parameters,
+                            parameters: epki.encryption_algorithm.parameters,
                         },
-                        encrypted_data: cs.value.encrypted_data,
+                        encrypted_data: epki.encrypted_data,
                     };
                     // Re-encode as a SafeBag
-                    let tampered_bag_value = tampered_epki.to_der().unwrap();
                     let tampered_safe_bag = pkcs12::safe_bag::SafeBag {
                         bag_id: PKCS_12_PKCS8_KEY_BAG_OID,
-                        bag_value: tampered_bag_value,
+                        bag_value: Any::encode_from(&tampered_epki).unwrap(),
                         bag_attributes: safe_bag.bag_attributes,
                     };
                     let tampered_bags = vec![tampered_safe_bag];

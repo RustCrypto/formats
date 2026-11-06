@@ -20,10 +20,7 @@ use cms::encrypted_data::EncryptedData;
 use const_oid::ObjectIdentifier;
 use const_oid::db::rfc2985::PKCS_9_AT_LOCAL_KEY_ID;
 use const_oid::db::rfc5911::{ID_DATA, ID_ENCRYPTED_DATA};
-use der::{
-    Any, Decode, Encode,
-    asn1::{ContextSpecific, OctetString},
-};
+use der::{Any, Decode, Encode, asn1::OctetString};
 use pkcs8::EncryptedPrivateKeyInfo;
 use subtle::ConstantTimeEq;
 use x509_cert::attr::{Attribute, Attributes};
@@ -192,8 +189,8 @@ fn extract_certs_from_safe_contents(plaintext: &[u8]) -> Result<CertContents> {
         match safe_bag.bag_id {
             crate::PKCS_12_CERT_BAG_OID => {
                 let attrs = parse_attributes(safe_bag.bag_attributes);
-                let cs: ContextSpecific<CertBag> = ContextSpecific::from_der(&safe_bag.bag_value)?;
-                let der = cs.value.cert_value.as_bytes().to_vec();
+                let cert_bag: CertBag = safe_bag.bag_value.decode_as()?;
+                let der = cert_bag.cert_value.as_bytes().to_vec();
 
                 if main_cert
                     .as_ref()
@@ -276,11 +273,10 @@ pub fn get_key(content: &Any, password: &str) -> Result<KeyContents> {
                 // Try PKCS#12 legacy PBE first (requires legacy feature)
                 #[cfg(feature = "legacy")]
                 {
-                    let cs_generic: ContextSpecific<crate::pbe_params::EncryptedPrivateKeyInfo> =
-                        ContextSpecific::from_der(&safe_bag.bag_value)?;
-                    if is_pkcs12_pbe_oid(&cs_generic.value.encryption_algorithm.oid) {
-                        let params_der = cs_generic
-                            .value
+                    let epki: crate::pbe_params::EncryptedPrivateKeyInfo =
+                        safe_bag.bag_value.decode_as()?;
+                    if is_pkcs12_pbe_oid(&epki.encryption_algorithm.oid) {
+                        let params_der = epki
                             .encryption_algorithm
                             .parameters
                             .as_ref()
@@ -289,9 +285,9 @@ pub fn get_key(content: &Any, password: &str) -> Result<KeyContents> {
                             })?
                             .to_der()?;
                         let mut ciphertext =
-                            Zeroizing::new(cs_generic.value.encrypted_data.as_bytes().to_vec());
+                            Zeroizing::new(epki.encrypted_data.as_bytes().to_vec());
                         let plaintext = pkcs12_pbe_decrypt(
-                            &cs_generic.value.encryption_algorithm.oid,
+                            &epki.encryption_algorithm.oid,
                             &params_der,
                             password,
                             &mut ciphertext,
@@ -302,9 +298,9 @@ pub fn get_key(content: &Any, password: &str) -> Result<KeyContents> {
 
                 #[cfg(not(feature = "legacy"))]
                 {
-                    let cs_generic: ContextSpecific<crate::pbe_params::EncryptedPrivateKeyInfo> =
-                        ContextSpecific::from_der(&safe_bag.bag_value)?;
-                    if is_known_legacy_pbe_oid(&cs_generic.value.encryption_algorithm.oid) {
+                    let epki: crate::pbe_params::EncryptedPrivateKeyInfo =
+                        safe_bag.bag_value.decode_as()?;
+                    if is_known_legacy_pbe_oid(&epki.encryption_algorithm.oid) {
                         return Err(Error::Pkcs12Builder(
                             "This P12 uses legacy PBE encryption. \
                              Enable the `legacy` feature to parse it."
@@ -314,10 +310,9 @@ pub fn get_key(content: &Any, password: &str) -> Result<KeyContents> {
                 }
 
                 // PBES2 path
-                let cs: ContextSpecific<EncryptedPrivateKeyInfo<OctetString>> =
-                    ContextSpecific::from_der(&safe_bag.bag_value)?;
+                let epki: EncryptedPrivateKeyInfo<OctetString> = safe_bag.bag_value.decode_as()?;
 
-                if let Some(pbes2) = cs.value.encryption_algorithm.pbes2() {
+                if let Some(pbes2) = epki.encryption_algorithm.pbes2() {
                     if let Some(params) = pbes2.kdf.pbkdf2() {
                         if params.iteration_count > MAX_ITERATION_COUNT {
                             return Err(Error::Pkcs12Builder(format!(
@@ -328,9 +323,8 @@ pub fn get_key(content: &Any, password: &str) -> Result<KeyContents> {
                     }
                 }
 
-                let mut ciphertext = Zeroizing::new(cs.value.encrypted_data.as_bytes().to_vec());
-                let plaintext = cs
-                    .value
+                let mut ciphertext = Zeroizing::new(epki.encrypted_data.as_bytes().to_vec());
+                let plaintext = epki
                     .encryption_algorithm
                     .decrypt_in_place(password, &mut ciphertext)?;
                 return Ok((Zeroizing::new(plaintext.to_vec()), key_attrs));
