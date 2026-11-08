@@ -29,7 +29,7 @@ signature = { version = "3", optional = true, default-features = false, features
 [dev-dependencies]
 hex-literal = "1"
 rand = "0.10"
-rsa = { version = "0.10.0-rc.20", default-features = false, features = ["encoding"] }
+rsa = { version = "0.10", default-features = false, features = ["encoding", "pkcs1v15"] }
 sha1 = { version = "0.11", default-features = false, features = ["oid"] }
 sha2 = { version = "0.11", default-features = false, features = ["oid"] }
 

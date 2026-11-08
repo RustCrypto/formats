@@ -28,7 +28,7 @@ use x509_cert::{
 /// # use rsa::{pkcs1v15::SigningKey, pkcs8::DecodePrivateKey};
 /// # use sha2::Sha256;
 /// # fn rsa_signer() -> SigningKey<Sha256> {
-/// #     let private_key = rsa::RsaPrivateKey::from_pkcs8_der(KEY_DER).unwrap();
+/// #     let private_key = rsa::PrivateKey::from_pkcs8_der(KEY_DER).unwrap();
 /// #     let signing_key = SigningKey::<Sha256>::new(private_key);
 /// #     signing_key
 /// # }

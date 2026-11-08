@@ -4,7 +4,7 @@
 use const_oid::AssociatedOid;
 use der::{DateTime, Decode, Encode};
 use hex_literal::hex;
-use rsa::{RsaPrivateKey, pkcs1v15::SigningKey, pkcs8::DecodePrivateKey};
+use rsa::{pkcs1v15::SigningKey, pkcs8::DecodePrivateKey};
 use sha1::Sha1;
 use sha2::{Sha224, Sha256, Sha384, Sha512};
 use std::sync::LazyLock;
@@ -19,8 +19,8 @@ static ISSUER: LazyLock<Certificate> = LazyLock::new(|| {
     Certificate::from_der(&std::fs::read("tests/examples/rsa-2048-sha256-ca.der").unwrap()).unwrap()
 });
 
-static ISSUER_KEY: LazyLock<RsaPrivateKey> = LazyLock::new(|| {
-    RsaPrivateKey::from_pkcs8_der(
+static ISSUER_KEY: LazyLock<rsa::PrivateKey> = LazyLock::new(|| {
+    rsa::PrivateKey::from_pkcs8_der(
         &std::fs::read("tests/examples/rsa-2048-sha256-ca-key.der").unwrap(),
     )
     .unwrap()
@@ -31,8 +31,8 @@ static CERT: LazyLock<Certificate> = LazyLock::new(|| {
         .unwrap()
 });
 
-static CERT_KEY: LazyLock<RsaPrivateKey> = LazyLock::new(|| {
-    RsaPrivateKey::from_pkcs8_der(
+static CERT_KEY: LazyLock<rsa::PrivateKey> = LazyLock::new(|| {
+    rsa::PrivateKey::from_pkcs8_der(
         &std::fs::read("tests/examples/rsa-2048-sha256-crt-key.der").unwrap(),
     )
     .unwrap()
@@ -43,8 +43,8 @@ static OCSP: LazyLock<Certificate> = LazyLock::new(|| {
         .unwrap()
 });
 
-static OCSP_KEY: LazyLock<RsaPrivateKey> = LazyLock::new(|| {
-    RsaPrivateKey::from_pkcs8_der(
+static OCSP_KEY: LazyLock<rsa::PrivateKey> = LazyLock::new(|| {
+    rsa::PrivateKey::from_pkcs8_der(
         &std::fs::read("tests/examples/rsa-2048-sha256-ocsp-crt-key.der").unwrap(),
     )
     .unwrap()
