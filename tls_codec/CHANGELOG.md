@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tls_codec_derive`: literal and implicit discriminants that do not fit the enum's repr are now reported at the offending variant during macro expansion, instead of as a failed constant evaluation pointing at the derive.
 - `tls_codec_derive`: path discriminants (`#[tls_codec(discriminant = "path")]`) that do not fit the repr still fail during constant evaluation, but the error now names the path and repr and points at the attribute's string literal instead of the derive.
 - `tls_codec_derive`: with the `conditional_deserialization` feature, the derives no longer rewrite a struct's own generic parameters named or containing `IS_DESERIALIZABLE` (e.g. `IS_DESERIALIZABLE_T` became `true_T`). The const generic parameter added by `#[conditionally_deserializable]` is now named `__TLS_CODEC_IS_DESERIALIZABLE`.
+- `tls_codec_derive`: enum variants with the same discriminant (explicit, implicit or via a path) are now a compile error. Previously deserialization always picked the first of them, so the others decoded as that variant.
 
 ## 0.5.0
 

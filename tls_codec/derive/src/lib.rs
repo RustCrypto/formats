@@ -267,6 +267,7 @@ extern crate proc_macro2;
 use proc_macro::TokenStream;
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::{quote, quote_spanned};
+use std::collections::HashMap;
 use syn::{
     self, Attribute, Data, DeriveInput, Expr, ExprLit, ExprPath, Field, Generics, Ident, Lit,
     Member, Meta, Result, Token, Type, parse_macro_input, punctuated::Punctuated, spanned::Spanned,
@@ -757,6 +758,45 @@ fn check_discriminant_fits(variant: &Ident, value: usize, repr: &Ident, max: u64
     Ok(())
 }
 
+/// Errors if another variant in `used` already has the discriminant `value`,
+/// and records `variant` as having it otherwise.
+fn check_discriminant_unused<'a>(
+    used: &mut HashMap<usize, &'a Ident>,
+    variant: &'a Ident,
+    value: usize,
+) -> Result<()> {
+    if let Some(other) = used.insert(value, variant) {
+        return Err(syn::Error::new(
+            variant.span(),
+            format!(
+                "The discriminant {value} of this variant is already used by variant `{other}`."
+            ),
+        ));
+    }
+    Ok(())
+}
+
+/// Returns a check, evaluated together with the discriminant constants, that
+/// the variants `earlier` and `later` have different discriminants.
+///
+/// This is for variants with path discriminants, whose values are only known
+/// once the constants are evaluated. A failing check points at `span`, which
+/// should be the span of the path.
+fn duplicate_discriminant_check(earlier: &Ident, later: &Ident, span: Span) -> TokenStream2 {
+    let (earlier_const, later_const) = (discriminant_id(earlier), discriminant_id(later));
+    quote_spanned! { span =>
+        if #earlier_const == #later_const {
+            panic!(concat!(
+                "The variants `",
+                stringify!(#earlier),
+                "` and `",
+                stringify!(#later),
+                "` have the same discriminant.",
+            ));
+        }
+    }
+}
+
 /// Returns definitions of constants equal to the discriminants of each variant
 fn define_discriminant_constants(
     enum_ident: &Ident,
@@ -796,13 +836,31 @@ fn define_discriminant_constants(
         // out instead.
         let mut implicit_discriminant = Some(0usize);
         let mut discriminant_has_paths = false;
-        for variant in variants.iter() {
+        // Discriminants known at expansion time, and the variant using each.
+        let mut used_discriminants = HashMap::new();
+        // Path discriminants are only known once the constants are evaluated,
+        // so variants with them are checked for duplicates there. The checks
+        // are collected into a separate constant: putting them into the
+        // variants' constants would make two path constants that are compared
+        // with each other depend on each other.
+        let mut duplicate_checks = Vec::new();
+        // Earlier variants with path discriminants, and the spans of their paths.
+        let mut earlier_paths: Vec<(&Ident, Span)> = Vec::new();
+        for (index, variant) in variants.iter().enumerate() {
             let constant_id = discriminant_id(&variant.ident);
 
             let tokens = if let Some(value) = discriminant_value(&variant.attrs)? {
                 match value {
                     DiscriminantValue::Literal(value) => {
                         check_discriminant_fits(&variant.ident, value, repr, repr_max)?;
+                        check_discriminant_unused(&mut used_discriminants, &variant.ident, value)?;
+                        for &(earlier, span) in &earlier_paths {
+                            duplicate_checks.push(duplicate_discriminant_check(
+                                earlier,
+                                &variant.ident,
+                                span,
+                            ));
+                        }
                         implicit_discriminant = Some(value);
                         quote! {
                             #[allow(non_upper_case_globals)]
@@ -811,6 +869,14 @@ fn define_discriminant_constants(
                     }
                     DiscriminantValue::Path(pathexpr) => {
                         discriminant_has_paths = true;
+                        for earlier in variants.iter().take(index) {
+                            duplicate_checks.push(duplicate_discriminant_check(
+                                &earlier.ident,
+                                &variant.ident,
+                                pathexpr.span(),
+                            ));
+                        }
+                        earlier_paths.push((&variant.ident, pathexpr.span()));
                         // The value behind the path is only known once the
                         // constant is evaluated, after macro expansion, so the
                         // range check has to happen there. Spanning it with the
@@ -854,6 +920,14 @@ fn define_discriminant_constants(
                     )
                 })?;
                 check_discriminant_fits(&variant.ident, value, repr, repr_max)?;
+                check_discriminant_unused(&mut used_discriminants, &variant.ident, value)?;
+                for &(earlier, span) in &earlier_paths {
+                    duplicate_checks.push(duplicate_discriminant_check(
+                        earlier,
+                        &variant.ident,
+                        span,
+                    ));
+                }
                 quote! {
                     #[allow(non_upper_case_globals)]
                     const #constant_id: #repr = #value as #repr;
@@ -863,6 +937,14 @@ fn define_discriminant_constants(
             implicit_discriminant = implicit_discriminant.and_then(|d| d.checked_add(1));
 
             spans.push(tokens);
+        }
+
+        if !duplicate_checks.is_empty() {
+            spans.push(quote! {
+                const _: () = {
+                    #(#duplicate_checks)*
+                };
+            });
         }
         spans
     };

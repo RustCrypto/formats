@@ -1,0 +1,11 @@
+error: The discriminant 1 of this variant is already used by variant `A`.
+ --> tests/attributes/that_duplicate_discriminants_do_not_compile.rs:9:5
+  |
+9 |     B(u8),
+  |     ^
+
+error: The discriminant 2 of this variant is already used by variant `B`.
+  --> tests/attributes/that_duplicate_discriminants_do_not_compile.rs:20:5
+   |
+20 |     C(u8),
+   |     ^
