@@ -177,11 +177,25 @@ mod allocating {
         }
 
         /// Encode the given data as the specified variant of Base64 and push it onto the password
-        /// hash string, first adding a `$` delimiter.
+        /// hash string, first adding a `$` delimiter and ensuring the added characters comprise a
+        /// valid field.
+        ///
+        /// # Errors
+        /// - If the base64-encoded field fails to validate as a [`Field`] (i.e. it is empty, or
+        ///   contains characters outside the allowed set)
         #[cfg(feature = "base64")]
-        pub fn push_base64(&mut self, field: &[u8], base64_encoding: Base64) {
+        pub fn push_base64(&mut self, field: &[u8], base64_encoding: Base64) -> Result<()> {
+            // Cache original length to roll back to on error
+            let old_len = self.0.len();
             self.0.push(fields::DELIMITER);
             self.0.push_str(&base64_encoding.encode_string(field));
+
+            if let Err(e) = Field::new(&self.0[(old_len + 1)..]) {
+                self.0.truncate(old_len);
+                return Err(e);
+            }
+
+            Ok(())
         }
 
         /// Push a type which impls [`fmt::Display`], first adding a `$` delimiter and ensuring the
@@ -456,9 +470,43 @@ mod tests {
     #[test]
     fn push_base64() {
         let mut hash = PasswordHash::new("$6$rounds=100000").unwrap();
-        hash.push_base64(EXAMPLE_SALT, Base64::Crypt);
-        hash.push_base64(EXAMPLE_HASH, Base64::Crypt);
+        hash.push_base64(EXAMPLE_SALT, Base64::Crypt).unwrap();
+        hash.push_base64(EXAMPLE_HASH, Base64::Crypt).unwrap();
         assert_eq!(SHA512_HASH, hash.as_str());
+    }
+
+    #[cfg(feature = "base64")]
+    #[test]
+    fn push_base64_empty() {
+        let mut hash = PasswordHash::new("$6$rounds=100000").unwrap();
+        // Empty bytes encode to an empty field, which is not a valid MCF field: reject it and
+        // leave the hash unchanged (regression test for #2471)
+        assert_eq!(
+            hash.push_base64(b"", Base64::Crypt),
+            Err(Error::FieldInvalid)
+        );
+        assert_eq!("$6$rounds=100000", hash.as_str());
+
+        // The rejected push left no delimiter behind: further pushes still round-trip
+        hash.push_base64(EXAMPLE_SALT, Base64::Crypt).unwrap();
+        assert!(PasswordHash::new(hash.as_str()).is_ok());
+    }
+
+    #[cfg(feature = "base64")]
+    #[test]
+    fn push_base64_empty_leaves_hash_usable() {
+        // The `pbkdf2`/`scrypt` MCF hashers call `push_base64(salt, ...)` then
+        // `push_base64(hash, ...)`: a rejected empty salt must leave the hash in a state the
+        // subsequent pushes can still build a valid hash on (regression test for #2471)
+        let mut hash = PasswordHash::from_id("pbkdf2").unwrap();
+        assert_eq!(
+            hash.push_base64(b"", Base64::Crypt),
+            Err(Error::FieldInvalid)
+        );
+        hash.push_str("c=1000").unwrap();
+        hash.push_base64(EXAMPLE_SALT, Base64::Crypt).unwrap();
+        hash.push_base64(EXAMPLE_HASH, Base64::Crypt).unwrap();
+        assert!(PasswordHash::new(hash.as_str()).is_ok());
     }
 
     #[test]

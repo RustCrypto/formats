@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- `PasswordHash::push_base64` now validates the base64-encoded field and returns `Result`,
+  rejecting empty input which previously produced a hash string that failed to parse
+  ([#2471])
+
+[#2471]: https://github.com/RustCrypto/formats/issues/2471
+
 ## 0.6.0 (2026-03-08)
 NOTE: v0.3 - v0.5 skipped to sync version numbers with the `password-hash` crate.
 
