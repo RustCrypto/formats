@@ -246,12 +246,12 @@ fn pss_certificate() {
 const RSA_2048_PRIV_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-priv.der");
 
 fn rsa_signer() -> SigningKey<Sha256> {
-    let private_key = rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
+    let private_key = rsa::PrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
     SigningKey::<Sha256>::new(private_key)
 }
 
 fn rsa_pss_signer() -> rsa::pss::SigningKey<Sha256> {
-    let private_key = rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
+    let private_key = rsa::PrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
     rsa::pss::SigningKey::<Sha256>::new(private_key)
 }
 

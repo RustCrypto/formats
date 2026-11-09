@@ -739,7 +739,7 @@ pub enum RecipientInfoType {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum KeyEncryptionInfo {
     /// Encrypt key with RSA
-    Rsa(rsa::RsaPublicKey),
+    Rsa(rsa::PublicKey),
     // to be extended here with other asymmetric encryption algorithms
 }
 

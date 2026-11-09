@@ -136,7 +136,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 /// # use std::time::Duration;
 /// # use der::referenced::RefToOwned;
 /// # fn rsa_signer() -> SigningKey<Sha256> {
-/// #     let private_key = rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER).unwrap();
+/// #     let private_key = rsa::PrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER).unwrap();
 /// #     let signing_key = SigningKey::<Sha256>::new(private_key);
 /// #     signing_key
 /// # }

@@ -23,8 +23,7 @@ use pem_rfc7468::LineEnding;
 use pkcs5::pbes2::Pbkdf2Params;
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::rand_core::CryptoRng;
-use rsa::{Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey};
-use rsa::{pkcs1v15, pss};
+use rsa::{Pkcs1v15Encrypt, pkcs1v15, pss};
 use sha2::Sha256;
 use signature::Verifier;
 use spki::AlgorithmIdentifierOwned;
@@ -47,12 +46,12 @@ const RSA_2048_PRIV_DER_EXAMPLE: &[u8] = include_bytes!("examples/rsa2048-priv.d
 const PKCS8_PRIVATE_KEY_DER: &[u8] = include_bytes!("examples/p256-priv.der");
 
 fn rsa_pss_signer() -> pss::SigningKey<Sha256> {
-    let private_key = rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
+    let private_key = rsa::PrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
     pss::SigningKey::<Sha256>::new(private_key)
 }
 
 fn rsa_pkcs1v15_signer() -> pkcs1v15::SigningKey<Sha256> {
-    let private_key = rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
+    let private_key = rsa::PrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
     pkcs1v15::SigningKey::<Sha256>::new(private_key)
 }
 
@@ -185,8 +184,8 @@ fn test_build_enveloped_data() {
     let mut rng = rand::rng();
     let bits = 2048;
     let recipient_private_key =
-        RsaPrivateKey::new(&mut rng, bits).expect("failed to generate a key");
-    let recipient_public_key = RsaPublicKey::from(&recipient_private_key);
+        rsa::PrivateKey::new(&mut rng, bits).expect("failed to generate a key");
+    let recipient_public_key = rsa::PublicKey::from(&recipient_private_key);
 
     let recipient_info_builder = KeyTransRecipientInfoBuilder::new(
         recipient_identifier,
@@ -278,9 +277,8 @@ fn test_build_pkcs7_scep_pkcsreq() {
 
     // Create recipient info
     let recipient_identifier = recipient_identifier(42);
-    let recipient_private_key =
-        rsa::RsaPrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
-    let recipient_public_key = RsaPublicKey::from(&recipient_private_key);
+    let recipient_private_key = rsa::PrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
+    let recipient_public_key = rsa::PublicKey::from(&recipient_private_key);
 
     //----------------------------------------------------------------------------------------------
     // Create enveloped data
@@ -329,7 +327,7 @@ fn test_build_pkcs7_scep_pkcsreq() {
     // Create a signer info. Multiple signers are possible, but not used here.
     let signer = {
         let sender_rsa_key_pem = include_str!("examples/sceptest_key.pem");
-        let sender_rsa_key = RsaPrivateKey::from_pkcs8_pem(sender_rsa_key_pem).unwrap();
+        let sender_rsa_key = rsa::PrivateKey::from_pkcs8_pem(sender_rsa_key_pem).unwrap();
         pkcs1v15::SigningKey::<Sha256>::new(sender_rsa_key)
     };
     let digest_algorithm = AlgorithmIdentifierOwned {
@@ -426,8 +424,8 @@ fn test_build_pkcs7_scep_pkcsreq() {
         let signed_attributes_der = signer_info.signed_attrs.clone().unwrap().to_der().unwrap();
         let verifier = {
             let verifier_rsa_key_pem = include_str!("examples/sceptest_key.pem");
-            let verifier_rsa_key = RsaPrivateKey::from_pkcs8_pem(verifier_rsa_key_pem).unwrap();
-            pkcs1v15::VerifyingKey::<Sha256>::new(RsaPublicKey::from(verifier_rsa_key))
+            let verifier_rsa_key = rsa::PrivateKey::from_pkcs8_pem(verifier_rsa_key_pem).unwrap();
+            pkcs1v15::VerifyingKey::<Sha256>::new(rsa::PublicKey::from(verifier_rsa_key))
         };
         assert!(
             verifier
