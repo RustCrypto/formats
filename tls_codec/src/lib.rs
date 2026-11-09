@@ -415,19 +415,24 @@ pub trait DeserializeBytes: Size {
 /// A 3 byte wide unsigned integer type as defined in [RFC 5246].
 ///
 /// [RFC 5246]: https://www.rfc-editor.org/info/rfc5246#section-4.4
-#[derive(Copy, Clone, Debug, Default, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct U24([u8; 3]);
 
 #[cfg_attr(hax, hax_lib::attributes)]
 impl U24 {
+    /// The maximum value that [`U24`] can have.
     pub const MAX: Self = Self([255u8; 3]);
+
+    /// The minimum value that [`U24`] can have.
     pub const MIN: Self = Self([0u8; 3]);
 
+    /// Decodes big endian bytes into a [`U24`].
     #[cfg_attr(hax, hax_lib::ensures(|res| res.to_be_bytes() == bytes))]
     pub fn from_be_bytes(bytes: [u8; 3]) -> Self {
         U24(bytes)
     }
 
+    /// Encodes a [`U24`] as big endian bytes.
     #[cfg_attr(hax, hax_lib::ensures(|res| U24::from_be_bytes(res) == self))]
     pub fn to_be_bytes(self) -> [u8; 3] {
         self.0
@@ -449,23 +454,32 @@ impl From<U24> for usize {
     }
 }
 
+/// The error returned when a value doesn't fit into a [`U24`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct U24OverflowError;
+
+impl Display for U24OverflowError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("out of range conversion to U24 attempted")
+    }
+}
+
+impl core::error::Error for U24OverflowError {}
+
+/// Returns [`U24OverflowError`] if the value doesn't fit into 24 bits.
 #[cfg_attr(hax, hax_lib::attributes)]
 impl TryFrom<usize> for U24 {
-    type Error = Error;
+    type Error = U24OverflowError;
 
     #[cfg_attr(hax, hax_lib::ensures(|res| res == if value <= 0x00ff_ffff {
         Ok(U24::from_be_bytes([(value >> 16) as u8, (value >> 8) as u8, value as u8]))
     } else {
-        Err(Error::LibraryError)
+        Err(U24OverflowError)
     }))]
     fn try_from(value: usize) -> Result<Self, Self::Error> {
-        const LEN: usize = core::mem::size_of::<usize>();
-        // In practice, our usages of this conversion should never be invalid, as the values
-        // have to come from `TryFrom<U24> for usize`.
         if value > (1 << 24) - 1 {
-            Err(Error::LibraryError)
-        } else {
-            Ok(U24(value.to_be_bytes()[LEN - 3..].try_into()?))
+            return Err(U24OverflowError);
         }
+        Ok(U24([(value >> 16) as u8, (value >> 8) as u8, value as u8]))
     }
 }

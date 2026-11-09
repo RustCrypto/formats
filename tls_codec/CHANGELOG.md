@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - BREAKING: The `tls_codec_derive` macros now reject enums whose `#[repr(...)]` is not `u8`, `u16`, `u32` or `u64` with a compile error. Other reprs could already not derive `TlsSerialize`/`TlsDeserialize` (`tls_codec` has no impls for them), but deriving only `TlsSize` used to be accepted.
+- BREAKING: `U24`'s `TryFrom<usize>` implementation now has the new error type `U24OverflowError` instead of `Error`, and no longer returns `Error::LibraryError` for values that don't fit into 24 bits.
 
 ### Fixed
 - I/O errors while writing the output of `Serialize::tls_serialize` are now reported as `Error::EncodingError` instead of `Error::DecodingError` (or `Error::EndOfStream`).
