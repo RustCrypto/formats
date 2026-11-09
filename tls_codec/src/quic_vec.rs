@@ -3,9 +3,10 @@
 //! While the TLS RFC 8446 only specifies vectors with fixed length length fields
 //! the QUIC RFC 9000 defines a variable length integer encoding.
 //!
-//! Note that we require, as the MLS specification does, that vectors have to
-//! use the minimum number of bytes necessary for the encoding.
-//! This ensures that encodings are unique.
+//! Serialization always uses the minimum number of bytes necessary for the
+//! length encoding. Deserialization only requires this with the `mls` feature,
+//! as the MLS specification does, which ensures that encodings are unique.
+//! Without it, non-minimal length encodings are accepted, as RFC 9000 allows.
 //!
 //! With the `mls` feature the length of variable length vectors can be limited
 //! to 30-bit values.

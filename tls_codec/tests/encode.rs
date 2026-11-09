@@ -1,7 +1,10 @@
 #![cfg(feature = "std")]
 #![cfg_attr(feature = "future_deprecations", allow(deprecated))]
 
-use tls_codec::{Serialize, TlsVecU16, TlsVecU24, U24, VLByteSlice, VLBytes};
+use tls_codec::{
+    Error, Serialize, Size, TlsByteVecU8, TlsVarInt, TlsVecU16, TlsVecU24, U24, U24OverflowError,
+    VLByteSlice, VLBytes,
+};
 
 #[test]
 fn serialize_primitives() {
@@ -134,4 +137,41 @@ fn serialize_vec_too_long_for_length_field() {
     assert_eq!(res, Err(Error::InvalidVectorLength));
     let res = TlsVecU16::<u8>::new(vec![0u8; 65536]).tls_serialize_detached();
     assert_eq!(res, Err(Error::InvalidVectorLength));
+}
+
+/// Serializes `value` into a buffer of `len` bytes, too short to hold it.
+fn serialize_into_short_buffer<T: Serialize + Size>(value: &T, len: usize) -> Result<usize, Error> {
+    assert!(len < value.tls_serialized_len());
+    let mut buffer = vec![0u8; len];
+    value.tls_serialize(&mut buffer.as_mut_slice())
+}
+
+#[test]
+fn write_errors_are_encoding_errors() {
+    // Each case makes a different write in the crate fail.
+    let results = [
+        serialize_into_short_buffer(&0x1234u16, 1),
+        serialize_into_short_buffer(&[1u8, 2, 3, 4], 3),
+        serialize_into_short_buffer(&Some(5u8), 0),
+        serialize_into_short_buffer(&None::<u8>, 0),
+        serialize_into_short_buffer(&TlsVarInt::try_from(300u64).unwrap(), 1),
+        serialize_into_short_buffer(&TlsByteVecU8::from_slice(&[1, 2, 3]), 3),
+        serialize_into_short_buffer(&VLBytes::new(vec![1, 2, 3]), 3),
+    ];
+    for (i, result) in results.into_iter().enumerate() {
+        assert!(
+            matches!(result, Err(Error::EncodingError(_))),
+            "case {i}: {result:?}"
+        );
+    }
+}
+
+#[test]
+fn u24_try_from_out_of_range() {
+    assert_eq!(
+        U24::try_from((1usize << 24) - 1).unwrap(),
+        U24::from_be_bytes([0xff, 0xff, 0xff])
+    );
+    let overflow: U24OverflowError = U24::try_from(1usize << 24).unwrap_err();
+    assert_eq!(U24::try_from(usize::MAX), Err(overflow));
 }
