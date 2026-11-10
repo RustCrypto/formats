@@ -24,13 +24,13 @@ namespace tls_codec
 
 /-! ### Writers -/
 
-/-- `write_all` on a lawful writer with room. -/
+/-- `write_all` (the crate helper) on a lawful writer with room. -/
 theorem write_all_law_spec {W : Type} {WI : core.io.write.Write W} {v : W → List Std.U8}
     (law : StdIo.WLaw WI v) (w : W) (s : Slice Std.U8)
     (h : (v w).length + s.val.length ≤ Usize.max) :
-    ⦃ ⌜ True ⌝ ⦄ WI.write_all w s ⦃ ⇓ p => ⌜ p.1 = .Ok () ∧ v p.2 = v w ++ s.val ⌝ ⦄ := by
+    ⦃ ⌜ True ⌝ ⦄ write_all WI w s ⦃ ⇓ p => ⌜ p.1 = .Ok () ∧ v p.2 = v w ++ s.val ⌝ ⦄ := by
   obtain ⟨w', hw, hv⟩ := law.write_all_ok w s h
-  rw [hw]
+  rw [write_all_of_ok hw]
   exact ok_triple_of ⟨rfl, hv⟩
 
 /-! ### Varint: serializer -/
@@ -207,7 +207,7 @@ theorem rw_bytes.ser_triple {W : Type} {WI : core.io.write.Write W} {v : W → L
         ∃ b : List Std.U8, b.map (·.val) = varint.encList c.val ∧ v p.2 = v w ++ b ⌝ ⦄ :=
     fun c h1 h2 => varint.ser_triple law c w h1 h2
   have hwa : ∀ (w1 : W) (s : Slice Std.U8), (v w1).length + s.val.length ≤ Usize.max →
-      ⦃ ⌜ True ⌝ ⦄ WI.write_all w1 s
+      ⦃ ⌜ True ⌝ ⦄ write_all WI w1 s
       ⦃ ⇓ p => ⌜ p.1 = .Ok () ∧ v p.2 = v w1 ++ s.val ⌝ ⦄ := fun w1 s h => write_all_law_spec law w1 s h
   unfold quic_vec.rw_bytes.tls_serialize_bytes
   mvcgen [hst, hwa, CoreModels.core.slice.Slice.len_spec]

@@ -2088,15 +2088,16 @@ theorem Usize.Insts.CoreConvertFromU24.from.spec.functional_correctness (value :
     · exfalso; scalar_tac
     · exfalso; scalar_tac
 
-theorem U24.Insts.CoreConvertTryFromUsizeError.try_from.spec.functional_correctness (value : Std.Usize) :
+theorem U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from.spec.functional_correctness   (value : Std.Usize) :
   ⦃ ⌜ True ⌝ ⦄
-  U24.Insts.CoreConvertTryFromUsizeError.try_from value
+  U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from value
   ⦃ ⇓? res =>
-    ⌜ (U24.Insts.CoreConvertTryFromUsizeError.try_from.post value res).holds ⌝ ⦄ := by
+    ⌜ (U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from.post value
+        res).holds ⌝ ⦄ := by
   refine partial_of_total (triple_post_mono
-    (U24.Insts.CoreConvertTryFromUsizeError.try_from_char value) ?_)
+    (U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from_char value) ?_)
   rintro r ⟨hok, herr⟩
-  simp only [U24.Insts.CoreConvertTryFromUsizeError.try_from.post]
+  simp only [U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from.post]
   by_cases hv : value.val ≤ 16777215
   · obtain ⟨a, b0, b1, b2, rfl, ha, hval⟩ := hok hv
     mvcgen [core.result.Result.Insts.CoreCmpPartialEqResult.eq, Error.Insts.CoreCmpPartialEqError.eq,
@@ -2116,7 +2117,8 @@ theorem U24.Insts.CoreConvertTryFromUsizeError.try_from.spec.functional_correctn
         simp [UScalar.cast_val_eq, Nat.shiftRight_eq_div_pow, eU8, e16, e8, *] <;> omega
     all_goals (have := numBits_eq_64; exfalso; scalar_tac)
   · obtain rfl := herr (by omega)
-    mvcgen [core.result.Result.Insts.CoreCmpPartialEqResult.eq, Error.Insts.CoreCmpPartialEqError.eq]
+    mvcgen [core.result.Result.Insts.CoreCmpPartialEqResult.eq,
+      U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.eq]
 
 /-! ### Arrays (arrays.rs) -/
 
@@ -10949,6 +10951,26 @@ theorem quic_vec.VLBytes.Insts.Tls_codecSpecIoRoundTripMixed.round_trip_mixed_sp
   intro hpre
   exact partial_of_total (ok_triple_of (round_trip_mixed_post_of _ _ _ VLBytes.partialEq_lawful VLBytes.encode_decodes
     VLBytes.agree.1 self_ rest whole hpre))
+
+/-! ### core.cmp.PartialEq -/
+
+theorem U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.eq_spec.functional_correctness (x : U24OverflowError) (y : U24OverflowError) :
+  ⦃ ⌜ True ⌝ ⦄ U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.eq x y ⦃ ⇓? r => ⌜ r = true ↔ HEq x y ⌝ ⦄ := by
+  -- `U24OverflowError` is a unit struct (`Unit`): `eq` is `true` and all values are equal.
+  unfold U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.eq
+  mvcgen
+  simp only [true_iff, heq_iff_eq]
+
+/-! ### core.cmp.Eq -/
+
+theorem U24.Insts.CoreCmpEq.eq_spec.functional_correctness (x y : U24) :
+  ⦃ ⌜ True ⌝ ⦄ U24.Insts.CoreCmpPartialEqU24.eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
+  simpa only [heq_iff_eq] using U24.Insts.CoreCmpPartialEqU24.eq_spec.functional_correctness x y
+
+theorem U24OverflowError.Insts.CoreCmpEq.eq_spec.functional_correctness (x y : U24OverflowError) :
+  ⦃ ⌜ True ⌝ ⦄ U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.eq x y ⦃ ⇓? r => ⌜ r = true ↔ x = y ⌝ ⦄ := by
+  simpa only [heq_iff_eq] using
+    U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.eq_spec.functional_correctness x y
 
 end tls_codec
 

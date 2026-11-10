@@ -308,7 +308,7 @@ theorem U8.ser_runs (x : Std.U8) : SerRuns U8.Insts.Tls_codecSerialize x 1#usize
   apply ser_runs_of_write_all U8.Insts.Tls_codecSerialize x _ 1#usize (by rw [hs]; rfl)
   intro W WI w w' hw
   obtain ⟨_, he, rfl⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (core.num.U8.to_be_bytes_spec x)
-  simp only [U8.Insts.Tls_codecSerialize.tls_serialize, he, lift, bind_tc_ok, hw]
+  simp only [U8.Insts.Tls_codecSerialize.tls_serialize, he, lift, bind_tc_ok, write_all_of_ok hw]
   rfl
 
 theorem U16.ser_runs (x : Std.U16) : SerRuns U16.Insts.Tls_codecSerialize x 2#usize
@@ -318,7 +318,7 @@ theorem U16.ser_runs (x : Std.U16) : SerRuns U16.Insts.Tls_codecSerialize x 2#us
     (by simpa [Array.to_slice] using (Aeneas.Std.core.num.U16.to_be_bytes x).property.symm)
   intro W WI w w' hw
   obtain ⟨_, he, rfl⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp (core.num.U16.to_be_bytes_spec x)
-  simp only [U16.Insts.Tls_codecSerialize.tls_serialize, he, lift, bind_tc_ok, hw]
+  simp only [U16.Insts.Tls_codecSerialize.tls_serialize, he, lift, bind_tc_ok, write_all_of_ok hw]
   rfl
 
 /-! ### Deserializers

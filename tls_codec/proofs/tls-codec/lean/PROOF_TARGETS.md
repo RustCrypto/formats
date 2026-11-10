@@ -231,7 +231,7 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `U24.from_be_bytes.spec.proof`
 - `U24.to_be_bytes.spec.proof`
 - `Usize.Insts.CoreConvertFromU24.from.spec.proof`
-- `U24.Insts.CoreConvertTryFromUsizeError.try_from.spec.proof`
+- `U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from.spec.proof`
 
 #### `tls_vec`: TlsSliceU* (4)
 
@@ -687,10 +687,11 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `varint.TlsVarInt.Insts.Tls_codecDeserialize.Lawful`
 - `varint.TlsVarInt.Insts.Tls_codecSerialize.Lawful`
 
-## 2d. Per-impl `Lawful`: core / third-party traits (428)
+## 2d. Per-impl `Lawful`: core / third-party traits (439)
 
-#### `core.ops.function.FnOnce` (114)
+#### `core.ops.function.FnOnce` (115)
 
+- `write_all.closure.Insts.CoreOpsFunctionFnOnceTupleErrorError.Lawful`
 - `arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairArrayU8LENSharedSliceU8Bool.Lawful`
 - `arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorError.Lawful`
 - `__4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.Lawful`
@@ -865,10 +866,11 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `Error.Insts.CoreConvertFromInfallible.Lawful`
 - `U64.Insts.CoreConvertFromTlsVarInt.Lawful`
 
-#### `core.fmt.Debug` (20)
+#### `core.fmt.Debug` (21)
 
 - `Error.Insts.CoreFmtDebug.Lawful`
 - `U24.Insts.CoreFmtDebug.Lawful`
+- `U24OverflowError.Insts.CoreFmtDebug.Lawful`
 - `quic_vec.VLBytes.Insts.CoreFmtDebug.Lawful`
 - `quic_vec.VLByteVec.Insts.CoreFmtDebug.Lawful`
 - `quic_vec.secret_bytes.SecretVLBytes.Insts.CoreFmtDebug.Lawful`
@@ -888,10 +890,11 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `tls_vec.TlsByteVecU32.Insts.CoreFmtDebug.Lawful`
 - `varint.TlsVarInt.Insts.CoreFmtDebug.Lawful`
 
-#### `core.clone.Clone` (19)
+#### `core.clone.Clone` (20)
 
 - `Error.Insts.CoreCloneClone.Lawful`
 - `U24.Insts.CoreCloneClone.Lawful`
+- `U24OverflowError.Insts.CoreCloneClone.Lawful`
 - `quic_vec.VLBytes.Insts.CoreCloneClone.Lawful`
 - `quic_vec.VLByteVec.Insts.CoreCloneClone.Lawful`
 - `quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCloneClone.Lawful`
@@ -910,31 +913,11 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `tls_vec.TlsByteVecU32.Insts.CoreCloneClone.Lawful`
 - `varint.TlsVarInt.Insts.CoreCloneClone.Lawful`
 
-#### `core.cmp.PartialEq` (19)
-
-- `Error.Insts.CoreCmpPartialEqError.Lawful`
-- `U24.Insts.CoreCmpPartialEqU24.Lawful`
-- `quic_vec.VLBytes.Insts.CoreCmpPartialEqVLBytes.Lawful`
-- `quic_vec.VLByteVec.Insts.CoreCmpPartialEqVLByteVec.Lawful`
-- `quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpPartialEqSecretVLBytes.Lawful`
-- `quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpPartialEqSecretVLByteVec.Lawful`
-- `varint.TlsVarInt.Insts.CoreCmpPartialEqTlsVarInt.Lawful`
-- `tls_vec.TlsByteVecU8.Insts.CoreCmpPartialEqTlsByteVecU8.Lawful`
-- `tls_vec.TlsByteVecU16.Insts.CoreCmpPartialEqTlsByteVecU16.Lawful`
-- `tls_vec.TlsByteVecU24.Insts.CoreCmpPartialEqTlsByteVecU24.Lawful`
-- `tls_vec.TlsByteVecU32.Insts.CoreCmpPartialEqTlsByteVecU32.Lawful`
-- `tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8.Lawful`
-- `tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16.Lawful`
-- `tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24.Lawful`
-- `tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32.Lawful`
-- `tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8.Lawful`
-- `tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16.Lawful`
-- `tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24.Lawful`
-- `tls_vec.SecretTlsVecU32.Insts.CoreCmpPartialEqSecretTlsVecU32.Lawful`
-
-#### `core.cmp.Eq` (18)
+#### `core.cmp.Eq` (20)
 
 - `Error.Insts.CoreCmpEq.Lawful`
+- `U24.Insts.CoreCmpEq.Lawful`
+- `U24OverflowError.Insts.CoreCmpEq.Lawful`
 - `quic_vec.VLBytes.Insts.CoreCmpEq.Lawful`
 - `quic_vec.VLByteVec.Insts.CoreCmpEq.Lawful`
 - `quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpEq.Lawful`
@@ -953,8 +936,32 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `tls_vec.TlsByteVecU32.Insts.CoreCmpEq.Lawful`
 - `varint.TlsVarInt.Insts.CoreCmpEq.Lawful`
 
-#### `core.hash.Hash` (17)
+#### `core.cmp.PartialEq` (20)
 
+- `Error.Insts.CoreCmpPartialEqError.Lawful`
+- `U24.Insts.CoreCmpPartialEqU24.Lawful`
+- `U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.Lawful`
+- `quic_vec.VLBytes.Insts.CoreCmpPartialEqVLBytes.Lawful`
+- `quic_vec.VLByteVec.Insts.CoreCmpPartialEqVLByteVec.Lawful`
+- `quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpPartialEqSecretVLBytes.Lawful`
+- `quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpPartialEqSecretVLByteVec.Lawful`
+- `varint.TlsVarInt.Insts.CoreCmpPartialEqTlsVarInt.Lawful`
+- `tls_vec.TlsByteVecU8.Insts.CoreCmpPartialEqTlsByteVecU8.Lawful`
+- `tls_vec.TlsByteVecU16.Insts.CoreCmpPartialEqTlsByteVecU16.Lawful`
+- `tls_vec.TlsByteVecU24.Insts.CoreCmpPartialEqTlsByteVecU24.Lawful`
+- `tls_vec.TlsByteVecU32.Insts.CoreCmpPartialEqTlsByteVecU32.Lawful`
+- `tls_vec.TlsVecU8.Insts.CoreCmpPartialEqTlsVecU8.Lawful`
+- `tls_vec.TlsVecU16.Insts.CoreCmpPartialEqTlsVecU16.Lawful`
+- `tls_vec.TlsVecU24.Insts.CoreCmpPartialEqTlsVecU24.Lawful`
+- `tls_vec.TlsVecU32.Insts.CoreCmpPartialEqTlsVecU32.Lawful`
+- `tls_vec.SecretTlsVecU8.Insts.CoreCmpPartialEqSecretTlsVecU8.Lawful`
+- `tls_vec.SecretTlsVecU16.Insts.CoreCmpPartialEqSecretTlsVecU16.Lawful`
+- `tls_vec.SecretTlsVecU24.Insts.CoreCmpPartialEqSecretTlsVecU24.Lawful`
+- `tls_vec.SecretTlsVecU32.Insts.CoreCmpPartialEqSecretTlsVecU32.Lawful`
+
+#### `core.hash.Hash` (18)
+
+- `U24.Insts.CoreHashHash.Lawful`
 - `quic_vec.VLBytes.Insts.CoreHashHash.Lawful`
 - `quic_vec.VLByteVec.Insts.CoreHashHash.Lawful`
 - `quic_vec.secret_bytes.SecretVLBytes.Insts.CoreHashHash.Lawful`
@@ -1101,6 +1108,17 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `tls_vec.TlsByteVecU24.Insts.CoreOpsIndexIndexUsizeU8.Lawful`
 - `tls_vec.TlsByteVecU32.Insts.CoreOpsIndexIndexUsizeU8.Lawful`
 
+#### `core.marker.StructuralPartialEq` (8)
+
+- `Error.Insts.CoreMarkerStructuralPartialEq.Lawful`
+- `U24.Insts.CoreMarkerStructuralPartialEq.Lawful`
+- `U24OverflowError.Insts.CoreMarkerStructuralPartialEq.Lawful`
+- `quic_vec.VLBytes.Insts.CoreMarkerStructuralPartialEq.Lawful`
+- `quic_vec.VLByteVec.Insts.CoreMarkerStructuralPartialEq.Lawful`
+- `quic_vec.secret_bytes.SecretVLBytes.Insts.CoreMarkerStructuralPartialEq.Lawful`
+- `quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreMarkerStructuralPartialEq.Lawful`
+- `varint.TlsVarInt.Insts.CoreMarkerStructuralPartialEq.Lawful`
+
 #### `spec.io.DecodersAgree` (8)
 
 - `U8.Insts.Tls_codecSpecIoDecodersAgree.Lawful`
@@ -1122,16 +1140,6 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `tls_vec.SecretTlsVecU16.Insts.ZeroizeZeroize.Lawful`
 - `tls_vec.SecretTlsVecU24.Insts.ZeroizeZeroize.Lawful`
 - `tls_vec.SecretTlsVecU32.Insts.ZeroizeZeroize.Lawful`
-
-#### `core.marker.StructuralPartialEq` (7)
-
-- `Error.Insts.CoreMarkerStructuralPartialEq.Lawful`
-- `U24.Insts.CoreMarkerStructuralPartialEq.Lawful`
-- `quic_vec.VLBytes.Insts.CoreMarkerStructuralPartialEq.Lawful`
-- `quic_vec.VLByteVec.Insts.CoreMarkerStructuralPartialEq.Lawful`
-- `quic_vec.secret_bytes.SecretVLBytes.Insts.CoreMarkerStructuralPartialEq.Lawful`
-- `quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreMarkerStructuralPartialEq.Lawful`
-- `varint.TlsVarInt.Insts.CoreMarkerStructuralPartialEq.Lawful`
 
 #### `core.ops.drop.Drop` (6)
 
@@ -1165,6 +1173,12 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 - `quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertAsRefSliceU8.Lawful`
 - `quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertAsRefSliceU8.Lawful`
 
+#### `core.marker.Copy` (3)
+
+- `U24.Insts.CoreMarkerCopy.Lawful`
+- `U24OverflowError.Insts.CoreMarkerCopy.Lawful`
+- `varint.TlsVarInt.Insts.CoreMarkerCopy.Lawful`
+
 #### `spec.io.NonEmptyStd` (3)
 
 - `U8.Insts.Tls_codecSpecIoNonEmptyStd.Lawful`
@@ -1179,13 +1193,18 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 
 #### `core.convert.TryFrom` (2)
 
-- `U24.Insts.CoreConvertTryFromUsizeError.Lawful`
+- `U24.Insts.CoreConvertTryFromUsizeU24OverflowError.Lawful`
 - `varint.TlsVarInt.Insts.CoreConvertTryFromU64Error.Lawful`
 
-#### `core.marker.Copy` (2)
+#### `core.error.Error` (2)
 
-- `U24.Insts.CoreMarkerCopy.Lawful`
-- `varint.TlsVarInt.Insts.CoreMarkerCopy.Lawful`
+- `Error.Insts.CoreErrorError.Lawful`
+- `U24OverflowError.Insts.CoreErrorError.Lawful`
+
+#### `core.fmt.Display` (2)
+
+- `Error.Insts.CoreFmtDisplay.Lawful`
+- `U24OverflowError.Insts.CoreFmtDisplay.Lawful`
 
 #### `spec.io.RoundTripMixed` (2)
 
@@ -1201,13 +1220,5 @@ proved, the 64-bit ones under the assumed `numBits_eq_64`; see `scripts/audit_*_
 
 - `quic_vec.secret_bytes.SecretVLBytes.Insts.ZeroizeZeroizeOnDrop.Lawful`
 - `quic_vec.secret_byte_vec.SecretVLByteVec.Insts.ZeroizeZeroizeOnDrop.Lawful`
-
-#### `core.error.Error` (1)
-
-- `Error.Insts.CoreErrorError.Lawful`
-
-#### `core.fmt.Display` (1)
-
-- `Error.Insts.CoreFmtDisplay.Lawful`
 
 <!-- END TARGETS -->

@@ -209,7 +209,7 @@ theorem tls_vec.TlsByteVecU24.serialize_bytes_bytes_char (self : tls_vec.TlsByte
   mvcgen [tls_vec.TlsByteVecU24.serialize_bytes_bytes,
     tls_vec.TlsByteVecU24.get_content_lengths_char,
     checked_alloc_len_total, alloc.vec.Vec.extend_from_slice_U8_spec,
-    U24.Insts.CoreConvertTryFromUsizeError.try_from_char,
+    U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from_char,
     alloc.vec.Vec.with_capacity, core.result.Result.unwrap_ok_spec, U24_serialize_char,
     alloc.vec.Vec.len_spec, tls_vec.TlsByteVecU24.as_slice, CoreModels.core.slice.Slice.len_spec,
     tls_vec.TlsByteVecU24.assert_written_bytes_total]
@@ -633,7 +633,7 @@ theorem tls_vec.TlsByteVecU24.serialize_bytes_bytes_content (self : tls_vec.TlsB
   mvcgen [tls_vec.TlsByteVecU24.serialize_bytes_bytes,
     tls_vec.TlsByteVecU24.get_content_lengths_char,
     checked_alloc_len_total, alloc.vec.Vec.extend_from_slice_U8_spec,
-    U24.Insts.CoreConvertTryFromUsizeError.try_from_char,
+    U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from_char,
     alloc.vec.Vec.with_capacity, core.result.Result.unwrap_ok_spec, U24_serialize_char,
     alloc.vec.Vec.len_spec, tls_vec.TlsByteVecU24.as_slice, CoreModels.core.slice.Slice.len_spec,
     tls_vec.TlsByteVecU24.assert_written_bytes_total]

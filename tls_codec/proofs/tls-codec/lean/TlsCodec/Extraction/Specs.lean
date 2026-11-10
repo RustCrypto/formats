@@ -30,14 +30,14 @@ noncomputable section
 namespace tls_codec
 
 /-- [tls_codec::Size::tls_serialized_len::pre]:
-    Source: 'tls_codec/src/lib.rs', lines 248:4-248:42 -/
+    Source: 'tls_codec/src/lib.rs', lines 268:4-268:42 -/
 @[reducible]
 def Size.tls_serialized_len.pre
   {Self_ : Type} (SizeInst : Size Self_) (self_ : Self_) : RustM Bool := do
   ok true
 
 /-- [tls_codec::Size::tls_serialized_len::post]:
-    Source: 'tls_codec/src/lib.rs', lines 245:16-245:35 -/
+    Source: 'tls_codec/src/lib.rs', lines 265:16-265:35 -/
 @[reducible]
 def Size.tls_serialized_len.post
   {Self_ : Type} (SizeInst : Size Self_) (self_ : Self_) (i : Std.Usize) :
@@ -46,7 +46,7 @@ def Size.tls_serialized_len.post
   ok true
 
 /-- Lawful structure of trait: [tls_codec::Size]
-    Source: 'tls_codec/src/lib.rs', lines 246:0-249:1 -/
+    Source: 'tls_codec/src/lib.rs', lines 266:0-269:1 -/
 structure Size.Lawful (Self : Type) (SizeInst : Size Self) : Prop where
   tls_serialized_len_spec (self_ : Self) :
     (Size.tls_serialized_len.pre SizeInst self_).holds →
@@ -56,7 +56,7 @@ structure Size.Lawful (Self : Type) (SizeInst : Size Self) : Prop where
       ⌜ (Size.tls_serialized_len.post SizeInst self_ res).holds ⌝ ⦄
 
 /-- [tls_codec::Serialize::tls_serialize::pre]:
-    Source: 'tls_codec/src/lib.rs', lines 256:16-256:35 -/
+    Source: 'tls_codec/src/lib.rs', lines 276:16-276:35 -/
 @[reducible]
 def Serialize.tls_serialize.pre
   {Self_ : Type} {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
@@ -72,7 +72,7 @@ def Serialize.tls_serialize.pre
   ok (i <= i3)
 
 /-- [tls_codec::Serialize::tls_serialize::post]:
-    Source: 'tls_codec/src/lib.rs', lines 256:16-256:35 -/
+    Source: 'tls_codec/src/lib.rs', lines 276:16-276:35 -/
 @[reducible]
 def Serialize.tls_serialize.post
   {Self_ : Type} {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
@@ -105,7 +105,7 @@ def Serialize.tls_serialize.post
   | core.result.Result.Err _ => core.result.Result.is_err res
 
 /-- [tls_codec::Serialize::tls_serialize_detached::pre]:
-    Source: 'tls_codec/src/lib.rs', lines 277:4-296:5 -/
+    Source: 'tls_codec/src/lib.rs', lines 297:4-316:5 -/
 @[reducible]
 def Serialize.tls_serialize_detached.pre
   {Self_ : Type} (SizeInst : Size Self_) (SerializeInst : Serialize Self_)
@@ -115,7 +115,7 @@ def Serialize.tls_serialize_detached.pre
   ok true
 
 /-- [tls_codec::Serialize::tls_serialize_detached::post]:
-    Source: 'tls_codec/src/lib.rs', lines 256:16-256:35 -/
+    Source: 'tls_codec/src/lib.rs', lines 276:16-276:35 -/
 @[reducible]
 def Serialize.tls_serialize_detached.post
   {Self_ : Type} (SizeInst : Size Self_) (SerializeInst : Serialize Self_)
@@ -131,7 +131,7 @@ def Serialize.tls_serialize_detached.post
       SerializeInst) res self_
 
 /-- Lawful structure of trait: [tls_codec::Serialize]
-    Source: 'tls_codec/src/lib.rs', lines 257:0-297:1 -/
+    Source: 'tls_codec/src/lib.rs', lines 277:0-317:1 -/
 structure Serialize.Lawful (Self : Type) (SerializeInst : Serialize Self) :
   Prop where
   SizeInstLawful : Size.Lawful Self SerializeInst.SizeInst
@@ -155,7 +155,7 @@ structure Serialize.Lawful (Self : Type) (SerializeInst : Serialize Self) :
           SerializeInst self_ res).holds ⌝ ⦄
 
 /-- [tls_codec::Deserialize::tls_deserialize::pre]:
-    Source: 'tls_codec/src/lib.rs', lines 327:4-329:20 -/
+    Source: 'tls_codec/src/lib.rs', lines 347:4-349:20 -/
 @[reducible]
 def Deserialize.tls_deserialize.pre
   {Self_ : Type} {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
@@ -165,7 +165,7 @@ def Deserialize.tls_deserialize.pre
   ok true
 
 /-- [tls_codec::Deserialize::tls_deserialize::post]:
-    Source: 'tls_codec/src/lib.rs', lines 313:16-313:35 -/
+    Source: 'tls_codec/src/lib.rs', lines 333:16-333:35 -/
 @[reducible]
 def Deserialize.tls_deserialize.post
   {Self_ : Type} {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
@@ -183,7 +183,7 @@ def Deserialize.tls_deserialize.post
       allocioreadReadInst SizeInst DeserializeInst) res (bytes, bytes_future)
 
 /-- [tls_codec::Deserialize::tls_deserialize_exact::pre]:
-    Source: 'tls_codec/src/lib.rs', lines 339:4-351:5 -/
+    Source: 'tls_codec/src/lib.rs', lines 359:4-371:5 -/
 @[reducible]
 def Deserialize.tls_deserialize_exact.pre
   {Self_ : Type} {T1 : Type} (SizeInst : Size Self_) (DeserializeInst :
@@ -194,7 +194,7 @@ def Deserialize.tls_deserialize_exact.pre
   ok true
 
 /-- [tls_codec::Deserialize::tls_deserialize_exact::post]:
-    Source: 'tls_codec/src/lib.rs', lines 313:16-313:35 -/
+    Source: 'tls_codec/src/lib.rs', lines 333:16-333:35 -/
 @[reducible]
 def Deserialize.tls_deserialize_exact.post
   {Self_ : Type} {T1 : Type} (SizeInst : Size Self_) (DeserializeInst :
@@ -211,7 +211,7 @@ def Deserialize.tls_deserialize_exact.post
       DeserializeInst coreconvertAsRefT1SliceU8Inst) res bytes
 
 /-- Lawful structure of trait: [tls_codec::Deserialize]
-    Source: 'tls_codec/src/lib.rs', lines 314:0-352:1 -/
+    Source: 'tls_codec/src/lib.rs', lines 334:0-372:1 -/
 structure Deserialize.Lawful (Self : Type) (DeserializeInst : Deserialize Self)
   : Prop where
   SizeInstLawful : Size.Lawful Self DeserializeInst.SizeInst
@@ -238,7 +238,7 @@ structure Deserialize.Lawful (Self : Type) (DeserializeInst : Deserialize Self)
           DeserializeInst coreconvertAsRefPSliceU8Inst bytes res).holds ⌝ ⦄
 
 /-- [tls_codec::DeserializeBytes::tls_deserialize_bytes::pre]:
-    Source: 'tls_codec/src/lib.rs', lines 370:4-372:20 -/
+    Source: 'tls_codec/src/lib.rs', lines 390:4-392:20 -/
 @[reducible]
 def DeserializeBytes.tls_deserialize_bytes.pre
   {Self_ : Type} (SizeInst : Size Self_) (DeserializeBytesInst :
@@ -248,7 +248,7 @@ def DeserializeBytes.tls_deserialize_bytes.pre
   ok true
 
 /-- [tls_codec::DeserializeBytes::tls_deserialize_bytes::post]:
-    Source: 'tls_codec/src/lib.rs', lines 357:16-357:35 -/
+    Source: 'tls_codec/src/lib.rs', lines 377:16-377:35 -/
 @[reducible]
 def DeserializeBytes.tls_deserialize_bytes.post
   {Self_ : Type} (SizeInst : Size Self_) (DeserializeBytesInst :
@@ -265,7 +265,7 @@ def DeserializeBytes.tls_deserialize_bytes.post
       SizeInst DeserializeBytesInst) res bytes
 
 /-- [tls_codec::DeserializeBytes::tls_deserialize_exact_bytes::pre]:
-    Source: 'tls_codec/src/lib.rs', lines 381:4-392:5 -/
+    Source: 'tls_codec/src/lib.rs', lines 401:4-412:5 -/
 @[reducible]
 def DeserializeBytes.tls_deserialize_exact_bytes.pre
   {Self_ : Type} (SizeInst : Size Self_) (DeserializeBytesInst :
@@ -275,7 +275,7 @@ def DeserializeBytes.tls_deserialize_exact_bytes.pre
   ok true
 
 /-- [tls_codec::DeserializeBytes::tls_deserialize_exact_bytes::post]:
-    Source: 'tls_codec/src/lib.rs', lines 357:16-357:35 -/
+    Source: 'tls_codec/src/lib.rs', lines 377:16-377:35 -/
 @[reducible]
 def DeserializeBytes.tls_deserialize_exact_bytes.post
   {Self_ : Type} (SizeInst : Size Self_) (DeserializeBytesInst :
@@ -292,7 +292,7 @@ def DeserializeBytes.tls_deserialize_exact_bytes.post
       DeserializeBytesInst) res bytes
 
 /-- Lawful structure of trait: [tls_codec::DeserializeBytes]
-    Source: 'tls_codec/src/lib.rs', lines 358:0-393:1 -/
+    Source: 'tls_codec/src/lib.rs', lines 378:0-413:1 -/
 structure DeserializeBytes.Lawful (Self : Type) (DeserializeBytesInst :
   DeserializeBytes Self) : Prop where
   SizeInstLawful : Size.Lawful Self DeserializeBytesInst.SizeInst
@@ -314,7 +314,7 @@ structure DeserializeBytes.Lawful (Self : Type) (DeserializeBytesInst :
           DeserializeBytesInst.SizeInst DeserializeBytesInst bytes res).holds ⌝ ⦄
 
 /-- [tls_codec::SerializeBytes::tls_serialize_bytes::pre]:
-    Source: 'tls_codec/src/lib.rs', lines 308:4-308:60 -/
+    Source: 'tls_codec/src/lib.rs', lines 328:4-328:60 -/
 @[reducible]
 def SerializeBytes.tls_serialize_bytes.pre
   {Self_ : Type} (SizeInst : Size Self_) (SerializeBytesInst : SerializeBytes
@@ -324,7 +324,7 @@ def SerializeBytes.tls_serialize_bytes.pre
   ok true
 
 /-- [tls_codec::SerializeBytes::tls_serialize_bytes::post]:
-    Source: 'tls_codec/src/lib.rs', lines 303:16-303:35 -/
+    Source: 'tls_codec/src/lib.rs', lines 323:16-323:35 -/
 @[reducible]
 def SerializeBytes.tls_serialize_bytes.post
   {Self_ : Type} (SizeInst : Size Self_) (SerializeBytesInst : SerializeBytes
@@ -341,7 +341,7 @@ def SerializeBytes.tls_serialize_bytes.post
       SerializeBytesInst) res self_
 
 /-- Lawful structure of trait: [tls_codec::SerializeBytes]
-    Source: 'tls_codec/src/lib.rs', lines 304:0-309:1 -/
+    Source: 'tls_codec/src/lib.rs', lines 324:0-329:1 -/
 structure SerializeBytes.Lawful (Self : Type) (SerializeBytesInst :
   SerializeBytes Self) : Prop where
   SizeInstLawful : Size.Lawful Self SerializeBytesInst.SizeInst
@@ -836,7 +836,7 @@ structure spec.io.RoundTripMixed.Lawful (Self : Type) (RoundTripMixedInst :
           whole res).holds ⌝ ⦄
 
 /-- [tls_codec::checked_capacity::post]:
-    Source: 'tls_codec/src/lib.rs', lines 216:16-216:42 -/
+    Source: 'tls_codec/src/lib.rs', lines 236:16-236:42 -/
 @[reducible]
 def checked_capacity.post
   (len : Std.Usize) (r : core.result.Result Std.Usize Error) : RustM Bool := do
@@ -848,7 +848,7 @@ def checked_capacity.spec (len : Std.Usize) : Prop :=
   ⦃ ⇓ res => ⌜ (checked_capacity.post len res).holds ⌝ ⦄
 
 /-- [tls_codec::checked_alloc_len::post]:
-    Source: 'tls_codec/src/lib.rs', lines 231:16-235:2 -/
+    Source: 'tls_codec/src/lib.rs', lines 251:16-255:2 -/
 @[reducible]
 def checked_alloc_len.post
   (a : Std.Usize) (b : Std.Usize) (res : core.result.Result Std.Usize Error) :
@@ -873,7 +873,7 @@ def checked_alloc_len.spec (a : Std.Usize) (b : Std.Usize) : Prop :=
   ⦃ ⇓ res => ⌜ (checked_alloc_len.post a b res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::tls_serialize_bytes_len::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 379:16-379:42 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 380:16-380:42 -/
 @[reducible]
 def quic_vec.tls_serialize_bytes_len.post
   (bytes : Slice Std.U8) (i : Std.Usize) : RustM Bool := do
@@ -1552,7 +1552,7 @@ def varint.calculate_value.spec (byte : Std.U8) : Prop :=
   ⦃ ⇓ res => ⌜ (varint.calculate_value.post byte res).holds ⌝ ⦄
 
 /-- [tls_codec::{tls_codec::U24}::from_be_bytes::post]:
-    Source: 'tls_codec/src/lib.rs', lines 401:16-401:35 -/
+    Source: 'tls_codec/src/lib.rs', lines 421:16-421:35 -/
 @[reducible]
 def U24.from_be_bytes.post
   (bytes : Array Std.U8 3#usize) (res : U24) : RustM Bool := do
@@ -1566,7 +1566,7 @@ def U24.from_be_bytes.spec (bytes : Array Std.U8 3#usize) : Prop :=
   ⦃ ⇓ res => ⌜ (U24.from_be_bytes.post bytes res).holds ⌝ ⦄
 
 /-- [tls_codec::{tls_codec::U24}::to_be_bytes::post]:
-    Source: 'tls_codec/src/lib.rs', lines 401:16-401:35 -/
+    Source: 'tls_codec/src/lib.rs', lines 421:16-421:35 -/
 @[reducible]
 def U24.to_be_bytes.post
   (self_ : U24) (res : Array Std.U8 3#usize) : RustM Bool := do
@@ -1579,7 +1579,7 @@ def U24.to_be_bytes.spec (self : U24) : Prop :=
   ⦃ ⇓ res => ⌜ (U24.to_be_bytes.post self res).holds ⌝ ⦄
 
 /-- [tls_codec::{impl core::convert::From<tls_codec::U24> for usize}::from::post]:
-    Source: 'tls_codec/src/lib.rs', lines 417:16-417:35 -/
+    Source: 'tls_codec/src/lib.rs', lines 442:16-442:35 -/
 @[reducible]
 def Usize.Insts.CoreConvertFromU24.from.post
   (value : U24) (res : Std.Usize) : RustM Bool := do
@@ -1604,11 +1604,13 @@ def Usize.Insts.CoreConvertFromU24.from.spec (value : U24) : Prop :=
   ⦃ ⇓ res =>
     ⌜ (Usize.Insts.CoreConvertFromU24.from.post value res).holds ⌝ ⦄
 
-/-- [tls_codec::{impl core::convert::TryFrom<usize, tls_codec::Error> for tls_codec::U24}::try_from::post]:
-    Source: 'tls_codec/src/lib.rs', lines 432:16-432:35 -/
+/-- [tls_codec::{impl core::convert::TryFrom<usize, tls_codec::U24OverflowError> for tls_codec::U24}::try_from::post]:
+    Source: 'tls_codec/src/lib.rs', lines 470:16-470:35 -/
 @[reducible]
-def U24.Insts.CoreConvertTryFromUsizeError.try_from.post
-  (value : Std.Usize) (res : core.result.Result U24 Error) : RustM Bool := do
+def U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from.post
+  (value : Std.Usize) (res : core.result.Result U24 U24OverflowError) :
+  RustM Bool
+  := do
   let r ←
     if value <= 16777215#usize
     then
@@ -1620,16 +1622,18 @@ def U24.Insts.CoreConvertTryFromUsizeError.try_from.post
       let i4 ← lift (UScalar.cast .U8 value)
       let u ← U24.from_be_bytes (Array.make 3#usize [ i1, i3, i4 ])
       ok (core.result.Result.Ok u)
-    else ok (core.result.Result.Err Error.LibraryError)
+    else ok (core.result.Result.Err ())
   core.result.Result.Insts.CoreCmpPartialEqResult.eq
-    U24.Insts.CoreCmpPartialEqU24 Error.Insts.CoreCmpPartialEqError res r
+    U24.Insts.CoreCmpPartialEqU24
+    U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError res r
 
-def U24.Insts.CoreConvertTryFromUsizeError.try_from.spec (value : Std.Usize)
-  : Prop :=
+def U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from.spec
+  (value : Std.Usize) : Prop :=
   ⦃ ⌜ True ⌝ ⦄
-  U24.Insts.CoreConvertTryFromUsizeError.try_from value
+  U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from value
   ⦃ ⇓ res =>
-    ⌜ (U24.Insts.CoreConvertTryFromUsizeError.try_from.post value res).holds ⌝ ⦄
+    ⌜ (U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from.post value
+        res).holds ⌝ ⦄
 
 /-- [tls_codec::arrays::{impl tls_codec::DeserializeBytes for [u8; LEN]}::tls_deserialize_bytes::post]:
     Source: 'tls_codec/src/arrays.rs', lines 29:16-29:35 -/
@@ -1882,7 +1886,7 @@ def U64.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes.spec
         res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::ContentLength}::new::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 45:16-45:35 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 46:16-46:35 -/
 @[reducible]
 def quic_vec.ContentLength.new.post
   (value : varint.TlsVarInt)
@@ -1897,7 +1901,7 @@ def quic_vec.ContentLength.new.spec (value : varint.TlsVarInt) : Prop :=
   ⦃ ⇓ res => ⌜ (quic_vec.ContentLength.new.post value res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::ContentLength}::from_usize::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 45:16-45:35 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 46:16-46:35 -/
 @[reducible]
 def quic_vec.ContentLength.from_usize.post
   (value : Std.Usize) (res : core.result.Result quic_vec.ContentLength Error) :
@@ -1918,7 +1922,7 @@ def quic_vec.ContentLength.from_usize.spec (value : Std.Usize) : Prop :=
     ⌜ (quic_vec.ContentLength.from_usize.post value res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLBytes}::tls_serialize_bytes::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 148:16-148:35 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 149:16-149:35 -/
 @[reducible]
 def quic_vec.VLBytes.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.post
   (self_ : quic_vec.VLBytes)
@@ -1948,7 +1952,7 @@ def quic_vec.VLBytes.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.spec
         self res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLBytes}::as_slice::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 283:16-283:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 284:16-284:18 -/
 @[reducible]
 def quic_vec.VLBytes.as_slice.post
   (self_ : quic_vec.VLBytes) (s : Slice Std.U8) : RustM Bool := do
@@ -1960,7 +1964,7 @@ def quic_vec.VLBytes.as_slice.spec (self : quic_vec.VLBytes) : Prop :=
   ⦃ ⇓ res => ⌜ (quic_vec.VLBytes.as_slice.post self res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLBytes}::push::pre]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 292:16-292:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 293:16-293:18 -/
 @[reducible]
 def quic_vec.VLBytes.push.pre
   (self_ : quic_vec.VLBytes) (value : Std.U8) : RustM Bool := do
@@ -1969,7 +1973,7 @@ def quic_vec.VLBytes.push.pre
   ok (i < core.num.Usize.MAX)
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLBytes}::push::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 292:16-292:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 293:16-293:18 -/
 @[reducible]
 def quic_vec.VLBytes.push.post
   (self_ : quic_vec.VLBytes) (value : Std.U8) (self__future : quic_vec.VLBytes)
@@ -1991,7 +1995,7 @@ def quic_vec.VLBytes.push.spec (self : quic_vec.VLBytes) (value : Std.U8)
   ⦃ ⇓ res => ⌜ (quic_vec.VLBytes.push.post self value res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLBytes}::pop::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 302:16-302:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 303:16-303:18 -/
 @[reducible]
 def quic_vec.VLBytes.pop.post
   (self_ : quic_vec.VLBytes)
@@ -2018,7 +2022,7 @@ def quic_vec.VLBytes.pop.spec (self : quic_vec.VLBytes) : Prop :=
   ⦃ ⇓ res => ⌜ (quic_vec.VLBytes.pop.post self res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLByteVec}::as_slice::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 283:16-283:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 284:16-284:18 -/
 @[reducible]
 def quic_vec.VLByteVec.as_slice.post
   (self_ : quic_vec.VLByteVec) (s : Slice Std.U8) : RustM Bool := do
@@ -2030,7 +2034,7 @@ def quic_vec.VLByteVec.as_slice.spec (self : quic_vec.VLByteVec) : Prop :=
   ⦃ ⇓ res => ⌜ (quic_vec.VLByteVec.as_slice.post self res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLByteVec}::push::pre]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 292:16-292:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 293:16-293:18 -/
 @[reducible]
 def quic_vec.VLByteVec.push.pre
   (self_ : quic_vec.VLByteVec) (value : Std.U8) : RustM Bool := do
@@ -2039,7 +2043,7 @@ def quic_vec.VLByteVec.push.pre
   ok (i < core.num.Usize.MAX)
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLByteVec}::push::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 292:16-292:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 293:16-293:18 -/
 @[reducible]
 def quic_vec.VLByteVec.push.post
   (self_ : quic_vec.VLByteVec) (value : Std.U8)
@@ -2062,7 +2066,7 @@ def quic_vec.VLByteVec.push.spec (self : quic_vec.VLByteVec) (value : Std.U8)
     ⌜ (quic_vec.VLByteVec.push.post self value res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLByteVec}::pop::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 302:16-302:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 303:16-303:18 -/
 @[reducible]
 def quic_vec.VLByteVec.pop.post
   (self_ : quic_vec.VLByteVec)
@@ -2089,7 +2093,7 @@ def quic_vec.VLByteVec.pop.spec (self : quic_vec.VLByteVec) : Prop :=
   ⦃ ⇓ res => ⌜ (quic_vec.VLByteVec.pop.post self res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLByteSlice<'_0>}::as_slice::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 611:16-611:35 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 612:16-612:35 -/
 @[reducible]
 def quic_vec.VLByteSlice.as_slice.post
   (self_ : quic_vec.VLByteSlice) (s : Slice Std.U8) : RustM Bool := do
@@ -2102,7 +2106,7 @@ def quic_vec.VLByteSlice.as_slice.spec (self : quic_vec.VLByteSlice) : Prop :=
     ⌜ (quic_vec.VLByteSlice.as_slice.post self res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLByteSlice<'_0>}::tls_serialize_bytes::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 641:16-641:35 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 642:16-642:35 -/
 @[reducible]
 def quic_vec.VLByteSlice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes.post
   (self_ : quic_vec.VLByteSlice)
@@ -6776,7 +6780,7 @@ def U64.Insts.CoreConvertFromTlsVarInt.from.spec (value : varint.TlsVarInt)
     ⌜ (U64.Insts.CoreConvertFromTlsVarInt.from.post value res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::secret_bytes::{tls_codec::quic_vec::secret_bytes::SecretVLBytes}::as_slice::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 283:16-283:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 284:16-284:18 -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes.as_slice.post
   (self_ : quic_vec.secret_bytes.SecretVLBytes) (s : Slice Std.U8) :
@@ -6792,7 +6796,7 @@ def quic_vec.secret_bytes.SecretVLBytes.as_slice.spec
     ⌜ (quic_vec.secret_bytes.SecretVLBytes.as_slice.post self res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::secret_bytes::{tls_codec::quic_vec::secret_bytes::SecretVLBytes}::push::pre]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 292:16-292:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 293:16-293:18 -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes.push.pre
   (self_ : quic_vec.secret_bytes.SecretVLBytes) (value : Std.U8) :
@@ -6803,7 +6807,7 @@ def quic_vec.secret_bytes.SecretVLBytes.push.pre
   ok (i < core.num.Usize.MAX)
 
 /-- [tls_codec::quic_vec::secret_bytes::{tls_codec::quic_vec::secret_bytes::SecretVLBytes}::push::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 292:16-292:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 293:16-293:18 -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes.push.post
   (self_ : quic_vec.secret_bytes.SecretVLBytes) (value : Std.U8)
@@ -6826,7 +6830,7 @@ def quic_vec.secret_bytes.SecretVLBytes.push.spec
     ⌜ (quic_vec.secret_bytes.SecretVLBytes.push.post self value res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::secret_bytes::{tls_codec::quic_vec::secret_bytes::SecretVLBytes}::pop::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 302:16-302:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 303:16-303:18 -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes.pop.post
   (self_ : quic_vec.secret_bytes.SecretVLBytes)
@@ -6855,7 +6859,7 @@ def quic_vec.secret_bytes.SecretVLBytes.pop.spec
     ⌜ (quic_vec.secret_bytes.SecretVLBytes.pop.post self res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::as_slice::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 283:16-283:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 284:16-284:18 -/
 @[reducible]
 def quic_vec.secret_byte_vec.SecretVLByteVec.as_slice.post
   (self_ : quic_vec.secret_byte_vec.SecretVLByteVec) (s : Slice Std.U8) :
@@ -6871,7 +6875,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.as_slice.spec
     ⌜ (quic_vec.secret_byte_vec.SecretVLByteVec.as_slice.post self res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::push::pre]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 292:16-292:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 293:16-293:18 -/
 @[reducible]
 def quic_vec.secret_byte_vec.SecretVLByteVec.push.pre
   (self_ : quic_vec.secret_byte_vec.SecretVLByteVec) (value : Std.U8) :
@@ -6882,7 +6886,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.push.pre
   ok (i < core.num.Usize.MAX)
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::push::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 292:16-292:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 293:16-293:18 -/
 @[reducible]
 def quic_vec.secret_byte_vec.SecretVLByteVec.push.post
   (self_ : quic_vec.secret_byte_vec.SecretVLByteVec) (value : Std.U8)
@@ -6906,7 +6910,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.push.spec
         res).holds ⌝ ⦄
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::pop::post]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 302:16-302:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 303:16-303:18 -/
 @[reducible]
 def quic_vec.secret_byte_vec.SecretVLByteVec.pop.post
   (self_ : quic_vec.secret_byte_vec.SecretVLByteVec)

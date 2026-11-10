@@ -219,10 +219,10 @@ theorem prefix_U32 (n : Std.Usize) (h : n.val ≤ 4294967295) : ∃ p pre,
   exact ⟨y, _, hr, U32.ser_runs y, by simp⟩
 
 theorem prefix_U24 (n : Std.Usize) (h : n.val ≤ 16777215) : ∃ p pre,
-    U24.Insts.CoreConvertTryFromUsizeError.try_from n = ok (.Ok p) ∧
+    U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from n = ok (.Ok p) ∧
     SerRuns U24.Insts.Tls_codecSerialize p 3#usize (some pre) ∧ pre.length = (3#usize).val := by
   obtain ⟨r, hr, hP⟩ := Aeneas.Std.WP.triple_iff_exists_ok.mp
-    (U24.Insts.CoreConvertTryFromUsizeError.try_from_char n)
+    (U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from_char n)
   obtain ⟨y, _, _, _, rfl, -⟩ := hP.1 h
   exact ⟨y, _, hr, U24.ser_runs y, by simp⟩
 

@@ -25,7 +25,7 @@ set_option maxRecDepth 2048
 namespace tls_codec
 
 /-- Trait declaration: [tls_codec::Size]
-    Source: 'tls_codec/src/lib.rs', lines 246:0-249:1
+    Source: 'tls_codec/src/lib.rs', lines 266:0-269:1
     Visibility: public -/
 structure Size (Self : Type) where
   tls_serialized_len : Self → RustM Std.Usize
@@ -46,7 +46,7 @@ inductive Error where
 | LibraryError : Error
 
 /-- Trait declaration: [tls_codec::Serialize]
-    Source: 'tls_codec/src/lib.rs', lines 257:0-297:1
+    Source: 'tls_codec/src/lib.rs', lines 277:0-317:1
     Visibility: public -/
 structure Serialize (Self : Type) where
   SizeInst : Size Self
@@ -55,8 +55,13 @@ structure Serialize (Self : Type) where
   tls_serialize_detached : Self → RustM (core.result.Result (alloc.vec.Vec
     Std.U8) Error)
 
+/-- [tls_codec::write_all::closure]
+    Source: 'tls_codec/src/lib.rs', lines 144:17-144:69 -/
+@[reducible]
+def write_all.closure (W : Type) := Unit
+
 /-- Trait declaration: [tls_codec::Deserialize]
-    Source: 'tls_codec/src/lib.rs', lines 314:0-352:1
+    Source: 'tls_codec/src/lib.rs', lines 334:0-372:1
     Visibility: public -/
 structure Deserialize (Self : Type) where
   SizeInst : Size Self
@@ -74,7 +79,7 @@ def arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes._.ensures.closure
   Slice Std.U8
 
 /-- Trait declaration: [tls_codec::DeserializeBytes]
-    Source: 'tls_codec/src/lib.rs', lines 358:0-393:1
+    Source: 'tls_codec/src/lib.rs', lines 378:0-413:1
     Visibility: public -/
 structure DeserializeBytes (Self : Type) where
   SizeInst : Size Self
@@ -91,7 +96,7 @@ def arrays.DeserializeBytesArrayU8LEN.tls_deserialize_bytes.closure (LEN :
 Unit
 
 /-- Trait declaration: [tls_codec::SerializeBytes]
-    Source: 'tls_codec/src/lib.rs', lines 304:0-309:1
+    Source: 'tls_codec/src/lib.rs', lines 324:0-329:1
     Visibility: public -/
 structure SerializeBytes (Self : Type) where
   SizeInst : Size Self
@@ -99,49 +104,55 @@ structure SerializeBytes (Self : Type) where
     Std.U8) Error)
 
 /-- [tls_codec::_#4::ensures::closure]
-    Source: 'tls_codec/src/lib.rs', lines 265:29-265:61 -/
+    Source: 'tls_codec/src/lib.rs', lines 285:29-285:61 -/
 @[reducible]
 def __4.ensures.closure (Self_ : Type) (W : Type) := alloc.vec.Vec Std.U8
 
 /-- [tls_codec::_#5::ensures::closure]
-    Source: 'tls_codec/src/lib.rs', lines 275:25-276:69 -/
+    Source: 'tls_codec/src/lib.rs', lines 295:25-296:69 -/
 @[reducible]
 def __5.ensures.closure (Self_ : Type) := Self_
 
 /-- [tls_codec::_#5::ensures::closure::closure]
-    Source: 'tls_codec/src/lib.rs', lines 276:23-276:68 -/
+    Source: 'tls_codec/src/lib.rs', lines 296:23-296:68 -/
 @[reducible]
 def __5.ensures.closure.closure (Self_ : Type) := alloc.vec.Vec Std.U8
 
 /-- [tls_codec::_#6::ensures::closure]
-    Source: 'tls_codec/src/lib.rs', lines 303:16-303:35 -/
+    Source: 'tls_codec/src/lib.rs', lines 323:16-323:35 -/
 @[reducible]
 def __6.ensures.closure (Self_ : Type) := Self_
 
 /-- [tls_codec::_#7::ensures::closure]
-    Source: 'tls_codec/src/lib.rs', lines 323:25-326:97 -/
+    Source: 'tls_codec/src/lib.rs', lines 343:25-346:97 -/
 def __7.ensures.closure (Self_ : Type) (R : Type) := R × R
 
 /-- [tls_codec::_#8::ensures::closure]
-    Source: 'tls_codec/src/lib.rs', lines 338:25-338:83 -/
+    Source: 'tls_codec/src/lib.rs', lines 358:25-358:83 -/
 @[reducible]
 def __8.ensures.closure (Self_ : Type) (T1 : Type) := T1
 
 /-- [tls_codec::_#9::ensures::closure]
-    Source: 'tls_codec/src/lib.rs', lines 366:25-369:79 -/
+    Source: 'tls_codec/src/lib.rs', lines 386:25-389:79 -/
 @[reducible]
 def __9.ensures.closure (Self_ : Type) := Slice Std.U8
 
 /-- [tls_codec::_#10::ensures::closure]
-    Source: 'tls_codec/src/lib.rs', lines 380:25-380:74 -/
+    Source: 'tls_codec/src/lib.rs', lines 400:25-400:74 -/
 @[reducible]
 def __10.ensures.closure (Self_ : Type) := Slice Std.U8
 
 /-- [tls_codec::U24]
-    Source: 'tls_codec/src/lib.rs', lines 399:0-399:24
+    Source: 'tls_codec/src/lib.rs', lines 419:0-419:24
     Visibility: public -/
 @[reducible]
 def U24 := Array Std.U8 3#usize
+
+/-- [tls_codec::U24OverflowError]
+    Source: 'tls_codec/src/lib.rs', lines 459:0-459:28
+    Visibility: public -/
+@[reducible]
+def U24OverflowError := Unit
 
 /-- [tls_codec::primitives::{impl tls_codec::Serialize for core::option::Option<T>}::tls_serialize::closure]
     Source: 'tls_codec/src/primitives.rs', lines 39:44-39:53 -/
@@ -246,12 +257,12 @@ def primitives.SerializeTupleTUV.tls_serialize.closure (T : Type) (U : Type) (V
 def varint.TlsVarInt := Std.U64
 
 /-- [tls_codec::quic_vec::ContentLength]
-    Source: 'tls_codec/src/quic_vec.rs', lines 43:0-43:39 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 44:0-44:39 -/
 @[reducible]
 def quic_vec.ContentLength := varint.TlsVarInt
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::ContentLength}::from_usize::_::ensures::closure]
-    Source: 'tls_codec/src/quic_vec.rs', lines 63:22-63:55 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 64:22-64:55 -/
 @[reducible]
 def quic_vec.ContentLength.from_usize._.ensures.closure := Std.Usize
 
@@ -261,71 +272,71 @@ def quic_vec.ContentLength.from_usize._.ensures.closure := Std.Usize
 def varint.DeserializeBytesTlsVarInt.tls_deserialize_bytes.closure := Unit
 
 /-- [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 [T]}::tls_serialized_len::closure#1]
-    Source: 'tls_codec/src/quic_vec.rs', lines 246:17-246:62 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 247:17-247:62 -/
 @[reducible]
 def quic_vec.SizeShared0Slice.tls_serialized_len.closure_1 (T : Type) := Unit
 
 /-- [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 [T]}::tls_serialized_len::closure]
-    Source: 'tls_codec/src/quic_vec.rs', lines 244:21-244:73 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 245:21-245:73 -/
 @[reducible]
 def quic_vec.SizeShared0Slice.tls_serialized_len.closure (T : Type) := Unit
 
 /-- [tls_codec::quic_vec::VLBytes]
-    Source: 'tls_codec/src/quic_vec.rs', lines 345:0-347:1
+    Source: 'tls_codec/src/quic_vec.rs', lines 346:0-348:1
     Visibility: public -/
 structure quic_vec.VLBytes where
   vec : alloc.vec.Vec Std.U8
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLBytes}::tls_serialize_bytes::_::ensures::closure#1]
-    Source: 'tls_codec/src/quic_vec.rs', lines 148:16-148:35 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 149:16-149:35 -/
 @[reducible]
 def quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure_1 :=
   quic_vec.VLBytes
 
 /-- [tls_codec::quic_vec::tls_serialize_bytes_len::closure]
-    Source: 'tls_codec/src/quic_vec.rs', lines 384:13-384:58 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 385:13-385:58 -/
 @[reducible]
 def quic_vec.tls_serialize_bytes_len.closure := Unit
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLBytes}::tls_serialize_bytes::_::ensures::closure]
-    Source: 'tls_codec/src/quic_vec.rs', lines 151:70-152:85 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 152:70-153:85 -/
 @[reducible]
 def quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure :=
   quic_vec.VLBytes
 
 /-- [tls_codec::quic_vec::VLByteVec]
-    Source: 'tls_codec/src/quic_vec.rs', lines 447:0-454:1
+    Source: 'tls_codec/src/quic_vec.rs', lines 448:0-455:1
     Visibility: public -/
 structure quic_vec.VLByteVec where
   vec : alloc.vec.Vec Std.U8
 
 /-- [tls_codec::quic_vec::secret_bytes::SecretVLBytes]
-    Source: 'tls_codec/src/quic_vec.rs', lines 907:4-907:38
+    Source: 'tls_codec/src/quic_vec.rs', lines 908:4-908:38
     Visibility: public -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes := quic_vec.VLBytes
 
 /-- [tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec]
-    Source: 'tls_codec/src/quic_vec.rs', lines 993:4-993:42
+    Source: 'tls_codec/src/quic_vec.rs', lines 994:4-994:42
     Visibility: public -/
 @[reducible]
 def quic_vec.secret_byte_vec.SecretVLByteVec := quic_vec.VLByteVec
 
 /-- [tls_codec::quic_vec::VLByteSlice]
-    Source: 'tls_codec/src/quic_vec.rs', lines 601:0-601:41
+    Source: 'tls_codec/src/quic_vec.rs', lines 602:0-602:41
     Visibility: public -/
 @[reducible]
 def quic_vec.VLByteSlice := Slice Std.U8
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLByteSlice<'_0>}::tls_serialize_bytes::_::ensures::closure#1]
-    Source: 'tls_codec/src/quic_vec.rs', lines 641:16-641:35 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 642:16-642:35 -/
 @[reducible]
 def quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure_1
   :=
   quic_vec.VLByteSlice
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLByteSlice<'_0>}::tls_serialize_bytes::_::ensures::closure]
-    Source: 'tls_codec/src/quic_vec.rs', lines 644:61-645:76 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 645:61-646:76 -/
 @[reducible]
 def quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure :=
   Slice Std.U8

@@ -224,6 +224,11 @@ axiom alloc.vec.Vec.Insts.CoreHashHash.hash
   {T H : Type} (HashInst : core.hash.Hash T) (HasherInst : core.hash.Hasher H) :
   alloc.vec.Vec T → H → RustM H
 
+/-- [core::array::{impl core::hash::Hash for [T; N]}::hash] (the derived `Hash` of `U24`) -/
+axiom core.Array.Insts.CoreHashHash.hash
+  {T H : Type} {N : Std.Usize} (HashInst : core.hash.Hash T) (HasherInst : core.hash.Hasher H) :
+  Aeneas.Std.Array T N → H → RustM H
+
 /-- [alloc::vec::{impl core::cmp::Ord for Vec<T>}::cmp] -/
 axiom alloc.vec.Vec.Insts.CoreCmpOrd.cmp
   {T : Type} (OrdInst : core.cmp.Ord T) :

@@ -475,6 +475,13 @@ end tls_codec.StdIo
 
 namespace tls_codec
 
+/-- The crate's `write_all` helper (`writer.write_all(bytes)`, an error mapped to
+`EncodingError`) returns what the writer's `write_all` returns when that succeeds. -/
+theorem write_all_of_ok {W : Type} {WI : core.io.write.Write W} {w w' : W} {s : Slice Std.U8}
+    (h : WI.write_all w s = ok (.Ok (), w')) : write_all WI w s = ok (.Ok (), w') := by
+  simp only [write_all, h, bind_tc_ok, CoreModels.core.result.Result.map_err]
+  rfl
+
 /-- `read_bytes_bounded` on a lawful reader: `len` bytes (at most `isize::MAX`) if the reader has
 them, with the reader advanced by `len`; `EndOfStream` otherwise. Never panics. -/
 theorem read_bytes_bounded_law {R : Type} {inst : alloc.io.read.Read R} {v : R → List Std.U8}

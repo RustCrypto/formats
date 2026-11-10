@@ -22,7 +22,7 @@ theorem U24.ser_runs (x : U24) : SerRuns U24.Insts.Tls_codecSerialize x 3#usize 
   apply ser_runs_of_write_all U24.Insts.Tls_codecSerialize x (Array.to_slice x) 3#usize
     (by simpa [Array.to_slice] using x.property.symm)
   intro W WI w w' hw
-  simp only [U24.Insts.Tls_codecSerialize.tls_serialize, U24.to_be_bytes, lift, bind_tc_ok, hw]
+  simp only [U24.Insts.Tls_codecSerialize.tls_serialize, U24.to_be_bytes, lift, bind_tc_ok, write_all_of_ok hw]
   rfl
 
 theorem U24.serSpec (x : U24) : SerSpec U24.Insts.Tls_codecSerialize x :=
@@ -85,7 +85,7 @@ theorem ArrayU8.ser_runs {LEN : Std.Usize} (x : Array Std.U8 LEN) :
     (by simpa [Array.to_slice] using x.property.symm)
   intro W WI w w' hw
   simp only [ArrayU8LEN.Insts.Tls_codecSerialize, ArrayU8LEN.Insts.Tls_codecSerialize.tls_serialize,
-    lift, bind_tc_ok, hw]
+    lift, bind_tc_ok, write_all_of_ok hw]
   rfl
 
 theorem ArrayU8.serSpec {LEN : Std.Usize} (x : Array Std.U8 LEN) :

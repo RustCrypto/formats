@@ -33,13 +33,22 @@ theorem ArrayU8LEN.Insts.Tls_codecSize.Lawful (LEN : Std.Usize) :
   Size.Lawful (Array Std.U8 LEN) (ArrayU8LEN.Insts.Tls_codecSize LEN)
   := by sorry
 
-theorem Error.Insts.CoreConvertFromError.Lawful :
-  core.convert.From.Lawful Error core.io.error.Error
-  Error.Insts.CoreConvertFromError
+theorem write_all.closure.Insts.CoreOpsFunctionFnOnceTupleErrorError.Lawful {W
+  : Type} (coreiowriteWriteInst : core.io.write.Write W)
+  (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+  coreiowriteWriteInst) :
+  core.ops.function.FnOnce.Lawful (write_all.closure W) core.io.error.Error
+  Error (write_all.closure.Insts.CoreOpsFunctionFnOnceTupleErrorError
+  coreiowriteWriteInst)
   := by sorry
 
 theorem ArrayU8LEN.Insts.Tls_codecSerialize.Lawful (LEN : Std.Usize) :
   Serialize.Lawful (Array Std.U8 LEN) (ArrayU8LEN.Insts.Tls_codecSerialize LEN)
+  := by sorry
+
+theorem Error.Insts.CoreConvertFromError.Lawful :
+  core.convert.From.Lawful Error core.io.error.Error
+  Error.Insts.CoreConvertFromError
   := by sorry
 
 theorem ArrayU8LEN.Insts.Tls_codecDeserialize.Lawful (LEN : Std.Usize) :
@@ -216,18 +225,58 @@ theorem U24.Insts.CoreCmpPartialEqU24.Lawful :
   core.cmp.PartialEq.Lawful U24 U24 U24.Insts.CoreCmpPartialEqU24
   := by sorry
 
+theorem U24.Insts.CoreCmpEq.Lawful : core.cmp.Eq.Lawful U24 U24.Insts.CoreCmpEq
+  := by sorry
+
+theorem U24.Insts.CoreHashHash.Lawful :
+  core.hash.Hash.Lawful U24 U24.Insts.CoreHashHash
+  := by sorry
+
 theorem Usize.Insts.CoreConvertFromU24.Lawful :
   core.convert.From.Lawful Std.Usize U24 Usize.Insts.CoreConvertFromU24
   := by sorry
 
-theorem Error.Insts.CoreConvertFromTryFromSliceError.Lawful :
-  core.convert.From.Lawful Error core.array.TryFromSliceError
-  Error.Insts.CoreConvertFromTryFromSliceError
+theorem U24OverflowError.Insts.CoreFmtDebug.Lawful :
+  core.fmt.Debug.Lawful U24OverflowError U24OverflowError.Insts.CoreFmtDebug
   := by sorry
 
-theorem U24.Insts.CoreConvertTryFromUsizeError.Lawful :
-  core.convert.TryFrom.Lawful U24 Std.Usize Error
-  U24.Insts.CoreConvertTryFromUsizeError
+theorem U24OverflowError.Insts.CoreCloneClone.Lawful :
+  core.clone.Clone.Lawful U24OverflowError
+  U24OverflowError.Insts.CoreCloneClone
+  := by sorry
+
+theorem U24OverflowError.Insts.CoreMarkerCopy.Lawful :
+  core.marker.Copy.Lawful U24OverflowError
+  U24OverflowError.Insts.CoreMarkerCopy
+  := by sorry
+
+theorem U24OverflowError.Insts.CoreMarkerStructuralPartialEq.Lawful :
+  core.marker.StructuralPartialEq.Lawful U24OverflowError
+  U24OverflowError.Insts.CoreMarkerStructuralPartialEq
+  := by sorry
+
+theorem U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.Lawful :
+  core.cmp.PartialEq.Lawful U24OverflowError U24OverflowError
+  U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError
+  := by sorry
+
+theorem U24OverflowError.Insts.CoreCmpEq.Lawful :
+  core.cmp.Eq.Lawful U24OverflowError U24OverflowError.Insts.CoreCmpEq
+  := by sorry
+
+theorem U24OverflowError.Insts.CoreFmtDisplay.Lawful :
+  core.fmt.Display.Lawful U24OverflowError
+  U24OverflowError.Insts.CoreFmtDisplay
+  := by sorry
+
+theorem U24OverflowError.Insts.CoreErrorError.Lawful :
+  core.error.Error.Lawful U24OverflowError
+  U24OverflowError.Insts.CoreErrorError
+  := by sorry
+
+theorem U24.Insts.CoreConvertTryFromUsizeU24OverflowError.Lawful :
+  core.convert.TryFrom.Lawful U24 Std.Usize U24OverflowError
+  U24.Insts.CoreConvertTryFromUsizeU24OverflowError
   := by sorry
 
 theorem core.option.Option.Insts.Tls_codecSize.Lawful {T : Type} (SizeInst :
@@ -579,6 +628,11 @@ theorem Shared0U32.Insts.Tls_codecSerialize.Lawful :
 
 theorem Shared0U64.Insts.Tls_codecSerialize.Lawful :
   Serialize.Lawful Std.U64 Shared0U64.Insts.Tls_codecSerialize
+  := by sorry
+
+theorem Error.Insts.CoreConvertFromTryFromSliceError.Lawful :
+  core.convert.From.Lawful Error core.array.TryFromSliceError
+  Error.Insts.CoreConvertFromTryFromSliceError
   := by sorry
 
 theorem Pair.Insts.Tls_codecSize.Lawful {T : Type} {U : Type} (SizeInst : Size
@@ -4643,9 +4697,9 @@ theorem Usize.Insts.CoreConvertFromU24.from.spec.proof (value : U24) :
   Usize.Insts.CoreConvertFromU24.from.spec value
   := by sorry
 
-theorem U24.Insts.CoreConvertTryFromUsizeError.try_from.spec.proof
-  (value : Std.Usize) :
-  U24.Insts.CoreConvertTryFromUsizeError.try_from.spec value
+theorem U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from.spec.proof
+   (value : Std.Usize) :
+  U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from.spec value
   := by sorry
 
 theorem

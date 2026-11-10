@@ -611,34 +611,27 @@ theorem usize_low3_bytes (value : Std.Usize) (h64 : System.Platform.numBits = 64
     exact eight_bytes_low3 _ _ _ _ _ _ _ _ _ c0.isLt c1.isLt c2.isLt c3.isLt c4.isLt c5.isLt c6.isLt
       c7.isLt hval hnat⟩
 
-/-- `U24::try_from(usize)` never panics: `Ok` of the three low bytes when the value fits, `Err LibraryError` otherwise. -/
-theorem U24.Insts.CoreConvertTryFromUsizeError.try_from_char (value : Std.Usize) :
-    ⦃ ⌜ True ⌝ ⦄ U24.Insts.CoreConvertTryFromUsizeError.try_from value
+/-- `U24::try_from(usize)` never panics: `Ok` of the three low bytes when the value fits, `Err` otherwise. -/
+theorem U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from_char (value : Std.Usize) :
+    ⦃ ⌜ True ⌝ ⦄ U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from value
     ⦃ ⇓ r => ⌜ (value.val ≤ 16777215 → ∃ (a : U24) (b0 b1 b2 : Std.U8), r = .Ok a ∧
           a.val = [b0, b1, b2] ∧ value.val = b0.val * 65536 + b1.val * 256 + b2.val) ∧
-        (16777215 < value.val → r = .Err Error.LibraryError) ⌝ ⦄ := by
-  have := numBits_eq_64
-  mvcgen [U24.Insts.CoreConvertTryFromUsizeError.try_from, TryFromU24UsizeError.try_from.LEN,
-    core.mem.size_of_Usize_spec, core.num.Usize.to_be_bytes,
-    rust_primitives.arithmetic.to_be_bytes_usize,
-    core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from_spec]
-  · simp_all [Usize.size, Usize.numBits, UScalarTy.numBits, Nat.shiftLeft_eq]
-  · intro h1 _
-    obtain ⟨t, ht, htv⟩ := h1 (by simp [Std.Array.to_slice]; scalar_tac)
-    have hl : t.val.length = 3 := by rw [htv]; simp [Std.Array.to_slice]; scalar_tac
-    refine ⟨t, ht, ?_⟩
-    simp only [PostCond.ok]
-    mvcgen [core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from_spec,
-      Error.Insts.CoreConvertFromTryFromSliceError.from]
-    · simp_all [tryCF, Usize.size, Usize.numBits, UScalarTy.numBits, Nat.shiftLeft_eq]
-      obtain ⟨a, ha, hav⟩ := ‹∃ a, _ ∧ _›
-      subst ha
-      simp_all
-      obtain ⟨b0, b1, b2, hb, hv⟩ := usize_low3_bytes value this ‹_› _ ‹_ * 8 = 64›
-      exact ⟨b0, b1, b2, hb, hv⟩
-    · simp_all [tryCF]
-      obtain ⟨a, ha, -⟩ := ‹∃ a, _ ∧ _›
-      simp [ha]
+        (16777215 < value.val → r = .Err ()) ⌝ ⦄ := by
+  have h64 := numBits_eq_64
+  unfold U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from
+  have e24 : (24#i32).toNat = 24 := rfl
+  have e16 : (16#i32).toNat = 16 := rfl
+  have e8 : (8#i32).toNat = 8 := rfl
+  have eU8 : UScalarTy.U8.numBits = 8 := rfl
+  mvcgen
+  all_goals (try simp only [e24, e16, e8, h64, Nat.shiftLeft_eq, gt_iff_lt, UScalar.lt_equiv] at *)
+  · refine ⟨fun hv => ?_, fun _ => trivial⟩
+    exfalso; scalar_tac
+  · refine ⟨fun hv => ⟨_, _, _, _, rfl, rfl, ?_⟩, fun hv => ?_⟩
+    · subst_vars
+      simp only [UScalar.cast_val_eq, eU8]
+      omega
+    · exfalso; scalar_tac
   all_goals (exfalso; scalar_tac)
 
 /-- `usize::from(U24)` is the big-endian value of the three bytes (total: `Usize.Insts.CoreConvertFromU24.from_pf`). -/

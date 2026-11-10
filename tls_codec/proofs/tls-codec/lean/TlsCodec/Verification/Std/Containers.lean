@@ -138,14 +138,14 @@ theorem SerRuns.spec' {T : Type} {SI : Serialize T} {x : T} {sz : Std.Usize}
   intro hroom
   exact h.spec WI hWI w hroom trivial
 
-/-- `write_all` on a lawful writer with room, as a triple. -/
+/-- `write_all` (the crate helper) on a lawful writer with room, as a triple. -/
 theorem write_all_spec {W : Type} {WI : core.io.write.Write W}
     (hWI : core.io.write.Write.Lawful W WI) (w : W) (s : Slice Std.U8)
     (h : (core.io.write.Write.view WI w).length + s.val.length ≤ Usize.max) :
-    ⦃ ⌜ True ⌝ ⦄ WI.write_all w s
+    ⦃ ⌜ True ⌝ ⦄ write_all WI w s
     ⦃ ⇓ p => ⌜ p.1 = .Ok () ∧ core.io.write.Write.view WI p.2 = core.io.write.Write.view WI w ++ s.val ⌝ ⦄ := by
   obtain ⟨w', hw, hv⟩ := hWI.law'.write_all_ok w s h
-  rw [hw]
+  rw [write_all_of_ok hw]
   exact ok_triple_of ⟨rfl, hv⟩
 
 /-- The encoding of an `Option`: a tag byte, then the encoding of the value. -/

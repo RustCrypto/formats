@@ -29,10 +29,13 @@ CoreModels.core.convert.Infallible.Insts.CoreFmtDebug.fmt
 CoreModels.core.io.error.Error.Insts.CoreFmtDebug.fmt
 CoreModels.alloc.vec.Vec.Insts.CoreCmpOrd.cmp
 CoreModels.alloc.vec.Vec.Insts.CoreHashHash.hash
+CoreModels.core.Array.Insts.CoreHashHash.hash
 zeroize.alloc.vec.Vec.Insts.ZeroizeZeroize.zeroize
 Error.Insts.CoreFmtDebug.fmt
 Error.Insts.CoreFmtDisplay.fmt
 U24.Insts.CoreFmtDebug.fmt
+U24OverflowError.Insts.CoreFmtDebug.fmt
+U24OverflowError.Insts.CoreFmtDisplay.fmt
 varint.TlsVarInt.Insts.CoreFmtDebug.fmt
 quic_vec.VLBytes.Insts.CoreFmtDebug.fmt
 quic_vec.VLByteVec.Insts.CoreFmtDebug.fmt

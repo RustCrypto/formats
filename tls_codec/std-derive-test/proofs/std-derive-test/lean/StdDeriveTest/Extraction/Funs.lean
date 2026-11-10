@@ -571,31 +571,19 @@ def Shared0Choice.Insts.Tls_codecSize : tls_codec.Size Choice := {
 /-- [std_derive_test::{impl tls_codec::Serialize for std_derive_test::Choice}::tls_serialize::__TLS_CODEC_Num]
     Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:24-24:36 -/
 @[global_simps, irreducible]
-def SerializeChoice.tls_serialize.__TLS_CODEC_Num : RustM Std.U8 := do
-  let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
-  massert (¬ (3#usize < i))
-  let i1 ← lift (UScalar.cast .Usize core.num.U8.MAX)
-  massert (¬ (3#usize > i1))
+def SerializeChoice.tls_serialize.__TLS_CODEC_Num : RustM Std.U8 :=
   ok (UScalar.cast .U8 3#usize)
 
 /-- [std_derive_test::{impl tls_codec::Serialize for std_derive_test::Choice}::tls_serialize::__TLS_CODEC_Bytes]
     Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:24-24:36 -/
 @[global_simps, irreducible]
-def SerializeChoice.tls_serialize.__TLS_CODEC_Bytes : RustM Std.U8 := do
-  let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
-  massert (¬ (2#usize < i))
-  let i1 ← lift (UScalar.cast .Usize core.num.U8.MAX)
-  massert (¬ (2#usize > i1))
+def SerializeChoice.tls_serialize.__TLS_CODEC_Bytes : RustM Std.U8 :=
   ok (UScalar.cast .U8 2#usize)
 
 /-- [std_derive_test::{impl tls_codec::Serialize for std_derive_test::Choice}::tls_serialize::__TLS_CODEC_Empty]
     Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:24-24:36 -/
 @[global_simps, irreducible]
-def SerializeChoice.tls_serialize.__TLS_CODEC_Empty : RustM Std.U8 := do
-  let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
-  massert (¬ (1#usize < i))
-  let i1 ← lift (UScalar.cast .Usize core.num.U8.MAX)
-  massert (¬ (1#usize > i1))
+def SerializeChoice.tls_serialize.__TLS_CODEC_Empty : RustM Std.U8 :=
   ok (UScalar.cast .U8 1#usize)
 
 /-- [std_derive_test::{impl tls_codec::Serialize for std_derive_test::Choice}::tls_serialize]:
@@ -776,64 +764,39 @@ impl_def Choice.Insts.Tls_codecDeserialize : tls_codec.Deserialize Choice := {
 /-- [std_derive_test::{impl tls_codec::Deserialize for std_derive_test::Choice}::tls_deserialize::__TLS_CODEC_Empty]
     Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:38-24:52 -/
 @[global_simps, irreducible]
-def DeserializeChoice.tls_deserialize.__TLS_CODEC_Empty : RustM Std.U8 := do
-  let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
-  massert (¬ (1#usize < i))
-  let i1 ← lift (UScalar.cast .Usize core.num.U8.MAX)
-  massert (¬ (1#usize > i1))
+def DeserializeChoice.tls_deserialize.__TLS_CODEC_Empty : RustM Std.U8 :=
   ok (UScalar.cast .U8 1#usize)
 
 /-- [std_derive_test::{impl tls_codec::Deserialize for std_derive_test::Choice}::tls_deserialize::__TLS_CODEC_Bytes]
     Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:38-24:52 -/
 @[global_simps, irreducible]
-def DeserializeChoice.tls_deserialize.__TLS_CODEC_Bytes : RustM Std.U8 := do
-  let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
-  massert (¬ (2#usize < i))
-  let i1 ← lift (UScalar.cast .Usize core.num.U8.MAX)
-  massert (¬ (2#usize > i1))
+def DeserializeChoice.tls_deserialize.__TLS_CODEC_Bytes : RustM Std.U8 :=
   ok (UScalar.cast .U8 2#usize)
 
 /-- [std_derive_test::{impl tls_codec::Deserialize for std_derive_test::Choice}::tls_deserialize::__TLS_CODEC_Num]
     Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:38-24:52 -/
 @[global_simps, irreducible]
-def DeserializeChoice.tls_deserialize.__TLS_CODEC_Num : RustM Std.U8 := do
-  let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
-  massert (¬ (3#usize < i))
-  let i1 ← lift (UScalar.cast .Usize core.num.U8.MAX)
-  massert (¬ (3#usize > i1))
+def DeserializeChoice.tls_deserialize.__TLS_CODEC_Num : RustM Std.U8 :=
   ok (UScalar.cast .U8 3#usize)
 
 /-- [std_derive_test::{impl tls_codec::SerializeBytes for std_derive_test::Choice}::tls_serialize_bytes::__TLS_CODEC_Num]
     Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:54-24:71 -/
 @[global_simps, irreducible]
-def SerializeBytesChoice.tls_serialize_bytes.__TLS_CODEC_Num
-  : RustM Std.U8 := do
-  let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
-  massert (¬ (3#usize < i))
-  let i1 ← lift (UScalar.cast .Usize core.num.U8.MAX)
-  massert (¬ (3#usize > i1))
+def SerializeBytesChoice.tls_serialize_bytes.__TLS_CODEC_Num : RustM Std.U8 :=
   ok (UScalar.cast .U8 3#usize)
 
 /-- [std_derive_test::{impl tls_codec::SerializeBytes for std_derive_test::Choice}::tls_serialize_bytes::__TLS_CODEC_Bytes]
     Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:54-24:71 -/
 @[global_simps, irreducible]
 def SerializeBytesChoice.tls_serialize_bytes.__TLS_CODEC_Bytes
-  : RustM Std.U8 := do
-  let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
-  massert (¬ (2#usize < i))
-  let i1 ← lift (UScalar.cast .Usize core.num.U8.MAX)
-  massert (¬ (2#usize > i1))
+  : RustM Std.U8 :=
   ok (UScalar.cast .U8 2#usize)
 
 /-- [std_derive_test::{impl tls_codec::SerializeBytes for std_derive_test::Choice}::tls_serialize_bytes::__TLS_CODEC_Empty]
     Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:54-24:71 -/
 @[global_simps, irreducible]
 def SerializeBytesChoice.tls_serialize_bytes.__TLS_CODEC_Empty
-  : RustM Std.U8 := do
-  let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
-  massert (¬ (1#usize < i))
-  let i1 ← lift (UScalar.cast .Usize core.num.U8.MAX)
-  massert (¬ (1#usize > i1))
+  : RustM Std.U8 :=
   ok (UScalar.cast .U8 1#usize)
 
 /-- [std_derive_test::{impl tls_codec::SerializeBytes for std_derive_test::Choice}::tls_serialize_bytes]:
@@ -1009,33 +972,21 @@ impl_def Choice.Insts.Tls_codecDeserializeBytes : tls_codec.DeserializeBytes
     Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:73-24:92 -/
 @[global_simps, irreducible]
 def DeserializeBytesChoice.tls_deserialize_bytes.__TLS_CODEC_Empty
-  : RustM Std.U8 := do
-  let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
-  massert (¬ (1#usize < i))
-  let i1 ← lift (UScalar.cast .Usize core.num.U8.MAX)
-  massert (¬ (1#usize > i1))
+  : RustM Std.U8 :=
   ok (UScalar.cast .U8 1#usize)
 
 /-- [std_derive_test::{impl tls_codec::DeserializeBytes for std_derive_test::Choice}::tls_deserialize_bytes::__TLS_CODEC_Bytes]
     Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:73-24:92 -/
 @[global_simps, irreducible]
 def DeserializeBytesChoice.tls_deserialize_bytes.__TLS_CODEC_Bytes
-  : RustM Std.U8 := do
-  let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
-  massert (¬ (2#usize < i))
-  let i1 ← lift (UScalar.cast .Usize core.num.U8.MAX)
-  massert (¬ (2#usize > i1))
+  : RustM Std.U8 :=
   ok (UScalar.cast .U8 2#usize)
 
 /-- [std_derive_test::{impl tls_codec::DeserializeBytes for std_derive_test::Choice}::tls_deserialize_bytes::__TLS_CODEC_Num]
     Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:73-24:92 -/
 @[global_simps, irreducible]
 def DeserializeBytesChoice.tls_deserialize_bytes.__TLS_CODEC_Num
-  : RustM Std.U8 := do
-  let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
-  massert (¬ (3#usize < i))
-  let i1 ← lift (UScalar.cast .Usize core.num.U8.MAX)
-  massert (¬ (3#usize > i1))
+  : RustM Std.U8 :=
   ok (UScalar.cast .U8 3#usize)
 
 end std_derive_test

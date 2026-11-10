@@ -15,7 +15,7 @@ false in Rust for an `io::Error::Custom` whose payload's `Debug` fails; proved f
 lawful readers produce (`Helpers/ErrorFrom.lean`).
 
 Audit status (`scripts/Audit.lean`): all 281 function specs proved (PF / FC / PO 281 / 281);
-per-impl `Lawful`: LPF 580 / 581, LFC 382 / 382, LAW 655 / 656. The one open obligation is that
+per-impl `Lawful`: LPF 603 / 604, LFC 403 / 403, LAW 680 / 681. The one open obligation is that
 `from_spec.panic_freedom`, so 2 theorems are not clean: it and `Error.Insts.CoreConvertFromError.Lawful`.
 
 ## Layout

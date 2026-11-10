@@ -29,7 +29,7 @@ noncomputable section
 namespace tls_codec
 
 /-- [tls_codec::checked_capacity]:
-    Source: 'tls_codec/src/lib.rs', lines 218:0-223:1 -/
+    Source: 'tls_codec/src/lib.rs', lines 238:0-243:1 -/
 def checked_capacity
   (len : Std.Usize) : RustM (core.result.Result Std.Usize Error) := do
   let i ← lift (IScalar.hcast .Usize core.num.Isize.MAX)
@@ -38,7 +38,7 @@ def checked_capacity
   else ok (core.result.Result.Ok len)
 
 /-- [tls_codec::Serialize::tls_serialize_detached]:
-    Source: 'tls_codec/src/lib.rs', lines 277:4-296:5
+    Source: 'tls_codec/src/lib.rs', lines 297:4-316:5
     Visibility: public -/
 @[trait_default]
 def Serialize.tls_serialize_detached.default
@@ -127,8 +127,111 @@ def ArrayU8LEN.Insts.Tls_codecSize (LEN : Std.Usize) : Size (Array Std.U8 LEN)
   tls_serialized_len := ArrayU8LEN.Insts.Tls_codecSize.tls_serialized_len
 }
 
+/-- [tls_codec::write_all::{impl core::ops::function::FnOnce<(core::io::error::Error,), tls_codec::Error> for tls_codec::write_all::closure<W>}::call_once]:
+    Source: 'tls_codec/src/lib.rs', lines 144:17-144:69 -/
+def write_all.closure.Insts.CoreOpsFunctionFnOnceTupleErrorError.call_once
+  {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
+  (c : write_all.closure W) (tupled_args : core.io.error.Error) :
+  RustM Error
+  := do
+  let a ←
+    core.fmt.rt.Argument.new_debug core.io.error.Error.Insts.CoreFmtDebug
+      tupled_args
+  let a1 ←
+    core.fmt.Arguments.new
+      (Array.make 13#usize [
+        10#u8, 105#u8, 111#u8, 32#u8, 101#u8, 114#u8, 114#u8, 111#u8, 114#u8,
+        58#u8, 32#u8, 192#u8, 0#u8
+        ]) (Array.make 1#usize [ a ])
+  let s ← alloc.fmt.format a1
+  let s1 ← core.hint.must_use s
+  ok (Error.EncodingError s1)
+
+/-- Trait implementation: [tls_codec::write_all::{impl core::ops::function::FnOnce<(core::io::error::Error,), tls_codec::Error> for tls_codec::write_all::closure<W>}]
+    Source: 'tls_codec/src/lib.rs', lines 144:17-144:69 -/
+@[reducible]
+def write_all.closure.Insts.CoreOpsFunctionFnOnceTupleErrorError {W : Type}
+  (coreiowriteWriteInst : core.io.write.Write W) : core.ops.function.FnOnce
+  (write_all.closure W) core.io.error.Error Error := {
+  call_once :=
+    write_all.closure.Insts.CoreOpsFunctionFnOnceTupleErrorError.call_once
+    coreiowriteWriteInst
+}
+
+/-- [tls_codec::write_all]:
+    Source: 'tls_codec/src/lib.rs', lines 138:0-145:1 -/
+def write_all
+  {W : Type} (coreiowriteWriteInst : core.io.write.Write W) (writer : W)
+  (bytes : Slice Std.U8) :
+  RustM ((core.result.Result Unit Error) × W)
+  := do
+  let (r, writer1) ← coreiowriteWriteInst.write_all writer bytes
+  let r1 ←
+    core.result.Result.map_err
+      (write_all.closure.Insts.CoreOpsFunctionFnOnceTupleErrorError
+      coreiowriteWriteInst) r ()
+  ok (r1, writer1)
+
+/-- [tls_codec::arrays::{impl tls_codec::Serialize for [u8; LEN]}::tls_serialize]:
+    Source: 'tls_codec/src/arrays.rs', lines 13:4-16:5
+    Visibility: public -/
+def ArrayU8LEN.Insts.Tls_codecSerialize.tls_serialize
+  {W : Type} {LEN : Std.Usize} (coreiowriteWriteInst : core.io.write.Write W)
+  (self : Array Std.U8 LEN) (writer : W) :
+  RustM ((core.result.Result Std.Usize Error) × W)
+  := do
+  let s ← lift (Array.to_slice self)
+  let (r, writer1) ← write_all coreiowriteWriteInst writer s
+  let cf ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue _ =>
+    ok (core.result.Result.Ok LEN, writer1)
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+        Std.Usize (core.convert.From.Blanket Error) residual
+    ok (r1, writer1)
+
+/-- Trait implementation: [tls_codec::arrays::{impl tls_codec::Serialize for [u8; LEN]}]
+    Source: 'tls_codec/src/arrays.rs', lines 10:0-17:1 -/
+@[reducible]
+impl_def ArrayU8LEN.Insts.Tls_codecSerialize (LEN : Std.Usize) : Serialize
+  (Array Std.U8 LEN) := {
+  SizeInst := ArrayU8LEN.Insts.Tls_codecSize LEN
+  tls_serialize := fun {W : Type} (coreiowriteWriteInst : core.io.write.Write
+    W) => ArrayU8LEN.Insts.Tls_codecSerialize.tls_serialize
+    coreiowriteWriteInst
+  tls_serialize_detached := Serialize.tls_serialize_detached.default
+    (ArrayU8LEN.Insts.Tls_codecSerialize LEN)
+}
+
+/-- [tls_codec::Deserialize::tls_deserialize_exact]:
+    Source: 'tls_codec/src/lib.rs', lines 359:4-371:5
+    Visibility: public -/
+@[trait_default]
+def Deserialize.tls_deserialize_exact.default
+  {Self : Type} {T1 : Type} (DeserializeInst : Deserialize Self)
+  (coreconvertAsRefT1SliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
+  (bytes : T1) :
+  RustM (core.result.Result Self Error)
+  := do
+  let bytes1 ← coreconvertAsRefT1SliceU8Inst.as_ref bytes
+  let (r, bytes2) ←
+    DeserializeInst.tls_deserialize alloc.Shared0SliceU8.Insts.AllocIoReadRead
+      bytes1
+  let cf ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let b ← core.slice.Slice.is_empty bytes2
+    if b
+    then ok (core.result.Result.Ok val)
+    else ok (core.result.Result.Err Error.TrailingData)
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+      Self (core.convert.From.Blanket Error) residual
+
 /-- [tls_codec::{impl core::convert::From<core::io::error::Error> for tls_codec::Error}::from]:
-    Source: 'tls_codec/src/lib.rs', lines 119:4-124:5
+    Source: 'tls_codec/src/lib.rs', lines 123:4-128:5
     Visibility: public -/
 def Error.Insts.CoreConvertFromError.from
   (e : core.io.error.Error) : RustM Error := do
@@ -653,70 +756,12 @@ def Error.Insts.CoreConvertFromError.from
     ok (Error.DecodingError s1)
 
 /-- Trait implementation: [tls_codec::{impl core::convert::From<core::io::error::Error> for tls_codec::Error}]
-    Source: 'tls_codec/src/lib.rs', lines 118:0-125:1 -/
+    Source: 'tls_codec/src/lib.rs', lines 122:0-129:1 -/
 @[reducible]
 def Error.Insts.CoreConvertFromError : core.convert.From Error
   core.io.error.Error := {
   «from» := Error.Insts.CoreConvertFromError.from
 }
-
-/-- [tls_codec::arrays::{impl tls_codec::Serialize for [u8; LEN]}::tls_serialize]:
-    Source: 'tls_codec/src/arrays.rs', lines 13:4-16:5
-    Visibility: public -/
-def ArrayU8LEN.Insts.Tls_codecSerialize.tls_serialize
-  {W : Type} {LEN : Std.Usize} (coreiowriteWriteInst : core.io.write.Write W)
-  (self : Array Std.U8 LEN) (writer : W) :
-  RustM ((core.result.Result Std.Usize Error) × W)
-  := do
-  let s ← lift (Array.to_slice self)
-  let (r, writer1) ← coreiowriteWriteInst.write_all writer s
-  let cf ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue _ =>
-    ok (core.result.Result.Ok LEN, writer1)
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r1 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-        Std.Usize Error.Insts.CoreConvertFromError residual
-    ok (r1, writer1)
-
-/-- Trait implementation: [tls_codec::arrays::{impl tls_codec::Serialize for [u8; LEN]}]
-    Source: 'tls_codec/src/arrays.rs', lines 10:0-17:1 -/
-@[reducible]
-impl_def ArrayU8LEN.Insts.Tls_codecSerialize (LEN : Std.Usize) : Serialize
-  (Array Std.U8 LEN) := {
-  SizeInst := ArrayU8LEN.Insts.Tls_codecSize LEN
-  tls_serialize := fun {W : Type} (coreiowriteWriteInst : core.io.write.Write
-    W) => ArrayU8LEN.Insts.Tls_codecSerialize.tls_serialize
-    coreiowriteWriteInst
-  tls_serialize_detached := Serialize.tls_serialize_detached.default
-    (ArrayU8LEN.Insts.Tls_codecSerialize LEN)
-}
-
-/-- [tls_codec::Deserialize::tls_deserialize_exact]:
-    Source: 'tls_codec/src/lib.rs', lines 339:4-351:5
-    Visibility: public -/
-@[trait_default]
-def Deserialize.tls_deserialize_exact.default
-  {Self : Type} {T1 : Type} (DeserializeInst : Deserialize Self)
-  (coreconvertAsRefT1SliceU8Inst : core.convert.AsRef T1 (Slice Std.U8))
-  (bytes : T1) :
-  RustM (core.result.Result Self Error)
-  := do
-  let bytes1 ← coreconvertAsRefT1SliceU8Inst.as_ref bytes
-  let (r, bytes2) ←
-    DeserializeInst.tls_deserialize alloc.Shared0SliceU8.Insts.AllocIoReadRead
-      bytes1
-  let cf ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let b ← core.slice.Slice.is_empty bytes2
-    if b
-    then ok (core.result.Result.Ok val)
-    else ok (core.result.Result.Err Error.TrailingData)
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-      Self (core.convert.From.Blanket Error) residual
 
 /-- [tls_codec::arrays::{impl tls_codec::Deserialize for [u8; LEN]}::tls_deserialize]:
     Source: 'tls_codec/src/arrays.rs', lines 22:4-26:5
@@ -881,7 +926,7 @@ def
 }
 
 /-- [tls_codec::DeserializeBytes::tls_deserialize_exact_bytes]:
-    Source: 'tls_codec/src/lib.rs', lines 381:4-392:5
+    Source: 'tls_codec/src/lib.rs', lines 401:4-412:5
     Visibility: public -/
 @[trait_default]
 def DeserializeBytes.tls_deserialize_exact_bytes.default
@@ -1066,11 +1111,11 @@ def Error.Insts.CoreErrorError : core.error.Error Error := {
 }
 
 /-- [tls_codec::MAX_PREALLOC]
-    Source: 'tls_codec/src/lib.rs', lines 132:0-132:44 -/
+    Source: 'tls_codec/src/lib.rs', lines 152:0-152:44 -/
 @[global_simps, irreducible] def MAX_PREALLOC : Std.Usize := 4096#usize
 
 /-- [tls_codec::read_bytes_bounded]:
-    Source: 'tls_codec/src/lib.rs', lines 145:0-165:1 -/
+    Source: 'tls_codec/src/lib.rs', lines 165:0-185:1 -/
 def read_bytes_bounded
   {R : Type} (allocioreadReadInst : alloc.io.read.Read R) (reader : R)
   (len : Std.Usize) :
@@ -1111,13 +1156,13 @@ def read_bytes_bounded
       ok (r1, reader1)
 
 /-- [tls_codec::len_add]:
-    Source: 'tls_codec/src/lib.rs', lines 182:0-184:1
+    Source: 'tls_codec/src/lib.rs', lines 202:0-204:1
     Visibility: public -/
 def len_add (a : Std.Usize) (b : Std.Usize) : RustM Std.Usize := do
   core.num.Usize.saturating_add a b
 
 /-- [tls_codec::checked_len_add]:
-    Source: 'tls_codec/src/lib.rs', lines 206:0-208:1 -/
+    Source: 'tls_codec/src/lib.rs', lines 226:0-228:1 -/
 def checked_len_add
   (a : Std.Usize) (b : Std.Usize) :
   RustM (core.result.Result Std.Usize Error)
@@ -1126,7 +1171,7 @@ def checked_len_add
   core.option.Option.ok_or o Error.InvalidVectorLength
 
 /-- [tls_codec::checked_alloc_len]:
-    Source: 'tls_codec/src/lib.rs', lines 237:0-239:1 -/
+    Source: 'tls_codec/src/lib.rs', lines 257:0-259:1 -/
 def checked_alloc_len
   (a : Std.Usize) (b : Std.Usize) :
   RustM (core.result.Result Std.Usize Error)
@@ -1154,7 +1199,7 @@ def spec.io.encode
       (alloc.vec.Vec Std.U8) (core.convert.From.Blanket Error) residual
 
 /-- [tls_codec::_#4::ensures::{impl core::ops::function::FnOnce<(usize,), bool> for tls_codec::_#4::ensures::closure<'_0, Self_, W>}::call_once]:
-    Source: 'tls_codec/src/lib.rs', lines 265:29-265:61 -/
+    Source: 'tls_codec/src/lib.rs', lines 285:29-285:61 -/
 def __4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
   {Self_ : Type} {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
   (SizeInst : Size Self_) (SerializeInst : Serialize Self_)
@@ -1165,7 +1210,7 @@ def __4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool.call_once
   ok (tupled_args = i)
 
 /-- Trait implementation: [tls_codec::_#4::ensures::{impl core::ops::function::FnOnce<(usize,), bool> for tls_codec::_#4::ensures::closure<'_0, Self_, W>}]
-    Source: 'tls_codec/src/lib.rs', lines 265:29-265:61 -/
+    Source: 'tls_codec/src/lib.rs', lines 285:29-285:61 -/
 @[reducible]
 def __4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool {Self_ :
   Type} {W : Type} (coreiowriteWriteInst : core.io.write.Write W) (SizeInst :
@@ -1177,7 +1222,7 @@ def __4.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeBool {Self_ :
 }
 
 /-- [tls_codec::_#5::ensures::closure::{impl core::ops::function::FnOnce<(alloc::vec::Vec<u8>,), bool> for tls_codec::_#5::ensures::closure::closure<'_0, Self_>}::call_once]:
-    Source: 'tls_codec/src/lib.rs', lines 276:23-276:68 -/
+    Source: 'tls_codec/src/lib.rs', lines 296:23-296:68 -/
 def
   __5.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once
   {Self_ : Type} (SizeInst : Size Self_) (SerializeInst : Serialize Self_)
@@ -1191,7 +1236,7 @@ def
     s1
 
 /-- Trait implementation: [tls_codec::_#5::ensures::closure::{impl core::ops::function::FnOnce<(alloc::vec::Vec<u8>,), bool> for tls_codec::_#5::ensures::closure::closure<'_0, Self_>}]
-    Source: 'tls_codec/src/lib.rs', lines 276:23-276:68 -/
+    Source: 'tls_codec/src/lib.rs', lines 296:23-296:68 -/
 @[reducible]
 def __5.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool
   {Self_ : Type} (SizeInst : Size Self_) (SerializeInst : Serialize Self_) :
@@ -1203,7 +1248,7 @@ def __5.ensures.closure.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool
 }
 
 /-- [tls_codec::_#5::ensures::{impl core::ops::function::FnOnce<(alloc::vec::Vec<u8>,), bool> for tls_codec::_#5::ensures::closure<'_0, Self_>}::call_once]:
-    Source: 'tls_codec/src/lib.rs', lines 275:25-276:69 -/
+    Source: 'tls_codec/src/lib.rs', lines 295:25-296:69 -/
 def __5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once
   {Self_ : Type} (SizeInst : Size Self_) (SerializeInst : Serialize Self_)
   (c : __5.ensures.closure Self_) (tupled_args : alloc.vec.Vec Std.U8) :
@@ -1215,7 +1260,7 @@ def __5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once
     SizeInst SerializeInst) r tupled_args
 
 /-- Trait implementation: [tls_codec::_#5::ensures::{impl core::ops::function::FnOnce<(alloc::vec::Vec<u8>,), bool> for tls_codec::_#5::ensures::closure<'_0, Self_>}]
-    Source: 'tls_codec/src/lib.rs', lines 275:25-276:69 -/
+    Source: 'tls_codec/src/lib.rs', lines 295:25-296:69 -/
 @[reducible]
 def __5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool {Self_ :
   Type} (SizeInst : Size Self_) (SerializeInst : Serialize Self_) :
@@ -1227,7 +1272,7 @@ def __5.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool {Self_ :
 }
 
 /-- [tls_codec::_#6::ensures::{impl core::ops::function::FnOnce<(alloc::vec::Vec<u8>,), bool> for tls_codec::_#6::ensures::closure<'_0, Self_>}::call_once]:
-    Source: 'tls_codec/src/lib.rs', lines 303:16-303:35 -/
+    Source: 'tls_codec/src/lib.rs', lines 323:16-323:35 -/
 def __6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once
   {Self_ : Type} (SizeInst : Size Self_) (SerializeBytesInst : SerializeBytes
   Self_) (c : __6.ensures.closure Self_) (tupled_args : alloc.vec.Vec Std.U8) :
@@ -1238,7 +1283,7 @@ def __6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once
   ok (i = i1)
 
 /-- Trait implementation: [tls_codec::_#6::ensures::{impl core::ops::function::FnOnce<(alloc::vec::Vec<u8>,), bool> for tls_codec::_#6::ensures::closure<'_0, Self_>}]
-    Source: 'tls_codec/src/lib.rs', lines 303:16-303:35 -/
+    Source: 'tls_codec/src/lib.rs', lines 323:16-323:35 -/
 @[reducible]
 def __6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool {Self_ :
   Type} (SizeInst : Size Self_) (SerializeBytesInst : SerializeBytes Self_) :
@@ -1250,7 +1295,7 @@ def __6.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool {Self_ :
 }
 
 /-- [tls_codec::_#7::ensures::{impl core::ops::function::FnOnce<(Self_,), bool> for tls_codec::_#7::ensures::closure<'_0, '_1, Self_, R>}::call_once]:
-    Source: 'tls_codec/src/lib.rs', lines 323:25-326:97 -/
+    Source: 'tls_codec/src/lib.rs', lines 343:25-346:97 -/
 def __7.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once
   {Self_ : Type} {R : Type} (allocioreadReadInst : alloc.io.read.Read R)
   (SizeInst : Size Self_) (DeserializeInst : Deserialize Self_)
@@ -1271,7 +1316,7 @@ def __7.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once
   else ok false
 
 /-- Trait implementation: [tls_codec::_#7::ensures::{impl core::ops::function::FnOnce<(Self_,), bool> for tls_codec::_#7::ensures::closure<'_0, '_1, Self_, R>}]
-    Source: 'tls_codec/src/lib.rs', lines 323:25-326:97 -/
+    Source: 'tls_codec/src/lib.rs', lines 343:25-346:97 -/
 @[reducible]
 def __7.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool {Self_ :
   Type} {R : Type} (allocioreadReadInst : alloc.io.read.Read R) (SizeInst :
@@ -1283,7 +1328,7 @@ def __7.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool {Self_ :
 }
 
 /-- [tls_codec::_#8::ensures::{impl core::ops::function::FnOnce<(Self_,), bool> for tls_codec::_#8::ensures::closure<'_0, Self_, T1>}::call_once]:
-    Source: 'tls_codec/src/lib.rs', lines 338:25-338:83 -/
+    Source: 'tls_codec/src/lib.rs', lines 358:25-358:83 -/
 def __8.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once
   {Self_ : Type} {T1 : Type} (SizeInst : Size Self_) (DeserializeInst :
   Deserialize Self_) (coreconvertAsRefT1SliceU8Inst : core.convert.AsRef T1
@@ -1296,7 +1341,7 @@ def __8.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once
   ok (i = i1)
 
 /-- Trait implementation: [tls_codec::_#8::ensures::{impl core::ops::function::FnOnce<(Self_,), bool> for tls_codec::_#8::ensures::closure<'_0, Self_, T1>}]
-    Source: 'tls_codec/src/lib.rs', lines 338:25-338:83 -/
+    Source: 'tls_codec/src/lib.rs', lines 358:25-358:83 -/
 @[reducible]
 def __8.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool {Self_ :
   Type} {T1 : Type} (SizeInst : Size Self_) (DeserializeInst : Deserialize
@@ -1308,7 +1353,7 @@ def __8.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool {Self_ :
 }
 
 /-- [tls_codec::_#9::ensures::{impl core::ops::function::FnOnce<((Self_, &'_ [u8]),), bool> for tls_codec::_#9::ensures::closure<'_0, Self_>}::call_once]:
-    Source: 'tls_codec/src/lib.rs', lines 366:25-369:79 -/
+    Source: 'tls_codec/src/lib.rs', lines 386:25-389:79 -/
 def
   __9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool.call_once
   {Self_ : Type} (SizeInst : Size Self_) (DeserializeBytesInst :
@@ -1332,7 +1377,7 @@ def
   else ok false
 
 /-- Trait implementation: [tls_codec::_#9::ensures::{impl core::ops::function::FnOnce<((Self_, &'_ [u8]),), bool> for tls_codec::_#9::ensures::closure<'_0, Self_>}]
-    Source: 'tls_codec/src/lib.rs', lines 366:25-369:79 -/
+    Source: 'tls_codec/src/lib.rs', lines 386:25-389:79 -/
 @[reducible]
 def
   __9.ensures.closure.Insts.CoreOpsFunctionFnOnceTuplePairSelf_SharedSliceU8Bool
@@ -1345,7 +1390,7 @@ def
 }
 
 /-- [tls_codec::_#10::ensures::{impl core::ops::function::FnOnce<(Self_,), bool> for tls_codec::_#10::ensures::closure<'_0, Self_>}::call_once]:
-    Source: 'tls_codec/src/lib.rs', lines 380:25-380:74 -/
+    Source: 'tls_codec/src/lib.rs', lines 400:25-400:74 -/
 def __10.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once
   {Self_ : Type} (SizeInst : Size Self_) (DeserializeBytesInst :
   DeserializeBytes Self_) (c : __10.ensures.closure Self_)
@@ -1357,7 +1402,7 @@ def __10.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool.call_once
   ok (i = i1)
 
 /-- Trait implementation: [tls_codec::_#10::ensures::{impl core::ops::function::FnOnce<(Self_,), bool> for tls_codec::_#10::ensures::closure<'_0, Self_>}]
-    Source: 'tls_codec/src/lib.rs', lines 380:25-380:74 -/
+    Source: 'tls_codec/src/lib.rs', lines 400:25-400:74 -/
 @[reducible]
 def __10.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool {Self_ :
   Type} (SizeInst : Size Self_) (DeserializeBytesInst : DeserializeBytes Self_)
@@ -1368,13 +1413,13 @@ def __10.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleSelf_Bool {Self_ :
 }
 
 /-- [tls_codec::{impl core::clone::Clone for tls_codec::U24}::clone]:
-    Source: 'tls_codec/src/lib.rs', lines 398:15-398:20
+    Source: 'tls_codec/src/lib.rs', lines 418:15-418:20
     Visibility: public -/
 def U24.Insts.CoreCloneClone.clone (self : U24) : RustM U24 := do
   ok self
 
 /-- Trait implementation: [tls_codec::{impl core::clone::Clone for tls_codec::U24}]
-    Source: 'tls_codec/src/lib.rs', lines 398:15-398:20 -/
+    Source: 'tls_codec/src/lib.rs', lines 418:15-418:20 -/
 @[reducible]
 impl_def U24.Insts.CoreCloneClone : core.clone.Clone U24 := {
   clone := U24.Insts.CoreCloneClone.clone
@@ -1382,21 +1427,21 @@ impl_def U24.Insts.CoreCloneClone : core.clone.Clone U24 := {
 }
 
 /-- Trait implementation: [tls_codec::{impl core::marker::Copy for tls_codec::U24}]
-    Source: 'tls_codec/src/lib.rs', lines 398:9-398:13 -/
+    Source: 'tls_codec/src/lib.rs', lines 418:9-418:13 -/
 @[reducible]
 def U24.Insts.CoreMarkerCopy : core.marker.Copy U24 := {
   cloneCloneInst := U24.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [tls_codec::{impl core::fmt::Debug for tls_codec::U24}]
-    Source: 'tls_codec/src/lib.rs', lines 398:22-398:27 -/
+    Source: 'tls_codec/src/lib.rs', lines 418:22-418:27 -/
 @[reducible]
 def U24.Insts.CoreFmtDebug : core.fmt.Debug U24 := {
   fmt := U24.Insts.CoreFmtDebug.fmt
 }
 
 /-- [tls_codec::{impl core::default::Default for tls_codec::U24}::default]:
-    Source: 'tls_codec/src/lib.rs', lines 398:29-398:36
+    Source: 'tls_codec/src/lib.rs', lines 418:29-418:36
     Visibility: public -/
 def U24.Insts.CoreDefaultDefault.default : RustM U24 := do
   let a ←
@@ -1405,21 +1450,21 @@ def U24.Insts.CoreDefaultDefault.default : RustM U24 := do
   ok a
 
 /-- Trait implementation: [tls_codec::{impl core::default::Default for tls_codec::U24}]
-    Source: 'tls_codec/src/lib.rs', lines 398:29-398:36 -/
+    Source: 'tls_codec/src/lib.rs', lines 418:29-418:36 -/
 @[reducible]
 def U24.Insts.CoreDefaultDefault : core.default.Default U24 := {
   default := U24.Insts.CoreDefaultDefault.default
 }
 
 /-- Trait implementation: [tls_codec::{impl core::marker::StructuralPartialEq for tls_codec::U24}]
-    Source: 'tls_codec/src/lib.rs', lines 398:38-398:47 -/
+    Source: 'tls_codec/src/lib.rs', lines 418:38-418:47 -/
 @[reducible]
 def U24.Insts.CoreMarkerStructuralPartialEq : core.marker.StructuralPartialEq
   U24 := {
 }
 
 /-- [tls_codec::{impl core::cmp::PartialEq<tls_codec::U24> for tls_codec::U24}::eq]:
-    Source: 'tls_codec/src/lib.rs', lines 398:38-398:47
+    Source: 'tls_codec/src/lib.rs', lines 418:38-418:47
     Visibility: public -/
 def U24.Insts.CoreCmpPartialEqU24.eq
   (self : U24) (other : U24) : RustM Bool := do
@@ -1427,46 +1472,72 @@ def U24.Insts.CoreCmpPartialEqU24.eq
     self other
 
 /-- Trait implementation: [tls_codec::{impl core::cmp::PartialEq<tls_codec::U24> for tls_codec::U24}]
-    Source: 'tls_codec/src/lib.rs', lines 398:38-398:47 -/
+    Source: 'tls_codec/src/lib.rs', lines 418:38-418:47 -/
 @[reducible]
 impl_def U24.Insts.CoreCmpPartialEqU24 : core.cmp.PartialEq U24 U24 := {
   eq := U24.Insts.CoreCmpPartialEqU24.eq
   ne := core.cmp.PartialEq.ne.default U24.Insts.CoreCmpPartialEqU24
 }
 
+/-- Trait implementation: [tls_codec::{impl core::cmp::Eq for tls_codec::U24}]
+    Source: 'tls_codec/src/lib.rs', lines 418:49-418:51 -/
+@[reducible]
+def U24.Insts.CoreCmpEq : core.cmp.Eq U24 := {
+  PartialEqInst := U24.Insts.CoreCmpPartialEqU24
+}
+
+/-- [tls_codec::{impl core::hash::Hash for tls_codec::U24}::hash]:
+    Source: 'tls_codec/src/lib.rs', lines 418:53-418:57
+    Visibility: public -/
+def U24.Insts.CoreHashHash.hash
+  {__H : Type} (corehashHasherInst : core.hash.Hasher __H) (self : U24)
+  (state : __H) :
+  RustM __H
+  := do
+  core.Array.Insts.CoreHashHash.hash core.U8.Insts.CoreHashHash
+    corehashHasherInst self state
+
+/-- Trait implementation: [tls_codec::{impl core::hash::Hash for tls_codec::U24}]
+    Source: 'tls_codec/src/lib.rs', lines 418:53-418:57 -/
+@[reducible]
+def U24.Insts.CoreHashHash : core.hash.Hash U24 := {
+  hash := fun {H : Type} (corehashHasherInst : core.hash.Hasher H) =>
+    U24.Insts.CoreHashHash.hash corehashHasherInst
+}
+
 /-- [tls_codec::{tls_codec::U24}::to_be_bytes]:
-    Source: 'tls_codec/src/lib.rs', lines 412:4-414:5
+    Source: 'tls_codec/src/lib.rs', lines 437:4-439:5
     Visibility: public -/
 def U24.to_be_bytes (self : U24) : RustM (Array Std.U8 3#usize) := do
   ok self
 
 /-- [tls_codec::{tls_codec::U24}::from_be_bytes]:
-    Source: 'tls_codec/src/lib.rs', lines 407:4-409:5
+    Source: 'tls_codec/src/lib.rs', lines 431:4-433:5
     Visibility: public -/
 def U24.from_be_bytes (bytes : Array Std.U8 3#usize) : RustM U24 := do
   ok bytes
 
 /-- [tls_codec::{tls_codec::U24}::MAX]
-    Source: 'tls_codec/src/lib.rs', lines 403:4-403:43
+    Source: 'tls_codec/src/lib.rs', lines 424:4-424:43
     Visibility: public -/
 @[global_simps, irreducible]
 def U24.MAX : U24 := let a := Array.repeat 3#usize 255#u8
                      a
 
 /-- [tls_codec::{tls_codec::U24}::MIN]
-    Source: 'tls_codec/src/lib.rs', lines 404:4-404:41
+    Source: 'tls_codec/src/lib.rs', lines 427:4-427:41
     Visibility: public -/
 @[global_simps, irreducible]
 def U24.MIN : U24 := let a := Array.repeat 3#usize 0#u8
                      a
 
 /-- [tls_codec::{impl core::convert::From<tls_codec::U24> for usize}::from::LEN]
-    Source: 'tls_codec/src/lib.rs', lines 425:8-425:57 -/
+    Source: 'tls_codec/src/lib.rs', lines 450:8-450:57 -/
 @[global_simps, irreducible]
 def FromUsizeU24.from.LEN : RustM Std.Usize := core.mem.size_of Std.Usize
 
 /-- [tls_codec::{impl core::convert::From<tls_codec::U24> for usize}::from]:
-    Source: 'tls_codec/src/lib.rs', lines 424:4-429:5
+    Source: 'tls_codec/src/lib.rs', lines 449:4-454:5
     Visibility: public -/
 def Usize.Insts.CoreConvertFromU24.from (value : U24) : RustM Std.Usize := do
   let usize_bytes := Array.repeat 8#usize 0#u8
@@ -1483,68 +1554,115 @@ def Usize.Insts.CoreConvertFromU24.from (value : U24) : RustM Std.Usize := do
   core.num.Usize.from_be_bytes usize_bytes1
 
 /-- Trait implementation: [tls_codec::{impl core::convert::From<tls_codec::U24> for usize}]
-    Source: 'tls_codec/src/lib.rs', lines 418:0-430:1 -/
+    Source: 'tls_codec/src/lib.rs', lines 443:0-455:1 -/
 @[reducible]
 def Usize.Insts.CoreConvertFromU24 : core.convert.From Std.Usize U24 := {
   «from» := Usize.Insts.CoreConvertFromU24.from
 }
 
-/-- [tls_codec::primitives::{impl core::convert::From<core::array::TryFromSliceError> for tls_codec::Error}::from]:
-    Source: 'tls_codec/src/primitives.rs', lines 226:4-228:5
-    Visibility: public -/
-def Error.Insts.CoreConvertFromTryFromSliceError.from
-  (tfse : core.array.TryFromSliceError) : RustM Error := do
-  ok Error.InvalidInput
-
-/-- Trait implementation: [tls_codec::primitives::{impl core::convert::From<core::array::TryFromSliceError> for tls_codec::Error}]
-    Source: 'tls_codec/src/primitives.rs', lines 225:0-229:1 -/
+/-- Trait implementation: [tls_codec::{impl core::fmt::Debug for tls_codec::U24OverflowError}]
+    Source: 'tls_codec/src/lib.rs', lines 458:9-458:14 -/
 @[reducible]
-def Error.Insts.CoreConvertFromTryFromSliceError : core.convert.From Error
-  core.array.TryFromSliceError := {
-  «from» := Error.Insts.CoreConvertFromTryFromSliceError.from
+def U24OverflowError.Insts.CoreFmtDebug : core.fmt.Debug U24OverflowError := {
+  fmt := U24OverflowError.Insts.CoreFmtDebug.fmt
 }
 
-/-- [tls_codec::{impl core::convert::TryFrom<usize, tls_codec::Error> for tls_codec::U24}::try_from::LEN]
-    Source: 'tls_codec/src/lib.rs', lines 442:8-442:57 -/
-@[global_simps, irreducible]
-def TryFromU24UsizeError.try_from.LEN : RustM Std.Usize :=
-  core.mem.size_of Std.Usize
-
-/-- [tls_codec::{impl core::convert::TryFrom<usize, tls_codec::Error> for tls_codec::U24}::try_from]:
-    Source: 'tls_codec/src/lib.rs', lines 441:4-450:5
+/-- [tls_codec::{impl core::clone::Clone for tls_codec::U24OverflowError}::clone]:
+    Source: 'tls_codec/src/lib.rs', lines 458:16-458:21
     Visibility: public -/
-def U24.Insts.CoreConvertTryFromUsizeError.try_from
-  (value : Std.Usize) : RustM (core.result.Result U24 Error) := do
+def U24OverflowError.Insts.CoreCloneClone.clone
+  (self : U24OverflowError) : RustM U24OverflowError := do
+  ok self
+
+/-- Trait implementation: [tls_codec::{impl core::clone::Clone for tls_codec::U24OverflowError}]
+    Source: 'tls_codec/src/lib.rs', lines 458:16-458:21 -/
+@[reducible]
+impl_def U24OverflowError.Insts.CoreCloneClone : core.clone.Clone
+  U24OverflowError := {
+  clone := U24OverflowError.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    U24OverflowError.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [tls_codec::{impl core::marker::Copy for tls_codec::U24OverflowError}]
+    Source: 'tls_codec/src/lib.rs', lines 458:23-458:27 -/
+@[reducible]
+def U24OverflowError.Insts.CoreMarkerCopy : core.marker.Copy U24OverflowError
+  := {
+  cloneCloneInst := U24OverflowError.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [tls_codec::{impl core::marker::StructuralPartialEq for tls_codec::U24OverflowError}]
+    Source: 'tls_codec/src/lib.rs', lines 458:29-458:38 -/
+@[reducible]
+def U24OverflowError.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq U24OverflowError := {
+}
+
+/-- [tls_codec::{impl core::cmp::PartialEq<tls_codec::U24OverflowError> for tls_codec::U24OverflowError}::eq]:
+    Source: 'tls_codec/src/lib.rs', lines 458:29-458:38
+    Visibility: public -/
+def U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.eq
+  (self : U24OverflowError) (other : U24OverflowError) : RustM Bool := do
+  ok true
+
+/-- Trait implementation: [tls_codec::{impl core::cmp::PartialEq<tls_codec::U24OverflowError> for tls_codec::U24OverflowError}]
+    Source: 'tls_codec/src/lib.rs', lines 458:29-458:38 -/
+@[reducible]
+impl_def U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError :
+  core.cmp.PartialEq U24OverflowError U24OverflowError := {
+  eq := U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.eq
+  ne := core.cmp.PartialEq.ne.default
+    U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError
+}
+
+/-- Trait implementation: [tls_codec::{impl core::cmp::Eq for tls_codec::U24OverflowError}]
+    Source: 'tls_codec/src/lib.rs', lines 458:40-458:42 -/
+@[reducible]
+def U24OverflowError.Insts.CoreCmpEq : core.cmp.Eq U24OverflowError := {
+  PartialEqInst := U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError
+}
+
+/-- Trait implementation: [tls_codec::{impl core::fmt::Display for tls_codec::U24OverflowError}]
+    Source: 'tls_codec/src/lib.rs', lines 461:0-465:1 -/
+@[reducible]
+def U24OverflowError.Insts.CoreFmtDisplay : core.fmt.Display U24OverflowError
+  := {
+  fmt := U24OverflowError.Insts.CoreFmtDisplay.fmt
+}
+
+/-- Trait implementation: [tls_codec::{impl core::error::Error for tls_codec::U24OverflowError}]
+    Source: 'tls_codec/src/lib.rs', lines 467:0-467:47 -/
+@[reducible]
+def U24OverflowError.Insts.CoreErrorError : core.error.Error U24OverflowError
+  := {
+  fmtDebugInst := U24OverflowError.Insts.CoreFmtDebug
+  fmtDisplayInst := U24OverflowError.Insts.CoreFmtDisplay
+}
+
+/-- [tls_codec::{impl core::convert::TryFrom<usize, tls_codec::U24OverflowError> for tls_codec::U24}::try_from]:
+    Source: 'tls_codec/src/lib.rs', lines 479:4-484:5
+    Visibility: public -/
+def U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from
+  (value : Std.Usize) : RustM (core.result.Result U24 U24OverflowError) := do
   let i ← 1#usize <<< 24#i32
   let i1 ← i - 1#usize
   if value > i1
-  then ok (core.result.Result.Err Error.LibraryError)
+  then ok (core.result.Result.Err ())
   else
-    let a ← core.num.Usize.to_be_bytes value
-    let i2 ← TryFromU24UsizeError.try_from.LEN
-    let i3 ← i2 - 3#usize
-    let s ←
-      core.Array.Insts.CoreOpsIndexIndex.index
-        (core.Slice.Insts.CoreOpsIndexIndex
-        (core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice
-        Std.U8)) a { start := i3 }
-    let r ←
-      core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
-        3#usize core.U8.Insts.CoreMarkerCopy s
-    let cf ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      ok (core.result.Result.Ok val)
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-        U24 Error.Insts.CoreConvertFromTryFromSliceError residual
+    let i2 ← value >>> 16#i32
+    let i3 ← lift (UScalar.cast .U8 i2)
+    let i4 ← value >>> 8#i32
+    let i5 ← lift (UScalar.cast .U8 i4)
+    let i6 ← lift (UScalar.cast .U8 value)
+    ok (core.result.Result.Ok (Array.make 3#usize [ i3, i5, i6 ]))
 
-/-- Trait implementation: [tls_codec::{impl core::convert::TryFrom<usize, tls_codec::Error> for tls_codec::U24}]
-    Source: 'tls_codec/src/lib.rs', lines 433:0-451:1 -/
+/-- Trait implementation: [tls_codec::{impl core::convert::TryFrom<usize, tls_codec::U24OverflowError> for tls_codec::U24}]
+    Source: 'tls_codec/src/lib.rs', lines 471:0-485:1 -/
 @[reducible]
-def U24.Insts.CoreConvertTryFromUsizeError : core.convert.TryFrom U24 Std.Usize
-  Error := {
-  try_from := U24.Insts.CoreConvertTryFromUsizeError.try_from
+def U24.Insts.CoreConvertTryFromUsizeU24OverflowError : core.convert.TryFrom
+  U24 Std.Usize U24OverflowError := {
+  try_from := U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from
 }
 
 /-- [tls_codec::primitives::{impl tls_codec::Size for core::option::Option<T>}::tls_serialized_len]:
@@ -1624,7 +1742,7 @@ def core.option.Option.Insts.Tls_codecSerialize.tls_serialize
   match self with
   | core.option.Option.None =>
     let s ← lift (Array.to_slice (Array.make 1#usize [ 0#u8 ]))
-    let (r, writer1) ← coreiowriteWriteInst.write_all writer s
+    let (r, writer1) ← write_all coreiowriteWriteInst writer s
     let cf ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -1632,11 +1750,11 @@ def core.option.Option.Insts.Tls_codecSerialize.tls_serialize
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r1 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-          Std.Usize Error.Insts.CoreConvertFromError residual
+          Std.Usize (core.convert.From.Blanket Error) residual
       ok (r1, writer1)
   | core.option.Option.Some e =>
     let s ← lift (Array.to_slice (Array.make 1#usize [ 1#u8 ]))
-    let (r, writer1) ← coreiowriteWriteInst.write_all writer s
+    let (r, writer1) ← write_all coreiowriteWriteInst writer s
     let cf ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -1650,7 +1768,7 @@ def core.option.Option.Insts.Tls_codecSerialize.tls_serialize
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r1 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-          Std.Usize Error.Insts.CoreConvertFromError residual
+          Std.Usize (core.convert.From.Blanket Error) residual
       ok (r1, writer1)
 
 /-- Trait implementation: [tls_codec::primitives::{impl tls_codec::Serialize for core::option::Option<T>}]
@@ -3196,7 +3314,7 @@ def U8.Insts.Tls_codecSerialize.tls_serialize
   := do
   let bytes ← core.num.U8.to_be_bytes self
   let s ← lift (Array.to_slice bytes)
-  let (r, writer1) ← coreiowriteWriteInst.write_all writer s
+  let (r, writer1) ← write_all coreiowriteWriteInst writer s
   let cf ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -3204,7 +3322,7 @@ def U8.Insts.Tls_codecSerialize.tls_serialize
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-        Std.Usize Error.Insts.CoreConvertFromError residual
+        Std.Usize (core.convert.From.Blanket Error) residual
     ok (r1, writer1)
 
 /-- Trait implementation: [tls_codec::primitives::{impl tls_codec::Serialize for u8}]
@@ -3228,7 +3346,7 @@ def U16.Insts.Tls_codecSerialize.tls_serialize
   := do
   let bytes ← core.num.U16.to_be_bytes self
   let s ← lift (Array.to_slice bytes)
-  let (r, writer1) ← coreiowriteWriteInst.write_all writer s
+  let (r, writer1) ← write_all coreiowriteWriteInst writer s
   let cf ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -3236,7 +3354,7 @@ def U16.Insts.Tls_codecSerialize.tls_serialize
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-        Std.Usize Error.Insts.CoreConvertFromError residual
+        Std.Usize (core.convert.From.Blanket Error) residual
     ok (r1, writer1)
 
 /-- Trait implementation: [tls_codec::primitives::{impl tls_codec::Serialize for u16}]
@@ -3260,7 +3378,7 @@ def U24.Insts.Tls_codecSerialize.tls_serialize
   := do
   let bytes ← U24.to_be_bytes self
   let s ← lift (Array.to_slice bytes)
-  let (r, writer1) ← coreiowriteWriteInst.write_all writer s
+  let (r, writer1) ← write_all coreiowriteWriteInst writer s
   let cf ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -3268,7 +3386,7 @@ def U24.Insts.Tls_codecSerialize.tls_serialize
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-        Std.Usize Error.Insts.CoreConvertFromError residual
+        Std.Usize (core.convert.From.Blanket Error) residual
     ok (r1, writer1)
 
 /-- Trait implementation: [tls_codec::primitives::{impl tls_codec::Serialize for tls_codec::U24}]
@@ -3292,7 +3410,7 @@ def U32.Insts.Tls_codecSerialize.tls_serialize
   := do
   let bytes ← core.num.U32.to_be_bytes self
   let s ← lift (Array.to_slice bytes)
-  let (r, writer1) ← coreiowriteWriteInst.write_all writer s
+  let (r, writer1) ← write_all coreiowriteWriteInst writer s
   let cf ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -3300,7 +3418,7 @@ def U32.Insts.Tls_codecSerialize.tls_serialize
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-        Std.Usize Error.Insts.CoreConvertFromError residual
+        Std.Usize (core.convert.From.Blanket Error) residual
     ok (r1, writer1)
 
 /-- Trait implementation: [tls_codec::primitives::{impl tls_codec::Serialize for u32}]
@@ -3324,7 +3442,7 @@ def U64.Insts.Tls_codecSerialize.tls_serialize
   := do
   let bytes ← core.num.U64.to_be_bytes self
   let s ← lift (Array.to_slice bytes)
-  let (r, writer1) ← coreiowriteWriteInst.write_all writer s
+  let (r, writer1) ← write_all coreiowriteWriteInst writer s
   let cf ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -3332,7 +3450,7 @@ def U64.Insts.Tls_codecSerialize.tls_serialize
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-        Std.Usize Error.Insts.CoreConvertFromError residual
+        Std.Usize (core.convert.From.Blanket Error) residual
     ok (r1, writer1)
 
 /-- Trait implementation: [tls_codec::primitives::{impl tls_codec::Serialize for u64}]
@@ -3453,6 +3571,21 @@ impl_def Shared0U64.Insts.Tls_codecSerialize : Serialize Std.U64 := {
     coreiowriteWriteInst
   tls_serialize_detached := Serialize.tls_serialize_detached.default
     Shared0U64.Insts.Tls_codecSerialize
+}
+
+/-- [tls_codec::primitives::{impl core::convert::From<core::array::TryFromSliceError> for tls_codec::Error}::from]:
+    Source: 'tls_codec/src/primitives.rs', lines 226:4-228:5
+    Visibility: public -/
+def Error.Insts.CoreConvertFromTryFromSliceError.from
+  (tfse : core.array.TryFromSliceError) : RustM Error := do
+  ok Error.InvalidInput
+
+/-- Trait implementation: [tls_codec::primitives::{impl core::convert::From<core::array::TryFromSliceError> for tls_codec::Error}]
+    Source: 'tls_codec/src/primitives.rs', lines 225:0-229:1 -/
+@[reducible]
+def Error.Insts.CoreConvertFromTryFromSliceError : core.convert.From Error
+  core.array.TryFromSliceError := {
+  «from» := Error.Insts.CoreConvertFromTryFromSliceError.from
 }
 
 /-- [tls_codec::primitives::{impl tls_codec::Size for (T, U)}::tls_serialized_len]:
@@ -4154,7 +4287,7 @@ impl_def Box.Insts.Tls_codecDeserializeBytes {T : Type} (DeserializeBytesInst :
 }
 
 /-- [tls_codec::quic_vec::MAX_MLS_LEN]
-    Source: 'tls_codec/src/quic_vec.rs', lines 36:0-36:39 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 37:0-37:39 -/
 @[global_simps, irreducible]
 def quic_vec.MAX_MLS_LEN : RustM Std.U64 := do
   let i ← 1#u64 <<< 30#i32
@@ -4167,7 +4300,7 @@ def varint.TlsVarInt.value (self : varint.TlsVarInt) : RustM Std.U64 := do
   ok self
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::ContentLength}::from_usize::_::ensures::{impl core::ops::function::FnOnce<(tls_codec::quic_vec::ContentLength,), bool> for tls_codec::quic_vec::{tls_codec::quic_vec::ContentLength}::from_usize::_::ensures::closure<'_0>}::call_once]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 63:22-63:55 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 64:22-64:55 -/
 def
   quic_vec.ContentLength.from_usize._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool.call_once
   (c : quic_vec.ContentLength.from_usize._.ensures.closure)
@@ -4179,7 +4312,7 @@ def
   ok (i = i1)
 
 /-- Trait implementation: [tls_codec::quic_vec::{tls_codec::quic_vec::ContentLength}::from_usize::_::ensures::{impl core::ops::function::FnOnce<(tls_codec::quic_vec::ContentLength,), bool> for tls_codec::quic_vec::{tls_codec::quic_vec::ContentLength}::from_usize::_::ensures::closure<'_0>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 63:22-63:55 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 64:22-64:55 -/
 @[reducible]
 def
   quic_vec.ContentLength.from_usize._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool
@@ -4191,12 +4324,12 @@ def
 }
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::ContentLength}::MAX]
-    Source: 'tls_codec/src/quic_vec.rs', lines 51:4-51:33 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 52:4-52:33 -/
 @[global_simps, irreducible]
 def quic_vec.ContentLength.MAX : RustM Std.U64 := quic_vec.MAX_MLS_LEN
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::ContentLength}::new]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 54:4-60:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 55:4-61:5 -/
 def quic_vec.ContentLength.new
   (value : varint.TlsVarInt) :
   RustM (core.result.Result quic_vec.ContentLength Error)
@@ -4240,7 +4373,7 @@ def Error.Insts.CoreConvertFromTryFromIntError : core.convert.From Error
 }
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::ContentLength}::from_usize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 64:4-66:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 65:4-67:5 -/
 def quic_vec.ContentLength.from_usize
   (value : Std.Usize) :
   RustM (core.result.Result quic_vec.ContentLength Error)
@@ -4284,14 +4417,14 @@ def varint.TlsVarInt.Insts.Tls_codecSize.tls_serialized_len
   varint.TlsVarInt.bytes_len self
 
 /-- [tls_codec::quic_vec::{impl tls_codec::Size for tls_codec::quic_vec::ContentLength}::tls_serialized_len]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 70:4-72:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 71:4-73:5
     Visibility: public -/
 def quic_vec.ContentLength.Insts.Tls_codecSize.tls_serialized_len
   (self : quic_vec.ContentLength) : RustM Std.Usize := do
   varint.TlsVarInt.Insts.Tls_codecSize.tls_serialized_len self
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::Size for tls_codec::quic_vec::ContentLength}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 69:0-73:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 70:0-74:1 -/
 @[reducible]
 def quic_vec.ContentLength.Insts.Tls_codecSize : Size quic_vec.ContentLength
   := {
@@ -4464,7 +4597,7 @@ def varint.TlsVarInt.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
       residual
 
 /-- [tls_codec::quic_vec::{impl tls_codec::DeserializeBytes for tls_codec::quic_vec::ContentLength}::tls_deserialize_bytes]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 76:4-79:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 77:4-80:5
     Visibility: public -/
 def
   quic_vec.ContentLength.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
@@ -4493,7 +4626,7 @@ def
       Error) residual
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::DeserializeBytes for tls_codec::quic_vec::ContentLength}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 75:0-80:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 76:0-81:1 -/
 @[reducible]
 impl_def quic_vec.ContentLength.Insts.Tls_codecDeserializeBytes :
   DeserializeBytes quic_vec.ContentLength := {
@@ -4506,7 +4639,7 @@ impl_def quic_vec.ContentLength.Insts.Tls_codecDeserializeBytes :
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 [T]}::tls_serialized_len::{impl core::ops::function::FnOnce<(tls_codec::quic_vec::ContentLength,), usize> for tls_codec::quic_vec::{impl tls_codec::Size for &'_0 [T]}::tls_serialized_len::closure#1<'_0, T>}::call_once]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 246:17-246:62 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 247:17-247:62 -/
 def
   quic_vec.SizeShared0Slice.tls_serialized_len.closure_1.Insts.CoreOpsFunctionFnOnceTupleContentLengthUsize.call_once
   {T : Type} (SizeInst : Size T)
@@ -4517,7 +4650,7 @@ def
   varint.TlsVarInt.bytes_len tupled_args
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 [T]}::tls_serialized_len::{impl core::ops::function::FnOnce<(tls_codec::quic_vec::ContentLength,), usize> for tls_codec::quic_vec::{impl tls_codec::Size for &'_0 [T]}::tls_serialized_len::closure#1<'_0, T>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 246:17-246:62 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 247:17-247:62 -/
 @[reducible]
 def
   quic_vec.SizeShared0Slice.tls_serialized_len.closure_1.Insts.CoreOpsFunctionFnOnceTupleContentLengthUsize
@@ -4530,7 +4663,7 @@ def
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 [T]}::tls_serialized_len::{impl core::ops::function::FnMut<(usize, &'_ T), usize> for tls_codec::quic_vec::{impl tls_codec::Size for &'_0 [T]}::tls_serialized_len::closure<'_0, T>}::call_mut]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 244:21-244:73 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 245:21-245:73 -/
 def
   quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize.call_mut
   {T : Type} (SizeInst : Size T)
@@ -4544,7 +4677,7 @@ def
   ok (i1, ())
 
 /-- [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 [T]}::tls_serialized_len::{impl core::ops::function::FnOnce<(usize, &'_ T), usize> for tls_codec::quic_vec::{impl tls_codec::Size for &'_0 [T]}::tls_serialized_len::closure<'_0, T>}::call_once]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 244:21-244:73 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 245:21-245:73 -/
 def
   quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize.call_once
   {T : Type} (SizeInst : Size T)
@@ -4558,7 +4691,7 @@ def
   ok i
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 [T]}::tls_serialized_len::{impl core::ops::function::FnOnce<(usize, &'_ T), usize> for tls_codec::quic_vec::{impl tls_codec::Size for &'_0 [T]}::tls_serialized_len::closure<'_0, T>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 244:21-244:73 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 245:21-245:73 -/
 @[reducible]
 def
   quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnOncePairUsizeSharedTUsize
@@ -4571,7 +4704,7 @@ def
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 [T]}::tls_serialized_len::{impl core::ops::function::FnMut<(usize, &'_ T), usize> for tls_codec::quic_vec::{impl tls_codec::Size for &'_0 [T]}::tls_serialized_len::closure<'_0, T>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 244:21-244:73 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 245:21-245:73 -/
 @[reducible]
 def
   quic_vec.SizeShared0Slice.tls_serialized_len.closure.Insts.CoreOpsFunctionFnMutPairUsizeSharedTUsize
@@ -4587,7 +4720,7 @@ def
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 [T]}::tls_serialized_len]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 241:4-253:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 242:4-254:5
     Visibility: public -/
 def Shared0Slice.Insts.Tls_codecSize.tls_serialized_len
   {T : Type} (SizeInst : Size T) (self : Slice T) : RustM Std.Usize := do
@@ -4605,7 +4738,7 @@ def Shared0Slice.Insts.Tls_codecSize.tls_serialized_len
   len_add content_length len_len
 
 /-- [tls_codec::quic_vec::{impl tls_codec::Size for alloc::vec::Vec<T>}::tls_serialized_len]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 84:4-86:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 85:4-87:5
     Visibility: public -/
 def alloc.vec.Vec.Insts.Tls_codecSize.tls_serialized_len
   {T : Type} (SizeInst : Size T) (self : alloc.vec.Vec T) :
@@ -4615,7 +4748,7 @@ def alloc.vec.Vec.Insts.Tls_codecSize.tls_serialized_len
   Shared0Slice.Insts.Tls_codecSize.tls_serialized_len SizeInst s
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::Size for alloc::vec::Vec<T>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 82:0-87:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 83:0-88:1 -/
 @[reducible]
 def alloc.vec.Vec.Insts.Tls_codecSize {T : Type} (SizeInst : Size T) : Size
   (alloc.vec.Vec T) := {
@@ -4624,7 +4757,7 @@ def alloc.vec.Vec.Insts.Tls_codecSize {T : Type} (SizeInst : Size T) : Size
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 alloc::vec::Vec<T>}::tls_serialized_len]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 91:4-93:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 92:4-94:5
     Visibility: public -/
 def Shared0Vec.Insts.Tls_codecSize.tls_serialized_len
   {T : Type} (SizeInst : Size T) (self : alloc.vec.Vec T) :
@@ -4633,7 +4766,7 @@ def Shared0Vec.Insts.Tls_codecSize.tls_serialized_len
   alloc.vec.Vec.Insts.Tls_codecSize.tls_serialized_len SizeInst self
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 alloc::vec::Vec<T>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 89:0-94:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 90:0-95:1 -/
 @[reducible]
 def Shared0Vec.Insts.Tls_codecSize {T : Type} (SizeInst : Size T) : Size
   (alloc.vec.Vec T) := {
@@ -4642,7 +4775,7 @@ def Shared0Vec.Insts.Tls_codecSize {T : Type} (SizeInst : Size T) : Size
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::DeserializeBytes for alloc::vec::Vec<T>}::tls_deserialize_bytes]: loop body 0:
-    Source: 'tls_codec/src/quic_vec.rs', lines 110:8-133:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 111:8-134:9
     Visibility: public -/
 @[rust_loop_body]
 def
@@ -4678,7 +4811,7 @@ def
   else ok (done (remainder, result, read, core.option.Option.None))
 
 /-- [tls_codec::quic_vec::{impl tls_codec::DeserializeBytes for alloc::vec::Vec<T>}::tls_deserialize_bytes]: loop 0:
-    Source: 'tls_codec/src/quic_vec.rs', lines 110:8-133:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 111:8-134:9
     Visibility: public -/
 @[rust_loop]
 def alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_loop
@@ -4695,7 +4828,7 @@ def alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_loop
     (remainder, result, read)
 
 /-- [tls_codec::quic_vec::{impl tls_codec::DeserializeBytes for alloc::vec::Vec<T>}::tls_deserialize_bytes]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 98:4-145:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 99:4-146:5
     Visibility: public -/
 def alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
   {T : Type} (DeserializeBytesInst : DeserializeBytes T) (bytes : Slice Std.U8)
@@ -4761,7 +4894,7 @@ def alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
       residual
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::DeserializeBytes for alloc::vec::Vec<T>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 96:0-146:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 97:0-147:1 -/
 @[reducible]
 impl_def alloc.vec.Vec.Insts.Tls_codecDeserializeBytes {T : Type}
   (DeserializeBytesInst : DeserializeBytes T) : DeserializeBytes (alloc.vec.Vec
@@ -4776,7 +4909,7 @@ impl_def alloc.vec.Vec.Insts.Tls_codecDeserializeBytes {T : Type}
 }
 
 /-- [tls_codec::quic_vec::tls_serialize_bytes_len::{impl core::ops::function::FnOnce<(tls_codec::quic_vec::ContentLength,), usize> for tls_codec::quic_vec::tls_serialize_bytes_len::closure}::call_once]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 384:13-384:58 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 385:13-385:58 -/
 def
   quic_vec.tls_serialize_bytes_len.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthUsize.call_once
   (c : quic_vec.tls_serialize_bytes_len.closure)
@@ -4786,7 +4919,7 @@ def
   varint.TlsVarInt.bytes_len tupled_args
 
 /-- Trait implementation: [tls_codec::quic_vec::tls_serialize_bytes_len::{impl core::ops::function::FnOnce<(tls_codec::quic_vec::ContentLength,), usize> for tls_codec::quic_vec::tls_serialize_bytes_len::closure}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 384:13-384:58 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 385:13-385:58 -/
 @[reducible]
 def
   quic_vec.tls_serialize_bytes_len.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthUsize
@@ -4797,7 +4930,7 @@ def
 }
 
 /-- [tls_codec::quic_vec::tls_serialize_bytes_len]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 381:0-391:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 382:0-392:1 -/
 def quic_vec.tls_serialize_bytes_len
   (bytes : Slice Std.U8) : RustM Std.Usize := do
   let content_length ← core.slice.Slice.len bytes
@@ -4810,13 +4943,13 @@ def quic_vec.tls_serialize_bytes_len
   content_length + len_len
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLBytes}::vec]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 355:4-357:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 356:4-358:5 -/
 def quic_vec.VLBytes.impl.vec
   (self : quic_vec.VLBytes) : RustM (Slice Std.U8) := do
   alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref self.vec
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLBytes}::as_slice]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 283:12-285:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 284:12-286:13
     Visibility: public -/
 def quic_vec.VLBytes.as_slice
   (self : quic_vec.VLBytes) : RustM (Slice Std.U8) := do
@@ -4824,7 +4957,7 @@ def quic_vec.VLBytes.as_slice
   core.Slice.Insts.CoreConvertAsRefSlice.as_ref s
 
 /-- [tls_codec::quic_vec::{impl tls_codec::Size for tls_codec::quic_vec::VLBytes}::tls_serialized_len]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 395:4-397:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 396:4-398:5
     Visibility: public -/
 def quic_vec.VLBytes.Insts.Tls_codecSize.tls_serialized_len
   (self : quic_vec.VLBytes) : RustM Std.Usize := do
@@ -4832,7 +4965,7 @@ def quic_vec.VLBytes.Insts.Tls_codecSize.tls_serialized_len
   quic_vec.tls_serialize_bytes_len s
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLBytes}::tls_serialize_bytes::_::ensures::{impl core::ops::function::FnOnce<(alloc::vec::Vec<u8>,), bool> for tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLBytes}::tls_serialize_bytes::_::ensures::closure#1<'_0>}::call_once]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 148:16-148:35 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 149:16-149:35 -/
 def
   quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once
   (c : quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure_1)
@@ -4844,7 +4977,7 @@ def
   ok (i = i1)
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLBytes}::tls_serialize_bytes::_::ensures::{impl core::ops::function::FnOnce<(alloc::vec::Vec<u8>,), bool> for tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLBytes}::tls_serialize_bytes::_::ensures::closure#1<'_0>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 148:16-148:35 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 149:16-149:35 -/
 @[reducible]
 def
   quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool
@@ -4856,7 +4989,7 @@ def
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLBytes}::tls_serialize_bytes::_::ensures::{impl core::ops::function::FnOnce<(tls_codec::quic_vec::ContentLength,), bool> for tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLBytes}::tls_serialize_bytes::_::ensures::closure<'_0>}::call_once]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 151:70-152:85 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 152:70-153:85 -/
 def
   quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool.call_once
   (c : quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure)
@@ -4870,7 +5003,7 @@ def
   core.result.Result.is_ok r
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLBytes}::tls_serialize_bytes::_::ensures::{impl core::ops::function::FnOnce<(tls_codec::quic_vec::ContentLength,), bool> for tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLBytes}::tls_serialize_bytes::_::ensures::closure<'_0>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 151:70-152:85 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 152:70-153:85 -/
 @[reducible]
 def
   quic_vec.SerializeBytesVLBytes.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool
@@ -4882,7 +5015,7 @@ def
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::Size for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 393:0-398:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 394:0-399:1 -/
 @[reducible]
 def quic_vec.VLBytes.Insts.Tls_codecSize : Size quic_vec.VLBytes := {
   tls_serialized_len := quic_vec.VLBytes.Insts.Tls_codecSize.tls_serialized_len
@@ -5065,7 +5198,7 @@ def varint.TlsVarInt.write_bytes
         fail panic
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLBytes}::tls_serialize_bytes]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 159:4-177:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 160:4-178:5
     Visibility: public -/
 def quic_vec.VLBytes.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   (self : quic_vec.VLBytes) :
@@ -5113,7 +5246,7 @@ def quic_vec.VLBytes.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
       (alloc.vec.Vec Std.U8) (core.convert.From.Blanket Error) residual
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 149:0-178:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 150:0-179:1 -/
 @[reducible]
 def quic_vec.VLBytes.Insts.Tls_codecSerializeBytes : SerializeBytes
   quic_vec.VLBytes := {
@@ -5123,21 +5256,21 @@ def quic_vec.VLBytes.Insts.Tls_codecSerializeBytes : SerializeBytes
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 tls_codec::quic_vec::VLBytes}::tls_serialized_len]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 424:4-426:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 425:4-427:5
     Visibility: public -/
 def Shared0VLBytes.Insts.Tls_codecSize.tls_serialized_len
   (self : quic_vec.VLBytes) : RustM Std.Usize := do
   quic_vec.VLBytes.Insts.Tls_codecSize.tls_serialized_len self
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 422:0-427:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 423:0-428:1 -/
 @[reducible]
 def Shared0VLBytes.Insts.Tls_codecSize : Size quic_vec.VLBytes := {
   tls_serialized_len := Shared0VLBytes.Insts.Tls_codecSize.tls_serialized_len
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for &'_0 tls_codec::quic_vec::VLBytes}::tls_serialize_bytes]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 182:4-184:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 183:4-185:5
     Visibility: public -/
 def Shared0VLBytes.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   (self : quic_vec.VLBytes) :
@@ -5146,7 +5279,7 @@ def Shared0VLBytes.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   quic_vec.VLBytes.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for &'_0 tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 180:0-185:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 181:0-186:1 -/
 @[reducible]
 def Shared0VLBytes.Insts.Tls_codecSerializeBytes : SerializeBytes
   quic_vec.VLBytes := {
@@ -5156,7 +5289,7 @@ def Shared0VLBytes.Insts.Tls_codecSerializeBytes : SerializeBytes
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 [T]}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 239:0-254:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 240:0-255:1 -/
 @[reducible]
 def Shared0Slice.Insts.Tls_codecSize {T : Type} (SizeInst : Size T) : Size
   (Slice T) := {
@@ -5165,7 +5298,7 @@ def Shared0Slice.Insts.Tls_codecSize {T : Type} (SizeInst : Size T) : Size
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for &'_0 [T]}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 187:0-224:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 188:0-225:1 -/
 @[reducible]
 def Shared0Slice.Insts.Tls_codecSerializeBytes {T : Type} (SerializeBytesInst :
   SerializeBytes T) : SerializeBytes (Slice T) := {
@@ -5176,7 +5309,7 @@ def Shared0Slice.Insts.Tls_codecSerializeBytes {T : Type} (SerializeBytesInst :
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for &'_0 alloc::vec::Vec<T>}::tls_serialize_bytes]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 228:4-230:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 229:4-231:5
     Visibility: public -/
 def Shared0Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   {T : Type} (SerializeBytesInst : SerializeBytes T) (self : alloc.vec.Vec T) :
@@ -5187,7 +5320,7 @@ def Shared0Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
     SerializeBytesInst s
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for &'_0 alloc::vec::Vec<T>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 226:0-231:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 227:0-232:1 -/
 @[reducible]
 def Shared0Vec.Insts.Tls_codecSerializeBytes {T : Type} (SerializeBytesInst :
   SerializeBytes T) : SerializeBytes (alloc.vec.Vec T) := {
@@ -5198,7 +5331,7 @@ def Shared0Vec.Insts.Tls_codecSerializeBytes {T : Type} (SerializeBytesInst :
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for alloc::vec::Vec<T>}::tls_serialize_bytes]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 234:4-236:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 235:4-237:5
     Visibility: public -/
 def alloc.vec.Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   {T : Type} (SerializeBytesInst : SerializeBytes T) (self : alloc.vec.Vec T) :
@@ -5209,7 +5342,7 @@ def alloc.vec.Vec.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
     SerializeBytesInst s
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for alloc::vec::Vec<T>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 233:0-237:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 234:0-238:1 -/
 @[reducible]
 def alloc.vec.Vec.Insts.Tls_codecSerializeBytes {T : Type} (SerializeBytesInst
   : SerializeBytes T) : SerializeBytes (alloc.vec.Vec T) := {
@@ -5220,14 +5353,14 @@ def alloc.vec.Vec.Insts.Tls_codecSerializeBytes {T : Type} (SerializeBytesInst
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::fmt::Debug for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 271:8-277:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 272:8-278:9 -/
 @[reducible]
 def quic_vec.VLBytes.Insts.CoreFmtDebug : core.fmt.Debug quic_vec.VLBytes := {
   fmt := quic_vec.VLBytes.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::fmt::Debug for tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 271:8-277:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 272:8-278:9 -/
 @[reducible]
 def quic_vec.VLByteVec.Insts.CoreFmtDebug : core.fmt.Debug quic_vec.VLByteVec
   := {
@@ -5235,7 +5368,7 @@ def quic_vec.VLByteVec.Insts.CoreFmtDebug : core.fmt.Debug quic_vec.VLByteVec
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl core::fmt::Debug for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 271:8-277:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 272:8-278:9 -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreFmtDebug : core.fmt.Debug
   quic_vec.secret_bytes.SecretVLBytes := {
@@ -5243,7 +5376,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl core::fmt::Debug for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 271:8-277:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 272:8-278:9 -/
 @[reducible]
 def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreFmtDebug :
   core.fmt.Debug quic_vec.secret_byte_vec.SecretVLByteVec := {
@@ -5251,13 +5384,13 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreFmtDebug :
 }
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLByteVec}::vec]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 462:4-464:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 463:4-465:5 -/
 def quic_vec.VLByteVec.impl.vec
   (self : quic_vec.VLByteVec) : RustM (Slice Std.U8) := do
   alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice.deref self.vec
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLByteVec}::as_slice]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 283:12-285:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 284:12-286:13
     Visibility: public -/
 def quic_vec.VLByteVec.as_slice
   (self : quic_vec.VLByteVec) : RustM (Slice Std.U8) := do
@@ -5265,7 +5398,7 @@ def quic_vec.VLByteVec.as_slice
   core.Slice.Insts.CoreConvertAsRefSlice.as_ref s
 
 /-- [tls_codec::quic_vec::secret_bytes::{tls_codec::quic_vec::secret_bytes::SecretVLBytes}::as_slice]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 283:12-285:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 284:12-286:13
     Visibility: public -/
 def quic_vec.secret_bytes.SecretVLBytes.as_slice
   (self : quic_vec.secret_bytes.SecretVLBytes) : RustM (Slice Std.U8) := do
@@ -5273,7 +5406,7 @@ def quic_vec.secret_bytes.SecretVLBytes.as_slice
   core.Slice.Insts.CoreConvertAsRefSlice.as_ref s
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::as_slice]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 283:12-285:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 284:12-286:13
     Visibility: public -/
 def quic_vec.secret_byte_vec.SecretVLByteVec.as_slice
   (self : quic_vec.secret_byte_vec.SecretVLByteVec) :
@@ -5283,7 +5416,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.as_slice
   core.Slice.Insts.CoreConvertAsRefSlice.as_ref s
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLBytes}::vec_mut]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 359:4-361:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 360:4-362:5 -/
 def quic_vec.VLBytes.vec_mut
   (self : quic_vec.VLBytes) :
   RustM ((alloc.vec.Vec Std.U8) × (alloc.vec.Vec Std.U8 → quic_vec.VLBytes))
@@ -5292,7 +5425,7 @@ def quic_vec.VLBytes.vec_mut
   ok (self.vec, back)
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLBytes}::push]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 292:12-294:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 293:12-295:13
     Visibility: public -/
 def quic_vec.VLBytes.push
   (self : quic_vec.VLBytes) (value : Std.U8) : RustM quic_vec.VLBytes := do
@@ -5301,7 +5434,7 @@ def quic_vec.VLBytes.push
   ok (vec_mut_back v1)
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLByteVec}::vec_mut]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 466:4-468:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 467:4-469:5 -/
 def quic_vec.VLByteVec.vec_mut
   (self : quic_vec.VLByteVec) :
   RustM ((alloc.vec.Vec Std.U8) × (alloc.vec.Vec Std.U8 →
@@ -5311,7 +5444,7 @@ def quic_vec.VLByteVec.vec_mut
   ok (self.vec, back)
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLByteVec}::push]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 292:12-294:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 293:12-295:13
     Visibility: public -/
 def quic_vec.VLByteVec.push
   (self : quic_vec.VLByteVec) (value : Std.U8) : RustM quic_vec.VLByteVec := do
@@ -5320,7 +5453,7 @@ def quic_vec.VLByteVec.push
   ok (vec_mut_back v1)
 
 /-- [tls_codec::quic_vec::secret_bytes::{tls_codec::quic_vec::secret_bytes::SecretVLBytes}::push]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 292:12-294:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 293:12-295:13
     Visibility: public -/
 def quic_vec.secret_bytes.SecretVLBytes.push
   (self : quic_vec.secret_bytes.SecretVLBytes) (value : Std.U8) :
@@ -5331,7 +5464,7 @@ def quic_vec.secret_bytes.SecretVLBytes.push
   ok (vec_mut_back v1)
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::push]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 292:12-294:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 293:12-295:13
     Visibility: public -/
 def quic_vec.secret_byte_vec.SecretVLByteVec.push
   (self : quic_vec.secret_byte_vec.SecretVLByteVec) (value : Std.U8) :
@@ -5343,7 +5476,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.push
   ok (vec_mut_back v1)
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLBytes}::pop]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 302:12-304:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 303:12-305:13
     Visibility: public -/
 def quic_vec.VLBytes.pop
   (self : quic_vec.VLBytes) :
@@ -5355,7 +5488,7 @@ def quic_vec.VLBytes.pop
   ok (o, self1)
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLByteVec}::pop]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 302:12-304:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 303:12-305:13
     Visibility: public -/
 def quic_vec.VLByteVec.pop
   (self : quic_vec.VLByteVec) :
@@ -5367,7 +5500,7 @@ def quic_vec.VLByteVec.pop
   ok (o, self1)
 
 /-- [tls_codec::quic_vec::secret_bytes::{tls_codec::quic_vec::secret_bytes::SecretVLBytes}::pop]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 302:12-304:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 303:12-305:13
     Visibility: public -/
 def quic_vec.secret_bytes.SecretVLBytes.pop
   (self : quic_vec.secret_bytes.SecretVLBytes) :
@@ -5379,7 +5512,7 @@ def quic_vec.secret_bytes.SecretVLBytes.pop
   ok (o, self1)
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::pop]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 302:12-304:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 303:12-305:13
     Visibility: public -/
 def quic_vec.secret_byte_vec.SecretVLByteVec.pop
   (self : quic_vec.secret_byte_vec.SecretVLByteVec) :
@@ -5393,21 +5526,21 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.pop
   ok (o, self1)
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLBytes}::new]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 351:4-353:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 352:4-354:5
     Visibility: public -/
 def quic_vec.VLBytes.new
   (vec : alloc.vec.Vec Std.U8) : RustM quic_vec.VLBytes := do
   ok { vec }
 
 /-- [tls_codec::quic_vec::{impl core::convert::From<alloc::vec::Vec<u8>> for tls_codec::quic_vec::VLBytes}::from]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 308:12-310:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 309:12-311:13
     Visibility: public -/
 def quic_vec.VLBytes.Insts.CoreConvertFromVecU8.from
   (vec : alloc.vec.Vec Std.U8) : RustM quic_vec.VLBytes := do
   quic_vec.VLBytes.new vec
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::convert::From<alloc::vec::Vec<u8>> for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 307:8-311:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 308:8-312:9 -/
 @[reducible]
 def quic_vec.VLBytes.Insts.CoreConvertFromVecU8 : core.convert.From
   quic_vec.VLBytes (alloc.vec.Vec Std.U8) := {
@@ -5415,21 +5548,21 @@ def quic_vec.VLBytes.Insts.CoreConvertFromVecU8 : core.convert.From
 }
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLByteVec}::new]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 458:4-460:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 459:4-461:5
     Visibility: public -/
 def quic_vec.VLByteVec.new
   (vec : alloc.vec.Vec Std.U8) : RustM quic_vec.VLByteVec := do
   ok { vec }
 
 /-- [tls_codec::quic_vec::{impl core::convert::From<alloc::vec::Vec<u8>> for tls_codec::quic_vec::VLByteVec}::from]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 308:12-310:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 309:12-311:13
     Visibility: public -/
 def quic_vec.VLByteVec.Insts.CoreConvertFromVecU8.from
   (vec : alloc.vec.Vec Std.U8) : RustM quic_vec.VLByteVec := do
   quic_vec.VLByteVec.new vec
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::convert::From<alloc::vec::Vec<u8>> for tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 307:8-311:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 308:8-312:9 -/
 @[reducible]
 def quic_vec.VLByteVec.Insts.CoreConvertFromVecU8 : core.convert.From
   quic_vec.VLByteVec (alloc.vec.Vec Std.U8) := {
@@ -5437,7 +5570,7 @@ def quic_vec.VLByteVec.Insts.CoreConvertFromVecU8 : core.convert.From
 }
 
 /-- [tls_codec::quic_vec::secret_bytes::{tls_codec::quic_vec::secret_bytes::SecretVLBytes}::new]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 912:8-914:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 913:8-915:9
     Visibility: public -/
 def quic_vec.secret_bytes.SecretVLBytes.new
   (vec : alloc.vec.Vec Std.U8) :
@@ -5446,7 +5579,7 @@ def quic_vec.secret_bytes.SecretVLBytes.new
   ok { vec }
 
 /-- [tls_codec::quic_vec::secret_bytes::{impl core::convert::From<alloc::vec::Vec<u8>> for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::from]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 308:12-310:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 309:12-311:13
     Visibility: public -/
 def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromVecU8.from
   (vec : alloc.vec.Vec Std.U8) :
@@ -5455,7 +5588,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromVecU8.from
   quic_vec.secret_bytes.SecretVLBytes.new vec
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl core::convert::From<alloc::vec::Vec<u8>> for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 307:8-311:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 308:8-312:9 -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromVecU8 :
   core.convert.From quic_vec.secret_bytes.SecretVLBytes (alloc.vec.Vec Std.U8)
@@ -5465,7 +5598,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromVecU8 :
 }
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::new]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 998:8-1000:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 999:8-1001:9
     Visibility: public -/
 def quic_vec.secret_byte_vec.SecretVLByteVec.new
   (vec : alloc.vec.Vec Std.U8) :
@@ -5474,7 +5607,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.new
   ok { vec }
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{impl core::convert::From<alloc::vec::Vec<u8>> for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::from]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 308:12-310:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 309:12-311:13
     Visibility: public -/
 def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromVecU8.from
   (vec : alloc.vec.Vec Std.U8) :
@@ -5483,7 +5616,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromVecU8.from
   quic_vec.secret_byte_vec.SecretVLByteVec.new vec
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl core::convert::From<alloc::vec::Vec<u8>> for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 307:8-311:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 308:8-312:9 -/
 @[reducible]
 def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromVecU8 :
   core.convert.From quic_vec.secret_byte_vec.SecretVLByteVec (alloc.vec.Vec
@@ -5493,7 +5626,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromVecU8 :
 }
 
 /-- [tls_codec::quic_vec::{impl core::convert::From<&'_0 [u8]> for tls_codec::quic_vec::VLBytes}::from]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 314:12-316:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 315:12-317:13
     Visibility: public -/
 def quic_vec.VLBytes.Insts.CoreConvertFromShared0SliceU8.from
   (slice : Slice Std.U8) : RustM quic_vec.VLBytes := do
@@ -5501,7 +5634,7 @@ def quic_vec.VLBytes.Insts.CoreConvertFromShared0SliceU8.from
   quic_vec.VLBytes.new v
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::convert::From<&'_0 [u8]> for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 313:8-317:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 314:8-318:9 -/
 @[reducible]
 def quic_vec.VLBytes.Insts.CoreConvertFromShared0SliceU8 : core.convert.From
   quic_vec.VLBytes (Slice Std.U8) := {
@@ -5509,7 +5642,7 @@ def quic_vec.VLBytes.Insts.CoreConvertFromShared0SliceU8 : core.convert.From
 }
 
 /-- [tls_codec::quic_vec::{impl core::convert::From<&'_0 [u8]> for tls_codec::quic_vec::VLByteVec}::from]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 314:12-316:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 315:12-317:13
     Visibility: public -/
 def quic_vec.VLByteVec.Insts.CoreConvertFromShared0SliceU8.from
   (slice : Slice Std.U8) : RustM quic_vec.VLByteVec := do
@@ -5517,7 +5650,7 @@ def quic_vec.VLByteVec.Insts.CoreConvertFromShared0SliceU8.from
   quic_vec.VLByteVec.new v
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::convert::From<&'_0 [u8]> for tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 313:8-317:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 314:8-318:9 -/
 @[reducible]
 def quic_vec.VLByteVec.Insts.CoreConvertFromShared0SliceU8 : core.convert.From
   quic_vec.VLByteVec (Slice Std.U8) := {
@@ -5525,7 +5658,7 @@ def quic_vec.VLByteVec.Insts.CoreConvertFromShared0SliceU8 : core.convert.From
 }
 
 /-- [tls_codec::quic_vec::secret_bytes::{impl core::convert::From<&'_0 [u8]> for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::from]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 314:12-316:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 315:12-317:13
     Visibility: public -/
 def
   quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0SliceU8.from
@@ -5534,7 +5667,7 @@ def
   quic_vec.secret_bytes.SecretVLBytes.new v
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl core::convert::From<&'_0 [u8]> for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 313:8-317:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 314:8-318:9 -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0SliceU8 :
   core.convert.From quic_vec.secret_bytes.SecretVLBytes (Slice Std.U8) := {
@@ -5543,7 +5676,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0SliceU8 :
 }
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{impl core::convert::From<&'_0 [u8]> for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::from]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 314:12-316:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 315:12-317:13
     Visibility: public -/
 def
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0SliceU8.from
@@ -5552,7 +5685,7 @@ def
   quic_vec.secret_byte_vec.SecretVLByteVec.new v
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl core::convert::From<&'_0 [u8]> for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 313:8-317:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 314:8-318:9 -/
 @[reducible]
 def
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0SliceU8
@@ -5563,7 +5696,7 @@ def
 }
 
 /-- [tls_codec::quic_vec::{impl core::convert::From<&'_0 [u8; N]> for tls_codec::quic_vec::VLBytes}::from]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 320:12-322:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 321:12-323:13
     Visibility: public -/
 def quic_vec.VLBytes.Insts.CoreConvertFromShared0ArrayU8N.from
   {N : Std.Usize} (slice : Array Std.U8 N) : RustM quic_vec.VLBytes := do
@@ -5572,7 +5705,7 @@ def quic_vec.VLBytes.Insts.CoreConvertFromShared0ArrayU8N.from
   quic_vec.VLBytes.new v
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::convert::From<&'_0 [u8; N]> for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 319:8-323:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 320:8-324:9 -/
 @[reducible]
 def quic_vec.VLBytes.Insts.CoreConvertFromShared0ArrayU8N (N : Std.Usize) :
   core.convert.From quic_vec.VLBytes (Array Std.U8 N) := {
@@ -5580,7 +5713,7 @@ def quic_vec.VLBytes.Insts.CoreConvertFromShared0ArrayU8N (N : Std.Usize) :
 }
 
 /-- [tls_codec::quic_vec::{impl core::convert::From<&'_0 [u8; N]> for tls_codec::quic_vec::VLByteVec}::from]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 320:12-322:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 321:12-323:13
     Visibility: public -/
 def quic_vec.VLByteVec.Insts.CoreConvertFromShared0ArrayU8N.from
   {N : Std.Usize} (slice : Array Std.U8 N) : RustM quic_vec.VLByteVec := do
@@ -5589,7 +5722,7 @@ def quic_vec.VLByteVec.Insts.CoreConvertFromShared0ArrayU8N.from
   quic_vec.VLByteVec.new v
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::convert::From<&'_0 [u8; N]> for tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 319:8-323:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 320:8-324:9 -/
 @[reducible]
 def quic_vec.VLByteVec.Insts.CoreConvertFromShared0ArrayU8N (N : Std.Usize) :
   core.convert.From quic_vec.VLByteVec (Array Std.U8 N) := {
@@ -5597,7 +5730,7 @@ def quic_vec.VLByteVec.Insts.CoreConvertFromShared0ArrayU8N (N : Std.Usize) :
 }
 
 /-- [tls_codec::quic_vec::secret_bytes::{impl core::convert::From<&'_0 [u8; N]> for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::from]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 320:12-322:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 321:12-323:13
     Visibility: public -/
 def
   quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0ArrayU8N.from
@@ -5609,7 +5742,7 @@ def
   quic_vec.secret_bytes.SecretVLBytes.new v
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl core::convert::From<&'_0 [u8; N]> for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 319:8-323:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 320:8-324:9 -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0ArrayU8N (N
   : Std.Usize) : core.convert.From quic_vec.secret_bytes.SecretVLBytes (Array
@@ -5619,7 +5752,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertFromShared0ArrayU8N (N
 }
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{impl core::convert::From<&'_0 [u8; N]> for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::from]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 320:12-322:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 321:12-323:13
     Visibility: public -/
 def
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0ArrayU8N.from
@@ -5631,7 +5764,7 @@ def
   quic_vec.secret_byte_vec.SecretVLByteVec.new v
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl core::convert::From<&'_0 [u8; N]> for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 319:8-323:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 320:8-324:9 -/
 @[reducible]
 def
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertFromShared0ArrayU8N
@@ -5642,14 +5775,14 @@ def
 }
 
 /-- [tls_codec::quic_vec::{impl core::convert::AsRef<[u8]> for tls_codec::quic_vec::VLBytes}::as_ref]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 326:12-328:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 327:12-329:13
     Visibility: public -/
 def quic_vec.VLBytes.Insts.CoreConvertAsRefSliceU8.as_ref
   (self : quic_vec.VLBytes) : RustM (Slice Std.U8) := do
   quic_vec.VLBytes.impl.vec self
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::convert::AsRef<[u8]> for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 325:8-329:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 326:8-330:9 -/
 @[reducible]
 def quic_vec.VLBytes.Insts.CoreConvertAsRefSliceU8 : core.convert.AsRef
   quic_vec.VLBytes (Slice Std.U8) := {
@@ -5657,14 +5790,14 @@ def quic_vec.VLBytes.Insts.CoreConvertAsRefSliceU8 : core.convert.AsRef
 }
 
 /-- [tls_codec::quic_vec::{impl core::convert::AsRef<[u8]> for tls_codec::quic_vec::VLByteVec}::as_ref]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 326:12-328:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 327:12-329:13
     Visibility: public -/
 def quic_vec.VLByteVec.Insts.CoreConvertAsRefSliceU8.as_ref
   (self : quic_vec.VLByteVec) : RustM (Slice Std.U8) := do
   quic_vec.VLByteVec.impl.vec self
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::convert::AsRef<[u8]> for tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 325:8-329:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 326:8-330:9 -/
 @[reducible]
 def quic_vec.VLByteVec.Insts.CoreConvertAsRefSliceU8 : core.convert.AsRef
   quic_vec.VLByteVec (Slice Std.U8) := {
@@ -5672,14 +5805,14 @@ def quic_vec.VLByteVec.Insts.CoreConvertAsRefSliceU8 : core.convert.AsRef
 }
 
 /-- [tls_codec::quic_vec::secret_bytes::{impl core::convert::AsRef<[u8]> for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::as_ref]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 326:12-328:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 327:12-329:13
     Visibility: public -/
 def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertAsRefSliceU8.as_ref
   (self : quic_vec.secret_bytes.SecretVLBytes) : RustM (Slice Std.U8) := do
   quic_vec.secret_bytes.SecretVLBytes.vec self
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl core::convert::AsRef<[u8]> for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 325:8-329:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 326:8-330:9 -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertAsRefSliceU8 :
   core.convert.AsRef quic_vec.secret_bytes.SecretVLBytes (Slice Std.U8) := {
@@ -5688,7 +5821,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreConvertAsRefSliceU8 :
 }
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{impl core::convert::AsRef<[u8]> for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::as_ref]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 326:12-328:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 327:12-329:13
     Visibility: public -/
 def
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertAsRefSliceU8.as_ref
@@ -5698,7 +5831,7 @@ def
   quic_vec.secret_byte_vec.SecretVLByteVec.vec self
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl core::convert::AsRef<[u8]> for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 325:8-329:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 326:8-330:9 -/
 @[reducible]
 def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertAsRefSliceU8 :
   core.convert.AsRef quic_vec.secret_byte_vec.SecretVLByteVec (Slice Std.U8)
@@ -5708,7 +5841,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreConvertAsRefSliceU8 :
 }
 
 /-- [tls_codec::quic_vec::{impl core::clone::Clone for tls_codec::quic_vec::VLBytes}::clone]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 337:9-337:14
+    Source: 'tls_codec/src/quic_vec.rs', lines 338:9-338:14
     Visibility: public -/
 def quic_vec.VLBytes.Insts.CoreCloneClone.clone
   (self : quic_vec.VLBytes) : RustM quic_vec.VLBytes := do
@@ -5718,7 +5851,7 @@ def quic_vec.VLBytes.Insts.CoreCloneClone.clone
   ok { vec := v }
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::clone::Clone for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 337:9-337:14 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 338:9-338:14 -/
 @[reducible]
 impl_def quic_vec.VLBytes.Insts.CoreCloneClone : core.clone.Clone
   quic_vec.VLBytes := {
@@ -5728,14 +5861,14 @@ impl_def quic_vec.VLBytes.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::marker::StructuralPartialEq for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 337:16-337:25 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 338:16-338:25 -/
 @[reducible]
 def quic_vec.VLBytes.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq quic_vec.VLBytes := {
 }
 
 /-- [tls_codec::quic_vec::{impl core::cmp::PartialEq<tls_codec::quic_vec::VLBytes> for tls_codec::quic_vec::VLBytes}::eq]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 337:16-337:25
+    Source: 'tls_codec/src/quic_vec.rs', lines 338:16-338:25
     Visibility: public -/
 def quic_vec.VLBytes.Insts.CoreCmpPartialEqVLBytes.eq
   (self : quic_vec.VLBytes) (other : quic_vec.VLBytes) : RustM Bool := do
@@ -5743,7 +5876,7 @@ def quic_vec.VLBytes.Insts.CoreCmpPartialEqVLBytes.eq
     self.vec other.vec
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::cmp::PartialEq<tls_codec::quic_vec::VLBytes> for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 337:16-337:25 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 338:16-338:25 -/
 @[reducible]
 impl_def quic_vec.VLBytes.Insts.CoreCmpPartialEqVLBytes : core.cmp.PartialEq
   quic_vec.VLBytes quic_vec.VLBytes := {
@@ -5753,14 +5886,14 @@ impl_def quic_vec.VLBytes.Insts.CoreCmpPartialEqVLBytes : core.cmp.PartialEq
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::cmp::Eq for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 337:27-337:29 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 338:27-338:29 -/
 @[reducible]
 def quic_vec.VLBytes.Insts.CoreCmpEq : core.cmp.Eq quic_vec.VLBytes := {
   PartialEqInst := quic_vec.VLBytes.Insts.CoreCmpPartialEqVLBytes
 }
 
 /-- [tls_codec::quic_vec::{impl core::hash::Hash for tls_codec::quic_vec::VLBytes}::hash]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 337:31-337:35
+    Source: 'tls_codec/src/quic_vec.rs', lines 338:31-338:35
     Visibility: public -/
 def quic_vec.VLBytes.Insts.CoreHashHash.hash
   {__H : Type} (corehashHasherInst : core.hash.Hasher __H)
@@ -5771,7 +5904,7 @@ def quic_vec.VLBytes.Insts.CoreHashHash.hash
     corehashHasherInst self.vec state
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::hash::Hash for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 337:31-337:35 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 338:31-338:35 -/
 @[reducible]
 def quic_vec.VLBytes.Insts.CoreHashHash : core.hash.Hash quic_vec.VLBytes := {
   hash := fun {H : Type} (corehashHasherInst : core.hash.Hasher H) =>
@@ -5779,7 +5912,7 @@ def quic_vec.VLBytes.Insts.CoreHashHash : core.hash.Hash quic_vec.VLBytes := {
 }
 
 /-- [tls_codec::quic_vec::{impl core::cmp::Ord for tls_codec::quic_vec::VLBytes}::cmp]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 337:37-337:40
+    Source: 'tls_codec/src/quic_vec.rs', lines 338:37-338:40
     Visibility: public -/
 def quic_vec.VLBytes.Insts.CoreCmpOrd.cmp
   (self : quic_vec.VLBytes) (other : quic_vec.VLBytes) :
@@ -5789,7 +5922,7 @@ def quic_vec.VLBytes.Insts.CoreCmpOrd.cmp
     other.vec
 
 /-- [tls_codec::quic_vec::{impl core::cmp::PartialOrd<tls_codec::quic_vec::VLBytes> for tls_codec::quic_vec::VLBytes}::partial_cmp]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 337:42-337:52
+    Source: 'tls_codec/src/quic_vec.rs', lines 338:42-338:52
     Visibility: public -/
 def quic_vec.VLBytes.Insts.CoreCmpPartialOrdVLBytes.partial_cmp
   (self : quic_vec.VLBytes) (other : quic_vec.VLBytes) :
@@ -5799,7 +5932,7 @@ def quic_vec.VLBytes.Insts.CoreCmpPartialOrdVLBytes.partial_cmp
   ok (core.option.Option.Some o)
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::cmp::PartialOrd<tls_codec::quic_vec::VLBytes> for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 337:42-337:52 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 338:42-338:52 -/
 @[reducible]
 impl_def quic_vec.VLBytes.Insts.CoreCmpPartialOrdVLBytes : core.cmp.PartialOrd
   quic_vec.VLBytes quic_vec.VLBytes := {
@@ -5816,7 +5949,7 @@ impl_def quic_vec.VLBytes.Insts.CoreCmpPartialOrdVLBytes : core.cmp.PartialOrd
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::cmp::Ord for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 337:37-337:40 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 338:37-338:40 -/
 @[reducible]
 def quic_vec.VLBytes.Insts.CoreCmpOrd : core.cmp.Ord quic_vec.VLBytes := {
   EqInst := quic_vec.VLBytes.Insts.CoreCmpEq
@@ -5825,7 +5958,7 @@ def quic_vec.VLBytes.Insts.CoreCmpOrd : core.cmp.Ord quic_vec.VLBytes := {
 }
 
 /-- [tls_codec::quic_vec::{impl zeroize::Zeroize for tls_codec::quic_vec::VLBytes}::zeroize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 368:4-370:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 369:4-371:5
     Visibility: public -/
 def quic_vec.VLBytes.Insts.ZeroizeZeroize.zeroize
   (self : quic_vec.VLBytes) : RustM quic_vec.VLBytes := do
@@ -5835,7 +5968,7 @@ def quic_vec.VLBytes.Insts.ZeroizeZeroize.zeroize
   ok { vec := v }
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl zeroize::Zeroize for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 367:0-371:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 368:0-372:1 -/
 @[reducible]
 def quic_vec.VLBytes.Insts.ZeroizeZeroize : zeroize.Zeroize quic_vec.VLBytes
   := {
@@ -5843,14 +5976,14 @@ def quic_vec.VLBytes.Insts.ZeroizeZeroize : zeroize.Zeroize quic_vec.VLBytes
 }
 
 /-- [tls_codec::quic_vec::{impl core::convert::From<tls_codec::quic_vec::VLBytes> for alloc::vec::Vec<u8>}::from]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 374:4-376:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 375:4-377:5
     Visibility: public -/
 def alloc.vec.VecU8.Insts.CoreConvertFromVLBytes.from
   (b : quic_vec.VLBytes) : RustM (alloc.vec.Vec Std.U8) := do
   ok b.vec
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::convert::From<tls_codec::quic_vec::VLBytes> for alloc::vec::Vec<u8>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 373:0-377:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 374:0-378:1 -/
 @[reducible]
 def alloc.vec.VecU8.Insts.CoreConvertFromVLBytes : core.convert.From
   (alloc.vec.Vec Std.U8) quic_vec.VLBytes := {
@@ -5858,7 +5991,7 @@ def alloc.vec.VecU8.Insts.CoreConvertFromVLBytes : core.convert.From
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::DeserializeBytes for tls_codec::quic_vec::VLBytes}::tls_deserialize_bytes]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 402:4-419:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 403:4-420:5
     Visibility: public -/
 def quic_vec.VLBytes.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
   (bytes : Slice Std.U8) :
@@ -5925,7 +6058,7 @@ def quic_vec.VLBytes.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
       residual
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::DeserializeBytes for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 400:0-420:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 401:0-421:1 -/
 @[reducible]
 impl_def quic_vec.VLBytes.Insts.Tls_codecDeserializeBytes : DeserializeBytes
   quic_vec.VLBytes := {
@@ -5938,7 +6071,7 @@ impl_def quic_vec.VLBytes.Insts.Tls_codecDeserializeBytes : DeserializeBytes
 }
 
 /-- [tls_codec::quic_vec::{impl core::clone::Clone for tls_codec::quic_vec::VLByteVec}::clone]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 446:9-446:14
+    Source: 'tls_codec/src/quic_vec.rs', lines 447:9-447:14
     Visibility: public -/
 def quic_vec.VLByteVec.Insts.CoreCloneClone.clone
   (self : quic_vec.VLByteVec) : RustM quic_vec.VLByteVec := do
@@ -5948,7 +6081,7 @@ def quic_vec.VLByteVec.Insts.CoreCloneClone.clone
   ok { vec := v }
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::clone::Clone for tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 446:9-446:14 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 447:9-447:14 -/
 @[reducible]
 impl_def quic_vec.VLByteVec.Insts.CoreCloneClone : core.clone.Clone
   quic_vec.VLByteVec := {
@@ -5958,14 +6091,14 @@ impl_def quic_vec.VLByteVec.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::marker::StructuralPartialEq for tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 446:16-446:25 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 447:16-447:25 -/
 @[reducible]
 def quic_vec.VLByteVec.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq quic_vec.VLByteVec := {
 }
 
 /-- [tls_codec::quic_vec::{impl core::cmp::PartialEq<tls_codec::quic_vec::VLByteVec> for tls_codec::quic_vec::VLByteVec}::eq]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 446:16-446:25
+    Source: 'tls_codec/src/quic_vec.rs', lines 447:16-447:25
     Visibility: public -/
 def quic_vec.VLByteVec.Insts.CoreCmpPartialEqVLByteVec.eq
   (self : quic_vec.VLByteVec) (other : quic_vec.VLByteVec) : RustM Bool := do
@@ -5973,7 +6106,7 @@ def quic_vec.VLByteVec.Insts.CoreCmpPartialEqVLByteVec.eq
     self.vec other.vec
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::cmp::PartialEq<tls_codec::quic_vec::VLByteVec> for tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 446:16-446:25 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 447:16-447:25 -/
 @[reducible]
 impl_def quic_vec.VLByteVec.Insts.CoreCmpPartialEqVLByteVec :
   core.cmp.PartialEq quic_vec.VLByteVec quic_vec.VLByteVec := {
@@ -5983,14 +6116,14 @@ impl_def quic_vec.VLByteVec.Insts.CoreCmpPartialEqVLByteVec :
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::cmp::Eq for tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 446:27-446:29 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 447:27-447:29 -/
 @[reducible]
 def quic_vec.VLByteVec.Insts.CoreCmpEq : core.cmp.Eq quic_vec.VLByteVec := {
   PartialEqInst := quic_vec.VLByteVec.Insts.CoreCmpPartialEqVLByteVec
 }
 
 /-- [tls_codec::quic_vec::{impl core::hash::Hash for tls_codec::quic_vec::VLByteVec}::hash]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 446:31-446:35
+    Source: 'tls_codec/src/quic_vec.rs', lines 447:31-447:35
     Visibility: public -/
 def quic_vec.VLByteVec.Insts.CoreHashHash.hash
   {__H : Type} (corehashHasherInst : core.hash.Hasher __H)
@@ -6001,7 +6134,7 @@ def quic_vec.VLByteVec.Insts.CoreHashHash.hash
     corehashHasherInst self.vec state
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::hash::Hash for tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 446:31-446:35 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 447:31-447:35 -/
 @[reducible]
 def quic_vec.VLByteVec.Insts.CoreHashHash : core.hash.Hash quic_vec.VLByteVec
   := {
@@ -6010,7 +6143,7 @@ def quic_vec.VLByteVec.Insts.CoreHashHash : core.hash.Hash quic_vec.VLByteVec
 }
 
 /-- [tls_codec::quic_vec::{impl core::cmp::Ord for tls_codec::quic_vec::VLByteVec}::cmp]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 446:37-446:40
+    Source: 'tls_codec/src/quic_vec.rs', lines 447:37-447:40
     Visibility: public -/
 def quic_vec.VLByteVec.Insts.CoreCmpOrd.cmp
   (self : quic_vec.VLByteVec) (other : quic_vec.VLByteVec) :
@@ -6020,7 +6153,7 @@ def quic_vec.VLByteVec.Insts.CoreCmpOrd.cmp
     other.vec
 
 /-- [tls_codec::quic_vec::{impl core::cmp::PartialOrd<tls_codec::quic_vec::VLByteVec> for tls_codec::quic_vec::VLByteVec}::partial_cmp]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 446:42-446:52
+    Source: 'tls_codec/src/quic_vec.rs', lines 447:42-447:52
     Visibility: public -/
 def quic_vec.VLByteVec.Insts.CoreCmpPartialOrdVLByteVec.partial_cmp
   (self : quic_vec.VLByteVec) (other : quic_vec.VLByteVec) :
@@ -6030,7 +6163,7 @@ def quic_vec.VLByteVec.Insts.CoreCmpPartialOrdVLByteVec.partial_cmp
   ok (core.option.Option.Some o)
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::cmp::PartialOrd<tls_codec::quic_vec::VLByteVec> for tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 446:42-446:52 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 447:42-447:52 -/
 @[reducible]
 impl_def quic_vec.VLByteVec.Insts.CoreCmpPartialOrdVLByteVec :
   core.cmp.PartialOrd quic_vec.VLByteVec quic_vec.VLByteVec := {
@@ -6048,7 +6181,7 @@ impl_def quic_vec.VLByteVec.Insts.CoreCmpPartialOrdVLByteVec :
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::cmp::Ord for tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 446:37-446:40 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 447:37-447:40 -/
 @[reducible]
 def quic_vec.VLByteVec.Insts.CoreCmpOrd : core.cmp.Ord quic_vec.VLByteVec := {
   EqInst := quic_vec.VLByteVec.Insts.CoreCmpEq
@@ -6057,7 +6190,7 @@ def quic_vec.VLByteVec.Insts.CoreCmpOrd : core.cmp.Ord quic_vec.VLByteVec := {
 }
 
 /-- [tls_codec::quic_vec::{impl zeroize::Zeroize for tls_codec::quic_vec::VLByteVec}::zeroize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 475:4-477:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 476:4-478:5
     Visibility: public -/
 def quic_vec.VLByteVec.Insts.ZeroizeZeroize.zeroize
   (self : quic_vec.VLByteVec) : RustM quic_vec.VLByteVec := do
@@ -6067,7 +6200,7 @@ def quic_vec.VLByteVec.Insts.ZeroizeZeroize.zeroize
   ok { vec := v }
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl zeroize::Zeroize for tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 474:0-478:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 475:0-479:1 -/
 @[reducible]
 def quic_vec.VLByteVec.Insts.ZeroizeZeroize : zeroize.Zeroize
   quic_vec.VLByteVec := {
@@ -6075,14 +6208,14 @@ def quic_vec.VLByteVec.Insts.ZeroizeZeroize : zeroize.Zeroize
 }
 
 /-- [tls_codec::quic_vec::{impl core::convert::From<tls_codec::quic_vec::VLByteVec> for alloc::vec::Vec<u8>}::from]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 481:4-483:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 482:4-484:5
     Visibility: public -/
 def alloc.vec.VecU8.Insts.CoreConvertFromVLByteVec.from
   (b : quic_vec.VLByteVec) : RustM (alloc.vec.Vec Std.U8) := do
   ok b.vec
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::convert::From<tls_codec::quic_vec::VLByteVec> for alloc::vec::Vec<u8>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 480:0-484:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 481:0-485:1 -/
 @[reducible]
 def alloc.vec.VecU8.Insts.CoreConvertFromVLByteVec : core.convert.From
   (alloc.vec.Vec Std.U8) quic_vec.VLByteVec := {
@@ -6090,7 +6223,7 @@ def alloc.vec.VecU8.Insts.CoreConvertFromVLByteVec : core.convert.From
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::Size for tls_codec::quic_vec::VLByteVec}::tls_serialized_len]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 488:4-490:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 489:4-491:5
     Visibility: public -/
 def quic_vec.VLByteVec.Insts.Tls_codecSize.tls_serialized_len
   (self : quic_vec.VLByteVec) : RustM Std.Usize := do
@@ -6098,7 +6231,7 @@ def quic_vec.VLByteVec.Insts.Tls_codecSize.tls_serialized_len
   quic_vec.tls_serialize_bytes_len s
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::Size for tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 486:0-491:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 487:0-492:1 -/
 @[reducible]
 def quic_vec.VLByteVec.Insts.Tls_codecSize : Size quic_vec.VLByteVec := {
   tls_serialized_len :=
@@ -6106,7 +6239,7 @@ def quic_vec.VLByteVec.Insts.Tls_codecSize : Size quic_vec.VLByteVec := {
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::DeserializeBytes for tls_codec::quic_vec::VLByteVec}::tls_deserialize_bytes]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 495:4-512:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 496:4-513:5
     Visibility: public -/
 def quic_vec.VLByteVec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
   (bytes : Slice Std.U8) :
@@ -6173,7 +6306,7 @@ def quic_vec.VLByteVec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
       residual
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::DeserializeBytes for tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 493:0-513:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 494:0-514:1 -/
 @[reducible]
 impl_def quic_vec.VLByteVec.Insts.Tls_codecDeserializeBytes : DeserializeBytes
   quic_vec.VLByteVec := {
@@ -6186,21 +6319,21 @@ impl_def quic_vec.VLByteVec.Insts.Tls_codecDeserializeBytes : DeserializeBytes
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 tls_codec::quic_vec::VLByteVec}::tls_serialized_len]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 517:4-519:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 518:4-520:5
     Visibility: public -/
 def Shared0VLByteVec.Insts.Tls_codecSize.tls_serialized_len
   (self : quic_vec.VLByteVec) : RustM Std.Usize := do
   quic_vec.VLByteVec.Insts.Tls_codecSize.tls_serialized_len self
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 515:0-520:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 516:0-521:1 -/
 @[reducible]
 def Shared0VLByteVec.Insts.Tls_codecSize : Size quic_vec.VLByteVec := {
   tls_serialized_len := Shared0VLByteVec.Insts.Tls_codecSize.tls_serialized_len
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl core::fmt::Debug for tls_codec::quic_vec::VLByteSlice<'_0>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 603:0-609:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 604:0-610:1 -/
 @[reducible]
 def quic_vec.VLByteSlice.Insts.CoreFmtDebug : core.fmt.Debug
   quic_vec.VLByteSlice := {
@@ -6208,21 +6341,21 @@ def quic_vec.VLByteSlice.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [tls_codec::quic_vec::{tls_codec::quic_vec::VLByteSlice<'_0>}::as_slice]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 616:4-618:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 617:4-619:5
     Visibility: public -/
 def quic_vec.VLByteSlice.as_slice
   (self : quic_vec.VLByteSlice) : RustM (Slice Std.U8) := do
   ok self
 
 /-- [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 tls_codec::quic_vec::VLByteSlice<'_1>}::tls_serialized_len]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 623:4-625:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 624:4-626:5
     Visibility: public -/
 def Shared0VLByteSlice.Insts.Tls_codecSize.tls_serialized_len
   (self : quic_vec.VLByteSlice) : RustM Std.Usize := do
   quic_vec.tls_serialize_bytes_len self
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::Size for &'_0 tls_codec::quic_vec::VLByteSlice<'_1>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 621:0-626:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 622:0-627:1 -/
 @[reducible]
 def Shared0VLByteSlice.Insts.Tls_codecSize : Size quic_vec.VLByteSlice := {
   tls_serialized_len :=
@@ -6230,14 +6363,14 @@ def Shared0VLByteSlice.Insts.Tls_codecSize : Size quic_vec.VLByteSlice := {
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::Size for tls_codec::quic_vec::VLByteSlice<'_0>}::tls_serialized_len]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 630:4-632:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 631:4-633:5
     Visibility: public -/
 def quic_vec.VLByteSlice.Insts.Tls_codecSize.tls_serialized_len
   (self : quic_vec.VLByteSlice) : RustM Std.Usize := do
   quic_vec.tls_serialize_bytes_len self
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::Size for tls_codec::quic_vec::VLByteSlice<'_0>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 628:0-633:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 629:0-634:1 -/
 @[reducible]
 def quic_vec.VLByteSlice.Insts.Tls_codecSize : Size quic_vec.VLByteSlice := {
   tls_serialized_len :=
@@ -6266,7 +6399,7 @@ def varint.TlsVarInt.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
       (alloc.vec.Vec Std.U8) (core.convert.From.Blanket Error) residual
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::ContentLength}::tls_serialize_bytes]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 636:4-638:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 637:4-639:5
     Visibility: public -/
 def quic_vec.ContentLength.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   (self : quic_vec.ContentLength) :
@@ -6275,7 +6408,7 @@ def quic_vec.ContentLength.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   varint.TlsVarInt.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::ContentLength}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 635:0-639:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 636:0-640:1 -/
 @[reducible]
 def quic_vec.ContentLength.Insts.Tls_codecSerializeBytes : SerializeBytes
   quic_vec.ContentLength := {
@@ -6285,7 +6418,7 @@ def quic_vec.ContentLength.Insts.Tls_codecSerializeBytes : SerializeBytes
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLByteSlice<'_0>}::tls_serialize_bytes::_::ensures::{impl core::ops::function::FnOnce<(alloc::vec::Vec<u8>,), bool> for tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLByteSlice<'_0>}::tls_serialize_bytes::_::ensures::closure#1<'_0, '_1>}::call_once]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 641:16-641:35 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 642:16-642:35 -/
 def
   quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool.call_once
   (c :
@@ -6298,7 +6431,7 @@ def
   ok (i = i1)
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLByteSlice<'_0>}::tls_serialize_bytes::_::ensures::{impl core::ops::function::FnOnce<(alloc::vec::Vec<u8>,), bool> for tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLByteSlice<'_0>}::tls_serialize_bytes::_::ensures::closure#1<'_0, '_1>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 641:16-641:35 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 642:16-642:35 -/
 @[reducible]
 def
   quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure_1.Insts.CoreOpsFunctionFnOnceTupleVecU8Bool
@@ -6310,7 +6443,7 @@ def
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLByteSlice<'_0>}::tls_serialize_bytes::_::ensures::{impl core::ops::function::FnOnce<(tls_codec::quic_vec::ContentLength,), bool> for tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLByteSlice<'_0>}::tls_serialize_bytes::_::ensures::closure<'_0>}::call_once]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 644:61-645:76 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 645:61-646:76 -/
 def
   quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool.call_once
   (c :
@@ -6324,7 +6457,7 @@ def
   core.result.Result.is_ok r
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLByteSlice<'_0>}::tls_serialize_bytes::_::ensures::{impl core::ops::function::FnOnce<(tls_codec::quic_vec::ContentLength,), bool> for tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLByteSlice<'_0>}::tls_serialize_bytes::_::ensures::closure<'_0>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 644:61-645:76 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 645:61-646:76 -/
 @[reducible]
 def
   quic_vec.SerializeBytesVLByteSlice.tls_serialize_bytes._.ensures.closure.Insts.CoreOpsFunctionFnOnceTupleContentLengthBool
@@ -6336,7 +6469,7 @@ def
 }
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLByteSlice<'_0>}::tls_serialize_bytes]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 651:4-665:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 652:4-666:5
     Visibility: public -/
 def quic_vec.VLByteSlice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   (self : quic_vec.VLByteSlice) :
@@ -6378,7 +6511,7 @@ def quic_vec.VLByteSlice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
       (alloc.vec.Vec Std.U8) (core.convert.From.Blanket Error) residual
 
 /-- Trait implementation: [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for tls_codec::quic_vec::VLByteSlice<'_0>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 642:0-666:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 643:0-667:1 -/
 @[reducible]
 def quic_vec.VLByteSlice.Insts.Tls_codecSerializeBytes : SerializeBytes
   quic_vec.VLByteSlice := {
@@ -6518,7 +6651,7 @@ def varint.TlsVarInt.Insts.Tls_codecDeserialize.tls_deserialize
     ok (r1, bytes1)
 
 /-- [tls_codec::quic_vec::rw::{impl tls_codec::Deserialize for tls_codec::quic_vec::ContentLength}::tls_deserialize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 675:8-677:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 676:8-678:9
     Visibility: public -/
 def quic_vec.ContentLength.Insts.Tls_codecDeserialize.tls_deserialize
   {R : Type} (allocioreadReadInst : alloc.io.read.Read R) (bytes : R) :
@@ -6539,7 +6672,7 @@ def quic_vec.ContentLength.Insts.Tls_codecDeserialize.tls_deserialize
     ok (r1, bytes1)
 
 /-- Trait implementation: [tls_codec::quic_vec::rw::{impl tls_codec::Deserialize for tls_codec::quic_vec::ContentLength}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 673:4-678:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 674:4-679:5 -/
 @[reducible]
 impl_def quic_vec.ContentLength.Insts.Tls_codecDeserialize : Deserialize
   quic_vec.ContentLength := {
@@ -6574,7 +6707,7 @@ def varint.TlsVarInt.Insts.Tls_codecSerialize.tls_serialize
         (core.Slice.Insts.CoreOpsIndexIndex
         (core.ops.range.RangeToUsize.Insts.CoreSliceIndexSliceIndexSliceSlice
         Std.U8)) bytes1 { «end» := val }
-    let (r1, writer1) ← coreiowriteWriteInst.write_all writer s2
+    let (r1, writer1) ← write_all coreiowriteWriteInst writer s2
     let cf1 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r1
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -6582,7 +6715,7 @@ def varint.TlsVarInt.Insts.Tls_codecSerialize.tls_serialize
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r2 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-          Std.Usize Error.Insts.CoreConvertFromError residual
+          Std.Usize (core.convert.From.Blanket Error) residual
       ok (r2, writer1)
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
@@ -6591,7 +6724,7 @@ def varint.TlsVarInt.Insts.Tls_codecSerialize.tls_serialize
     ok (r1, writer)
 
 /-- [tls_codec::quic_vec::rw::{impl tls_codec::Serialize for tls_codec::quic_vec::ContentLength}::tls_serialize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 682:8-684:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 683:8-685:9
     Visibility: public -/
 def quic_vec.ContentLength.Insts.Tls_codecSerialize.tls_serialize
   {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
@@ -6602,7 +6735,7 @@ def quic_vec.ContentLength.Insts.Tls_codecSerialize.tls_serialize
     self writer
 
 /-- Trait implementation: [tls_codec::quic_vec::rw::{impl tls_codec::Serialize for tls_codec::quic_vec::ContentLength}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 680:4-685:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 681:4-686:5 -/
 @[reducible]
 impl_def quic_vec.ContentLength.Insts.Tls_codecSerialize : Serialize
   quic_vec.ContentLength := {
@@ -6615,7 +6748,7 @@ impl_def quic_vec.ContentLength.Insts.Tls_codecSerialize : Serialize
 }
 
 /-- [tls_codec::quic_vec::rw::read_length]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 694:4-699:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 695:4-700:5
     Visibility: public -/
 def quic_vec.rw.read_length
   {R : Type} (allocioreadReadInst : alloc.io.read.Read R) (bytes : R) :
@@ -6647,7 +6780,7 @@ def quic_vec.rw.read_length
     ok (r1, bytes1)
 
 /-- [tls_codec::quic_vec::rw::{impl tls_codec::Deserialize for alloc::vec::Vec<T>}::tls_deserialize]: loop body 0:
-    Source: 'tls_codec/src/quic_vec.rs', lines 720:12-739:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 721:12-740:13
     Visibility: public -/
 @[rust_loop_body]
 def alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_loop.body
@@ -6694,7 +6827,7 @@ def alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_loop.body
                                          back t2))
 
 /-- [tls_codec::quic_vec::rw::{impl tls_codec::Deserialize for alloc::vec::Vec<T>}::tls_deserialize]: loop 0:
-    Source: 'tls_codec/src/quic_vec.rs', lines 720:12-739:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 721:12-740:13
     Visibility: public -/
 @[rust_loop]
 def alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_loop
@@ -6711,7 +6844,7 @@ def alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize_loop
     (back, t, i, i1, result)
 
 /-- [tls_codec::quic_vec::rw::{impl tls_codec::Deserialize for alloc::vec::Vec<T>}::tls_deserialize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 703:8-744:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 704:8-745:9
     Visibility: public -/
 def alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize
   {T : Type} {R : Type} (DeserializeInst : Deserialize T) (allocioreadReadInst
@@ -6752,7 +6885,7 @@ def alloc.vec.Vec.Insts.Tls_codecDeserialize.tls_deserialize
     ok (r1, bytes1)
 
 /-- Trait implementation: [tls_codec::quic_vec::rw::{impl tls_codec::Deserialize for alloc::vec::Vec<T>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 701:4-745:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 702:4-746:5 -/
 @[reducible]
 impl_def alloc.vec.Vec.Insts.Tls_codecDeserialize {T : Type} (DeserializeInst :
   Deserialize T) : Deserialize (alloc.vec.Vec T) := {
@@ -6768,7 +6901,7 @@ impl_def alloc.vec.Vec.Insts.Tls_codecDeserialize {T : Type} (DeserializeInst :
 }
 
 /-- [tls_codec::quic_vec::rw::write_length]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 748:4-753:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 749:4-754:5
     Visibility: public -/
 def quic_vec.rw.write_length
   {W : Type} (coreiowriteWriteInst : core.io.write.Write W) (writer : W)
@@ -6841,7 +6974,7 @@ def tls_vec.serialize_elements
   | core.option.Option.Some err => ok (core.result.Result.Err err, writer1)
 
 /-- [tls_codec::quic_vec::rw::{impl tls_codec::Serialize for &'_0 [T]}::tls_serialize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 776:8-793:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 777:8-794:9
     Visibility: public -/
 def Shared0Slice.Insts.Tls_codecSerialize.tls_serialize
   {T : Type} {W : Type} (SerializeInst : Serialize T) (corefmtDebugInst :
@@ -6885,7 +7018,7 @@ def Shared0Slice.Insts.Tls_codecSerialize.tls_serialize
     ok (r1, writer)
 
 /-- [tls_codec::quic_vec::rw::{impl tls_codec::Serialize for alloc::vec::Vec<T>}::tls_serialize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 769:8-771:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 770:8-772:9
     Visibility: public -/
 def alloc.vec.Vec.Insts.Tls_codecSerialize.tls_serialize
   {T : Type} {W : Type} (SerializeInst : Serialize T) (corefmtDebugInst :
@@ -6898,7 +7031,7 @@ def alloc.vec.Vec.Insts.Tls_codecSerialize.tls_serialize
     corefmtDebugInst coreiowriteWriteInst s writer
 
 /-- Trait implementation: [tls_codec::quic_vec::rw::{impl tls_codec::Serialize for alloc::vec::Vec<T>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 767:4-772:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 768:4-773:5 -/
 @[reducible]
 impl_def alloc.vec.Vec.Insts.Tls_codecSerialize {T : Type} (SerializeInst :
   Serialize T) (corefmtDebugInst : core.fmt.Debug T) : Serialize (alloc.vec.Vec
@@ -6912,7 +7045,7 @@ impl_def alloc.vec.Vec.Insts.Tls_codecSerialize {T : Type} (SerializeInst :
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::rw::{impl tls_codec::Serialize for &'_0 [T]}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 774:4-794:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 775:4-795:5 -/
 @[reducible]
 impl_def Shared0Slice.Insts.Tls_codecSerialize {T : Type} (SerializeInst :
   Serialize T) (corefmtDebugInst : core.fmt.Debug T) : Serialize (Slice T) := {
@@ -6925,7 +7058,7 @@ impl_def Shared0Slice.Insts.Tls_codecSerialize {T : Type} (SerializeInst :
 }
 
 /-- [tls_codec::quic_vec::rw_bytes::tls_serialize_bytes]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 804:4-819:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 805:4-820:5 -/
 def quic_vec.rw_bytes.tls_serialize_bytes
   {W : Type} (coreiowriteWriteInst : core.io.write.Write W) (writer : W)
   (bytes : Slice Std.U8) :
@@ -6942,7 +7075,7 @@ def quic_vec.rw_bytes.tls_serialize_bytes
     let cf1 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r1
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
-      let (r2, writer2) ← coreiowriteWriteInst.write_all writer1 bytes
+      let (r2, writer2) ← write_all coreiowriteWriteInst writer1 bytes
       let cf2 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r2
       match cf2 with
       | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -6951,7 +7084,7 @@ def quic_vec.rw_bytes.tls_serialize_bytes
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r3 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-            Std.Usize Error.Insts.CoreConvertFromError residual
+            Std.Usize (core.convert.From.Blanket Error) residual
         ok (r3, writer2)
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r2 ←
@@ -6965,7 +7098,7 @@ def quic_vec.rw_bytes.tls_serialize_bytes
     ok (r1, writer)
 
 /-- [tls_codec::quic_vec::rw_bytes::{impl tls_codec::Serialize for tls_codec::quic_vec::VLBytes}::tls_serialize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 823:8-825:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 824:8-826:9
     Visibility: public -/
 def quic_vec.VLBytes.Insts.Tls_codecSerialize.tls_serialize
   {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
@@ -6976,7 +7109,7 @@ def quic_vec.VLBytes.Insts.Tls_codecSerialize.tls_serialize
   quic_vec.rw_bytes.tls_serialize_bytes coreiowriteWriteInst writer s
 
 /-- Trait implementation: [tls_codec::quic_vec::rw_bytes::{impl tls_codec::Serialize for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 821:4-826:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 822:4-827:5 -/
 @[reducible]
 impl_def quic_vec.VLBytes.Insts.Tls_codecSerialize : Serialize quic_vec.VLBytes
   := {
@@ -6989,7 +7122,7 @@ impl_def quic_vec.VLBytes.Insts.Tls_codecSerialize : Serialize quic_vec.VLBytes
 }
 
 /-- [tls_codec::quic_vec::rw_bytes::{impl tls_codec::Serialize for &'_0 tls_codec::quic_vec::VLBytes}::tls_serialize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 830:8-832:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 831:8-833:9
     Visibility: public -/
 def Shared0VLBytes.Insts.Tls_codecSerialize.tls_serialize
   {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
@@ -7000,7 +7133,7 @@ def Shared0VLBytes.Insts.Tls_codecSerialize.tls_serialize
     self writer
 
 /-- Trait implementation: [tls_codec::quic_vec::rw_bytes::{impl tls_codec::Serialize for &'_0 tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 828:4-833:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 829:4-834:5 -/
 @[reducible]
 impl_def Shared0VLBytes.Insts.Tls_codecSerialize : Serialize quic_vec.VLBytes
   := {
@@ -7013,7 +7146,7 @@ impl_def Shared0VLBytes.Insts.Tls_codecSerialize : Serialize quic_vec.VLBytes
 }
 
 /-- [tls_codec::quic_vec::rw_bytes::{impl tls_codec::Deserialize for tls_codec::quic_vec::VLBytes}::tls_deserialize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 836:8-846:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 837:8-847:9
     Visibility: public -/
 def quic_vec.VLBytes.Insts.Tls_codecDeserialize.tls_deserialize
   {R : Type} (allocioreadReadInst : alloc.io.read.Read R) (bytes : R) :
@@ -7060,7 +7193,7 @@ def quic_vec.VLBytes.Insts.Tls_codecDeserialize.tls_deserialize
     ok (r1, bytes1)
 
 /-- Trait implementation: [tls_codec::quic_vec::rw_bytes::{impl tls_codec::Deserialize for tls_codec::quic_vec::VLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 835:4-847:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 836:4-848:5 -/
 @[reducible]
 impl_def quic_vec.VLBytes.Insts.Tls_codecDeserialize : Deserialize
   quic_vec.VLBytes := {
@@ -7075,7 +7208,7 @@ impl_def quic_vec.VLBytes.Insts.Tls_codecDeserialize : Deserialize
 }
 
 /-- [tls_codec::quic_vec::rw_bytes::{impl tls_codec::Serialize for tls_codec::quic_vec::VLByteVec}::tls_serialize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 851:8-853:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 852:8-854:9
     Visibility: public -/
 def quic_vec.VLByteVec.Insts.Tls_codecSerialize.tls_serialize
   {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
@@ -7086,7 +7219,7 @@ def quic_vec.VLByteVec.Insts.Tls_codecSerialize.tls_serialize
   quic_vec.rw_bytes.tls_serialize_bytes coreiowriteWriteInst writer s
 
 /-- Trait implementation: [tls_codec::quic_vec::rw_bytes::{impl tls_codec::Serialize for tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 849:4-854:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 850:4-855:5 -/
 @[reducible]
 impl_def quic_vec.VLByteVec.Insts.Tls_codecSerialize : Serialize
   quic_vec.VLByteVec := {
@@ -7099,7 +7232,7 @@ impl_def quic_vec.VLByteVec.Insts.Tls_codecSerialize : Serialize
 }
 
 /-- [tls_codec::quic_vec::rw_bytes::{impl tls_codec::Serialize for &'_0 tls_codec::quic_vec::VLByteVec}::tls_serialize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 858:8-860:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 859:8-861:9
     Visibility: public -/
 def Shared0VLByteVec.Insts.Tls_codecSerialize.tls_serialize
   {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
@@ -7110,7 +7243,7 @@ def Shared0VLByteVec.Insts.Tls_codecSerialize.tls_serialize
     coreiowriteWriteInst self writer
 
 /-- Trait implementation: [tls_codec::quic_vec::rw_bytes::{impl tls_codec::Serialize for &'_0 tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 856:4-861:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 857:4-862:5 -/
 @[reducible]
 impl_def Shared0VLByteVec.Insts.Tls_codecSerialize : Serialize
   quic_vec.VLByteVec := {
@@ -7123,7 +7256,7 @@ impl_def Shared0VLByteVec.Insts.Tls_codecSerialize : Serialize
 }
 
 /-- [tls_codec::quic_vec::rw_bytes::{impl tls_codec::Deserialize for tls_codec::quic_vec::VLByteVec}::tls_deserialize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 864:8-874:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 865:8-875:9
     Visibility: public -/
 def quic_vec.VLByteVec.Insts.Tls_codecDeserialize.tls_deserialize
   {R : Type} (allocioreadReadInst : alloc.io.read.Read R) (bytes : R) :
@@ -7170,7 +7303,7 @@ def quic_vec.VLByteVec.Insts.Tls_codecDeserialize.tls_deserialize
     ok (r1, bytes1)
 
 /-- Trait implementation: [tls_codec::quic_vec::rw_bytes::{impl tls_codec::Deserialize for tls_codec::quic_vec::VLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 863:4-875:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 864:4-876:5 -/
 @[reducible]
 impl_def quic_vec.VLByteVec.Insts.Tls_codecDeserialize : Deserialize
   quic_vec.VLByteVec := {
@@ -7185,7 +7318,7 @@ impl_def quic_vec.VLByteVec.Insts.Tls_codecDeserialize : Deserialize
 }
 
 /-- [tls_codec::quic_vec::rw_bytes::{impl tls_codec::Serialize for &'_0 tls_codec::quic_vec::VLByteSlice<'_1>}::tls_serialize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 878:8-880:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 879:8-881:9
     Visibility: public -/
 def Shared0VLByteSlice.Insts.Tls_codecSerialize.tls_serialize
   {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
@@ -7195,7 +7328,7 @@ def Shared0VLByteSlice.Insts.Tls_codecSerialize.tls_serialize
   quic_vec.rw_bytes.tls_serialize_bytes coreiowriteWriteInst writer self
 
 /-- Trait implementation: [tls_codec::quic_vec::rw_bytes::{impl tls_codec::Serialize for &'_0 tls_codec::quic_vec::VLByteSlice<'_1>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 877:4-881:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 878:4-882:5 -/
 @[reducible]
 impl_def Shared0VLByteSlice.Insts.Tls_codecSerialize : Serialize
   quic_vec.VLByteSlice := {
@@ -7208,7 +7341,7 @@ impl_def Shared0VLByteSlice.Insts.Tls_codecSerialize : Serialize
 }
 
 /-- [tls_codec::quic_vec::rw_bytes::{impl tls_codec::Serialize for tls_codec::quic_vec::VLByteSlice<'_0>}::tls_serialize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 884:8-886:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 885:8-887:9
     Visibility: public -/
 def quic_vec.VLByteSlice.Insts.Tls_codecSerialize.tls_serialize
   {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
@@ -7218,7 +7351,7 @@ def quic_vec.VLByteSlice.Insts.Tls_codecSerialize.tls_serialize
   quic_vec.rw_bytes.tls_serialize_bytes coreiowriteWriteInst writer self
 
 /-- Trait implementation: [tls_codec::quic_vec::rw_bytes::{impl tls_codec::Serialize for tls_codec::quic_vec::VLByteSlice<'_0>}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 883:4-887:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 884:4-888:5 -/
 @[reducible]
 impl_def quic_vec.VLByteSlice.Insts.Tls_codecSerialize : Serialize
   quic_vec.VLByteSlice := {
@@ -7231,7 +7364,7 @@ impl_def quic_vec.VLByteSlice.Insts.Tls_codecSerialize : Serialize
 }
 
 /-- [tls_codec::quic_vec::secret_bytes::{impl core::clone::Clone for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::clone]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 899:13-899:18
+    Source: 'tls_codec/src/quic_vec.rs', lines 900:13-900:18
     Visibility: public -/
 def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCloneClone.clone
   (self : quic_vec.secret_bytes.SecretVLBytes) :
@@ -7241,7 +7374,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCloneClone.clone
   ok v
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl core::clone::Clone for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 899:13-899:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 900:13-900:18 -/
 @[reducible]
 impl_def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCloneClone :
   core.clone.Clone quic_vec.secret_bytes.SecretVLBytes := {
@@ -7251,14 +7384,14 @@ impl_def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCloneClone :
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl core::marker::StructuralPartialEq for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 899:20-899:29 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 900:20-900:29 -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq quic_vec.secret_bytes.SecretVLBytes := {
 }
 
 /-- [tls_codec::quic_vec::secret_bytes::{impl core::cmp::PartialEq<tls_codec::quic_vec::secret_bytes::SecretVLBytes> for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::eq]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 899:20-899:29
+    Source: 'tls_codec/src/quic_vec.rs', lines 900:20-900:29
     Visibility: public -/
 def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpPartialEqSecretVLBytes.eq
   (self : quic_vec.secret_bytes.SecretVLBytes)
@@ -7268,7 +7401,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpPartialEqSecretVLBytes.eq
   quic_vec.VLBytes.Insts.CoreCmpPartialEqVLBytes.eq self other
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl core::cmp::PartialEq<tls_codec::quic_vec::secret_bytes::SecretVLBytes> for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 899:20-899:29 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 900:20-900:29 -/
 @[reducible]
 impl_def
   quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpPartialEqSecretVLBytes :
@@ -7281,7 +7414,7 @@ impl_def
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl core::cmp::Eq for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 899:31-899:33 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 900:31-900:33 -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpEq : core.cmp.Eq
   quic_vec.secret_bytes.SecretVLBytes := {
@@ -7290,7 +7423,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpEq : core.cmp.Eq
 }
 
 /-- [tls_codec::quic_vec::secret_bytes::{impl core::hash::Hash for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::hash]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 899:35-899:39
+    Source: 'tls_codec/src/quic_vec.rs', lines 900:35-900:39
     Visibility: public -/
 def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreHashHash.hash
   {__H : Type} (corehashHasherInst : core.hash.Hasher __H)
@@ -7300,7 +7433,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreHashHash.hash
   quic_vec.VLBytes.Insts.CoreHashHash.hash corehashHasherInst self state
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl core::hash::Hash for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 899:35-899:39 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 900:35-900:39 -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreHashHash : core.hash.Hash
   quic_vec.secret_bytes.SecretVLBytes := {
@@ -7310,7 +7443,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreHashHash : core.hash.Hash
 }
 
 /-- [tls_codec::quic_vec::secret_bytes::{impl core::cmp::Ord for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::cmp]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 899:41-899:44
+    Source: 'tls_codec/src/quic_vec.rs', lines 900:41-900:44
     Visibility: public -/
 def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpOrd.cmp
   (self : quic_vec.secret_bytes.SecretVLBytes)
@@ -7320,7 +7453,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpOrd.cmp
   quic_vec.VLBytes.Insts.CoreCmpOrd.cmp self other
 
 /-- [tls_codec::quic_vec::secret_bytes::{impl core::cmp::PartialOrd<tls_codec::quic_vec::secret_bytes::SecretVLBytes> for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::partial_cmp]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 899:46-899:56
+    Source: 'tls_codec/src/quic_vec.rs', lines 900:46-900:56
     Visibility: public -/
 def
   quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpPartialOrdSecretVLBytes.partial_cmp
@@ -7332,7 +7465,7 @@ def
   ok (core.option.Option.Some o)
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl core::cmp::PartialOrd<tls_codec::quic_vec::secret_bytes::SecretVLBytes> for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 899:46-899:56 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 900:46-900:56 -/
 @[reducible]
 impl_def
   quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpPartialOrdSecretVLBytes :
@@ -7353,7 +7486,7 @@ impl_def
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl core::cmp::Ord for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 899:41-899:44 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 900:41-900:44 -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpOrd : core.cmp.Ord
   quic_vec.secret_bytes.SecretVLBytes := {
@@ -7364,7 +7497,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreCmpOrd : core.cmp.Ord
 }
 
 /-- [tls_codec::quic_vec::secret_bytes::{impl zeroize::Zeroize for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::zeroize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 928:8-930:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 929:8-931:9
     Visibility: public -/
 def quic_vec.secret_bytes.SecretVLBytes.Insts.ZeroizeZeroize.zeroize
   (self : quic_vec.secret_bytes.SecretVLBytes) :
@@ -7374,7 +7507,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.ZeroizeZeroize.zeroize
   ok v
 
 /-- [tls_codec::quic_vec::secret_bytes::{impl core::ops::drop::Drop for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::drop]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 934:8-936:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 935:8-937:9
     Visibility: public -/
 def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreOpsDropDrop.drop
   (self : quic_vec.secret_bytes.SecretVLBytes) :
@@ -7383,7 +7516,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreOpsDropDrop.drop
   quic_vec.secret_bytes.SecretVLBytes.Insts.ZeroizeZeroize.zeroize self
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl zeroize::Zeroize for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 927:4-931:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 928:4-932:5 -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes.Insts.ZeroizeZeroize : zeroize.Zeroize
   quic_vec.secret_bytes.SecretVLBytes := {
@@ -7391,7 +7524,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.ZeroizeZeroize : zeroize.Zeroize
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl core::ops::drop::Drop for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 933:4-937:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 934:4-938:5 -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreOpsDropDrop :
   core.ops.drop.Drop quic_vec.secret_bytes.SecretVLBytes := {
@@ -7399,21 +7532,21 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.CoreOpsDropDrop :
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl zeroize::ZeroizeOnDrop for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 939:4-939:43 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 940:4-940:43 -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes.Insts.ZeroizeZeroizeOnDrop :
   zeroize.ZeroizeOnDrop quic_vec.secret_bytes.SecretVLBytes := {
 }
 
 /-- [tls_codec::quic_vec::secret_bytes::{impl tls_codec::Size for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::tls_serialized_len]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 942:8-944:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 943:8-945:9
     Visibility: public -/
 def quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSize.tls_serialized_len
   (self : quic_vec.secret_bytes.SecretVLBytes) : RustM Std.Usize := do
   quic_vec.VLBytes.Insts.Tls_codecSize.tls_serialized_len self
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl tls_codec::Size for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 941:4-945:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 942:4-946:5 -/
 @[reducible]
 def quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSize : Size
   quic_vec.secret_bytes.SecretVLBytes := {
@@ -7422,7 +7555,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSize : Size
 }
 
 /-- [tls_codec::quic_vec::secret_bytes::{impl tls_codec::DeserializeBytes for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::tls_deserialize_bytes]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 948:8-954:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 949:8-955:9
     Visibility: public -/
 def
   quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
@@ -7444,7 +7577,7 @@ def
       (core.convert.From.Blanket Error) residual
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl tls_codec::DeserializeBytes for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 947:4-955:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 948:4-956:5 -/
 @[reducible]
 impl_def quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecDeserializeBytes :
   DeserializeBytes quic_vec.secret_bytes.SecretVLBytes := {
@@ -7457,7 +7590,7 @@ impl_def quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecDeserializeBytes :
 }
 
 /-- [tls_codec::quic_vec::secret_bytes::{impl tls_codec::Serialize for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::tls_serialize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 958:8-960:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 959:8-961:9
     Visibility: public -/
 def quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSerialize.tls_serialize
   {W : Type} (coreiowriteWriteInst : core.io.write.Write W)
@@ -7468,7 +7601,7 @@ def quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSerialize.tls_serialize
     self writer
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl tls_codec::Serialize for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 957:4-961:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 958:4-962:5 -/
 @[reducible]
 impl_def quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSerialize :
   Serialize quic_vec.secret_bytes.SecretVLBytes := {
@@ -7482,7 +7615,7 @@ impl_def quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecSerialize :
 }
 
 /-- [tls_codec::quic_vec::secret_bytes::{impl tls_codec::Deserialize for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::tls_deserialize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 964:8-969:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 965:8-970:9
     Visibility: public -/
 def
   quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecDeserialize.tls_deserialize
@@ -7504,7 +7637,7 @@ def
     ok (r1, bytes1)
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_bytes::{impl tls_codec::Deserialize for tls_codec::quic_vec::secret_bytes::SecretVLBytes}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 963:4-970:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 964:4-971:5 -/
 @[reducible]
 impl_def quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecDeserialize :
   Deserialize quic_vec.secret_bytes.SecretVLBytes := {
@@ -7521,7 +7654,7 @@ impl_def quic_vec.secret_bytes.SecretVLBytes.Insts.Tls_codecDeserialize :
 }
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{impl core::clone::Clone for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::clone]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 992:13-992:18
+    Source: 'tls_codec/src/quic_vec.rs', lines 993:13-993:18
     Visibility: public -/
 def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCloneClone.clone
   (self : quic_vec.secret_byte_vec.SecretVLByteVec) :
@@ -7531,7 +7664,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCloneClone.clone
   ok vv
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl core::clone::Clone for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 992:13-992:18 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 993:13-993:18 -/
 @[reducible]
 impl_def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCloneClone :
   core.clone.Clone quic_vec.secret_byte_vec.SecretVLByteVec := {
@@ -7541,7 +7674,7 @@ impl_def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCloneClone :
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl core::marker::StructuralPartialEq for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 992:20-992:29 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 993:20-993:29 -/
 @[reducible]
 def
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreMarkerStructuralPartialEq
@@ -7550,7 +7683,7 @@ def
 }
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{impl core::cmp::PartialEq<tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec> for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::eq]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 992:20-992:29
+    Source: 'tls_codec/src/quic_vec.rs', lines 993:20-993:29
     Visibility: public -/
 def
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpPartialEqSecretVLByteVec.eq
@@ -7561,7 +7694,7 @@ def
   quic_vec.VLByteVec.Insts.CoreCmpPartialEqVLByteVec.eq self other
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl core::cmp::PartialEq<tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec> for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 992:20-992:29 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 993:20-993:29 -/
 @[reducible]
 impl_def
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpPartialEqSecretVLByteVec
@@ -7574,7 +7707,7 @@ impl_def
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl core::cmp::Eq for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 992:31-992:33 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 993:31-993:33 -/
 @[reducible]
 def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpEq : core.cmp.Eq
   quic_vec.secret_byte_vec.SecretVLByteVec := {
@@ -7583,7 +7716,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpEq : core.cmp.Eq
 }
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{impl core::hash::Hash for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::hash]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 992:35-992:39
+    Source: 'tls_codec/src/quic_vec.rs', lines 993:35-993:39
     Visibility: public -/
 def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreHashHash.hash
   {__H : Type} (corehashHasherInst : core.hash.Hasher __H)
@@ -7593,7 +7726,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreHashHash.hash
   quic_vec.VLByteVec.Insts.CoreHashHash.hash corehashHasherInst self state
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl core::hash::Hash for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 992:35-992:39 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 993:35-993:39 -/
 @[reducible]
 def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreHashHash :
   core.hash.Hash quic_vec.secret_byte_vec.SecretVLByteVec := {
@@ -7603,7 +7736,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreHashHash :
 }
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{impl core::cmp::Ord for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::cmp]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 992:41-992:44
+    Source: 'tls_codec/src/quic_vec.rs', lines 993:41-993:44
     Visibility: public -/
 def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpOrd.cmp
   (self : quic_vec.secret_byte_vec.SecretVLByteVec)
@@ -7613,7 +7746,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpOrd.cmp
   quic_vec.VLByteVec.Insts.CoreCmpOrd.cmp self other
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{impl core::cmp::PartialOrd<tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec> for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::partial_cmp]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 992:46-992:56
+    Source: 'tls_codec/src/quic_vec.rs', lines 993:46-993:56
     Visibility: public -/
 def
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpPartialOrdSecretVLByteVec.partial_cmp
@@ -7626,7 +7759,7 @@ def
   ok (core.option.Option.Some o)
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl core::cmp::PartialOrd<tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec> for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 992:46-992:56 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 993:46-993:56 -/
 @[reducible]
 impl_def
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpPartialOrdSecretVLByteVec
@@ -7647,7 +7780,7 @@ impl_def
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl core::cmp::Ord for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 992:41-992:44 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 993:41-993:44 -/
 @[reducible]
 def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpOrd : core.cmp.Ord
   quic_vec.secret_byte_vec.SecretVLByteVec := {
@@ -7658,7 +7791,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreCmpOrd : core.cmp.Ord
 }
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{impl zeroize::Zeroize for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::zeroize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 1014:8-1016:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 1015:8-1017:9
     Visibility: public -/
 def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.ZeroizeZeroize.zeroize
   (self : quic_vec.secret_byte_vec.SecretVLByteVec) :
@@ -7668,7 +7801,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.ZeroizeZeroize.zeroize
   ok vv
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{impl core::ops::drop::Drop for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::drop]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 1020:8-1022:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 1021:8-1023:9
     Visibility: public -/
 def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreOpsDropDrop.drop
   (self : quic_vec.secret_byte_vec.SecretVLByteVec) :
@@ -7677,7 +7810,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreOpsDropDrop.drop
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.ZeroizeZeroize.zeroize self
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl zeroize::Zeroize for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 1013:4-1017:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 1014:4-1018:5 -/
 @[reducible]
 def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.ZeroizeZeroize :
   zeroize.Zeroize quic_vec.secret_byte_vec.SecretVLByteVec := {
@@ -7686,7 +7819,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.ZeroizeZeroize :
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl core::ops::drop::Drop for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 1019:4-1023:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 1020:4-1024:5 -/
 @[reducible]
 def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreOpsDropDrop :
   core.ops.drop.Drop quic_vec.secret_byte_vec.SecretVLByteVec := {
@@ -7694,14 +7827,14 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreOpsDropDrop :
 }
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl zeroize::ZeroizeOnDrop for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 1025:4-1025:45 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 1026:4-1026:45 -/
 @[reducible]
 def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.ZeroizeZeroizeOnDrop :
   zeroize.ZeroizeOnDrop quic_vec.secret_byte_vec.SecretVLByteVec := {
 }
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{impl tls_codec::Size for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::tls_serialized_len]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 1028:8-1030:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 1029:8-1031:9
     Visibility: public -/
 def
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.Tls_codecSize.tls_serialized_len
@@ -7709,7 +7842,7 @@ def
   quic_vec.VLByteVec.Insts.Tls_codecSize.tls_serialized_len self
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl tls_codec::Size for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 1027:4-1031:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 1028:4-1032:5 -/
 @[reducible]
 def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.Tls_codecSize : Size
   quic_vec.secret_byte_vec.SecretVLByteVec := {
@@ -7718,7 +7851,7 @@ def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.Tls_codecSize : Size
 }
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{impl tls_codec::DeserializeBytes for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::tls_deserialize_bytes]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 1034:8-1040:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 1035:8-1041:9
     Visibility: public -/
 def
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
@@ -7740,7 +7873,7 @@ def
       (core.convert.From.Blanket Error) residual
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl tls_codec::DeserializeBytes for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 1033:4-1041:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 1034:4-1042:5 -/
 @[reducible]
 impl_def
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.Tls_codecDeserializeBytes :
@@ -7754,7 +7887,7 @@ impl_def
 }
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{impl tls_codec::Serialize for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::tls_serialize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 1044:8-1046:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 1045:8-1047:9
     Visibility: public -/
 def
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.Tls_codecSerialize.tls_serialize
@@ -7766,7 +7899,7 @@ def
     coreiowriteWriteInst self writer
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl tls_codec::Serialize for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 1043:4-1047:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 1044:4-1048:5 -/
 @[reducible]
 impl_def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.Tls_codecSerialize :
   Serialize quic_vec.secret_byte_vec.SecretVLByteVec := {
@@ -7780,7 +7913,7 @@ impl_def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.Tls_codecSerialize :
 }
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{impl tls_codec::Deserialize for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::tls_deserialize]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 1050:8-1055:9
+    Source: 'tls_codec/src/quic_vec.rs', lines 1051:8-1056:9
     Visibility: public -/
 def
   quic_vec.secret_byte_vec.SecretVLByteVec.Insts.Tls_codecDeserialize.tls_deserialize
@@ -7803,7 +7936,7 @@ def
     ok (r1, bytes1)
 
 /-- Trait implementation: [tls_codec::quic_vec::secret_byte_vec::{impl tls_codec::Deserialize for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}]
-    Source: 'tls_codec/src/quic_vec.rs', lines 1049:4-1056:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 1050:4-1057:5 -/
 @[reducible]
 impl_def quic_vec.secret_byte_vec.SecretVLByteVec.Insts.Tls_codecDeserialize :
   Deserialize quic_vec.secret_byte_vec.SecretVLByteVec := {
@@ -8665,8 +8798,10 @@ def tls_vec.TlsByteVecU24.serialize_bytes_bytes
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
       let vec ← alloc.vec.Vec.with_capacity Std.U8 val1
-      let r2 ← U24.Insts.CoreConvertTryFromUsizeError.try_from byte_length
-      let u ← core.result.Result.unwrap Error.Insts.CoreFmtDebug r2
+      let r2 ←
+        U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from byte_length
+      let u ←
+        core.result.Result.unwrap U24OverflowError.Insts.CoreFmtDebug r2
       let r3 ← U24.Insts.Tls_codecSerializeBytes.tls_serialize_bytes u
       let cf2 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r3
       match cf2 with
@@ -15695,8 +15830,9 @@ def tls_vec.TlsVecU24.serialize
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (tls_serialized_len, byte_length) := val
-    let r1 ← U24.Insts.CoreConvertTryFromUsizeError.try_from byte_length
-    let u ← core.result.Result.unwrap Error.Insts.CoreFmtDebug r1
+    let r1 ←
+      U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from byte_length
+    let u ← core.result.Result.unwrap U24OverflowError.Insts.CoreFmtDebug r1
     let (r2, writer1) ←
       U24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst u writer
     let cf1 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r2
@@ -16054,8 +16190,9 @@ def tls_vec.SecretTlsVecU24.serialize
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (tls_serialized_len, byte_length) := val
-    let r1 ← U24.Insts.CoreConvertTryFromUsizeError.try_from byte_length
-    let u ← core.result.Result.unwrap Error.Insts.CoreFmtDebug r1
+    let r1 ←
+      U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from byte_length
+    let u ← core.result.Result.unwrap U24OverflowError.Insts.CoreFmtDebug r1
     let (r2, writer1) ←
       U24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst u writer
     let cf1 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r2
@@ -16405,8 +16542,9 @@ def tls_vec.TlsSliceU24.serialize
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (tls_serialized_len, byte_length) := val
-    let r1 ← U24.Insts.CoreConvertTryFromUsizeError.try_from byte_length
-    let u ← core.result.Result.unwrap Error.Insts.CoreFmtDebug r1
+    let r1 ←
+      U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from byte_length
+    let u ← core.result.Result.unwrap U24OverflowError.Insts.CoreFmtDebug r1
     let (r2, writer1) ←
       U24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst u writer
     let cf1 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r2
@@ -16558,7 +16696,7 @@ def tls_vec.TlsByteVecU8.serialize_bytes
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
       let bytes ← tls_vec.TlsByteVecU8.as_slice self
-      let (r3, writer2) ← coreiowriteWriteInst.write_all writer1 bytes
+      let (r3, writer2) ← write_all coreiowriteWriteInst writer1 bytes
       let cf2 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r3
       match cf2 with
       | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -16579,7 +16717,7 @@ def tls_vec.TlsByteVecU8.serialize_bytes
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r4 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-            Std.Usize Error.Insts.CoreConvertFromError residual
+            Std.Usize (core.convert.From.Blanket Error) residual
         ok (r4, writer2)
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r3 ←
@@ -16616,7 +16754,7 @@ def tls_vec.TlsByteVecU16.serialize_bytes
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
       let bytes ← tls_vec.TlsByteVecU16.as_slice self
-      let (r3, writer2) ← coreiowriteWriteInst.write_all writer1 bytes
+      let (r3, writer2) ← write_all coreiowriteWriteInst writer1 bytes
       let cf2 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r3
       match cf2 with
       | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -16637,7 +16775,7 @@ def tls_vec.TlsByteVecU16.serialize_bytes
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r4 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-            Std.Usize Error.Insts.CoreConvertFromError residual
+            Std.Usize (core.convert.From.Blanket Error) residual
         ok (r4, writer2)
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r3 ←
@@ -16662,15 +16800,16 @@ def tls_vec.TlsByteVecU24.serialize_bytes
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (tls_serialized_len, byte_length) := val
-    let r1 ← U24.Insts.CoreConvertTryFromUsizeError.try_from byte_length
-    let u ← core.result.Result.unwrap Error.Insts.CoreFmtDebug r1
+    let r1 ←
+      U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from byte_length
+    let u ← core.result.Result.unwrap U24OverflowError.Insts.CoreFmtDebug r1
     let (r2, writer1) ←
       U24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst u writer
     let cf1 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r2
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
       let bytes ← tls_vec.TlsByteVecU24.as_slice self
-      let (r3, writer2) ← coreiowriteWriteInst.write_all writer1 bytes
+      let (r3, writer2) ← write_all coreiowriteWriteInst writer1 bytes
       let cf2 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r3
       match cf2 with
       | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -16691,7 +16830,7 @@ def tls_vec.TlsByteVecU24.serialize_bytes
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r4 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-            Std.Usize Error.Insts.CoreConvertFromError residual
+            Std.Usize (core.convert.From.Blanket Error) residual
         ok (r4, writer2)
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r3 ←
@@ -16728,7 +16867,7 @@ def tls_vec.TlsByteVecU32.serialize_bytes
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
       let bytes ← tls_vec.TlsByteVecU32.as_slice self
-      let (r3, writer2) ← coreiowriteWriteInst.write_all writer1 bytes
+      let (r3, writer2) ← write_all coreiowriteWriteInst writer1 bytes
       let cf2 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r3
       match cf2 with
       | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -16749,7 +16888,7 @@ def tls_vec.TlsByteVecU32.serialize_bytes
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r4 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-            Std.Usize Error.Insts.CoreConvertFromError residual
+            Std.Usize (core.convert.From.Blanket Error) residual
         ok (r4, writer2)
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r3 ←
@@ -16815,7 +16954,7 @@ def tls_vec.TlsByteSliceU8.serialize_bytes
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
       let bytes ← tls_vec.TlsByteSliceU8.as_slice self
-      let (r3, writer2) ← coreiowriteWriteInst.write_all writer1 bytes
+      let (r3, writer2) ← write_all coreiowriteWriteInst writer1 bytes
       let cf2 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r3
       match cf2 with
       | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -16836,7 +16975,7 @@ def tls_vec.TlsByteSliceU8.serialize_bytes
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r4 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-            Std.Usize Error.Insts.CoreConvertFromError residual
+            Std.Usize (core.convert.From.Blanket Error) residual
         ok (r4, writer2)
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r3 ←
@@ -16903,7 +17042,7 @@ def tls_vec.TlsByteSliceU16.serialize_bytes
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
       let bytes ← tls_vec.TlsByteSliceU16.as_slice self
-      let (r3, writer2) ← coreiowriteWriteInst.write_all writer1 bytes
+      let (r3, writer2) ← write_all coreiowriteWriteInst writer1 bytes
       let cf2 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r3
       match cf2 with
       | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -16924,7 +17063,7 @@ def tls_vec.TlsByteSliceU16.serialize_bytes
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r4 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-            Std.Usize Error.Insts.CoreConvertFromError residual
+            Std.Usize (core.convert.From.Blanket Error) residual
         ok (r4, writer2)
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r3 ←
@@ -16979,15 +17118,16 @@ def tls_vec.TlsByteSliceU24.serialize_bytes
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (tls_serialized_len, byte_length) := val
-    let r1 ← U24.Insts.CoreConvertTryFromUsizeError.try_from byte_length
-    let u ← core.result.Result.unwrap Error.Insts.CoreFmtDebug r1
+    let r1 ←
+      U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from byte_length
+    let u ← core.result.Result.unwrap U24OverflowError.Insts.CoreFmtDebug r1
     let (r2, writer1) ←
       U24.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst u writer
     let cf1 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r2
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
       let bytes ← tls_vec.TlsByteSliceU24.as_slice self
-      let (r3, writer2) ← coreiowriteWriteInst.write_all writer1 bytes
+      let (r3, writer2) ← write_all coreiowriteWriteInst writer1 bytes
       let cf2 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r3
       match cf2 with
       | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -17008,7 +17148,7 @@ def tls_vec.TlsByteSliceU24.serialize_bytes
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r4 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-            Std.Usize Error.Insts.CoreConvertFromError residual
+            Std.Usize (core.convert.From.Blanket Error) residual
         ok (r4, writer2)
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r3 ←
@@ -17075,7 +17215,7 @@ def tls_vec.TlsByteSliceU32.serialize_bytes
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
       let bytes ← tls_vec.TlsByteSliceU32.as_slice self
-      let (r3, writer2) ← coreiowriteWriteInst.write_all writer1 bytes
+      let (r3, writer2) ← write_all coreiowriteWriteInst writer1 bytes
       let cf2 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r3
       match cf2 with
       | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -17096,7 +17236,7 @@ def tls_vec.TlsByteSliceU32.serialize_bytes
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r4 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-            Std.Usize Error.Insts.CoreConvertFromError residual
+            Std.Usize (core.convert.From.Blanket Error) residual
         ok (r4, writer2)
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r3 ←

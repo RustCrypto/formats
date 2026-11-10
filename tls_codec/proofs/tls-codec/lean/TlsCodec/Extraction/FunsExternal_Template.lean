@@ -46,7 +46,7 @@ axiom Error.Insts.CoreFmtDisplay.fmt
     core.fmt.Formatter))
 
 /-- [tls_codec::append_bytes]:
-    Source: 'tls_codec/src/lib.rs', lines 197:0-200:1
+    Source: 'tls_codec/src/lib.rs', lines 217:0-220:1
     Visibility: public -/
 axiom append_bytes
   :
@@ -81,11 +81,29 @@ axiom spec.io.stream
   R → RustM (alloc.vec.Vec Std.U8)
 
 /-- [tls_codec::{impl core::fmt::Debug for tls_codec::U24}::fmt]:
-    Source: 'tls_codec/src/lib.rs', lines 398:22-398:27
+    Source: 'tls_codec/src/lib.rs', lines 418:22-418:27
     Visibility: public -/
 axiom U24.Insts.CoreFmtDebug.fmt
   :
   U24 → core.fmt.Formatter → RustM ((core.result.Result Unit
+    core.fmt.Error) × core.fmt.Formatter × (core.fmt.Formatter →
+    core.fmt.Formatter))
+
+/-- [tls_codec::{impl core::fmt::Debug for tls_codec::U24OverflowError}::fmt]:
+    Source: 'tls_codec/src/lib.rs', lines 458:9-458:14
+    Visibility: public -/
+axiom U24OverflowError.Insts.CoreFmtDebug.fmt
+  :
+  U24OverflowError → core.fmt.Formatter → RustM ((core.result.Result Unit
+    core.fmt.Error) × core.fmt.Formatter × (core.fmt.Formatter →
+    core.fmt.Formatter))
+
+/-- [tls_codec::{impl core::fmt::Display for tls_codec::U24OverflowError}::fmt]:
+    Source: 'tls_codec/src/lib.rs', lines 462:4-464:5
+    Visibility: public -/
+axiom U24OverflowError.Insts.CoreFmtDisplay.fmt
+  :
+  U24OverflowError → core.fmt.Formatter → RustM ((core.result.Result Unit
     core.fmt.Error) × core.fmt.Formatter × (core.fmt.Formatter →
     core.fmt.Formatter))
 
@@ -97,14 +115,14 @@ axiom Box.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
   Slice Std.U8 → RustM (core.result.Result (T × (Slice Std.U8)) Error)
 
 /-- [tls_codec::quic_vec::{impl tls_codec::SerializeBytes for &'_0 [T]}::tls_serialize_bytes]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 189:4-223:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 190:4-224:5
     Visibility: public -/
 axiom Shared0Slice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   {T : Type} (SerializeBytesInst : SerializeBytes T) :
   Slice T → RustM (core.result.Result (alloc.vec.Vec Std.U8) Error)
 
 /-- [tls_codec::quic_vec::write_hex]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 256:0-267:1 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 257:0-268:1 -/
 axiom quic_vec.write_hex
   :
   core.fmt.Formatter → Slice Std.U8 → RustM ((core.result.Result Unit
@@ -112,7 +130,7 @@ axiom quic_vec.write_hex
     core.fmt.Formatter))
 
 /-- [tls_codec::quic_vec::{impl core::fmt::Debug for tls_codec::quic_vec::VLBytes}::fmt]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 272:12-276:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 273:12-277:13
     Visibility: public -/
 axiom quic_vec.VLBytes.Insts.CoreFmtDebug.fmt
   :
@@ -121,7 +139,7 @@ axiom quic_vec.VLBytes.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter))
 
 /-- [tls_codec::quic_vec::{impl core::fmt::Debug for tls_codec::quic_vec::VLByteVec}::fmt]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 272:12-276:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 273:12-277:13
     Visibility: public -/
 axiom quic_vec.VLByteVec.Insts.CoreFmtDebug.fmt
   :
@@ -130,7 +148,7 @@ axiom quic_vec.VLByteVec.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter))
 
 /-- [tls_codec::quic_vec::secret_bytes::{impl core::fmt::Debug for tls_codec::quic_vec::secret_bytes::SecretVLBytes}::fmt]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 272:12-276:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 273:12-277:13
     Visibility: public -/
 axiom quic_vec.secret_bytes.SecretVLBytes.Insts.CoreFmtDebug.fmt
   :
@@ -139,7 +157,7 @@ axiom quic_vec.secret_bytes.SecretVLBytes.Insts.CoreFmtDebug.fmt
     (core.fmt.Formatter → core.fmt.Formatter))
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{impl core::fmt::Debug for tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::fmt]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 272:12-276:13
+    Source: 'tls_codec/src/quic_vec.rs', lines 273:12-277:13
     Visibility: public -/
 axiom quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreFmtDebug.fmt
   :
@@ -148,31 +166,31 @@ axiom quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreFmtDebug.fmt
     (core.fmt.Formatter → core.fmt.Formatter))
 
 /-- [tls_codec::quic_vec::secret_bytes::{tls_codec::quic_vec::secret_bytes::SecretVLBytes}::vec]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 916:8-918:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 917:8-919:9 -/
 axiom quic_vec.secret_bytes.SecretVLBytes.vec
   : quic_vec.secret_bytes.SecretVLBytes → RustM (Slice Std.U8)
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::vec]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 1002:8-1004:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 1003:8-1005:9 -/
 axiom quic_vec.secret_byte_vec.SecretVLByteVec.vec
   : quic_vec.secret_byte_vec.SecretVLByteVec → RustM (Slice Std.U8)
 
 /-- [tls_codec::quic_vec::secret_bytes::{tls_codec::quic_vec::secret_bytes::SecretVLBytes}::vec_mut]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 920:8-922:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 921:8-923:9 -/
 axiom quic_vec.secret_bytes.SecretVLBytes.vec_mut
   :
   quic_vec.secret_bytes.SecretVLBytes → RustM ((alloc.vec.Vec Std.U8) ×
     (alloc.vec.Vec Std.U8 → quic_vec.secret_bytes.SecretVLBytes))
 
 /-- [tls_codec::quic_vec::secret_byte_vec::{tls_codec::quic_vec::secret_byte_vec::SecretVLByteVec}::vec_mut]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 1006:8-1008:9 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 1007:8-1009:9 -/
 axiom quic_vec.secret_byte_vec.SecretVLByteVec.vec_mut
   :
   quic_vec.secret_byte_vec.SecretVLByteVec → RustM ((alloc.vec.Vec Std.U8) ×
     (alloc.vec.Vec Std.U8 → quic_vec.secret_byte_vec.SecretVLByteVec))
 
 /-- [tls_codec::quic_vec::{impl core::fmt::Debug for tls_codec::quic_vec::VLByteSlice<'_0>}::fmt]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 604:4-608:5
+    Source: 'tls_codec/src/quic_vec.rs', lines 605:4-609:5
     Visibility: public -/
 axiom quic_vec.VLByteSlice.Insts.CoreFmtDebug.fmt
   :
@@ -181,7 +199,7 @@ axiom quic_vec.VLByteSlice.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter))
 
 /-- [tls_codec::quic_vec::rw::checked_content_length]:
-    Source: 'tls_codec/src/quic_vec.rs', lines 761:4-765:5 -/
+    Source: 'tls_codec/src/quic_vec.rs', lines 762:4-766:5 -/
 axiom quic_vec.rw.checked_content_length
   {T : Type} (SizeInst : Size T) :
   Slice T → RustM (core.result.Result Std.Usize Error)

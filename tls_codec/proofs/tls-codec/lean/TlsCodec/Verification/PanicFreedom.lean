@@ -807,26 +807,12 @@ theorem Usize.Insts.CoreConvertFromU24.from.spec.panic_freedom (value : U24) :
     simp at hlt
     omega
 
-theorem U24.Insts.CoreConvertTryFromUsizeError.try_from.spec.panic_freedom (value : Std.Usize) :
+theorem U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from.spec.panic_freedom   (value : Std.Usize) :
   ⦃ ⌜ True ⌝ ⦄
-  U24.Insts.CoreConvertTryFromUsizeError.try_from value
+  U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from value
   ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  mvcgen [U24.Insts.CoreConvertTryFromUsizeError.try_from, TryFromU24UsizeError.try_from.LEN,
-    core.mem.size_of_Usize_spec, core.num.Usize.to_be_bytes,
-    rust_primitives.arithmetic.to_be_bytes_usize,
-    core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from_spec]
-  · intro h1 _
-    have := numBits_eq_64
-    obtain ⟨t, ht, htv⟩ := h1 (by simp [Std.Array.to_slice]; scalar_tac)
-    have hl : t.val.length = 3 := by rw [htv]; simp [Std.Array.to_slice]; scalar_tac
-    refine ⟨t, ht, ?_⟩
-    simp only [PostCond.ok]
-    mvcgen [core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from_spec,
-      Error.Insts.CoreConvertFromTryFromSliceError.from]
-    simp_all [tryCF]
-    obtain ⟨a, ha, -⟩ := ‹∃ a, _ ∧ _›
-    simp [ha]
-  all_goals (have := numBits_eq_64; exfalso; scalar_tac)
+  exact triple_post_mono
+    (U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from_char value) (fun _ _ => trivial)
 
 /-! ### Arrays (arrays.rs) -/
 
@@ -6788,9 +6774,9 @@ theorem tls_vec.TlsByteVecU32.Insts.CoreDefaultDefault.default_spec.panic_freedo
 
 /-! ### core.convert.TryFrom -/
 
-theorem U24.Insts.CoreConvertTryFromUsizeError.try_from_spec.panic_freedom (x : Std.Usize) :
-  ⦃ ⌜ True ⌝ ⦄ U24.Insts.CoreConvertTryFromUsizeError.try_from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
-  exact U24.Insts.CoreConvertTryFromUsizeError.try_from.spec.panic_freedom x
+theorem U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from_spec.panic_freedom (x : Std.Usize) :
+  ⦃ ⌜ True ⌝ ⦄ U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from.spec.panic_freedom x
 
 theorem varint.TlsVarInt.Insts.CoreConvertTryFromU64Error.try_from_spec.panic_freedom (x : Std.U64) :
   ⦃ ⌜ True ⌝ ⦄ varint.TlsVarInt.Insts.CoreConvertTryFromU64Error.try_from x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
@@ -7415,6 +7401,33 @@ theorem tls_vec.TlsByteVecU24.Insts.CoreBorrowBorrowSliceU8.borrow_spec.panic_fr
 theorem tls_vec.TlsByteVecU32.Insts.CoreBorrowBorrowSliceU8.borrow_spec.panic_freedom (x : tls_vec.TlsByteVecU32) :
   ⦃ ⌜ True ⌝ ⦄ tls_vec.TlsByteVecU32.Insts.CoreBorrowBorrowSliceU8.borrow x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
   mvcgen [tls_vec.TlsByteVecU32.Insts.CoreBorrowBorrowSliceU8.borrow]
+
+/-! ### core.cmp.PartialEq -/
+
+theorem U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.eq_spec.panic_freedom (x : U24OverflowError) (y : U24OverflowError) :
+  ⦃ ⌜ True ⌝ ⦄ U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  unfold U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.eq; mvcgen
+
+theorem U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.ne_spec.panic_freedom (x : U24OverflowError) (y : U24OverflowError) :
+  ⦃ ⌜ True ⌝ ⦄ U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.ne x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  mvcgen [U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError, core.cmp.PartialEq.ne.default,
+    U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.eq]
+
+/-! ### core.cmp.Eq -/
+
+theorem U24.Insts.CoreCmpEq.eq_spec.panic_freedom (x y : U24) :
+  ⦃ ⌜ True ⌝ ⦄ U24.Insts.CoreCmpPartialEqU24.eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact U24.Insts.CoreCmpPartialEqU24.eq_spec.panic_freedom x y
+
+theorem U24OverflowError.Insts.CoreCmpEq.eq_spec.panic_freedom (x y : U24OverflowError) :
+  ⦃ ⌜ True ⌝ ⦄ U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.eq x y ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  exact U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.eq_spec.panic_freedom x y
+
+/-! ### core.clone.Clone -/
+
+theorem U24OverflowError.Insts.CoreCloneClone.clone_spec.panic_freedom (x : U24OverflowError) :
+  ⦃ ⌜ True ⌝ ⦄ U24OverflowError.Insts.CoreCloneClone.clone x ⦃ ⇓ _ => ⌜ True ⌝ ⦄ := by
+  unfold U24OverflowError.Insts.CoreCloneClone.clone; mvcgen
 
 end tls_codec
 

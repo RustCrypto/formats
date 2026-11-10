@@ -1451,7 +1451,8 @@ Signature-only (no spec; each is reached only on paths no obligation needs, or b
 obligations named in `PROOF_TARGETS.md`):
 
 - `MissingCoreModels.lean`: `core.mem.size_of` (values fixed by the `size_of_*` axioms),
-  `alloc.vec.Vec.Insts.CoreHashHash.hash`, `alloc.vec.Vec.Insts.CoreCmpOrd.cmp`,
+  `alloc.vec.Vec.Insts.CoreHashHash.hash`, `core.Array.Insts.CoreHashHash.hash`,
+  `alloc.vec.Vec.Insts.CoreCmpOrd.cmp`,
   `alloc.vec.Vec.retain`, and the `….fmt` axioms of `FromUtf8Error`, `TryFromIntError`,
   `Infallible`, `io::Error` (`Debug`);
 - `MissingThirdPartyModels.lean`: `zeroize.alloc.vec.Vec.Insts.ZeroizeZeroize.zeroize`;

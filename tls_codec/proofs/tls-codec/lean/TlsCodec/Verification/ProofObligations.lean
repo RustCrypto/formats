@@ -559,12 +559,12 @@ theorem Usize.Insts.CoreConvertFromU24.from.spec.proof (value : U24) :
   unfold Usize.Insts.CoreConvertFromU24.from.spec
   pf_fc_combine Usize.Insts.CoreConvertFromU24.from.spec.panic_freedom Usize.Insts.CoreConvertFromU24.from.spec.functional_correctness
 
-theorem U24.Insts.CoreConvertTryFromUsizeError.try_from.spec.proof
-  (value : Std.Usize) :
-  U24.Insts.CoreConvertTryFromUsizeError.try_from.spec value
+theorem U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from.spec.proof
+   (value : Std.Usize) :
+  U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from.spec value
   := by
-  unfold U24.Insts.CoreConvertTryFromUsizeError.try_from.spec
-  pf_fc_combine U24.Insts.CoreConvertTryFromUsizeError.try_from.spec.panic_freedom U24.Insts.CoreConvertTryFromUsizeError.try_from.spec.functional_correctness
+  unfold U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from.spec
+  pf_fc_combine U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from.spec.panic_freedom U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from.spec.functional_correctness
 
 /-! ### Arrays (arrays.rs) -/
 
@@ -7145,11 +7145,11 @@ theorem tls_vec.TlsByteVecU32.Insts.CoreDefaultDefault.Lawful :
 
 /-! ### core.convert.TryFrom -/
 
-theorem U24.Insts.CoreConvertTryFromUsizeError.Lawful :
-  core.convert.TryFrom.Lawful U24 Std.Usize Error
-  U24.Insts.CoreConvertTryFromUsizeError
+theorem U24.Insts.CoreConvertTryFromUsizeU24OverflowError.Lawful :
+  core.convert.TryFrom.Lawful U24 Std.Usize U24OverflowError
+  U24.Insts.CoreConvertTryFromUsizeU24OverflowError
   := {
-  try_from_spec := by pf_only_combine U24.Insts.CoreConvertTryFromUsizeError.try_from_spec.panic_freedom
+  try_from_spec := by pf_only_combine U24.Insts.CoreConvertTryFromUsizeU24OverflowError.try_from_spec.panic_freedom
 }
 
 theorem varint.TlsVarInt.Insts.CoreConvertTryFromU64Error.Lawful :
@@ -8382,6 +8382,89 @@ theorem tls_vec.TlsByteVecU32.Insts.CoreIterTraitsCollectFromIteratorU8.Lawful
   :
   core.iter.traits.collect.FromIterator.Lawful tls_vec.TlsByteVecU32 Std.U8
   tls_vec.TlsByteVecU32.Insts.CoreIterTraitsCollectFromIteratorU8
+  := ⟨⟩
+
+/-! ### core.ops.function.FnOnce -/
+
+theorem write_all.closure.Insts.CoreOpsFunctionFnOnceTupleErrorError.Lawful {W
+  : Type} (coreiowriteWriteInst : core.io.write.Write W)
+  (coreiowriteWriteInstLawful : core.io.write.Write.Lawful W
+  coreiowriteWriteInst) :
+  core.ops.function.FnOnce.Lawful (write_all.closure W) core.io.error.Error
+  Error (write_all.closure.Insts.CoreOpsFunctionFnOnceTupleErrorError
+  coreiowriteWriteInst)
+  := ⟨⟩
+
+/-! ### core.cmp.PartialEq -/
+
+theorem U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.Lawful :
+  core.cmp.PartialEq.Lawful U24OverflowError U24OverflowError
+  U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError
+  := {
+  eq_spec := by pf_fc_combine U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.eq_spec.panic_freedom U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.eq_spec.functional_correctness
+  ne_spec := by pf_only_combine U24OverflowError.Insts.CoreCmpPartialEqU24OverflowError.ne_spec.panic_freedom
+}
+
+/-! ### core.fmt.Debug -/
+
+theorem U24OverflowError.Insts.CoreFmtDebug.Lawful :
+  core.fmt.Debug.Lawful U24OverflowError U24OverflowError.Insts.CoreFmtDebug
+  := ⟨⟩
+
+/-! ### core.cmp.Eq -/
+
+theorem U24.Insts.CoreCmpEq.Lawful : core.cmp.Eq.Lawful U24 U24.Insts.CoreCmpEq
+  := {
+  eq_spec := by pf_fc_combine U24.Insts.CoreCmpEq.eq_spec.panic_freedom U24.Insts.CoreCmpEq.eq_spec.functional_correctness
+}
+
+theorem U24OverflowError.Insts.CoreCmpEq.Lawful :
+  core.cmp.Eq.Lawful U24OverflowError U24OverflowError.Insts.CoreCmpEq
+  := {
+  eq_spec := by pf_fc_combine U24OverflowError.Insts.CoreCmpEq.eq_spec.panic_freedom U24OverflowError.Insts.CoreCmpEq.eq_spec.functional_correctness
+}
+
+/-! ### core.marker.StructuralPartialEq -/
+
+theorem U24OverflowError.Insts.CoreMarkerStructuralPartialEq.Lawful :
+  core.marker.StructuralPartialEq.Lawful U24OverflowError
+  U24OverflowError.Insts.CoreMarkerStructuralPartialEq
+  := ⟨⟩
+
+/-! ### core.clone.Clone -/
+
+theorem U24OverflowError.Insts.CoreCloneClone.Lawful :
+  core.clone.Clone.Lawful U24OverflowError
+  U24OverflowError.Insts.CoreCloneClone
+  := {
+  clone_spec := by pf_only_combine U24OverflowError.Insts.CoreCloneClone.clone_spec.panic_freedom
+}
+
+/-! ### core.fmt.Display -/
+
+theorem U24OverflowError.Insts.CoreFmtDisplay.Lawful :
+  core.fmt.Display.Lawful U24OverflowError
+  U24OverflowError.Insts.CoreFmtDisplay
+  := ⟨⟩
+
+/-! ### core.error.Error -/
+
+theorem U24OverflowError.Insts.CoreErrorError.Lawful :
+  core.error.Error.Lawful U24OverflowError
+  U24OverflowError.Insts.CoreErrorError
+  := ⟨⟩
+
+/-! ### core.marker.Copy -/
+
+theorem U24OverflowError.Insts.CoreMarkerCopy.Lawful :
+  core.marker.Copy.Lawful U24OverflowError
+  U24OverflowError.Insts.CoreMarkerCopy
+  := ⟨⟩
+
+/-! ### core.hash.Hash -/
+
+theorem U24.Insts.CoreHashHash.Lawful :
+  core.hash.Hash.Lawful U24 U24.Insts.CoreHashHash
   := ⟨⟩
 
 end tls_codec

@@ -39,7 +39,7 @@ noncomputable def serB {W P E : Type} (gcl : RustM (core.result.Result (Std.Usiz
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
       let bytes ← slc
-      let (r3, writer2) ← WI.write_all writer1 bytes
+      let (r3, writer2) ← write_all WI writer1 bytes
       let cf2 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r3
       match cf2 with
       | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -58,7 +58,7 @@ noncomputable def serB {W P E : Type} (gcl : RustM (core.result.Result (Std.Usiz
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r4 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-            Std.Usize Error.Insts.CoreConvertFromError residual
+            Std.Usize (core.convert.From.Blanket Error) residual
         ok (r4, writer2)
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r3 ←
@@ -120,7 +120,7 @@ theorem serB_runs {P E X : Type} (SI' : Serialize X) (x : X) (s : Slice Std.U8) 
       obtain ⟨⟨n, hn, hnv⟩, hv⟩ := hp.1 _ rfl
       exact ⟨⟨n, hn, by rw [hnv, hencP]⟩, hv⟩
     have hwa : ∀ (w' : W) (s' : Slice Std.U8), ⦃ ⌜ s' = s ∧
-          (core.io.write.Write.view WI w').length + s.val.length ≤ imax ⌝ ⦄ WI.write_all w' s'
+          (core.io.write.Write.view WI w').length + s.val.length ≤ imax ⌝ ⦄ write_all WI w' s'
         ⦃ ⇓ q => ⌜ q.1 = .Ok () ∧
           core.io.write.Write.view WI q.2 = core.io.write.Write.view WI w' ++ s.val ⌝ ⦄ := by
       intro w' s' ⟨hs, hr⟩

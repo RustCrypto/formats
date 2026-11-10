@@ -54,6 +54,22 @@ axiom U24.Insts.CoreFmtDebug.fmt
   U24 → core.fmt.Formatter → RustM ((core.result.Result Unit core.fmt.Error) ×
     core.fmt.Formatter)
 
+/-- [tls_codec::{impl core::fmt::Debug for tls_codec::U24OverflowError}::fmt]:
+    Source: 'tls_codec/src/lib.rs', lines 458:9-458:14
+    Visibility: public -/
+axiom U24OverflowError.Insts.CoreFmtDebug.fmt
+  :
+  U24OverflowError → core.fmt.Formatter → RustM ((core.result.Result Unit core.fmt.Error) ×
+    core.fmt.Formatter)
+
+/-- [tls_codec::{impl core::fmt::Display for tls_codec::U24OverflowError}::fmt]:
+    Source: 'tls_codec/src/lib.rs', lines 462:4-464:5
+    Visibility: public -/
+axiom U24OverflowError.Insts.CoreFmtDisplay.fmt
+  :
+  U24OverflowError → core.fmt.Formatter → RustM ((core.result.Result Unit core.fmt.Error) ×
+    core.fmt.Formatter)
+
 /-- [tls_codec::quic_vec::write_hex]:
     Source: 'tls_codec/src/quic_vec.rs', lines 256:0-267:1 -/
 axiom quic_vec.write_hex
