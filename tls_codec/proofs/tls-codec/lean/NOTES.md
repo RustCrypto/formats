@@ -144,7 +144,7 @@ contain proofs; `--force` drops all proofs. `ProofObligations.lean` is always re
 - `lean_build` is needed after every Helpers change before PF / FC see it, and shows only the first error
   per declaration; use `lean_diagnostic_messages` (retry with `timeout_s` after an edit if it answers "Lean
   did not finish").
-- `lean_multi_attempt` mis-parses multi-line snippets; `lean_goal` / `lean_multi_attempt` output is huge
+- `lean_multi_attempt` misparses multi-line snippets; `lean_goal` / `lean_multi_attempt` output is huge
   after `mvcgen`, so targeted `lean_diagnostic_messages` is cheaper.
 - `rename_i` lists are fragile (inaccessible hypotheses, order shifts after `simp … at *` / `subst_vars`);
   prefer a Helpers lemma stating the whole behaviour and a short consumer.
