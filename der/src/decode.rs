@@ -165,7 +165,9 @@ impl<T: DecodeOwned<Error = Error> + PemLabel> DecodePem for T {
     fn from_pem(pem: impl AsRef<[u8]>) -> Result<T, Error> {
         let mut reader = PemReader::new(pem.as_ref())?;
         Self::validate_pem_label(reader.type_label()).map_err(Error::from)?;
-        T::decode(&mut reader)
+        let result = T::decode(&mut reader)?;
+        reader.finish()?;
+        Ok(result)
     }
 }
 
