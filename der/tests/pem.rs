@@ -4,7 +4,7 @@
 #![allow(missing_docs)]
 
 use der::{
-    Any, Decode, DecodePem, EncodePem, Sequence,
+    Any, Decode, DecodePem, EncodePem, ErrorKind, Sequence,
     asn1::{BitString, ObjectIdentifier},
     pem::{LineEnding, PemLabel},
 };
@@ -58,6 +58,26 @@ fn from_pem() {
         pem_spki.subject_public_key.raw_bytes(),
         der_spki.subject_public_key
     );
+}
+
+#[test]
+fn from_pem_trailing_data() {
+    // Append a complete NULL, an incomplete tag, or a second SPKI document.
+    for trailing in [b"\x05\x00".as_slice(), b"\xff".as_slice(), SPKI_DER] {
+        let mut der = SPKI_DER.to_vec();
+        der.extend_from_slice(trailing);
+        let pem = der::pem::encode_string(SpkiOwned::PEM_LABEL, LineEnding::LF, &der).unwrap();
+
+        let err = SpkiOwned::from_der(&der).unwrap_err();
+        assert_eq!(
+            err.kind(),
+            ErrorKind::TrailingData {
+                decoded: SPKI_DER.len().try_into().unwrap(),
+                remaining: trailing.len().try_into().unwrap(),
+            }
+        );
+        assert_eq!(SpkiOwned::from_pem(&pem).unwrap_err(), err);
+    }
 }
 
 #[test]
