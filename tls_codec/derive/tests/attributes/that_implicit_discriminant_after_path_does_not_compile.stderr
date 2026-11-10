@@ -1,0 +1,5 @@
+error: This variant needs an explicit discriminant: the previous variant's discriminant is a path, whose value is not known during macro expansion. Add #[tls_codec(discriminant = ...)] to this variant.
+  --> tests/attributes/that_implicit_discriminant_after_path_does_not_compile.rs:10:5
+   |
+10 |     B(u8),
+   |     ^
