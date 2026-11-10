@@ -26,7 +26,7 @@ set_option maxRecDepth 2048
 namespace std_derive_test
 
 /-- [std_derive_test::Pair2]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 8:0-12:1
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 12:0-16:1
     Visibility: public -/
 structure Pair2 where
   kem_output : tls_codec.quic_vec.VLBytes
@@ -34,7 +34,7 @@ structure Pair2 where
   ciphertext : tls_codec.quic_vec.VLBytes
 
 /-- [std_derive_test::Choice]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 17:0-24:1
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 23:0-30:1
     Visibility: public -/
 @[discriminant u8]
 inductive Choice where
