@@ -30,14 +30,14 @@ noncomputable section
 namespace std_derive_test
 
 /-- Trait implementation: [std_derive_test::{impl core::marker::StructuralPartialEq for std_derive_test::Pair2}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:4-10:13 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:4-14:13 -/
 @[reducible]
 def Pair2.Insts.CoreMarkerStructuralPartialEq : core.marker.StructuralPartialEq
   Pair2 := {
 }
 
 /-- [std_derive_test::{impl core::cmp::PartialEq<std_derive_test::Pair2> for std_derive_test::Pair2}::eq]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:4-10:13
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:4-14:13
     Visibility: public -/
 def Pair2.Insts.CoreCmpPartialEqPair2.eq
   (self : Pair2) (other : Pair2) : RustM Bool := do
@@ -54,7 +54,7 @@ def Pair2.Insts.CoreCmpPartialEqPair2.eq
   else ok false
 
 /-- Trait implementation: [std_derive_test::{impl core::cmp::PartialEq<std_derive_test::Pair2> for std_derive_test::Pair2}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:4-10:13 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:4-14:13 -/
 @[reducible]
 impl_def Pair2.Insts.CoreCmpPartialEqPair2 : core.cmp.PartialEq Pair2 Pair2
   := {
@@ -63,7 +63,7 @@ impl_def Pair2.Insts.CoreCmpPartialEqPair2 : core.cmp.PartialEq Pair2 Pair2
 }
 
 /-- [std_derive_test::{impl tls_codec::Size for std_derive_test::Pair2}::tls_serialized_len]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:15-10:22
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:15-14:22
     Visibility: public -/
 def Pair2.Insts.Tls_codecSize.tls_serialized_len
   (self : Pair2) : RustM Std.Usize := do
@@ -79,28 +79,28 @@ def Pair2.Insts.Tls_codecSize.tls_serialized_len
   tls_codec.len_add __tls_len1 i2
 
 /-- Trait implementation: [std_derive_test::{impl tls_codec::Size for std_derive_test::Pair2}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:15-10:22 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:15-14:22 -/
 @[reducible]
 def Pair2.Insts.Tls_codecSize : tls_codec.Size Pair2 := {
   tls_serialized_len := Pair2.Insts.Tls_codecSize.tls_serialized_len
 }
 
 /-- [std_derive_test::{impl tls_codec::Size for &'_0 std_derive_test::Pair2}::tls_serialized_len]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:15-10:22
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:15-14:22
     Visibility: public -/
 def Shared0Pair2.Insts.Tls_codecSize.tls_serialized_len
   (self : Pair2) : RustM Std.Usize := do
   Pair2.Insts.Tls_codecSize.tls_serialized_len self
 
 /-- Trait implementation: [std_derive_test::{impl tls_codec::Size for &'_0 std_derive_test::Pair2}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:15-10:22 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:15-14:22 -/
 @[reducible]
 def Shared0Pair2.Insts.Tls_codecSize : tls_codec.Size Pair2 := {
   tls_serialized_len := Shared0Pair2.Insts.Tls_codecSize.tls_serialized_len
 }
 
 /-- [std_derive_test::{impl tls_codec::Serialize for std_derive_test::Pair2}::tls_serialize]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:24-10:36
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:24-14:36
     Visibility: public -/
 def Pair2.Insts.Tls_codecSerialize.tls_serialize
   {W : Type} (coreiowriteWriteInst : core.io.write.Write W) (self : Pair2)
@@ -194,7 +194,7 @@ def Pair2.Insts.Tls_codecSerialize.tls_serialize
     ok (r1, writer1)
 
 /-- Trait implementation: [std_derive_test::{impl tls_codec::Serialize for std_derive_test::Pair2}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:24-10:36 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:24-14:36 -/
 @[reducible]
 impl_def Pair2.Insts.Tls_codecSerialize : tls_codec.Serialize Pair2 := {
   SizeInst := Pair2.Insts.Tls_codecSize
@@ -205,7 +205,7 @@ impl_def Pair2.Insts.Tls_codecSerialize : tls_codec.Serialize Pair2 := {
 }
 
 /-- [std_derive_test::{impl tls_codec::Serialize for &'_0 std_derive_test::Pair2}::tls_serialize]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:24-10:36
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:24-14:36
     Visibility: public -/
 def Shared0Pair2.Insts.Tls_codecSerialize.tls_serialize
   {W : Type} (coreiowriteWriteInst : core.io.write.Write W) (self : Pair2)
@@ -215,7 +215,7 @@ def Shared0Pair2.Insts.Tls_codecSerialize.tls_serialize
   Pair2.Insts.Tls_codecSerialize.tls_serialize coreiowriteWriteInst self writer
 
 /-- Trait implementation: [std_derive_test::{impl tls_codec::Serialize for &'_0 std_derive_test::Pair2}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:24-10:36 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:24-14:36 -/
 @[reducible]
 impl_def Shared0Pair2.Insts.Tls_codecSerialize : tls_codec.Serialize Pair2 := {
   SizeInst := Shared0Pair2.Insts.Tls_codecSize
@@ -227,7 +227,7 @@ impl_def Shared0Pair2.Insts.Tls_codecSerialize : tls_codec.Serialize Pair2 := {
 }
 
 /-- [std_derive_test::{impl tls_codec::Deserialize for std_derive_test::Pair2}::tls_deserialize]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:38-10:52
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:38-14:52
     Visibility: public -/
 def Pair2.Insts.Tls_codecDeserialize.tls_deserialize
   {R : Type} (allocioreadReadInst : alloc.io.read.Read R) (bytes : R) :
@@ -270,7 +270,7 @@ def Pair2.Insts.Tls_codecDeserialize.tls_deserialize
     ok (r1, bytes1)
 
 /-- Trait implementation: [std_derive_test::{impl tls_codec::Deserialize for std_derive_test::Pair2}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:38-10:52 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:38-14:52 -/
 @[reducible]
 impl_def Pair2.Insts.Tls_codecDeserialize : tls_codec.Deserialize Pair2 := {
   SizeInst := Pair2.Insts.Tls_codecSize
@@ -283,7 +283,7 @@ impl_def Pair2.Insts.Tls_codecDeserialize : tls_codec.Deserialize Pair2 := {
 }
 
 /-- [std_derive_test::{impl tls_codec::SerializeBytes for std_derive_test::Pair2}::tls_serialize_bytes]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:54-10:71
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:54-14:71
     Visibility: public -/
 def Pair2.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   (self : Pair2) :
@@ -397,7 +397,7 @@ def Pair2.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
       residual
 
 /-- Trait implementation: [std_derive_test::{impl tls_codec::SerializeBytes for std_derive_test::Pair2}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:54-10:71 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:54-14:71 -/
 @[reducible]
 def Pair2.Insts.Tls_codecSerializeBytes : tls_codec.SerializeBytes Pair2 := {
   SizeInst := Pair2.Insts.Tls_codecSize
@@ -406,7 +406,7 @@ def Pair2.Insts.Tls_codecSerializeBytes : tls_codec.SerializeBytes Pair2 := {
 }
 
 /-- [std_derive_test::{impl tls_codec::SerializeBytes for &'_0 std_derive_test::Pair2}::tls_serialize_bytes]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:54-10:71
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:54-14:71
     Visibility: public -/
 def Shared0Pair2.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   (self : Pair2) :
@@ -415,7 +415,7 @@ def Shared0Pair2.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   Pair2.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self
 
 /-- Trait implementation: [std_derive_test::{impl tls_codec::SerializeBytes for &'_0 std_derive_test::Pair2}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:54-10:71 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:54-14:71 -/
 @[reducible]
 def Shared0Pair2.Insts.Tls_codecSerializeBytes : tls_codec.SerializeBytes Pair2
   := {
@@ -425,7 +425,7 @@ def Shared0Pair2.Insts.Tls_codecSerializeBytes : tls_codec.SerializeBytes Pair2
 }
 
 /-- [std_derive_test::{impl tls_codec::DeserializeBytes for std_derive_test::Pair2}::tls_deserialize_bytes]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:73-10:92
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:73-14:92
     Visibility: public -/
 def Pair2.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
   (bytes : Slice Std.U8) :
@@ -472,7 +472,7 @@ def Pair2.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
       residual
 
 /-- Trait implementation: [std_derive_test::{impl tls_codec::DeserializeBytes for std_derive_test::Pair2}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 10:73-10:92 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 14:73-14:92 -/
 @[reducible]
 impl_def Pair2.Insts.Tls_codecDeserializeBytes : tls_codec.DeserializeBytes
   Pair2 := {
@@ -485,14 +485,14 @@ impl_def Pair2.Insts.Tls_codecDeserializeBytes : tls_codec.DeserializeBytes
 }
 
 /-- Trait implementation: [std_derive_test::{impl core::marker::StructuralPartialEq for std_derive_test::Choice}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:4-20:13 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:4-24:13 -/
 @[reducible]
 def Choice.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq Choice := {
 }
 
 /-- [std_derive_test::{impl core::cmp::PartialEq<std_derive_test::Choice> for std_derive_test::Choice}::eq]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:4-20:13
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:4-24:13
     Visibility: public -/
 def Choice.Insts.CoreCmpPartialEqChoice.eq
   (self : Choice) (other : Choice) : RustM Bool := do
@@ -518,7 +518,7 @@ def Choice.Insts.CoreCmpPartialEqChoice.eq
   else ok false
 
 /-- Trait implementation: [std_derive_test::{impl core::cmp::PartialEq<std_derive_test::Choice> for std_derive_test::Choice}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:4-20:13 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:4-24:13 -/
 @[reducible]
 impl_def Choice.Insts.CoreCmpPartialEqChoice : core.cmp.PartialEq Choice Choice
   := {
@@ -527,7 +527,7 @@ impl_def Choice.Insts.CoreCmpPartialEqChoice : core.cmp.PartialEq Choice Choice
 }
 
 /-- [std_derive_test::{impl tls_codec::Size for std_derive_test::Choice}::tls_serialized_len]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:15-20:22
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:15-24:22
     Visibility: public -/
 def Choice.Insts.Tls_codecSize.tls_serialized_len
   (self : Choice) : RustM Std.Usize := do
@@ -548,28 +548,28 @@ def Choice.Insts.Tls_codecSize.tls_serialized_len
   tls_codec.len_add __tls_len field_len
 
 /-- Trait implementation: [std_derive_test::{impl tls_codec::Size for std_derive_test::Choice}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:15-20:22 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:15-24:22 -/
 @[reducible]
 def Choice.Insts.Tls_codecSize : tls_codec.Size Choice := {
   tls_serialized_len := Choice.Insts.Tls_codecSize.tls_serialized_len
 }
 
 /-- [std_derive_test::{impl tls_codec::Size for &'_0 std_derive_test::Choice}::tls_serialized_len]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:15-20:22
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:15-24:22
     Visibility: public -/
 def Shared0Choice.Insts.Tls_codecSize.tls_serialized_len
   (self : Choice) : RustM Std.Usize := do
   Choice.Insts.Tls_codecSize.tls_serialized_len self
 
 /-- Trait implementation: [std_derive_test::{impl tls_codec::Size for &'_0 std_derive_test::Choice}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:15-20:22 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:15-24:22 -/
 @[reducible]
 def Shared0Choice.Insts.Tls_codecSize : tls_codec.Size Choice := {
   tls_serialized_len := Shared0Choice.Insts.Tls_codecSize.tls_serialized_len
 }
 
 /-- [std_derive_test::{impl tls_codec::Serialize for std_derive_test::Choice}::tls_serialize::__TLS_CODEC_Num]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:24-20:36 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:24-24:36 -/
 @[global_simps, irreducible]
 def SerializeChoice.tls_serialize.__TLS_CODEC_Num : RustM Std.U8 := do
   let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
@@ -579,7 +579,7 @@ def SerializeChoice.tls_serialize.__TLS_CODEC_Num : RustM Std.U8 := do
   ok (UScalar.cast .U8 3#usize)
 
 /-- [std_derive_test::{impl tls_codec::Serialize for std_derive_test::Choice}::tls_serialize::__TLS_CODEC_Bytes]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:24-20:36 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:24-24:36 -/
 @[global_simps, irreducible]
 def SerializeChoice.tls_serialize.__TLS_CODEC_Bytes : RustM Std.U8 := do
   let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
@@ -589,7 +589,7 @@ def SerializeChoice.tls_serialize.__TLS_CODEC_Bytes : RustM Std.U8 := do
   ok (UScalar.cast .U8 2#usize)
 
 /-- [std_derive_test::{impl tls_codec::Serialize for std_derive_test::Choice}::tls_serialize::__TLS_CODEC_Empty]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:24-20:36 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:24-24:36 -/
 @[global_simps, irreducible]
 def SerializeChoice.tls_serialize.__TLS_CODEC_Empty : RustM Std.U8 := do
   let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
@@ -599,7 +599,7 @@ def SerializeChoice.tls_serialize.__TLS_CODEC_Empty : RustM Std.U8 := do
   ok (UScalar.cast .U8 1#usize)
 
 /-- [std_derive_test::{impl tls_codec::Serialize for std_derive_test::Choice}::tls_serialize]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:24-20:36
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:24-24:36
     Visibility: public -/
 def Choice.Insts.Tls_codecSerialize.tls_serialize
   {W : Type} (coreiowriteWriteInst : core.io.write.Write W) (self : Choice)
@@ -675,7 +675,7 @@ def Choice.Insts.Tls_codecSerialize.tls_serialize
       ok (r1, writer1)
 
 /-- Trait implementation: [std_derive_test::{impl tls_codec::Serialize for std_derive_test::Choice}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:24-20:36 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:24-24:36 -/
 @[reducible]
 impl_def Choice.Insts.Tls_codecSerialize : tls_codec.Serialize Choice := {
   SizeInst := Choice.Insts.Tls_codecSize
@@ -686,7 +686,7 @@ impl_def Choice.Insts.Tls_codecSerialize : tls_codec.Serialize Choice := {
 }
 
 /-- [std_derive_test::{impl tls_codec::Serialize for &'_0 std_derive_test::Choice}::tls_serialize]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:24-20:36
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:24-24:36
     Visibility: public -/
 def Shared0Choice.Insts.Tls_codecSerialize.tls_serialize
   {W : Type} (coreiowriteWriteInst : core.io.write.Write W) (self : Choice)
@@ -697,7 +697,7 @@ def Shared0Choice.Insts.Tls_codecSerialize.tls_serialize
     writer
 
 /-- Trait implementation: [std_derive_test::{impl tls_codec::Serialize for &'_0 std_derive_test::Choice}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:24-20:36 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:24-24:36 -/
 @[reducible]
 impl_def Shared0Choice.Insts.Tls_codecSerialize : tls_codec.Serialize Choice
   := {
@@ -710,7 +710,7 @@ impl_def Shared0Choice.Insts.Tls_codecSerialize : tls_codec.Serialize Choice
 }
 
 /-- [std_derive_test::{impl tls_codec::Deserialize for std_derive_test::Choice}::tls_deserialize]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:38-20:52
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:38-24:52
     Visibility: public -/
 def Choice.Insts.Tls_codecDeserialize.tls_deserialize
   {R : Type} (allocioreadReadInst : alloc.io.read.Read R) (bytes : R) :
@@ -761,7 +761,7 @@ def Choice.Insts.Tls_codecDeserialize.tls_deserialize
     ok (r1, bytes1)
 
 /-- Trait implementation: [std_derive_test::{impl tls_codec::Deserialize for std_derive_test::Choice}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:38-20:52 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:38-24:52 -/
 @[reducible]
 impl_def Choice.Insts.Tls_codecDeserialize : tls_codec.Deserialize Choice := {
   SizeInst := Choice.Insts.Tls_codecSize
@@ -774,7 +774,7 @@ impl_def Choice.Insts.Tls_codecDeserialize : tls_codec.Deserialize Choice := {
 }
 
 /-- [std_derive_test::{impl tls_codec::Deserialize for std_derive_test::Choice}::tls_deserialize::__TLS_CODEC_Empty]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:38-20:52 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:38-24:52 -/
 @[global_simps, irreducible]
 def DeserializeChoice.tls_deserialize.__TLS_CODEC_Empty : RustM Std.U8 := do
   let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
@@ -784,7 +784,7 @@ def DeserializeChoice.tls_deserialize.__TLS_CODEC_Empty : RustM Std.U8 := do
   ok (UScalar.cast .U8 1#usize)
 
 /-- [std_derive_test::{impl tls_codec::Deserialize for std_derive_test::Choice}::tls_deserialize::__TLS_CODEC_Bytes]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:38-20:52 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:38-24:52 -/
 @[global_simps, irreducible]
 def DeserializeChoice.tls_deserialize.__TLS_CODEC_Bytes : RustM Std.U8 := do
   let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
@@ -794,7 +794,7 @@ def DeserializeChoice.tls_deserialize.__TLS_CODEC_Bytes : RustM Std.U8 := do
   ok (UScalar.cast .U8 2#usize)
 
 /-- [std_derive_test::{impl tls_codec::Deserialize for std_derive_test::Choice}::tls_deserialize::__TLS_CODEC_Num]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:38-20:52 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:38-24:52 -/
 @[global_simps, irreducible]
 def DeserializeChoice.tls_deserialize.__TLS_CODEC_Num : RustM Std.U8 := do
   let i ← lift (UScalar.cast .Usize core.num.U8.MIN)
@@ -804,7 +804,7 @@ def DeserializeChoice.tls_deserialize.__TLS_CODEC_Num : RustM Std.U8 := do
   ok (UScalar.cast .U8 3#usize)
 
 /-- [std_derive_test::{impl tls_codec::SerializeBytes for std_derive_test::Choice}::tls_serialize_bytes::__TLS_CODEC_Num]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:54-20:71 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:54-24:71 -/
 @[global_simps, irreducible]
 def SerializeBytesChoice.tls_serialize_bytes.__TLS_CODEC_Num
   : RustM Std.U8 := do
@@ -815,7 +815,7 @@ def SerializeBytesChoice.tls_serialize_bytes.__TLS_CODEC_Num
   ok (UScalar.cast .U8 3#usize)
 
 /-- [std_derive_test::{impl tls_codec::SerializeBytes for std_derive_test::Choice}::tls_serialize_bytes::__TLS_CODEC_Bytes]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:54-20:71 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:54-24:71 -/
 @[global_simps, irreducible]
 def SerializeBytesChoice.tls_serialize_bytes.__TLS_CODEC_Bytes
   : RustM Std.U8 := do
@@ -826,7 +826,7 @@ def SerializeBytesChoice.tls_serialize_bytes.__TLS_CODEC_Bytes
   ok (UScalar.cast .U8 2#usize)
 
 /-- [std_derive_test::{impl tls_codec::SerializeBytes for std_derive_test::Choice}::tls_serialize_bytes::__TLS_CODEC_Empty]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:54-20:71 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:54-24:71 -/
 @[global_simps, irreducible]
 def SerializeBytesChoice.tls_serialize_bytes.__TLS_CODEC_Empty
   : RustM Std.U8 := do
@@ -837,7 +837,7 @@ def SerializeBytesChoice.tls_serialize_bytes.__TLS_CODEC_Empty
   ok (UScalar.cast .U8 1#usize)
 
 /-- [std_derive_test::{impl tls_codec::SerializeBytes for std_derive_test::Choice}::tls_serialize_bytes]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:54-20:71
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:54-24:71
     Visibility: public -/
 def Choice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   (self : Choice) :
@@ -914,7 +914,7 @@ def Choice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
         residual
 
 /-- Trait implementation: [std_derive_test::{impl tls_codec::SerializeBytes for std_derive_test::Choice}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:54-20:71 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:54-24:71 -/
 @[reducible]
 def Choice.Insts.Tls_codecSerializeBytes : tls_codec.SerializeBytes Choice := {
   SizeInst := Choice.Insts.Tls_codecSize
@@ -923,7 +923,7 @@ def Choice.Insts.Tls_codecSerializeBytes : tls_codec.SerializeBytes Choice := {
 }
 
 /-- [std_derive_test::{impl tls_codec::SerializeBytes for &'_0 std_derive_test::Choice}::tls_serialize_bytes]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:54-20:71
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:54-24:71
     Visibility: public -/
 def Shared0Choice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   (self : Choice) :
@@ -932,7 +932,7 @@ def Shared0Choice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes
   Choice.Insts.Tls_codecSerializeBytes.tls_serialize_bytes self
 
 /-- Trait implementation: [std_derive_test::{impl tls_codec::SerializeBytes for &'_0 std_derive_test::Choice}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:54-20:71 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:54-24:71 -/
 @[reducible]
 def Shared0Choice.Insts.Tls_codecSerializeBytes : tls_codec.SerializeBytes
   Choice := {
@@ -942,7 +942,7 @@ def Shared0Choice.Insts.Tls_codecSerializeBytes : tls_codec.SerializeBytes
 }
 
 /-- [std_derive_test::{impl tls_codec::DeserializeBytes for std_derive_test::Choice}::tls_deserialize_bytes]:
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:73-20:92
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:73-24:92
     Visibility: public -/
 def Choice.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
   (bytes : Slice Std.U8) :
@@ -993,7 +993,7 @@ def Choice.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes
       residual
 
 /-- Trait implementation: [std_derive_test::{impl tls_codec::DeserializeBytes for std_derive_test::Choice}]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:73-20:92 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:73-24:92 -/
 @[reducible]
 impl_def Choice.Insts.Tls_codecDeserializeBytes : tls_codec.DeserializeBytes
   Choice := {
@@ -1006,7 +1006,7 @@ impl_def Choice.Insts.Tls_codecDeserializeBytes : tls_codec.DeserializeBytes
 }
 
 /-- [std_derive_test::{impl tls_codec::DeserializeBytes for std_derive_test::Choice}::tls_deserialize_bytes::__TLS_CODEC_Empty]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:73-20:92 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:73-24:92 -/
 @[global_simps, irreducible]
 def DeserializeBytesChoice.tls_deserialize_bytes.__TLS_CODEC_Empty
   : RustM Std.U8 := do
@@ -1017,7 +1017,7 @@ def DeserializeBytesChoice.tls_deserialize_bytes.__TLS_CODEC_Empty
   ok (UScalar.cast .U8 1#usize)
 
 /-- [std_derive_test::{impl tls_codec::DeserializeBytes for std_derive_test::Choice}::tls_deserialize_bytes::__TLS_CODEC_Bytes]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:73-20:92 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:73-24:92 -/
 @[global_simps, irreducible]
 def DeserializeBytesChoice.tls_deserialize_bytes.__TLS_CODEC_Bytes
   : RustM Std.U8 := do
@@ -1028,7 +1028,7 @@ def DeserializeBytesChoice.tls_deserialize_bytes.__TLS_CODEC_Bytes
   ok (UScalar.cast .U8 2#usize)
 
 /-- [std_derive_test::{impl tls_codec::DeserializeBytes for std_derive_test::Choice}::tls_deserialize_bytes::__TLS_CODEC_Num]
-    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 20:73-20:92 -/
+    Source: 'tls_codec/std-derive-test/src/lib.rs', lines 24:73-24:92 -/
 @[global_simps, irreducible]
 def DeserializeBytesChoice.tls_deserialize_bytes.__TLS_CODEC_Num
   : RustM Std.U8 := do

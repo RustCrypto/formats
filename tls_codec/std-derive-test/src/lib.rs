@@ -1,6 +1,10 @@
 //! Derived `std` codecs (`TlsSerialize` / `TlsDeserialize`) of one struct and one enum, shaped
 //! like OpenMLS wire types (a test of TlsCodec's std derive tactics).
 
+// `VLBytes` (what OpenMLS uses, and what the proofs are about) is deprecated with the
+// `serde` feature, which `--all-features` enables.
+#![allow(deprecated)]
+
 use tls_codec::{
     TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSerializeBytes, TlsSize, VLBytes,
 };
