@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.10.3 (2026-11-10)
+### Added
+- Algorithm Protection OID from RFC6211 ([#2405])
+
+### Changed
+- Reject over-`u32` arcs in BER decoder instead of truncating ([#2412])
+
+[#2405]: https://github.com/RustCrypto/formats/pull/2405
+[#2412]: https://github.com/RustCrypto/formats/pull/2412
+
 ## 0.10.2 (2026-01-07)
 ### Added
 - `ObjectIdentifier::from_bytes_sized` which ensures OIDs use all available space in the backing
