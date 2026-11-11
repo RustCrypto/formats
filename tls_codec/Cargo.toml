@@ -52,4 +52,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [lints.rust.unexpected_cfgs]
 level = "warn"
-check-cfg = ['cfg(fuzzing)']
+check-cfg = ['cfg(fuzzing)', 'cfg(hax)']
+
+[target."cfg(hax)".dependencies]
+hax-lib = "0.4.1"

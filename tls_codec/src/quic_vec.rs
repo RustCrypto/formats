@@ -42,6 +42,7 @@ const MAX_MLS_LEN: u64 = (1 << 30) - 1;
 /// Otherwise, this type is no-op.
 struct ContentLength(super::TlsVarInt);
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl ContentLength {
     #[cfg(all(not(feature = "mls"), feature = "arbitrary"))]
     const MAX: u64 = crate::TlsVarInt::MAX;
@@ -49,6 +50,7 @@ impl ContentLength {
     #[cfg(feature = "mls")]
     const MAX: u64 = MAX_MLS_LEN;
 
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     fn new(value: super::TlsVarInt) -> Result<Self, Error> {
         #[cfg(feature = "mls")]
         if Self::MAX < value.value() {
@@ -57,6 +59,8 @@ impl ContentLength {
         Ok(Self(value))
     }
 
+    #[cfg_attr(all(hax, feature = "mls"), hax_lib::ensures(|res|
+        res.is_ok_and(|cl| cl.0.value() == value as u64) == (value as u64 <= MAX_MLS_LEN)))]
     fn from_usize(value: usize) -> Result<Self, Error> {
         Self::new(super::TlsVarInt::try_new(value.try_into()?)?)
     }
@@ -71,7 +75,7 @@ impl Size for ContentLength {
 impl DeserializeBytes for ContentLength {
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
         let (value, remainder) = super::TlsVarInt::tls_deserialize_bytes(bytes)?;
-        Ok((Self(value), remainder))
+        Ok((Self::new(value)?, remainder))
     }
 }
 
@@ -102,21 +106,33 @@ impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
 
         let mut result = Vec::new();
         let mut read = 0usize;
+        let mut failure: Option<Error> = None;
         while read < length {
-            let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
-            // Measure how many bytes the element actually consumed from the
-            // input rather than trusting `tls_serialized_len`.
-            let consumed = remainder.len() - next_remainder.len();
-            remainder = next_remainder;
-            result.push(element);
-            // A zero-length element would never advance `read`, causing an
-            // infinite loop that keeps allocating. Reject such input.
-            if consumed == 0 {
-                return Err(Error::DecodingError(
-                    "Vector element consumed 0 bytes; refusing to loop".into(),
-                ));
+            match T::tls_deserialize_bytes(remainder) {
+                Ok((element, next_remainder)) => {
+                    // Measure how many bytes the element actually consumed from the
+                    // input rather than trusting `tls_serialized_len`.
+                    let consumed = remainder.len() - next_remainder.len();
+                    remainder = next_remainder;
+                    result.push(element);
+                    // A zero-length element would never advance `read`, causing an
+                    // infinite loop that keeps allocating. Reject such input.
+                    if consumed == 0 {
+                        failure = Some(Error::DecodingError(
+                            "Vector element consumed 0 bytes; refusing to loop".into(),
+                        ));
+                        break;
+                    }
+                    read += consumed;
+                }
+                Err(e) => {
+                    failure = Some(e);
+                    break;
+                }
             }
-            read += consumed;
+        }
+        if let Some(e) = failure {
+            return Err(e);
         }
         // The declared length is authoritative: the elements must consume
         // exactly `length` bytes, not overshoot it.
@@ -129,7 +145,16 @@ impl<T: DeserializeBytes> DeserializeBytes for Vec<T> {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl SerializeBytes for VLBytes {
+    #[cfg_attr(hax, hax_lib::ensures(|res|
+        if ContentLength::from_usize(self.as_slice().len()).is_ok_and(|cl|
+            crate::checked_alloc_len(self.as_slice().len(), cl.0.bytes_len()).is_ok())
+        {
+            res.is_ok_and(|out| out.len() == self.tls_serialized_len())
+        } else {
+            res.is_err()
+        }))]
     #[inline(always)]
     fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         let content_length = self.as_slice().len();
@@ -176,8 +201,18 @@ impl<T: SerializeBytes> SerializeBytes for &[T] {
         length.0.write_bytes(&mut out)?;
 
         // Serialize the elements
+        let mut failure: Option<Error> = None;
         for e in self.iter() {
-            out.append(&mut e.tls_serialize_bytes()?);
+            match e.tls_serialize_bytes() {
+                Ok(mut bytes) => out.append(&mut bytes),
+                Err(err) => {
+                    failure = Some(err);
+                    break;
+                }
+            }
+        }
+        if let Some(err) = failure {
+            return Err(err);
         }
         #[cfg(debug_assertions)]
         if out.len() - len_len != content_length {
@@ -241,19 +276,28 @@ macro_rules! impl_vl_bytes_generic {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl $name {
             /// Get a reference to the vlbytes's vec.
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             pub fn as_slice(&self) -> &[u8] {
                 self.vec().as_ref()
             }
 
             /// Add an element to this.
+            #[cfg_attr(hax, hax_lib::requires(self.as_slice().len() < usize::MAX))]
+            #[cfg_attr(hax, hax_lib::ensures(|_|
+                                future(self).as_slice().len() == self.as_slice().len() + 1))]
             #[inline]
             pub fn push(&mut self, value: u8) {
                 self.vec_mut().push(value);
             }
 
             /// Remove the last element.
+            #[cfg_attr(hax, hax_lib::ensures(|res|
+                                res.is_some() == !self.as_slice().is_empty()
+                                    && future(self).as_slice().len()
+                                        == self.as_slice().len() - usize::from(res.is_some())))]
             #[inline]
             pub fn pop(&mut self) -> Option<u8> {
                 self.vec_mut().pop()
@@ -332,6 +376,7 @@ impl From<VLBytes> for Vec<u8> {
     }
 }
 
+#[cfg_attr(hax, hax_lib::ensures(|_| true))]
 #[inline(always)]
 fn tls_serialize_bytes_len(bytes: &[u8]) -> usize {
     let content_length = bytes.len();
@@ -563,8 +608,10 @@ impl fmt::Debug for VLByteSlice<'_> {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl VLByteSlice<'_> {
     /// Get the raw slice.
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     #[inline(always)]
     pub fn as_slice(&self) -> &[u8] {
         self.0
@@ -591,7 +638,16 @@ impl SerializeBytes for ContentLength {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl SerializeBytes for VLByteSlice<'_> {
+    #[cfg_attr(hax, hax_lib::ensures(|res|
+        if ContentLength::from_usize(self.0.len()).is_ok_and(|cl|
+            crate::checked_alloc_len(self.0.len(), cl.0.bytes_len()).is_ok())
+        {
+            res.is_ok_and(|out| out.len() == self.tls_serialized_len())
+        } else {
+            res.is_err()
+        }))]
     fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error> {
         // Get the byte length of the content and make sure it's not too
         // large (requires `mls` feature, so we also do it explicitly below).
@@ -660,17 +716,29 @@ pub mod rw {
             // encodings (e.g. non-minimal varint lengths).
             let mut sub = std::io::Read::take(bytes, length as u64);
             let mut result = Vec::new();
+            let mut failure: Option<Error> = None;
             while sub.limit() > 0 {
                 let before = sub.limit();
-                let element = T::tls_deserialize(&mut sub)?;
-                // A zero-length element would never advance the reader, causing
-                // an infinite loop that keeps allocating. Reject such input.
-                if sub.limit() == before {
-                    return Err(Error::DecodingError(
-                        "Vector element consumed 0 bytes; refusing to loop".into(),
-                    ));
+                match T::tls_deserialize(&mut sub) {
+                    Ok(element) => {
+                        // A zero-length element would never advance the reader, causing
+                        // an infinite loop that keeps allocating. Reject such input.
+                        if sub.limit() == before {
+                            failure = Some(Error::DecodingError(
+                                "Vector element consumed 0 bytes; refusing to loop".into(),
+                            ));
+                            break;
+                        }
+                        result.push(element);
+                    }
+                    Err(e) => {
+                        failure = Some(e);
+                        break;
+                    }
                 }
-                result.push(element);
+            }
+            if let Some(e) = failure {
+                return Err(e);
             }
             Ok(result)
         }
@@ -682,6 +750,18 @@ pub mod rw {
         content_length: usize,
     ) -> Result<usize, Error> {
         Serialize::tls_serialize(&ContentLength::from_usize(content_length)?, writer)
+    }
+
+    /// The sum of the elements' serialized lengths (with the overflow check of
+    /// [`crate::checked_len_add`]).
+    // A function of its own only for the verification: aeneas cannot translate
+    // `Iterator::try_fold`, so this body is opaque and hand-translated in the Lean
+    // model, while the serializer below stays extracted.
+    #[inline(always)]
+    fn checked_content_length<T: Size>(elements: &[T]) -> Result<usize, Error> {
+        elements.iter().try_fold(0usize, |acc, e| {
+            crate::checked_len_add(acc, e.tls_serialized_len())
+        })
     }
 
     impl<T: Serialize + std::fmt::Debug> Serialize for Vec<T> {
@@ -697,23 +777,13 @@ pub mod rw {
             // We need to pre-compute the length of the content.
             // This requires more computations but the other option would be to buffer
             // the entire content, which can end up requiring a lot of memory.
-            let content_length = self.iter().try_fold(0usize, |acc, e| {
-                crate::checked_len_add(acc, e.tls_serialized_len())
-            })?;
+            let content_length = checked_content_length(self)?;
             let len_len = write_length(writer, content_length)?;
 
-            // Serialize the elements
-            #[cfg(debug_assertions)]
-            let mut written = 0;
-            for e in self.iter() {
-                #[cfg(debug_assertions)]
-                {
-                    written += e.tls_serialize(writer)?;
-                }
-                // We don't care about the length here. We pre-computed it.
-                #[cfg(not(debug_assertions))]
-                e.tls_serialize(writer)?;
-            }
+            // Serialize the elements (the index loop of `tls_vec::serialize_elements`:
+            // aeneas fails on a loop over the elements inlined here).
+            #[cfg_attr(not(debug_assertions), allow(unused_variables))]
+            let written = crate::tls_vec::serialize_elements(self, writer)?;
             #[cfg(debug_assertions)]
             if written != content_length {
                 return Err(Error::LibraryError);
