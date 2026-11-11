@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- BREAKING: The `tls_codec_derive` macros now reject enums whose `#[repr(...)]` is not `u8`, `u16`, `u32` or `u64` with a compile error. Other reprs could already not derive `TlsSerialize`/`TlsDeserialize` (`tls_codec` has no impls for them), but deriving only `TlsSize` used to be accepted.
+- BREAKING: `U24`'s `TryFrom<usize>` implementation now has the new error type `U24OverflowError` instead of `Error`, and no longer returns `Error::LibraryError` for values that don't fit into 24 bits.
+
+### Fixed
+- I/O errors while writing the output of `Serialize::tls_serialize` are now reported as `Error::EncodingError` instead of `Error::DecodingError` (or `Error::EndOfStream`).
+- `tls_codec_derive`: an implicit enum discriminant following an explicit `usize::MAX` no longer wraps around to 0 (which could give two variants the same discriminant); it is now a compile error.
+- `tls_codec_derive`: raw identifiers (`r#type`) as enum variant names, or as field names with `TlsDeserializeBytes`, now give a compile error instead of panicking inside the macro.
+- `tls_codec_derive`: literal and implicit discriminants that do not fit the enum's repr are now reported at the offending variant during macro expansion, instead of as a failed constant evaluation pointing at the derive.
+- `tls_codec_derive`: path discriminants (`#[tls_codec(discriminant = "path")]`) that do not fit the repr still fail during constant evaluation, but the error now names the path and repr and points at the attribute's string literal instead of the derive.
+- `tls_codec_derive`: with the `conditional_deserialization` feature, the derives no longer rewrite a struct's own generic parameters named or containing `IS_DESERIALIZABLE` (e.g. `IS_DESERIALIZABLE_T` became `true_T`). The const generic parameter added by `#[conditionally_deserializable]` is now named `__TLS_CODEC_IS_DESERIALIZABLE`.
+- `tls_codec_derive`: enum variants with the same discriminant (explicit, implicit or via a path) are now a compile error. Previously deserialization always picked the first of them, so the others decoded as that variant.
+
 ## 0.5.0
 
 - BREAKING: Rename `SerializeBytes::tls_serialize` to `SerializeBytes::tls_serialize_bytes` to resolve a method-name collision with `Serialize::tls_serialize` (this matches the existing `DeserializeBytes::tls_deserialize_bytes` convention). Any type using `#[tls_codec(with = "...")]` together with `TlsSerializeBytes` must rename its module's `tls_serialize` function to `tls_serialize_bytes` accordingly.

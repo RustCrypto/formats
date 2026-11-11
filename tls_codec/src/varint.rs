@@ -6,6 +6,7 @@ use crate::{Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Siz
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct TlsVarInt(u64);
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl TlsVarInt {
     /// The largest value that can be represented by this type.
     pub const MAX: u64 = (1 << 62) - 1;
@@ -15,6 +16,7 @@ impl TlsVarInt {
     ///
     /// Returns [`Error::InvalidVectorLength`] if the value is larger than
     /// [`TlsVarInt::MAX`].
+    #[cfg_attr(hax, hax_lib::ensures(|res| res == if value <= TlsVarInt::MAX { Ok(TlsVarInt(value)) } else { Err(Error::InvalidVectorLength) }))]
     #[inline]
     pub(crate) fn try_new(value: u64) -> Result<Self, Error> {
         if Self::MAX < value {
@@ -25,6 +27,7 @@ impl TlsVarInt {
     }
 
     /// Returns the value of this variable-length int.
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     #[inline]
     pub const fn value(&self) -> u64 {
         self.0
@@ -32,6 +35,7 @@ impl TlsVarInt {
 
     /// Returns the number of bytes required to encode this variable-length
     /// int.
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     pub(crate) const fn bytes_len(&self) -> usize {
         let value = self.0;
         if value <= 0x3f {
@@ -52,7 +56,19 @@ impl TlsVarInt {
     ///
     /// The buffer must be at least of the length returned by
     /// [`Self::bytes_len`].
+    #[cfg_attr(hax, hax_lib::ensures(|res| {
+        let len = self.bytes_len();
+        res == (if self.0 > TlsVarInt::MAX || buf.len() < len {
+            Err(Error::InvalidVectorLength)
+        } else {
+            Ok(len)
+        })
+    }))]
     pub(crate) fn write_bytes(&self, buf: &mut [u8]) -> Result<usize, Error> {
+        // Unreachable: every constructor enforces `self.0 <= MAX`.
+        if self.0 > Self::MAX {
+            return Err(Error::InvalidVectorLength);
+        }
         let len = self.bytes_len();
         if buf.len() < len {
             return Err(Error::InvalidVectorLength);
@@ -72,8 +88,10 @@ impl TlsVarInt {
             }
         }
         let mut value = self.0;
-        for b in bytes.iter_mut().rev() {
-            *b |= (value & 0xFF) as u8;
+        let mut i = len;
+        while i > 0 {
+            i -= 1;
+            bytes[i] |= (value & 0xFF) as u8;
             value >>= 8;
         }
 
@@ -81,22 +99,33 @@ impl TlsVarInt {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl TryFrom<u64> for TlsVarInt {
     type Error = Error;
 
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     #[inline]
     fn try_from(value: u64) -> Result<Self, Self::Error> {
         Self::try_new(value)
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl From<TlsVarInt> for u64 {
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     #[inline]
     fn from(value: TlsVarInt) -> Self {
         value.0
     }
 }
 
+#[cfg_attr(all(hax, feature = "mls"), hax_lib::ensures(|res| res
+    == if _value <= TlsVarInt::MAX && TlsVarInt(_value).bytes_len() == _len {
+        Ok(())
+    } else {
+        Err(Error::InvalidVectorLength)
+    }))]
+#[cfg_attr(all(hax, not(feature = "mls")), hax_lib::ensures(|_| true))]
 fn check_min_len(_value: u64, _len: usize) -> Result<(), Error> {
     #[cfg(feature = "mls")]
     {
@@ -114,18 +143,25 @@ impl Deserialize for TlsVarInt {
     #[inline]
     fn tls_deserialize<R: std::io::Read>(bytes: &mut R) -> Result<Self, Error> {
         let mut len_byte = [0u8; 1];
-        if bytes.read(&mut len_byte)? == 0 {
-            return Err(Error::EndOfStream);
-        };
+        bytes.read_exact(&mut len_byte)?;
         let len_byte = len_byte[0];
 
         let (value, len) = calculate_value(len_byte)?;
         let mut value: u64 = value.try_into().map_err(|_| Error::InvalidInput)?;
 
-        for _ in 1..len {
+        let mut failure: Option<Error> = None;
+        let mut i = 1usize;
+        while i < len {
             let mut next = [0u8; 1];
-            bytes.read_exact(&mut next)?;
+            if let Err(e) = bytes.read_exact(&mut next) {
+                failure = Some(e.into());
+                break;
+            }
             value = (value << 8) + u64::from(next[0]);
+            i += 1;
+        }
+        if let Some(e) = failure {
+            return Err(e);
         }
 
         check_min_len(value, len)?;
@@ -134,7 +170,13 @@ impl Deserialize for TlsVarInt {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl DeserializeBytes for TlsVarInt {
+    #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
+        || res.is_ok_and(|(value, remainder)| value.value() <= TlsVarInt::MAX
+            && remainder.len() <= bytes.len()
+            && (!cfg!(feature = "mls")
+                || remainder.len() + value.tls_serialized_len() == bytes.len()))))]
     #[inline]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
     where
@@ -145,10 +187,23 @@ impl DeserializeBytes for TlsVarInt {
         let (value, len) = calculate_value(len_byte)?;
         let mut value: u64 = value.try_into().map_err(|_| Error::InvalidInput)?;
 
-        for _ in 1..len {
-            let (next, next_remainder) = u8::tls_deserialize_bytes(remainder)?;
-            remainder = next_remainder;
-            value = (value << 8) + u64::from(next);
+        let mut failure: Option<Error> = None;
+        let mut i = 1usize;
+        while i < len {
+            match u8::tls_deserialize_bytes(remainder) {
+                Ok((next, next_remainder)) => {
+                    remainder = next_remainder;
+                    value = (value << 8) + u64::from(next);
+                }
+                Err(e) => {
+                    failure = Some(e);
+                    break;
+                }
+            }
+            i += 1;
+        }
+        if let Some(e) = failure {
+            return Err(e);
         }
 
         check_min_len(value, len)?;
@@ -163,12 +218,18 @@ impl Serialize for TlsVarInt {
     fn tls_serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<usize, Error> {
         let mut bytes = [0u8; 8];
         let len = self.write_bytes(&mut bytes)?;
-        writer.write_all(&bytes[..len])?;
+        crate::write_all(writer, &bytes[..len])?;
         Ok(len)
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl SerializeBytes for TlsVarInt {
+    #[cfg_attr(hax, hax_lib::ensures(|res| if self.0 <= TlsVarInt::MAX {
+        res.is_ok_and(|out| out.len() == self.bytes_len() && out.len() == self.tls_serialized_len())
+    } else {
+        res.is_err()
+    }))]
     #[inline]
     fn tls_serialize_bytes(&self) -> Result<alloc::vec::Vec<u8>, Error> {
         let len = self.bytes_len();
@@ -186,6 +247,8 @@ impl Size for TlsVarInt {
 }
 
 /// Calculates the value and the length from the first byte.
+#[cfg_attr(hax, hax_lib::ensures(|res|
+    res == Ok((usize::from(byte & 0x3F), 1usize << (byte >> 6)))))]
 #[inline(always)]
 pub(crate) fn calculate_value(byte: u8) -> Result<(usize, usize), Error> {
     let value: usize = (byte & 0x3F).into();

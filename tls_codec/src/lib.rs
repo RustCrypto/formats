@@ -38,6 +38,8 @@ use std::io::{Read, Write};
 mod arrays;
 mod primitives;
 mod quic_vec;
+#[cfg(hax)]
+pub mod spec;
 mod string;
 mod tls_vec;
 mod varint;
@@ -112,6 +114,10 @@ impl Display for Error {
     }
 }
 
+/// Converts an error from reading the input of a deserialization.
+///
+/// Errors from writing the output of a serialization are not converted with
+/// this impl; this crate reports them as [`Error::EncodingError`].
 #[cfg(feature = "std")]
 impl From<std::io::Error> for Error {
     fn from(e: std::io::Error) -> Self {
@@ -120,6 +126,22 @@ impl From<std::io::Error> for Error {
             _ => Self::DecodingError(format!("io error: {e:?}")),
         }
     }
+}
+
+/// Writes all of `bytes` to `writer`, reporting a failure as
+/// [`Error::EncodingError`].
+///
+/// Use this instead of `writer.write_all(bytes)?`, which would go through the
+/// `From<std::io::Error>` impl meant for reading and report the failure as an
+/// [`Error::DecodingError`] (or as [`Error::EndOfStream`]).
+#[cfg(feature = "std")]
+pub(crate) fn write_all<W: std::io::Write + ?Sized>(
+    writer: &mut W,
+    bytes: &[u8],
+) -> Result<(), Error> {
+    writer
+        .write_all(bytes)
+        .map_err(|e| Error::EncodingError(format!("io error: {e:?}")))
 }
 
 /// Upper bound on an up-front allocation sized from an untrusted length hint, so
@@ -162,50 +184,45 @@ fn read_bytes_bounded<R: std::io::Read>(reader: &mut R, len: usize) -> Result<Ve
     Ok(result)
 }
 
-/// Adds two serialized-length components, guarding against `usize` overflow
-/// only on platforms where it can actually occur.
+/// Adds two serialized-length components, saturating at `usize::MAX`.
 ///
-/// On 64-bit targets every length is bounded by the amount of addressable
-/// memory (`isize::MAX`), so a sum of serialized lengths can never overflow
-/// `usize`. There this compiles down to a plain addition with no branch,
-/// keeping the serialization hot path free of overflow checks.
+/// A sum of serialized lengths is not bounded by the addressable memory: `Size`
+/// for `&[T]`, `Vec<&[u8]>`, ... counts aliased data once per reference, so a
+/// structure of about 1 GiB can describe more than `usize::MAX` bytes even on
+/// 64-bit targets. Saturating instead of wrapping keeps an oversized length
+/// oversized, so it is subsequently rejected by the length-encoding bounds
+/// checks instead of producing a truncated, mismatched length prefix on the
+/// wire. One definition on every target.
 ///
-/// On narrower targets (32-bit, 16-bit is not officially supported)
-/// the serialized form of a large in-memory structure can carry enough
-/// length-prefix / discriminant overhead to exceed `usize::MAX`.
-/// There we saturate at `usize::MAX` rather than silently wrapping to a small
-/// value, so the oversized length is subsequently rejected by the
-/// length-encoding bounds checks instead of producing a truncated, mismatched
-/// length prefix on the wire.
-///
-/// `tls_codec_derive` emits the equivalent logic inline, so this helper does not
-/// need to be part of the public API.
+/// Not public API: `pub` only because `tls_codec_derive`'s generated `Size`
+/// impls call it, so that the crate's and the derived sums share one
+/// definition.
+#[doc(hidden)]
 #[inline(always)]
-#[cfg(target_pointer_width = "64")]
-pub(crate) const fn len_add(a: usize, b: usize) -> usize {
-    a + b
-}
-
-#[inline(always)]
-#[cfg(not(target_pointer_width = "64"))]
-pub(crate) const fn len_add(a: usize, b: usize) -> usize {
+pub const fn len_add(a: usize, b: usize) -> usize {
     a.saturating_add(b)
 }
 
-/// Like [`len_add`], but for contexts that can surface an error.
+/// Appends `bytes` to `out`, as `out.append(&mut bytes)`.
 ///
-/// On 64-bit targets this is a plain, branch-free addition (see [`len_add`] for
-/// why it can't overflow). On narrower targets an overflow becomes
-/// [`Error::InvalidVectorLength`] so a wrapped, too-small length is never
-/// written to the wire.
+/// Always `Ok`: the `Result` only gives the verification a place to state that
+/// the concatenation fits in a `Vec` (an in-memory value always does, as for
+/// [`len_add`]). Being `#[inline(always)]` and infallible, no check survives
+/// optimisation: the serialization hot path is the same as a direct `append`.
+///
+/// Not public API: `pub` only because `tls_codec_derive`'s generated serializers
+/// call it.
+#[doc(hidden)]
 #[inline(always)]
-#[cfg(target_pointer_width = "64")]
-pub(crate) fn checked_len_add(a: usize, b: usize) -> Result<usize, Error> {
-    Ok(a + b)
+pub fn append_bytes(out: &mut Vec<u8>, mut bytes: Vec<u8>) -> Result<(), Error> {
+    out.append(&mut bytes);
+    Ok(())
 }
 
+/// Like [`len_add`], but for contexts that can surface an error: an overflow
+/// becomes [`Error::InvalidVectorLength`], so a wrapped, too-small length is
+/// never written to the wire. One definition on every target.
 #[inline(always)]
-#[cfg(not(target_pointer_width = "64"))]
 pub(crate) fn checked_len_add(a: usize, b: usize) -> Result<usize, Error> {
     a.checked_add(b).ok_or(Error::InvalidVectorLength)
 }
@@ -216,6 +233,7 @@ pub(crate) fn checked_len_add(a: usize, b: usize) -> Result<usize, Error> {
 /// `isize::MAX`, so anything larger becomes [`Error::InvalidVectorLength`]
 /// instead of a panic. Call this at allocation sites — not in the per-element
 /// length folds, which use the cheaper [`checked_len_add`].
+#[cfg_attr(hax, hax_lib::ensures(|_| true))]
 #[inline(always)]
 pub(crate) fn checked_capacity(len: usize) -> Result<usize, Error> {
     if len > isize::MAX as usize {
@@ -230,6 +248,11 @@ pub(crate) fn checked_capacity(len: usize) -> Result<usize, Error> {
 /// The `saturating_add` collapses a `usize` wrap (possible on narrow targets)
 /// into a value the `isize::MAX` check then rejects, so both failure modes are
 /// covered by a single check.
+#[cfg_attr(hax, hax_lib::ensures(|res| if a.saturating_add(b) <= isize::MAX as usize {
+    res == Ok(a + b)
+} else {
+    res == Err(Error::InvalidVectorLength)
+}))]
 #[inline(always)]
 pub(crate) fn checked_alloc_len(a: usize, b: usize) -> Result<usize, Error> {
     checked_capacity(a.saturating_add(b))
@@ -239,7 +262,9 @@ pub(crate) fn checked_alloc_len(a: usize, b: usize) -> Result<usize, Error> {
 /// efficiently serialized.
 /// This allows to collect the length of a serialized structure before allocating
 /// memory.
+#[cfg_attr(hax, hax_lib::attributes)]
 pub trait Size {
+    #[cfg_attr(hax, hax_lib::ensures(|_| true))]
     fn tls_serialized_len(&self) -> usize;
 }
 
@@ -248,14 +273,27 @@ pub trait Size {
 /// The trait provides two functions:
 /// * `tls_serialize` that takes a buffer to write the serialization to
 /// * `tls_serialize_detached` that returns a byte vector
+#[cfg_attr(hax, hax_lib::attributes)]
 pub trait Serialize: Size {
     /// Serialize `self` and write it to the `writer`.
     /// The function returns the number of bytes written to `writer`.
     #[cfg(feature = "std")]
+    #[cfg_attr(all(hax, feature = "std"), hax_lib::requires(
+        self.tls_serialized_len() <= isize::MAX as usize - crate::spec::io::sink(writer).len()))]
+    #[cfg_attr(all(hax, feature = "std"), hax_lib::ensures(|res| match crate::spec::io::encode(self) {
+        Ok(bytes) => bytes.len() == self.tls_serialized_len()
+            && res.is_ok_and(|written| written == bytes.len())
+            && crate::spec::io::is_concat(
+                &crate::spec::io::sink(writer), &bytes, &crate::spec::io::sink(future(writer))),
+        Err(_) => res.is_err(),
+    }))]
     fn tls_serialize<W: Write>(&self, writer: &mut W) -> Result<usize, Error>;
 
     /// Serialize `self` and return it as a byte vector.
     #[cfg(feature = "std")]
+    #[cfg_attr(all(hax, feature = "std"), hax_lib::ensures(|res| res.is_err()
+        || res.is_ok_and(|buffer| crate::spec::io::encode(self)
+            .is_ok_and(|bytes| bytes.as_slice() == buffer.as_slice()))))]
     fn tls_serialize_detached(&self) -> Result<Vec<u8>, Error> {
         let mut buffer = Vec::with_capacity(checked_capacity(self.tls_serialized_len())?);
         let written = self.tls_serialize(&mut buffer)?;
@@ -282,13 +320,17 @@ pub trait Serialize: Size {
 ///
 /// The trait provides one function:
 /// * `tls_serialize_bytes` that returns a byte vector
+#[cfg_attr(hax, hax_lib::attributes)]
 pub trait SerializeBytes: Size {
     /// Serialize `self` and return it as a byte vector.
+    #[cfg_attr(hax, hax_lib::ensures(|res|
+        res.is_err() || res.is_ok_and(|bytes| bytes.len() == self.tls_serialized_len())))]
     fn tls_serialize_bytes(&self) -> Result<Vec<u8>, Error>;
 }
 
 /// The `Deserialize` trait defines functions to deserialize a byte slice to a
 /// struct or enum.
+#[cfg_attr(hax, hax_lib::attributes)]
 pub trait Deserialize: Size {
     /// This function deserializes the `bytes` from the provided a [`std::io::Read`]
     /// and returns the populated struct.
@@ -297,6 +339,11 @@ pub trait Deserialize: Size {
     ///
     /// Returns an error if one occurs during deserialization.
     #[cfg(feature = "std")]
+    #[cfg_attr(all(hax, feature = "std"), hax_lib::ensures(|res| res.is_err()
+        || res.is_ok_and(|value| crate::spec::io::advanced(bytes, future(bytes))
+            && (!cfg!(feature = "mls")
+                || crate::spec::io::stream(bytes).len()
+                    == crate::spec::io::stream(future(bytes)).len() + value.tls_serialized_len()))))]
     fn tls_deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error>
     where
         Self: Sized;
@@ -307,6 +354,8 @@ pub trait Deserialize: Size {
     /// Returns an error if not all bytes are read from the input, or if an error
     /// occurs during deserialization.
     #[cfg(feature = "std")]
+    #[cfg_attr(all(hax, feature = "std", feature = "mls"), hax_lib::ensures(|res| res.is_err()
+        || res.is_ok_and(|value| value.tls_serialized_len() == bytes.as_ref().len())))]
     fn tls_deserialize_exact(bytes: impl AsRef<[u8]>) -> Result<Self, Error>
     where
         Self: Sized,
@@ -325,6 +374,7 @@ pub trait Deserialize: Size {
 /// The `DeserializeBytes` trait defines functions to deserialize a byte slice
 /// to a struct or enum. In contrast to [`Deserialize`], this trait operates
 /// directly on byte slices and can return any remaining bytes.
+#[cfg_attr(hax, hax_lib::attributes)]
 pub trait DeserializeBytes: Size {
     /// This function deserializes the `bytes` from the provided a `&[u8]`
     /// and returns the populated struct, as well as the remaining slice.
@@ -332,6 +382,11 @@ pub trait DeserializeBytes: Size {
     /// In order to get the amount of bytes read, use [`Size::tls_serialized_len`].
     ///
     /// Returns an error if one occurs during deserialization.
+    #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
+        || res.is_ok_and(|(value, remainder)| remainder.len() <= bytes.len()
+            && bytes.ends_with(remainder)
+            && (!cfg!(feature = "mls")
+                || remainder.len() + value.tls_serialized_len() == bytes.len()))))]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error>
     where
         Self: Sized;
@@ -341,6 +396,8 @@ pub trait DeserializeBytes: Size {
     ///
     /// Returns an error if not all bytes are read from the input, or if an error
     /// occurs during deserialization.
+    #[cfg_attr(all(hax, feature = "mls"), hax_lib::ensures(|res| res.is_err()
+        || res.is_ok_and(|value| value.tls_serialized_len() == bytes.len())))]
     fn tls_deserialize_exact_bytes(bytes: &[u8]) -> Result<Self, Error>
     where
         Self: Sized,
@@ -358,23 +415,37 @@ pub trait DeserializeBytes: Size {
 /// A 3 byte wide unsigned integer type as defined in [RFC 5246].
 ///
 /// [RFC 5246]: https://www.rfc-editor.org/info/rfc5246#section-4.4
-#[derive(Copy, Clone, Debug, Default, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct U24([u8; 3]);
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl U24 {
+    /// The maximum value that [`U24`] can have.
     pub const MAX: Self = Self([255u8; 3]);
+
+    /// The minimum value that [`U24`] can have.
     pub const MIN: Self = Self([0u8; 3]);
 
+    /// Decodes big endian bytes into a [`U24`].
+    #[cfg_attr(hax, hax_lib::ensures(|res| res.to_be_bytes() == bytes))]
     pub fn from_be_bytes(bytes: [u8; 3]) -> Self {
         U24(bytes)
     }
 
+    /// Encodes a [`U24`] as big endian bytes.
+    #[cfg_attr(hax, hax_lib::ensures(|res| U24::from_be_bytes(res) == self))]
     pub fn to_be_bytes(self) -> [u8; 3] {
         self.0
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl From<U24> for usize {
+    #[cfg_attr(hax, hax_lib::ensures(|res| {
+        let [b0, b1, b2] = value.to_be_bytes();
+        res == (b0 as usize) * 0x1_0000 + (b1 as usize) * 0x100 + (b2 as usize)
+            && res <= 0x00ff_ffff
+    }))]
     fn from(value: U24) -> usize {
         const LEN: usize = core::mem::size_of::<usize>();
         let mut usize_bytes = [0u8; LEN];
@@ -383,17 +454,32 @@ impl From<U24> for usize {
     }
 }
 
-impl TryFrom<usize> for U24 {
-    type Error = Error;
+/// The error returned when a value doesn't fit into a [`U24`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct U24OverflowError;
 
+impl Display for U24OverflowError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("out of range conversion to U24 attempted")
+    }
+}
+
+impl core::error::Error for U24OverflowError {}
+
+/// Returns [`U24OverflowError`] if the value doesn't fit into 24 bits.
+#[cfg_attr(hax, hax_lib::attributes)]
+impl TryFrom<usize> for U24 {
+    type Error = U24OverflowError;
+
+    #[cfg_attr(hax, hax_lib::ensures(|res| res == if value <= 0x00ff_ffff {
+        Ok(U24::from_be_bytes([(value >> 16) as u8, (value >> 8) as u8, value as u8]))
+    } else {
+        Err(U24OverflowError)
+    }))]
     fn try_from(value: usize) -> Result<Self, Self::Error> {
-        const LEN: usize = core::mem::size_of::<usize>();
-        // In practice, our usages of this conversion should never be invalid, as the values
-        // have to come from `TryFrom<U24> for usize`.
         if value > (1 << 24) - 1 {
-            Err(Error::LibraryError)
-        } else {
-            Ok(U24(value.to_be_bytes()[LEN - 3..].try_into()?))
+            return Err(U24OverflowError);
         }
+        Ok(U24([(value >> 16) as u8, (value >> 8) as u8, value as u8]))
     }
 }

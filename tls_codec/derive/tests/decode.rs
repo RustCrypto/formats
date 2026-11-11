@@ -528,7 +528,9 @@ fn type_with_unknowns() {
 #[cfg(feature = "conditional_deserialization")]
 mod conditional_deserialization {
     use tls_codec::{Deserialize, DeserializeBytes, Serialize, Size};
-    use tls_codec_derive::{TlsSerialize, TlsSize, conditionally_deserializable};
+    use tls_codec_derive::{
+        TlsDeserialize, TlsDeserializeBytes, TlsSerialize, TlsSize, conditionally_deserializable,
+    };
 
     #[test]
     fn conditionally_deserializable_struct() {
@@ -606,5 +608,61 @@ mod conditional_deserialization {
             #[tls_codec(cd_field)]
             nested_field: GenericExampleStruct<T>,
         }
+    }
+
+    // Only the parameter added by the attribute may be touched, not the
+    // struct's own generic parameters, even if their names are similar.
+    #[test]
+    #[allow(non_camel_case_types)]
+    fn similarly_named_generics_are_untouched() {
+        // With the feature enabled, the derives run the conditional generics
+        // handling on every struct, not only on conditionally deserializable ones.
+        #[derive(TlsSize, TlsSerialize, TlsDeserialize, TlsDeserializeBytes, PartialEq, Debug)]
+        struct PlainStruct<const IS_DESERIALIZABLE_T: bool> {
+            a: u8,
+        }
+
+        // This used to be the name of the parameter added by the attribute.
+        #[derive(TlsSize, TlsSerialize, TlsDeserialize, TlsDeserializeBytes, PartialEq, Debug)]
+        struct FormerlyReserved<const IS_DESERIALIZABLE: bool> {
+            a: u8,
+        }
+
+        let formerly_reserved = FormerlyReserved::<false> { a: 1 };
+        let serialized = formerly_reserved.tls_serialize_detached().unwrap();
+        assert_eq!(
+            FormerlyReserved::<false>::tls_deserialize(&mut serialized.as_slice()).unwrap(),
+            formerly_reserved
+        );
+        assert_eq!(
+            FormerlyReserved::<false>::tls_deserialize_exact_bytes(&serialized).unwrap(),
+            formerly_reserved
+        );
+
+        let plain = PlainStruct::<true> { a: 1 };
+        let serialized = plain.tls_serialize_detached().unwrap();
+        assert_eq!(
+            PlainStruct::<true>::tls_deserialize(&mut serialized.as_slice()).unwrap(),
+            plain
+        );
+        assert_eq!(
+            PlainStruct::<true>::tls_deserialize_exact_bytes(&serialized).unwrap(),
+            plain
+        );
+
+        #[conditionally_deserializable]
+        #[derive(TlsSize, TlsSerialize, PartialEq, Debug)]
+        struct ConditionalStruct<
+            IS_DESERIALIZABLE_T: Serialize + Size + Deserialize + DeserializeBytes,
+        > {
+            a: IS_DESERIALIZABLE_T,
+        }
+
+        let undeserializable = UndeserializableConditionalStruct::<u8> { a: 1 };
+        let serialized = undeserializable.tls_serialize_detached().unwrap();
+        let deserializable =
+            DeserializableConditionalStruct::<u8>::tls_deserialize_exact_bytes(&serialized)
+                .unwrap();
+        assert_eq!(deserializable.a, undeserializable.a);
     }
 }

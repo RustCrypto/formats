@@ -1,0 +1,11 @@
+error: The generic parameter name `__TLS_CODEC_IS_DESERIALIZABLE` is reserved by #[conditionally_deserializable], which adds a const generic parameter of that name. Rename this parameter.
+ --> tests/conditional_deserialization_attributes/that_reserved_generic_name_does_not_compile.rs:5:32
+  |
+5 | struct ReservedConstName<const __TLS_CODEC_IS_DESERIALIZABLE: bool> {
+  |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: The generic parameter name `__TLS_CODEC_IS_DESERIALIZABLE` is reserved by #[conditionally_deserializable], which adds a const generic parameter of that name. Rename this parameter.
+  --> tests/conditional_deserialization_attributes/that_reserved_generic_name_does_not_compile.rs:12:25
+   |
+12 | struct ReservedTypeName<__TLS_CODEC_IS_DESERIALIZABLE> {
+   |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

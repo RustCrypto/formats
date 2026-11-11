@@ -15,252 +15,338 @@ use zeroize::Zeroize;
 
 use crate::{Deserialize, DeserializeBytes, Error, Serialize, SerializeBytes, Size, U24};
 
-macro_rules! impl_size {
-    ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
-        /// The serialized len
-        #[inline(always)]
-        fn tls_serialized_length(&$self) -> usize {
-            $self.as_slice()
-                .iter()
-                .fold($len_len, |acc, e| crate::len_add(acc, e.tls_serialized_len()))
+/// Serialize `elements` one after the other and return the number of bytes
+/// written. Shared by the `serialize` methods of the generic vector types and
+/// `Serialize for &[T]` (`quic_vec.rs`).
+#[cfg(feature = "std")]
+#[inline(always)]
+pub(crate) fn serialize_elements<T: Serialize, W: Write>(
+    elements: &[T],
+    writer: &mut W,
+) -> Result<usize, Error> {
+    let mut written = 0usize;
+    let mut failure: Option<Error> = None;
+    let mut i = 0usize;
+    while i < elements.len() {
+        match elements[i].tls_serialize(writer) {
+            Ok(n) => written += n,
+            Err(err) => {
+                failure = Some(err);
+                break;
+            }
         }
+        i += 1;
     }
+    if let Some(err) = failure {
+        return Err(err);
+    }
+    Ok(written)
+}
+
+macro_rules! impl_size {
+    ({$($header:tt)*}, $self:ident, $size:ty, $name:ident, $len_len:literal) => {
+        #[cfg_attr(hax, hax_lib::attributes)]
+        $($header)* {
+            /// The serialized len
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
+            #[inline(always)]
+            fn tls_serialized_length(&$self) -> usize {
+                $self.as_slice()
+                    .iter()
+                    .fold($len_len, |acc, e| crate::len_add(acc, e.tls_serialized_len()))
+            }
+        }
+    };
 }
 
 macro_rules! impl_byte_size {
-    ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
-        /// The serialized len
-        #[inline(always)]
-        fn tls_serialized_byte_length(&$self) -> usize {
-            $self.as_slice().len() + $len_len
+    ({$($header:tt)*}, $self:ident, $size:ty, $name:ident, $len_len:literal) => {
+        #[cfg_attr(hax, hax_lib::attributes)]
+        $($header)* {
+            /// The serialized len
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
+            #[inline(always)]
+            fn tls_serialized_byte_length(&$self) -> usize {
+                crate::len_add($self.as_slice().len(), $len_len)
+            }
         }
-    }
+    };
 }
 
 macro_rules! impl_byte_deserialize {
-    ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
-        #[cfg(feature = "std")]
-        #[inline(always)]
-        fn deserialize_bytes<R: Read>(bytes: &mut R) -> Result<Self, Error> {
-            let len = <$size>::tls_deserialize(bytes)?.try_into().unwrap();
-            // When fuzzing we limit the maximum size to allocate.
-            // XXX: We should think about a configurable limit for the allocation
-            //      here.
-            if cfg!(fuzzing) && len > u16::MAX as usize {
-                return Err(Error::DecodingError(format!(
-                    "Trying to allocate {} bytes. Only {} allowed.",
-                    len,
-                    u16::MAX
-                )));
+    ({$($header:tt)*}, $self:ident, $size:ty, $name:ident, $len_len:literal) => {
+        #[cfg_attr(hax, hax_lib::attributes)]
+        $($header)* {
+            #[cfg(feature = "std")]
+            #[inline(always)]
+            fn deserialize_bytes<R: Read>(bytes: &mut R) -> Result<Self, Error> {
+                let len = <$size>::tls_deserialize(bytes)?.try_into().unwrap();
+                // When fuzzing we limit the maximum size to allocate.
+                // XXX: We should think about a configurable limit for the allocation
+                //      here.
+                if cfg!(fuzzing) && len > u16::MAX as usize {
+                    return Err(Error::DecodingError(format!(
+                        "Trying to allocate {} bytes. Only {} allowed.",
+                        len,
+                        u16::MAX
+                    )));
+                }
+                // Read into a bounded buffer rather than allocating `len` bytes up
+                // front, so an oversized length field can't trigger a huge
+                // allocation before any bytes are read.
+                let vec = crate::read_bytes_bounded(bytes, len)?;
+                Ok(Self { vec })
             }
-            // Read into a bounded buffer rather than allocating `len` bytes up
-            // front, so an oversized length field can't trigger a huge
-            // allocation before any bytes are read.
-            let vec = crate::read_bytes_bounded(bytes, len)?;
-            Ok(Self { vec })
-        }
 
-        #[inline(always)]
-        fn deserialize_bytes_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-            let (type_len, remainder) = <$size>::tls_deserialize_bytes(bytes)?;
-            let len: usize = type_len.try_into().unwrap();
-            // When fuzzing we limit the maximum size to allocate.
-            // XXX: We should think about a configurable limit for the allocation
-            //      here.
-            if cfg!(fuzzing) && len > u16::MAX as usize {
-                return Err(Error::DecodingError(alloc::format!(
-                    "Trying to allocate {} bytes. Only {} allowed.",
-                    len,
-                    u16::MAX
-                )));
+            #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
+                || res.is_ok_and(|(vec, remainder)|
+                    remainder.len() + $len_len + vec.len() == bytes.len())))]
+            #[inline(always)]
+            fn deserialize_bytes_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+                let (type_len, remainder) = <$size>::tls_deserialize_bytes(bytes)?;
+                let len: usize = type_len.try_into().unwrap();
+                // When fuzzing we limit the maximum size to allocate.
+                // XXX: We should think about a configurable limit for the allocation
+                //      here.
+                if cfg!(fuzzing) && len > u16::MAX as usize {
+                    return Err(Error::DecodingError(alloc::format!(
+                        "Trying to allocate {} bytes. Only {} allowed.",
+                        len,
+                        u16::MAX
+                    )));
+                }
+                // Use `checked_add` to avoid overflowing `usize` on targets where
+                // the length field is as wide as (or wider than) the pointer width.
+                let end = len
+                    .checked_add($len_len)
+                    .ok_or(Error::InvalidVectorLength)?;
+                let vec = bytes.get($len_len..end).ok_or(Error::EndOfStream)?;
+                let result = Self { vec: vec.to_vec() };
+                Ok((result, &remainder.get(len..).ok_or(Error::EndOfStream)?))
             }
-            // Use `checked_add` to avoid overflowing `usize` on targets where
-            // the length field is as wide as (or wider than) the pointer width.
-            let end = len
-                .checked_add($len_len)
-                .ok_or(Error::InvalidVectorLength)?;
-            let vec = bytes.get($len_len..end).ok_or(Error::EndOfStream)?;
-            let result = Self { vec: vec.to_vec() };
-            Ok((result, &remainder.get(len..).ok_or(Error::EndOfStream)?))
         }
     };
 }
 
 macro_rules! impl_deserialize {
-    ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
-        #[cfg(feature = "std")]
-        #[inline(always)]
-        fn deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
-            let mut result = Self { vec: Vec::new() };
-            let len = <$size>::tls_deserialize(bytes)?;
-            let length: usize = len.try_into().unwrap();
-            // The declared length is authoritative and delimits the vector's
-            // content. Bound the reader to exactly `length` bytes and decode
-            // elements until it is exhausted. This measures actual consumption
-            // instead of trusting `tls_serialized_len()`, keeping this in sync
-            // with the `DeserializeBytes` implementation for non-canonical
-            // encodings (e.g. non-minimal varint lengths).
-            let mut sub = Read::take(bytes, length as u64);
-            while sub.limit() > 0 {
-                let before = sub.limit();
-                let element = T::tls_deserialize(&mut sub)?;
-                // A zero-length element would never advance the reader, causing
-                // an infinite loop that keeps allocating. Reject such input.
-                if sub.limit() == before {
-                    return Err(Error::DecodingError(format!(
-                        "Vector element consumed 0 bytes; refusing to loop"
-                    )));
+    ({$($header:tt)*}, $self:ident, $size:ty, $name:ident, $len_len:literal) => {
+        #[cfg_attr(hax, hax_lib::attributes)]
+        $($header)* {
+            #[cfg(feature = "std")]
+            #[inline(always)]
+            fn deserialize<R: Read>(bytes: &mut R) -> Result<Self, Error> {
+                let mut result = Self { vec: Vec::new() };
+                let len = <$size>::tls_deserialize(bytes)?;
+                let length: usize = len.try_into().unwrap();
+                // The declared length is authoritative and delimits the vector's
+                // content. Bound the reader to exactly `length` bytes and decode
+                // elements until it is exhausted. This measures actual consumption
+                // instead of trusting `tls_serialized_len()`, keeping this in sync
+                // with the `DeserializeBytes` implementation for non-canonical
+                // encodings (e.g. non-minimal varint lengths).
+                let mut sub = Read::take(bytes, length as u64);
+                let mut failure: Option<Error> = None;
+                while sub.limit() > 0 {
+                    let before = sub.limit();
+                    match T::tls_deserialize(&mut sub) {
+                        Ok(element) => {
+                            // A zero-length element would never advance the reader, causing
+                            // an infinite loop that keeps allocating. Reject such input.
+                            if sub.limit() == before {
+                                failure = Some(Error::DecodingError(format!(
+                                    "Vector element consumed 0 bytes; refusing to loop"
+                                )));
+                                break;
+                            }
+                            result.push(element);
+                        }
+                        Err(e) => {
+                            failure = Some(e);
+                            break;
+                        }
+                    }
                 }
-                result.push(element);
+                if let Some(e) = failure {
+                    return Err(e);
+                }
+                Ok(result)
             }
-            Ok(result)
         }
     };
 }
 
 macro_rules! impl_deserialize_bytes {
-    ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
-        #[inline(always)]
-        fn deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
-            let mut result = Self { vec: Vec::new() };
-            let (len, mut remainder) = <$size>::tls_deserialize_bytes(bytes)?;
-            let length: usize = len.try_into().unwrap();
-            let mut read = 0usize;
-            while read < length {
-                let (element, next_remainder) = T::tls_deserialize_bytes(remainder)?;
-                // Measure how many bytes the element actually consumed from the
-                // input rather than trusting `tls_serialized_len`.
-                let consumed = remainder.len() - next_remainder.len();
-                remainder = next_remainder;
-                result.push(element);
-                // A zero-length element would never advance `read`, causing an
-                // infinite loop that keeps allocating. Reject such input.
-                if consumed == 0 {
+    ({$($header:tt)*}, $self:ident, $size:ty, $name:ident, $len_len:literal) => {
+        #[cfg_attr(hax, hax_lib::attributes)]
+        $($header)* {
+            #[cfg_attr(all(hax, feature = "mls"), hax_lib::ensures(|res| res.is_err()
+                || res.is_ok_and(|(vec, remainder)|
+                    remainder.len() + vec.tls_serialized_len() == bytes.len())))]
+            #[inline(always)]
+            fn deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), Error> {
+                let mut result = Self { vec: Vec::new() };
+                let (len, mut remainder) = <$size>::tls_deserialize_bytes(bytes)?;
+                let length: usize = len.try_into().unwrap();
+                let mut read = 0usize;
+                let mut failure: Option<Error> = None;
+                while read < length {
+                    match T::tls_deserialize_bytes(remainder) {
+                        Ok((element, next_remainder)) => {
+                            // Measure how many bytes the element actually consumed from the
+                            // input rather than trusting `tls_serialized_len`.
+                            let consumed = remainder.len() - next_remainder.len();
+                            remainder = next_remainder;
+                            result.push(element);
+                            // A zero-length element would never advance `read`, causing an
+                            // infinite loop that keeps allocating. Reject such input.
+                            if consumed == 0 {
+                                failure = Some(Error::DecodingError(alloc::format!(
+                                    "Vector element consumed 0 bytes; refusing to loop"
+                                )));
+                                break;
+                            }
+                            read += consumed;
+                        }
+                        Err(e) => {
+                            failure = Some(e);
+                            break;
+                        }
+                    }
+                }
+                if let Some(e) = failure {
+                    return Err(e);
+                }
+                // The declared length is authoritative: the elements must consume
+                // exactly `length` bytes, not overshoot it.
+                if read != length {
                     return Err(Error::DecodingError(alloc::format!(
-                        "Vector element consumed 0 bytes; refusing to loop"
+                        "Vector length mismatch: declared {length} bytes but elements consumed {read}"
                     )));
                 }
-                read += consumed;
+                Ok((result, remainder))
             }
-            // The declared length is authoritative: the elements must consume
-            // exactly `length` bytes, not overshoot it.
-            if read != length {
-                return Err(Error::DecodingError(alloc::format!(
-                    "Vector length mismatch: declared {length} bytes but elements consumed {read}"
-                )));
-            }
-            Ok((result, remainder))
         }
     };
 }
 
 macro_rules! impl_serialize {
-    ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
-        #[cfg(feature = "std")]
-        #[inline(always)]
-        fn serialize<W: Write>(&$self, writer: &mut W) -> Result<usize, Error> {
-            // Get the byte length of the content, make sure it's not too
-            // large and write it out.
-            let (tls_serialized_len, byte_length) = $self.get_content_lengths()?;
+    ({$($header:tt)*}, $self:ident, $size:ty, $name:ident, $len_len:literal) => {
+        #[cfg_attr(hax, hax_lib::attributes)]
+        $($header)* {
+            #[cfg(feature = "std")]
+            #[inline(always)]
+            fn serialize<W: Write>(&$self, writer: &mut W) -> Result<usize, Error> {
+                // Get the byte length of the content, make sure it's not too
+                // large and write it out.
+                let (tls_serialized_len, byte_length) = $self.get_content_lengths()?;
 
-            let mut written = <$size as Serialize>::tls_serialize(&<$size>::try_from(byte_length).unwrap(), writer)?;
+                let mut written = <$size as Serialize>::tls_serialize(&<$size>::try_from(byte_length).unwrap(), writer)?;
 
-            // Now serialize the elements
-            for e in $self.as_slice().iter() {
-                written += e.tls_serialize(writer)?;
+                // Now serialize the elements
+                written += serialize_elements($self.as_slice(), writer)?;
+
+                $self.assert_written_bytes(tls_serialized_len, written)?;
+                Ok(written)
             }
-
-            $self.assert_written_bytes(tls_serialized_len, written)?;
-            Ok(written)
         }
     };
 }
 
 macro_rules! impl_byte_serialize {
-    ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
-        #[cfg(feature = "std")]
-        #[inline(always)]
-        fn serialize_bytes<W: Write>(&$self, writer: &mut W) -> Result<usize, Error> {
-            // Get the byte length of the content, make sure it's not too
-            // large and write it out.
-            let (tls_serialized_len, byte_length) = $self.get_content_lengths()?;
+    ({$($header:tt)*}, $self:ident, $size:ty, $name:ident, $len_len:literal) => {
+        #[cfg_attr(hax, hax_lib::attributes)]
+        $($header)* {
+            #[cfg(feature = "std")]
+            #[inline(always)]
+            fn serialize_bytes<W: Write>(&$self, writer: &mut W) -> Result<usize, Error> {
+                // Get the byte length of the content, make sure it's not too
+                // large and write it out.
+                let (tls_serialized_len, byte_length) = $self.get_content_lengths()?;
 
-            let mut written = <$size as Serialize>::tls_serialize(&<$size>::try_from(byte_length).unwrap(), writer)?;
+                let mut written = <$size as Serialize>::tls_serialize(&<$size>::try_from(byte_length).unwrap(), writer)?;
 
-            // Now serialize the elements
-            let bytes = $self.as_slice();
-            writer.write_all(bytes)?;
-            written += bytes.len();
+                // Now serialize the elements
+                let bytes = $self.as_slice();
+                crate::write_all(writer, bytes)?;
+                written += bytes.len();
 
-            $self.assert_written_bytes(tls_serialized_len, written)?;
-            Ok(written)
+                $self.assert_written_bytes(tls_serialized_len, written)?;
+                Ok(written)
+            }
         }
     };
 }
 
 macro_rules! impl_serialize_common {
-    ($self:ident, $size:ty, $name:ident, $len_len:literal $(,#[$std_enabled:meta])?) => {
-        $(#[$std_enabled])?
-        fn get_content_lengths(&$self) -> Result<(usize, usize), Error> {
-            // Sum the element lengths with an overflow check on platforms where
-            // `usize` is narrow enough for it to matter (see `crate::len_add`).
-            // Computing `byte_length` directly (rather than deriving it from
-            // `tls_serialized_len()`) lets us reject a true overflow instead of
-            // trusting a possibly-saturated value from the `Size` impl.
-            let byte_length = $self
-                .as_slice()
-                .iter()
-                .try_fold(0usize, |acc, e| crate::checked_len_add(acc, e.tls_serialized_len()))?;
-            let tls_serialized_len = crate::checked_len_add(byte_length, $len_len)?;
+    ({$($header:tt)*}, $self:ident, $size:ty, $name:ident, $len_len:literal $(,#[$std_enabled:meta])?) => {
+        #[cfg_attr(hax, hax_lib::attributes)]
+        $($header)* {
+            #[cfg_attr(hax, hax_lib::ensures(|res|
+                res.as_ref().is_err_and(|e| *e == Error::InvalidVectorLength)
+                    || res.is_ok_and(|(total, content)| total == content + $len_len)))]
+            $(#[$std_enabled])?
+            fn get_content_lengths(&$self) -> Result<(usize, usize), Error> {
+                // Sum the element lengths with an overflow check
+                // (see `crate::checked_len_add`).
+                // Computing `byte_length` directly (rather than deriving it from
+                // `tls_serialized_len()`) lets us reject a true overflow instead of
+                // trusting a possibly-saturated value from the `Size` impl.
+                let byte_length = $self
+                    .as_slice()
+                    .iter()
+                    .try_fold(0usize, |acc, e| crate::checked_len_add(acc, e.tls_serialized_len()))?;
+                let tls_serialized_len = crate::checked_len_add(byte_length, $len_len)?;
 
-            let max_len = <$size>::MAX.try_into().unwrap();
-            debug_assert!(
-                byte_length <= max_len,
-                "Vector length can't be encoded in the vector length a {} >= {}",
-                byte_length,
-                max_len
-            );
-            if byte_length > max_len {
-                return Err(Error::InvalidVectorLength);
+                let max_len = <$size>::MAX.try_into().unwrap();
+                if byte_length > max_len {
+                    return Err(Error::InvalidVectorLength);
+                }
+                Ok((tls_serialized_len, byte_length))
             }
-            Ok((tls_serialized_len, byte_length))
-        }
 
-        $(#[$std_enabled])?
-        fn assert_written_bytes(&$self, tls_serialized_len: usize, written: usize) -> Result<(), Error> {
-            debug_assert_eq!(
-                written, tls_serialized_len,
-                "{} bytes should have been serialized but {} were written",
-                tls_serialized_len, written
-            );
-            if written != tls_serialized_len {
-                return Err(Error::EncodingError(format!(
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
+            $(#[$std_enabled])?
+            fn assert_written_bytes(&$self, tls_serialized_len: usize, written: usize) -> Result<(), Error> {
+                #[cfg(not(hax))]
+                debug_assert_eq!(
+                    written, tls_serialized_len,
                     "{} bytes should have been serialized but {} were written",
                     tls_serialized_len, written
-                )));
+                );
+                if written != tls_serialized_len {
+                    return Err(Error::EncodingError(format!(
+                        "{} bytes should have been serialized but {} were written",
+                        tls_serialized_len, written
+                    )));
+                }
+                Ok(())
             }
-            Ok(())
         }
     };
 }
 
 macro_rules! impl_serialize_bytes_bytes {
-    ($self:ident, $size:ty, $name:ident, $len_len:literal) => {
-        fn serialize_bytes_bytes(&$self) -> Result<Vec<u8>, Error> {
-            let (tls_serialized_len, byte_length) = $self.get_content_lengths()?;
+    ({$($header:tt)*}, $self:ident, $size:ty, $name:ident, $len_len:literal) => {
+        #[cfg_attr(hax, hax_lib::attributes)]
+        $($header)* {
+            #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
+                || res.is_ok_and(|out| out.len() == $self.tls_serialized_len())))]
+            fn serialize_bytes_bytes(&$self) -> Result<Vec<u8>, Error> {
+                let (tls_serialized_len, byte_length) = $self.get_content_lengths()?;
 
-            let mut vec = Vec::<u8>::with_capacity(crate::checked_alloc_len(byte_length, $len_len)?);
-            let length_vec = <$size as SerializeBytes>::tls_serialize_bytes(&byte_length.try_into().unwrap())?;
-            let mut written = length_vec.len();
-            vec.extend_from_slice(&length_vec);
+                let mut vec = Vec::<u8>::with_capacity(crate::checked_alloc_len(byte_length, $len_len)?);
+                let length_vec = <$size as SerializeBytes>::tls_serialize_bytes(&byte_length.try_into().unwrap())?;
+                let mut written = length_vec.len();
+                vec.extend_from_slice(&length_vec);
 
-            let bytes = $self.as_slice();
-            vec.extend_from_slice(bytes);
-            written += bytes.len();
+                let bytes = $self.as_slice();
+                vec.extend_from_slice(bytes);
+                written += bytes.len();
 
-            $self.assert_written_bytes(tls_serialized_len, written)?;
+                $self.assert_written_bytes(tls_serialized_len, written)?;
 
-            Ok(vec)
+                Ok(vec)
+            }
         }
     };
 }
@@ -362,92 +448,108 @@ macro_rules! impl_tls_vec_codec_bytes {
 }
 
 macro_rules! impl_vec_members {
-    ($element_type:ident, $len_len:literal) => {
-        /// Create a new `TlsVec` from a Rust Vec.
-        #[inline]
-        pub fn new(vec: Vec<$element_type>) -> Self {
-            Self { vec }
-        }
-
-        /// Create a new `TlsVec` from a slice.
-        #[inline]
-        pub fn from_slice(slice: &[$element_type]) -> Self
-        where
-            $element_type: Clone,
-        {
-            Self {
-                vec: slice.to_vec(),
+    ({$($header:tt)*}, $element_type:ident, $len_len:literal) => {
+        #[cfg_attr(hax, hax_lib::attributes)]
+        $($header)* {
+            /// Create a new `TlsVec` from a Rust Vec.
+            #[cfg_attr(hax, hax_lib::ensures(|res| res.len() == vec.len()))]
+            #[inline]
+            pub fn new(vec: Vec<$element_type>) -> Self {
+                Self { vec }
             }
-        }
 
-        /// Get the length of the vector.
-        #[inline]
-        pub fn len(&self) -> usize {
-            self.vec.len()
-        }
+            /// Create a new `TlsVec` from a slice.
+            #[cfg_attr(hax, hax_lib::ensures(|res| res.len() == slice.len()))]
+            #[inline]
+            pub fn from_slice(slice: &[$element_type]) -> Self
+            where
+                $element_type: Clone,
+            {
+                Self {
+                    vec: slice.to_vec(),
+                }
+            }
 
-        /// Get a slice to the raw vector.
-        #[inline]
-        pub fn as_slice(&self) -> &[$element_type] {
-            &self.vec
-        }
+            /// Get the length of the vector.
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
+            #[inline]
+            pub fn len(&self) -> usize {
+                self.vec.len()
+            }
 
-        /// Check if the vector is empty.
-        #[inline]
-        pub fn is_empty(&self) -> bool {
-            self.vec.is_empty()
-        }
+            /// Get a slice to the raw vector.
+            #[inline]
+            pub fn as_slice(&self) -> &[$element_type] {
+                &self.vec
+            }
 
-        /// Get the underlying vector and consume this.
-        #[inline]
-        pub fn into_vec(mut self) -> Vec<$element_type> {
-            core::mem::take(&mut self.vec)
-        }
+            /// Check if the vector is empty.
+            #[cfg_attr(hax, hax_lib::ensures(|res| res == (self.len() == 0)))]
+            #[inline]
+            pub fn is_empty(&self) -> bool {
+                self.vec.is_empty()
+            }
 
-        /// Add an element to this.
-        #[inline]
-        pub fn push(&mut self, value: $element_type) {
-            self.vec.push(value);
-        }
+            /// Get the underlying vector and consume this.
+            #[cfg_attr(hax, hax_lib::ensures(|res| res.len() == self.len()))]
+            #[inline]
+            pub fn into_vec(mut self) -> Vec<$element_type> {
+                core::mem::take(&mut self.vec)
+            }
 
-        /// Remove the last element.
-        #[inline]
-        pub fn pop(&mut self) -> Option<$element_type> {
-            self.vec.pop()
-        }
+            /// Add an element to this.
+            #[cfg_attr(hax, hax_lib::requires(self.len() < usize::MAX))]
+            #[cfg_attr(hax, hax_lib::ensures(|_| future(self).len() == self.len() + 1))]
+            #[inline]
+            pub fn push(&mut self, value: $element_type) {
+                self.vec.push(value);
+            }
 
-        /// Remove the element at `index`.
-        #[inline]
-        pub fn remove(&mut self, index: usize) -> $element_type {
-            self.vec.remove(index)
-        }
+            /// Remove the last element.
+            #[cfg_attr(hax, hax_lib::ensures(|res| res.is_some() == (self.len() > 0)
+                && future(self).len() == self.len() - usize::from(res.is_some())))]
+            #[inline]
+            pub fn pop(&mut self) -> Option<$element_type> {
+                self.vec.pop()
+            }
 
-        /// Returns a reference to an element or subslice depending on the type of index.
-        /// XXX: implement SliceIndex instead
-        #[inline]
-        pub fn get(&self, index: usize) -> Option<&$element_type> {
-            self.vec.get(index)
-        }
+            /// Remove the element at `index`.
+            #[cfg_attr(hax, hax_lib::requires(index < self.len()))]
+            #[cfg_attr(hax, hax_lib::ensures(|_| future(self).len() == self.len() - 1))]
+            #[inline]
+            pub fn remove(&mut self, index: usize) -> $element_type {
+                self.vec.remove(index)
+            }
 
-        /// Returns an iterator over the slice.
-        #[inline]
-        pub fn iter(&self) -> core::slice::Iter<'_, $element_type> {
-            self.vec.iter()
-        }
+            /// Returns a reference to an element or subslice depending on the type of index.
+            /// XXX: implement SliceIndex instead
+            #[cfg_attr(hax, hax_lib::ensures(|res| res.is_some() == (index < self.len())))]
+            #[inline]
+            pub fn get(&self, index: usize) -> Option<&$element_type> {
+                self.vec.get(index)
+            }
 
-        /// Retains only the elements specified by the predicate.
-        #[inline]
-        pub fn retain<F>(&mut self, f: F)
-        where
-            F: FnMut(&$element_type) -> bool,
-        {
-            self.vec.retain(f)
-        }
+            /// Returns an iterator over the slice.
+            #[inline]
+            pub fn iter(&self) -> core::slice::Iter<'_, $element_type> {
+                self.vec.iter()
+            }
 
-        /// Get the number of bytes used for the length encoding.
-        #[inline(always)]
-        pub fn len_len() -> usize {
-            $len_len
+            /// Retains only the elements specified by the predicate.
+            #[inline]
+            pub fn retain<F>(&mut self, f: F)
+            where
+                F: FnMut(&$element_type) -> bool,
+            {
+                self.vec.retain(f)
+            }
+
+            /// Get the number of bytes used for the length encoding.
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
+            #[inline(always)]
+            pub fn len_len() -> usize {
+                $len_len
+            }
         }
     };
 }
@@ -465,9 +567,7 @@ macro_rules! impl_tls_vec_generic {
             }
         }
 
-        impl<T: $($bounds + )*> $name<T> {
-            impl_vec_members!(T, $len_len);
-        }
+        impl_vec_members!({impl<T: $($bounds + )*> $name<T>}, T, $len_len);
 
         impl<T: $($bounds + )* core::hash::Hash> core::hash::Hash for $name<T> {
             #[inline]
@@ -476,9 +576,11 @@ macro_rules! impl_tls_vec_generic {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl<T: $($bounds + )*> core::ops::Index<usize> for $name<T> {
             type Output = T;
 
+            #[cfg_attr(hax, hax_lib::requires(i < self.len()))]
             #[inline]
             fn index(&self, i: usize) -> &T {
                 self.vec.index(i)
@@ -491,9 +593,11 @@ macro_rules! impl_tls_vec_generic {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl<T: $($bounds + )*> core::ops::IndexMut<usize> for $name<T> {
+            #[cfg_attr(hax, hax_lib::requires(i < self.len()))]
             #[inline]
-            fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+            fn index_mut(&mut self, i: usize) -> &mut T {
                 self.vec.index_mut(i)
             }
         }
@@ -663,9 +767,7 @@ macro_rules! impl_tls_vec {
             vec: Vec<u8>,
         }
 
-        impl $name {
-            impl_vec_members!(u8, $len_len);
-        }
+        impl_vec_members!({impl $name}, u8, $len_len);
 
         impl core::hash::Hash for $name {
             #[inline]
@@ -674,9 +776,11 @@ macro_rules! impl_tls_vec {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl core::ops::Index<usize> for $name {
             type Output = u8;
 
+            #[cfg_attr(hax, hax_lib::requires(i < self.len()))]
             #[inline]
             fn index(&self, i: usize) -> &u8 {
                 self.vec.index(i)
@@ -689,9 +793,11 @@ macro_rules! impl_tls_vec {
             }
         }
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl core::ops::IndexMut<usize> for $name {
+            #[cfg_attr(hax, hax_lib::requires(i < self.len()))]
             #[inline]
-            fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+            fn index_mut(&mut self, i: usize) -> &mut u8 {
                 self.vec.index_mut(i)
             }
         }
@@ -853,22 +959,11 @@ macro_rules! impl_secret_tls_vec {
         impl_tls_vec_generic!($size, $name, $len_len, Zeroize);
         impl_tls_vec_codec_generic!($size, $name, $len_len, Zeroize);
 
-        impl<T: Serialize + Zeroize> $name<T> {
-            impl_serialize_common!(self, $size, $name, $len_len, #[cfg(feature = "std")]);
-            impl_serialize!(self, $size, $name, $len_len);
-        }
-
-        impl<T: Size + Zeroize> $name<T> {
-            impl_size!(self, $size, $name, $len_len);
-        }
-
-        impl<T: Deserialize + Zeroize> $name<T> {
-            impl_deserialize!(self, $size, $name, $len_len);
-        }
-
-        impl<T: DeserializeBytes + Zeroize> $name<T> {
-            impl_deserialize_bytes!(self, $size, $name, $len_len);
-        }
+        impl_serialize_common!({impl<T: Serialize + Zeroize> $name<T>}, self, $size, $name, $len_len, #[cfg(feature = "std")]);
+        impl_serialize!({impl<T: Serialize + Zeroize> $name<T>}, self, $size, $name, $len_len);
+        impl_size!({impl<T: Size + Zeroize> $name<T>}, self, $size, $name, $len_len);
+        impl_deserialize!({impl<T: Deserialize + Zeroize> $name<T>}, self, $size, $name, $len_len);
+        impl_deserialize_bytes!({impl<T: DeserializeBytes + Zeroize> $name<T>}, self, $size, $name, $len_len);
 
         impl<T: Zeroize> Zeroize for $name<T> {
             fn zeroize(&mut self) {
@@ -890,22 +985,11 @@ macro_rules! impl_public_tls_vec {
 
         impl_tls_vec_codec_generic!($size, $name, $len_len);
 
-        impl<T: Serialize> $name<T> {
-            impl_serialize_common!(self, $size, $name, $len_len, #[cfg(feature = "std")]);
-            impl_serialize!(self, $size, $name, $len_len);
-        }
-
-        impl<T: Size> $name<T> {
-            impl_size!(self, $size, $name, $len_len);
-        }
-
-        impl<T: Deserialize> $name<T> {
-            impl_deserialize!(self, $size, $name, $len_len);
-        }
-
-        impl<T: DeserializeBytes> $name<T> {
-            impl_deserialize_bytes!(self, $size, $name, $len_len);
-        }
+        impl_serialize_common!({impl<T: Serialize> $name<T>}, self, $size, $name, $len_len, #[cfg(feature = "std")]);
+        impl_serialize!({impl<T: Serialize> $name<T>}, self, $size, $name, $len_len);
+        impl_size!({impl<T: Size> $name<T>}, self, $size, $name, $len_len);
+        impl_deserialize!({impl<T: Deserialize> $name<T>}, self, $size, $name, $len_len);
+        impl_deserialize_bytes!({impl<T: DeserializeBytes> $name<T>}, self, $size, $name, $len_len);
     };
 }
 
@@ -913,14 +997,12 @@ macro_rules! impl_tls_byte_vec {
     ($size:ty, $name:ident, $len_len: literal) => {
         impl_tls_vec!($name, $len_len);
 
-        impl $name {
-            // This implements serialize and size for all versions
-            impl_serialize_common!(self, $size, $name, $len_len);
-            impl_byte_serialize!(self, $size, $name, $len_len);
-            impl_serialize_bytes_bytes!(self, $size, $name, $len_len);
-            impl_byte_size!(self, $size, $name, $len_len);
-            impl_byte_deserialize!(self, $size, $name, $len_len);
-        }
+        // This implements serialize and size for all versions
+        impl_serialize_common!({impl $name}, self, $size, $name, $len_len);
+        impl_byte_serialize!({impl $name}, self, $size, $name, $len_len);
+        impl_serialize_bytes_bytes!({impl $name}, self, $size, $name, $len_len);
+        impl_byte_size!({impl $name}, self, $size, $name, $len_len);
+        impl_byte_deserialize!({impl $name}, self, $size, $name, $len_len);
 
         impl_tls_vec_codec_bytes!($size, $name, $len_len);
     };
@@ -948,19 +1030,19 @@ macro_rules! impl_tls_byte_slice {
     ($size:ty, $name:ident, $len_len:literal) => {
         pub struct $name<'a>(pub &'a [u8]);
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl<'a> $name<'a> {
             /// Get the raw slice.
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline(always)]
             pub fn as_slice(&self) -> &[u8] {
                 self.0
             }
         }
 
-        impl<'a> $name<'a> {
-            impl_serialize_common!(self, $size, $name, $len_len, #[cfg(feature = "std")]);
-            impl_byte_serialize!(self, $size, $name, $len_len);
-            impl_byte_size!(self, $size, $name, $len_len);
-        }
+        impl_serialize_common!({impl<'a> $name<'a>}, self, $size, $name, $len_len, #[cfg(feature = "std")]);
+        impl_byte_serialize!({impl<'a> $name<'a>}, self, $size, $name, $len_len);
+        impl_byte_size!({impl<'a> $name<'a>}, self, $size, $name, $len_len);
 
         impl<'a> Serialize for &$name<'a> {
             #[cfg(feature = "std")]
@@ -1001,22 +1083,19 @@ macro_rules! impl_tls_slice {
     ($size:ty, $name:ident, $len_len: literal) => {
         pub struct $name<'a, T>(pub &'a [T]);
 
+        #[cfg_attr(hax, hax_lib::attributes)]
         impl<'a, T> $name<'a, T> {
             /// Get the raw slice.
+            #[cfg_attr(hax, hax_lib::ensures(|_| true))]
             #[inline(always)]
             pub fn as_slice(&self) -> &[T] {
                 self.0
             }
         }
 
-        impl<'a, T: Size> $name<'a, T> {
-            impl_size!(self, $size, $name, $len_len);
-        }
-
-        impl<'a, T: Serialize> $name<'a, T> {
-            impl_serialize_common!(self, $size, $name, $len_len, #[cfg(feature = "std")]);
-            impl_serialize!(self, $size, $name, $len_len);
-        }
+        impl_size!({impl<'a, T: Size> $name<'a, T>}, self, $size, $name, $len_len);
+        impl_serialize_common!({impl<'a, T: Serialize> $name<'a, T>}, self, $size, $name, $len_len, #[cfg(feature = "std")]);
+        impl_serialize!({impl<'a, T: Serialize> $name<'a, T>}, self, $size, $name, $len_len);
 
         impl<'a, T: Serialize> Serialize for &$name<'a, T> {
             #[cfg(feature = "std")]
