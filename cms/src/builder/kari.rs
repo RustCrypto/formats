@@ -50,6 +50,7 @@ use elliptic_curve::{
     point::PointCompression,
     sec1::{FromSec1Point, ModulusSize, ToSec1Point},
 };
+use x509_cert::certificate::{Profile, Rfc5280};
 
 /// The `EccCmsSharedInfo` type is defined in [RFC 5753 Section 7.2].
 ///
@@ -203,7 +204,7 @@ where
 /// This type uses key agreement:  the recipient's public key and the sender's
 /// private key are used to generate a pairwise symmetric key, then
 /// the content-encryption key is encrypted in the pairwise symmetric key.
-pub struct KeyAgreeRecipientInfoBuilder<R: ?Sized, C, KA, KW, Enc>
+pub struct KeyAgreeRecipientInfoBuilder<R: ?Sized, C, KA, KW, Enc, P: Profile = Rfc5280>
 where
     C: CurveArithmetic,
     KA: KeyAgreementAlgorithm,
@@ -213,7 +214,7 @@ where
     /// Optional information which helps generating different keys every time.
     pub ukm: Option<UserKeyingMaterial>,
     /// Recipient identifier
-    pub rid: KeyAgreeRecipientIdentifier,
+    pub rid: KeyAgreeRecipientIdentifier<P>,
     /// Recipient key info
     pub eckey_encryption_info: EcKeyEncryptionInfo<C>,
     /// Key agreement algorithm
@@ -226,7 +227,7 @@ where
     _rng: PhantomData<R>,
 }
 
-impl<R: ?Sized, C, KA, KW, Enc> KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc>
+impl<R: ?Sized, C, KA, KW, Enc, P: Profile> KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc, P>
 where
     C: CurveArithmetic,
     KA: KeyAgreementAlgorithm,
@@ -236,7 +237,7 @@ where
     /// Creates a `KeyAgreeRecipientInfoBuilder`
     pub fn new(
         ukm: Option<UserKeyingMaterial>,
-        rid: KeyAgreeRecipientIdentifier,
+        rid: KeyAgreeRecipientIdentifier<P>,
         eckey_encryption_info: EcKeyEncryptionInfo<C>,
     ) -> Result<Self> {
         Ok(KeyAgreeRecipientInfoBuilder {
@@ -250,8 +251,8 @@ where
         })
     }
 }
-impl<R: ?Sized, C, KA, KW, Enc> RecipientInfoBuilder
-    for KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc>
+impl<R: ?Sized, C, KA, KW, Enc, P: Profile> RecipientInfoBuilder<P>
+    for KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc, P>
 where
     R: CryptoRng,
     KA: KeyAgreementAlgorithm + AssociatedOid,
@@ -295,7 +296,7 @@ where
         &mut self,
         content_encryption_key: &[u8],
         rng: &mut Self::Rng,
-    ) -> Result<RecipientInfo> {
+    ) -> Result<RecipientInfo<P>> {
         // Encrypt key
         let (
             encrypted_key,

@@ -63,7 +63,7 @@ fn cms_decode_signed_mdm_example() {
     let bytes = ci.content.to_der().unwrap();
 
     // parse as SignedData then re-encode
-    let sd = SignedData::from_der(bytes.as_slice()).unwrap();
+    let sd: SignedData = SignedData::from_der(bytes.as_slice()).unwrap();
     let reencoded_signed_data = sd.to_der().unwrap();
 
     // assemble a new ContentInfo and encode it
@@ -89,7 +89,7 @@ fn cms_decode_signed_scep_example() {
     let bytes = ci.content.to_der().unwrap();
 
     // parse as SignedData then re-encode
-    let sd = SignedData::from_der(bytes.as_slice()).unwrap();
+    let sd: SignedData = SignedData::from_der(bytes.as_slice()).unwrap();
     assert_eq!(sd.version, CmsVersion::V1);
     let reencoded_signed_data = sd.to_der().unwrap();
 
@@ -116,7 +116,7 @@ fn cms_decode_signed_der() {
     let bytes = ci.content.to_der().unwrap();
 
     // parse as SignedData then re-encode
-    let sd = SignedData::from_der(bytes.as_slice()).unwrap();
+    let sd: SignedData = SignedData::from_der(bytes.as_slice()).unwrap();
 
     let reencoded_signed_data = sd.to_der().unwrap();
     assert_eq!(

@@ -47,7 +47,7 @@ rsa = "0.10"
 ecdsa = { version = "0.17", features = ["digest", "pem"] }
 p256 = "0.14"
 tokio = { version = "1.45.1", features = ["macros", "rt"] }
-x509-cert = { version = "0.3", features = ["pem"] }
+x509-cert = { version = "0.3", features = ["hazmat", "pem"] }
 
 [features]
 default = ["pem"]

@@ -415,7 +415,7 @@ fn test_build_pkcs7_scep_pkcsreq() {
 
     // Decode CMS message (by converting `Any` to `SignedData`)
     let signed_data_der = ci.content.to_der().unwrap();
-    let signed_data = SignedData::from_der(signed_data_der.as_slice()).unwrap();
+    let signed_data: SignedData = SignedData::from_der(signed_data_der.as_slice()).unwrap();
 
     // Check signatures (only one in this test)
     for signer_info in signed_data.signer_infos.0.iter() {
@@ -519,7 +519,7 @@ fn test_degenerate_certificates_only_cms() {
     let degenerate_certificates_only_cms = signed_data_builder.build().unwrap();
 
     // Extract certificates from `degenerate_certificates_only_cms`
-    let signed_data = SignedData::from_der(
+    let signed_data: SignedData = SignedData::from_der(
         degenerate_certificates_only_cms
             .content
             .to_der()
@@ -916,7 +916,7 @@ fn test_create_password_recipient_info() {
         None,
     )
     .expect("Could not create an EnvelopedData builder.");
-    let enveloped_data = builder
+    let enveloped_data: EnvelopedData = builder
         .add_recipient_info(recipient_info_builder)
         .expect("Could not add a recipient info")
         .build_with_rng(&mut the_one_and_only_rng)
