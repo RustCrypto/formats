@@ -6,7 +6,8 @@
 use hex_literal::hex;
 use pkcs12::kdf::{Pkcs12KeyType, derive_key_utf8};
 
-/// rounds=1 is the minimum valid value per RFC 7292 Appendix C (`iterations INTEGER (1..MAX)`).
+/// rounds=1 is the minimum valid value: RFC 7292 Appendix B.2 step 6A computes the r-th iterated
+/// hash `H^r(D||I)`.
 /// Vectors generated with:
 ///   openssl kdf -keylen 32 -kdfopt digest:SHA256 \
 ///     -kdfopt hexpass:00670065004000e4006800650069006d0000 \

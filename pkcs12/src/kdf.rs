@@ -37,7 +37,8 @@ pub enum Pkcs12KeyType {
 /// `pass` must be a UTF-8 string.  Characters outside the Unicode Basic Multilingual Plane
 /// (U+0000–U+FFFF) are rejected; BMP encoding is required by the PKCS#12 §B.2 KDF.
 ///
-/// `rounds` must be ≥ 1 (RFC 7292 Appendix C defines `iterations INTEGER (1..MAX)`).
+/// `rounds` must be ≥ 1: RFC 7292 Appendix B.2 step 6A computes the `rounds`-th iterated hash
+/// `H^r(D||I)`, which is undefined for `rounds < 1`.
 /// An error is returned if `rounds < 1`.
 ///
 /// ```rust
@@ -61,7 +62,8 @@ where
 /// Derives `key` of type `id` from `pass` (as a [`BmpString`]) and `salt` with length `key_len`
 /// using `rounds` iterations of the algorithm.
 ///
-/// `rounds` must be ≥ 1 (RFC 7292 Appendix C defines `iterations INTEGER (1..MAX)`).
+/// `rounds` must be ≥ 1: RFC 7292 Appendix B.2 step 6A computes the `rounds`-th iterated hash
+/// `H^r(D||I)`, which is undefined for `rounds < 1`.
 /// An error is returned if `rounds < 1`.
 pub fn derive_key_bmp<D>(
     password: BmpString,
@@ -87,7 +89,8 @@ where
 /// `pass` must be a Unicode (UTF-16BE) byte array in big-endian order without a byte-order mark
 /// and with two terminating zero bytes.
 ///
-/// `rounds` must be ≥ 1 (RFC 7292 Appendix C defines `iterations INTEGER (1..MAX)`).
+/// `rounds` must be ≥ 1: RFC 7292 Appendix B.2 step 6A computes the `rounds`-th iterated hash
+/// `H^r(D||I)`, which is undefined for `rounds < 1`.
 /// An error is returned if `rounds < 1`.
 ///
 /// ```rust
@@ -104,9 +107,11 @@ pub fn derive_key<D>(
 where
     D: Digest + FixedOutputReset + BlockSizeUser,
 {
-    // RFC 7292 Appendix C: `iterations INTEGER (1..MAX)`.  The iteration loop
-    // `for _ in 1..rounds` silently degenerates to a single hash application
-    // when rounds <= 0, producing wrong output without signalling failure.
+    // RFC 7292 Appendix B.2 step 6A sets A_i = H^r(D||I), the r-th iterated
+    // hash, so r must be at least 1. (Appendix C's `iterations INTEGER` has no
+    // ASN.1 bound.) The iteration loop `for _ in 1..rounds` silently
+    // degenerates to a single hash application when rounds <= 0, producing
+    // wrong output without signalling failure.
     if rounds < 1 {
         return Err(der::Error::from(der::ErrorKind::Value {
             tag: Tag::Integer,
