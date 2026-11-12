@@ -50,10 +50,10 @@ encountered. There is currently no way to disable these checks.
 ### BER decoding
 
 The `ber` feature enables `Decode::from_ber`. With `alloc`, `Any` and `OctetString`
-assemble indefinite-length constructed OCTET STRINGs from primitive fragments.
-Borrowed `AnyRef` and `OctetStringRef` reject constructed OCTET STRINGs because
-their contents are not contiguous in the input. Definite-length constructed
-strings and recursively constructed fragments remain unsupported.
+assemble indefinite-length constructed OCTET STRING values from primitive
+fragments. Borrowed `AnyRef` and `OctetStringRef` reject constructed OCTET STRING
+values because their contents are not contiguous in the input. Definite-length
+constructed strings and recursively constructed fragments remain unsupported.
 
 `Any` does not recursively convert nested BER values to DER. OCTET STRING payloads
 remain opaque, including payloads that contain ASN.1 encodings.
