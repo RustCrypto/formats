@@ -127,3 +127,118 @@ fn der_rejects_indefinite_lengths() {
         ErrorKind::IndefiniteLength
     );
 }
+
+#[test]
+#[cfg(feature = "alloc")]
+fn any_constructed_octet_string() {
+    use der::{Encode, asn1::Any, asn1::OctetString, asn1::OctetStringRef};
+
+    for (ber, der, value) in [
+        (
+            hex!("24 80 00 00").as_slice(),
+            hex!("04 00").as_slice(),
+            b"".as_slice(),
+        ),
+        (
+            &hex!("24 80 04 01 61 04 00 04 02 42 43 00 00"),
+            &hex!("04 03 61 42 43"),
+            b"aBC",
+        ),
+        (
+            &hex!("24 80 04 04 30 80 00 00 00 00"),
+            &hex!("04 04 30 80 00 00"),
+            &hex!("30 80 00 00"),
+        ),
+    ] {
+        let any = Any::from_ber(ber).unwrap();
+        assert_eq!(any.value(), value);
+        assert_eq!(any.decode_as::<OctetString>().unwrap().as_bytes(), value);
+        assert_eq!(
+            any.decode_as_encoding::<OctetString>(EncodingRules::Ber)
+                .unwrap()
+                .as_bytes(),
+            value
+        );
+        assert_eq!(
+            any.to_ref()
+                .decode_as::<&OctetStringRef>()
+                .unwrap()
+                .as_bytes(),
+            value
+        );
+        assert_eq!(any.to_der().unwrap(), der);
+        assert!(Any::from_der(ber).is_err());
+    }
+}
+
+#[test]
+fn primitive_octets_remain_opaque() {
+    use der::asn1::OctetStringRef;
+
+    let bytes = hex!("04 07 04 01 61 04 02 42 43");
+    let value = hex!("04 01 61 04 02 42 43");
+    for any in [
+        AnyRef::from_ber(&bytes).unwrap(),
+        AnyRef::from_der(&bytes).unwrap(),
+    ] {
+        assert_eq!(any.value(), value);
+        assert_eq!(
+            any.decode_as::<&OctetStringRef>().unwrap().as_bytes(),
+            value
+        );
+    }
+
+    #[cfg(feature = "alloc")]
+    {
+        use der::{Encode, asn1::Any, asn1::OctetString};
+
+        for any in [
+            Any::from_ber(&bytes).unwrap(),
+            Any::from_der(&bytes).unwrap(),
+        ] {
+            assert_eq!(any.value(), value);
+            assert_eq!(any.decode_as::<OctetString>().unwrap().as_bytes(), value);
+            assert_eq!(any.to_der().unwrap(), bytes);
+        }
+    }
+}
+
+#[test]
+fn borrowed_constructed_octet_string_is_rejected() {
+    use der::asn1::OctetStringRef;
+
+    for bytes in [
+        hex!("24 80 04 01 61 04 02 42 43 00 00").as_slice(),
+        &hex!("24 07 04 01 61 04 02 42 43"),
+    ] {
+        assert_eq!(
+            AnyRef::from_ber(bytes).unwrap_err().kind(),
+            ErrorKind::Noncanonical {
+                tag: Tag::OctetString
+            }
+        );
+        assert_eq!(
+            <&OctetStringRef>::from_ber(bytes).unwrap_err().kind(),
+            ErrorKind::Noncanonical {
+                tag: Tag::OctetString
+            }
+        );
+    }
+}
+
+#[test]
+#[cfg(feature = "alloc")]
+fn any_rejects_unsupported_octet_string_fragments() {
+    use der::asn1::{Any, OctetString};
+
+    for bytes in [
+        hex!("24 07 04 01 61 04 02 42 43").as_slice(),
+        &hex!("24 80 02 01 61 00 00"),
+        &hex!("24 80 04 03 61 00 00"),
+        &hex!("24 80 24 80 04 01 61 00 00 00 00"),
+        &hex!("24 80 24 03 04 01 61 00 00"),
+    ] {
+        assert!(Any::from_ber(bytes).is_err(), "{bytes:02x?}");
+        assert!(OctetString::from_ber(bytes).is_err(), "{bytes:02x?}");
+    }
+}

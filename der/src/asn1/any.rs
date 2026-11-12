@@ -11,6 +11,7 @@ use core::cmp::Ordering;
 /// ASN.1 `ANY`: represents any explicitly tagged ASN.1 value.
 ///
 /// This is a zero-copy reference type which borrows from the input data.
+/// Constructed BER `OCTET STRING` values require the owned `Any` type.
 ///
 /// Technically `ANY` hasn't been a recommended part of ASN.1 since the X.209
 /// revision from 1988. It was deprecated and replaced by Information Object
@@ -139,6 +140,10 @@ impl<'a> DecodeValue<'a> for AnyRef<'a> {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
+        if header.tag() == Tag::OctetString {
+            return <&crate::asn1::OctetStringRef>::decode_value(reader, header).map(Self::from);
+        }
+
         Ok(Self {
             tag: header.tag(),
             value: <&'a BytesRef>::decode_value(reader, header)?,
@@ -195,6 +200,10 @@ mod allocating {
     ///
     /// This type provides the same functionality as [`AnyRef`] but owns the
     /// backing data.
+    ///
+    /// BER constructed `OCTET STRING` values are assembled into a primitive
+    /// value. Other values retain their encoded contents; decoding does not
+    /// recursively canonicalize nested BER values.
     #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
     #[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
     pub struct Any {
@@ -317,9 +326,15 @@ mod allocating {
         type Error = Error;
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
+            let value = if header.tag() == Tag::OctetString {
+                BytesOwned::decode_value_parts(reader, header, Tag::OctetString)?
+            } else {
+                BytesOwned::decode_value(reader, header)?
+            };
+
             Ok(Self {
                 tag: header.tag(),
-                value: BytesOwned::decode_value(reader, header)?,
+                value,
             })
         }
     }
