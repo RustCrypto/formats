@@ -26,6 +26,12 @@ fn assert_length(bytes: &[u8]) {
     assert_eq!(usize::try_from(header.length()).unwrap(), bytes.len() - 2);
     assert_eq!(reader.position(), Length::new(2));
     assert_eq!(AnyRef::from_ber(bytes).unwrap().value(), &bytes[2..]);
+
+    #[cfg(feature = "alloc")]
+    assert_eq!(
+        der::asn1::Any::from_ber(bytes).unwrap().value(),
+        &bytes[2..bytes.len() - 2]
+    );
 }
 
 #[test]
@@ -131,7 +137,10 @@ fn der_rejects_indefinite_lengths() {
 #[test]
 #[cfg(feature = "alloc")]
 fn any_constructed_octet_string() {
-    use der::{Encode, asn1::Any, asn1::OctetString, asn1::OctetStringRef};
+    use der::{
+        Encode, TagNumber,
+        asn1::{Any, ContextSpecific, OctetString, OctetStringRef},
+    };
 
     for (ber, der, value) in [
         (
@@ -168,6 +177,67 @@ fn any_constructed_octet_string() {
         );
         assert_eq!(any.to_der().unwrap(), der);
         assert!(Any::from_der(ber).is_err());
+
+        let mut implicit = ber.to_vec();
+        implicit[0] = 0xA0;
+        let mut reader =
+            SliceReader::new_with_encoding_rules(&implicit, EncodingRules::Ber).unwrap();
+        let field = ContextSpecific::<OctetString>::decode_implicit(&mut reader, TagNumber(0))
+            .unwrap()
+            .unwrap();
+        assert_eq!(field.value.as_bytes(), value);
+        reader.finish().unwrap();
+        assert_eq!(
+            Any::from_ber(&implicit).unwrap().value(),
+            &ber[2..ber.len() - 2]
+        );
+    }
+}
+
+#[test]
+#[cfg(feature = "alloc")]
+fn any_constructed_values_remain_opaque() {
+    use der::{Encode, asn1::Any};
+
+    let value = hex!("02 01 2A 04 03 61 42 43");
+    for (der, ber) in [
+        (
+            hex!("30 08 02 01 2A 04 03 61 42 43").as_slice(),
+            hex!("30 80 02 01 2A 04 03 61 42 43 00 00").as_slice(),
+        ),
+        (
+            &hex!("31 08 02 01 2A 04 03 61 42 43"),
+            &hex!("31 80 02 01 2A 04 03 61 42 43 00 00"),
+        ),
+        (
+            &hex!("7F 81 00 08 02 01 2A 04 03 61 42 43"),
+            &hex!("7F 81 00 80 02 01 2A 04 03 61 42 43 00 00"),
+        ),
+        (
+            &hex!("A0 08 02 01 2A 04 03 61 42 43"),
+            &hex!("A0 80 02 01 2A 04 03 61 42 43 00 00"),
+        ),
+        (
+            &hex!("FF 1F 08 02 01 2A 04 03 61 42 43"),
+            &hex!("FF 1F 80 02 01 2A 04 03 61 42 43 00 00"),
+        ),
+    ] {
+        for any in [
+            Any::from_der(der).unwrap(),
+            Any::from_ber(der).unwrap(),
+            Any::from_ber(ber).unwrap(),
+        ] {
+            assert_eq!(any.value(), value);
+            assert_eq!(any.to_der().unwrap(), der);
+        }
+
+        for any in [
+            AnyRef::from_der(der).unwrap(),
+            AnyRef::from_ber(der).unwrap(),
+        ] {
+            assert_eq!(any.value(), value);
+            assert_eq!(any.to_der().unwrap(), der);
+        }
     }
 }
 

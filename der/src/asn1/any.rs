@@ -140,8 +140,8 @@ impl<'a> DecodeValue<'a> for AnyRef<'a> {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
-        if header.tag() == Tag::OctetString {
-            return <&crate::asn1::OctetStringRef>::decode_value(reader, header).map(Self::from);
+        if header.is_constructed() && !header.tag().is_constructed() {
+            return Err(reader.error(header.tag().non_canonical_error()));
         }
 
         Ok(Self {
@@ -326,15 +326,9 @@ mod allocating {
         type Error = Error;
 
         fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
-            let value = if header.tag() == Tag::OctetString {
-                BytesOwned::decode_value_parts(reader, header, Tag::OctetString)?
-            } else {
-                BytesOwned::decode_value(reader, header)?
-            };
-
             Ok(Self {
                 tag: header.tag(),
-                value,
+                value: BytesOwned::decode_value_parts(reader, header, header.tag())?,
             })
         }
     }
