@@ -153,6 +153,7 @@ pub(crate) mod allocating {
                 inner,
             })
         }
+
         /// Decodes [`BytesOwned`] as DER, or from parts, when using a BER reader.
         pub fn decode_value_parts<'a, R: Reader<'a>>(
             reader: &mut R,
