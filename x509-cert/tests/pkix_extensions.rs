@@ -1119,7 +1119,7 @@ fn decode_idp_negative() {
     // Negative tests
     //---------------------------------
     // Value contains more than length value indicates
-    let reason_flags = ReasonFlags::from_der(&hex!("0302079F80"));
+    let reason_flags = ReasonFlags::from_der(&hex!("0302078080"));
     let err = reason_flags.err().unwrap();
     assert_eq!(
         ErrorKind::TrailingData {
