@@ -14,7 +14,7 @@ use x509_cert::{
 #[test]
 fn trust_list_sd_test() {
     let der_signed_data_in_ci = include_bytes!("examples/authroot.stl.sd");
-    let _ci = SignedData::from_der(der_signed_data_in_ci).unwrap();
+    let _ci: SignedData = SignedData::from_der(der_signed_data_in_ci).unwrap();
 }
 #[test]
 fn trust_list_test() {
@@ -26,7 +26,7 @@ fn trust_list_test() {
     let bytes = ci.content.to_der().unwrap();
 
     // parse as SignedData then re-encode
-    let sd = SignedData::from_der(bytes.as_slice()).unwrap();
+    let sd: SignedData = SignedData::from_der(bytes.as_slice()).unwrap();
     let reencoded_signed_data = sd.to_der().unwrap();
     assert_eq!(
         sd.encap_content_info.econtent_type.to_string(),
@@ -59,7 +59,7 @@ fn reencode_signed_data_test() {
     let bytes = ci.content.to_der().unwrap();
 
     // parse as SignedData then re-encode
-    let sd = SignedData::from_der(bytes.as_slice()).unwrap();
+    let sd: SignedData = SignedData::from_der(bytes.as_slice()).unwrap();
     let reencoded_signed_data = sd.to_der().unwrap();
 
     // assemble a new ContentInfo and encode it
@@ -80,7 +80,7 @@ fn misencoded_signer_infos_tests() {
     // TODO the error contents need work
 
     let der_signer_infos = include_bytes!("examples/signer_info_explicit_attrs.bin");
-    let si = SignerInfos::from_der(der_signer_infos);
+    let si = <SignerInfos>::from_der(der_signer_infos);
     assert!(si.is_err());
     let e = si.err().unwrap();
     assert_eq!(
@@ -94,7 +94,7 @@ fn misencoded_signer_infos_tests() {
     //assert_eq!(e.position(), Some(Length::new(185)));
 
     let der_signer_infos = include_bytes!("examples/signer_info_sequence_not_set.bin");
-    let si = SignerInfos::from_der(der_signer_infos);
+    let si = <SignerInfos>::from_der(der_signer_infos);
     assert!(si.is_err());
     let e = si.err().unwrap();
     assert_eq!(

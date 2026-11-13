@@ -4,7 +4,7 @@ pub use x509_cert as x509;
 
 use core::cmp::Ordering;
 use der::{Any, Choice, Sequence, ValueOrd, asn1::ObjectIdentifier};
-use x509_cert::Certificate;
+use x509_cert::certificate::{CertificateInner, Profile, Rfc5280};
 use x509_cert::name::Name;
 use x509_cert::serial_number::SerialNumber;
 
@@ -27,15 +27,15 @@ use x509_cert::serial_number::SerialNumber;
 #[derive(Clone, Debug, Eq, PartialEq, Choice)]
 #[allow(missing_docs)]
 #[allow(clippy::large_enum_variant)]
-pub enum CertificateChoices {
-    Certificate(Certificate),
+pub enum CertificateChoices<P: Profile = Rfc5280> {
+    Certificate(CertificateInner<P>),
     #[asn1(context_specific = "3", tag_mode = "IMPLICIT", constructed = "true")]
     Other(OtherCertificateFormat),
     // TODO DEFER add more choices if desired (i.e., AttributeCertificateV2)
 }
 
 // TODO DEFER ValueOrd is not supported for CHOICE types (see new_enum in value_ord.rs)
-impl ValueOrd for CertificateChoices {
+impl<P: Profile> ValueOrd for CertificateChoices<P> {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
         use der::DerOrd;
         use der::Encode;
@@ -75,7 +75,7 @@ pub struct OtherCertificateFormat {
 /// [RFC 5652 Section 10.2.4]: https://www.rfc-editor.org/info/rfc5652#section-10.2.4
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct IssuerAndSerialNumber {
+pub struct IssuerAndSerialNumber<P: Profile = Rfc5280> {
     pub issuer: Name,
-    pub serial_number: SerialNumber,
+    pub serial_number: SerialNumber<P>,
 }

@@ -4,11 +4,12 @@ use crate::cert::CertificateChoices;
 use crate::revocation::RevocationInfoChoices;
 use crate::signed_data::EncapsulatedContentInfo;
 use crate::signed_data::{CertificateSet, SignedData, SignerInfos};
+use alloc::vec::Vec;
 use core::cmp::Ordering;
 use der::Encode;
 use der::asn1::SetOfVec;
 use der::{Any, AnyRef, Enumerated, Sequence, ValueOrd, asn1::ObjectIdentifier};
-use x509_cert::{Certificate, PkiPath};
+use x509_cert::certificate::{CertificateInner, Profile};
 
 /// The `OtherCertificateFormat` type is defined in [RFC 5652 Section 10.2.5].
 ///
@@ -56,10 +57,10 @@ pub struct ContentInfo {
 }
 
 /// Convert a Certificate to a certs-only SignedData message
-impl TryFrom<Certificate> for ContentInfo {
+impl<P: Profile> TryFrom<CertificateInner<P>> for ContentInfo {
     type Error = der::Error;
 
-    fn try_from(cert: Certificate) -> der::Result<Self> {
+    fn try_from(cert: CertificateInner<P>) -> der::Result<Self> {
         let mut certs = CertificateSet(Default::default());
         certs.0.insert(CertificateChoices::Certificate(cert))?;
 
@@ -87,10 +88,10 @@ impl TryFrom<Certificate> for ContentInfo {
 }
 
 /// Convert a vector of Certificates to a certs-only SignedData message
-impl TryFrom<PkiPath> for ContentInfo {
+impl<P: Profile> TryFrom<Vec<CertificateInner<P>>> for ContentInfo {
     type Error = der::Error;
 
-    fn try_from(pki_path: PkiPath) -> der::Result<Self> {
+    fn try_from(pki_path: Vec<CertificateInner<P>>) -> der::Result<Self> {
         let mut certs = CertificateSet(Default::default());
         for cert in pki_path {
             certs.0.insert(CertificateChoices::Certificate(cert))?;

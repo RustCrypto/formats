@@ -11,6 +11,7 @@ use der::asn1::{BitString, GeneralizedTime, ObjectIdentifier, OctetString, SetOf
 use der::{Any, Choice, Sequence, ValueOrd};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::{Attribute, Attributes};
+use x509_cert::certificate::{Profile, Rfc5280};
 use x509_cert::ext::pkix::SubjectKeyIdentifier;
 use x509_cert::impl_newtype;
 
@@ -30,7 +31,7 @@ use x509_cert::impl_newtype;
 /// [RFC 5652 Section 6.1]: https://www.rfc-editor.org/rfc/rfc5652#section-6.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct EnvelopedData {
+pub struct EnvelopedData<P: Profile = Rfc5280> {
     pub version: CmsVersion,
     #[asn1(
         context_specific = "0",
@@ -38,8 +39,8 @@ pub struct EnvelopedData {
         constructed = "true",
         optional = "true"
     )]
-    pub originator_info: Option<OriginatorInfo>,
-    pub recip_infos: RecipientInfos,
+    pub originator_info: Option<OriginatorInfo<P>>,
+    pub recip_infos: RecipientInfos<P>,
     pub encrypted_content: EncryptedContentInfo,
     #[asn1(
         context_specific = "1",
@@ -61,14 +62,14 @@ pub struct EnvelopedData {
 /// [RFC 5652 Section 6.1]: https://www.rfc-editor.org/rfc/rfc5652#section-6.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct OriginatorInfo {
+pub struct OriginatorInfo<P: Profile = Rfc5280> {
     #[asn1(
         context_specific = "0",
         tag_mode = "IMPLICIT",
         constructed = "true",
         optional = "true"
     )]
-    pub certs: Option<CertificateSet>,
+    pub certs: Option<CertificateSet<P>>,
     #[asn1(
         context_specific = "1",
         tag_mode = "IMPLICIT",
@@ -86,13 +87,13 @@ pub struct OriginatorInfo {
 ///
 /// [RFC 5652 Section 6.1]: https://www.rfc-editor.org/rfc/rfc5652#section-6.1
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct RecipientInfos(pub SetOfVec<RecipientInfo>);
-impl_newtype!(RecipientInfos, SetOfVec<RecipientInfo>);
+pub struct RecipientInfos<P: Profile = Rfc5280>(pub SetOfVec<RecipientInfo<P>>);
+impl_newtype!(RecipientInfos<P>, SetOfVec<RecipientInfo<P>>, P: Profile);
 
-impl TryFrom<vec::Vec<RecipientInfo>> for RecipientInfos {
+impl<P: Profile> TryFrom<vec::Vec<RecipientInfo<P>>> for RecipientInfos<P> {
     type Error = der::Error;
 
-    fn try_from(vec: vec::Vec<RecipientInfo>) -> der::Result<RecipientInfos> {
+    fn try_from(vec: vec::Vec<RecipientInfo<P>>) -> der::Result<Self> {
         Ok(RecipientInfos(SetOfVec::try_from(vec)?))
     }
 }
@@ -131,10 +132,10 @@ pub struct EncryptedContentInfo {
 /// [RFC 5652 Section 6.2]: https://www.rfc-editor.org/rfc/rfc5652#section-6.2
 #[derive(Clone, Debug, Eq, PartialEq, Choice)]
 #[allow(missing_docs)]
-pub enum RecipientInfo {
-    Ktri(KeyTransRecipientInfo),
+pub enum RecipientInfo<P: Profile = Rfc5280> {
+    Ktri(KeyTransRecipientInfo<P>),
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", constructed = "true")]
-    Kari(KeyAgreeRecipientInfo),
+    Kari(KeyAgreeRecipientInfo<P>),
     #[asn1(context_specific = "2", tag_mode = "IMPLICIT", constructed = "true")]
     Kekri(KekRecipientInfo),
     #[asn1(context_specific = "3", tag_mode = "IMPLICIT", constructed = "true")]
@@ -143,7 +144,7 @@ pub enum RecipientInfo {
     Ori(OtherRecipientInfo),
 }
 
-impl ValueOrd for RecipientInfo {
+impl<P: Profile> ValueOrd for RecipientInfo<P> {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
         use der::DerOrd;
         use der::Encode;
@@ -174,9 +175,9 @@ pub type EncryptedKey = OctetString;
 /// [RFC 5652 Section 6.2.1]: https://www.rfc-editor.org/rfc/rfc5652#section-6.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct KeyTransRecipientInfo {
+pub struct KeyTransRecipientInfo<P: Profile = Rfc5280> {
     pub version: CmsVersion,
-    pub rid: RecipientIdentifier,
+    pub rid: RecipientIdentifier<P>,
     pub key_enc_alg: AlgorithmIdentifierOwned,
     pub enc_key: EncryptedKey,
 }
@@ -193,8 +194,8 @@ pub struct KeyTransRecipientInfo {
 /// [RFC 5652 Section 6.2.1]: https://www.rfc-editor.org/rfc/rfc5652#section-6.2.1
 #[derive(Clone, Debug, Eq, PartialEq, Choice)]
 #[allow(missing_docs)]
-pub enum RecipientIdentifier {
-    IssuerAndSerialNumber(IssuerAndSerialNumber),
+pub enum RecipientIdentifier<P: Profile = Rfc5280> {
+    IssuerAndSerialNumber(IssuerAndSerialNumber<P>),
 
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
     SubjectKeyIdentifier(SubjectKeyIdentifier),
@@ -215,14 +216,14 @@ pub enum RecipientIdentifier {
 /// [RFC 5652 Section 6.2.2]: https://www.rfc-editor.org/rfc/rfc5652#section-6.2.2
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct KeyAgreeRecipientInfo {
+pub struct KeyAgreeRecipientInfo<P: Profile = Rfc5280> {
     pub version: CmsVersion,
     #[asn1(context_specific = "0", tag_mode = "EXPLICIT")]
-    pub originator: OriginatorIdentifierOrKey,
+    pub originator: OriginatorIdentifierOrKey<P>,
     #[asn1(context_specific = "1", tag_mode = "EXPLICIT", optional = "true")]
     pub ukm: Option<UserKeyingMaterial>,
     pub key_enc_alg: AlgorithmIdentifierOwned,
-    pub recipient_enc_keys: RecipientEncryptedKeys,
+    pub recipient_enc_keys: RecipientEncryptedKeys<P>,
 }
 
 /// The `OriginatorIdentifierOrKey` type is defined in [RFC 5652 Section 6.2.2].
@@ -237,8 +238,8 @@ pub struct KeyAgreeRecipientInfo {
 /// [RFC 5652 Section 6.2.2]: https://www.rfc-editor.org/rfc/rfc5652#section-6.2.2
 #[derive(Clone, Debug, Eq, PartialEq, Choice)]
 #[allow(missing_docs)]
-pub enum OriginatorIdentifierOrKey {
-    IssuerAndSerialNumber(IssuerAndSerialNumber),
+pub enum OriginatorIdentifierOrKey<P: Profile = Rfc5280> {
+    IssuerAndSerialNumber(IssuerAndSerialNumber<P>),
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT")]
     SubjectKeyIdentifier(SubjectKeyIdentifier),
     #[asn1(context_specific = "1", tag_mode = "IMPLICIT", constructed = "true")]
@@ -268,7 +269,7 @@ pub struct OriginatorPublicKey {
 /// ```
 ///
 /// [RFC 5652 Section 6.2.2]: https://www.rfc-editor.org/rfc/rfc5652#section-6.2.2
-pub type RecipientEncryptedKeys = vec::Vec<RecipientEncryptedKey>;
+pub type RecipientEncryptedKeys<P = Rfc5280> = vec::Vec<RecipientEncryptedKey<P>>;
 
 /// The `RecipientEncryptedKey` type is defined in [RFC 5652 Section 6.2.2].
 ///
@@ -281,8 +282,8 @@ pub type RecipientEncryptedKeys = vec::Vec<RecipientEncryptedKey>;
 /// [RFC 5652 Section 6.2.2]: https://www.rfc-editor.org/rfc/rfc5652#section-6.2.2
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct RecipientEncryptedKey {
-    pub rid: KeyAgreeRecipientIdentifier,
+pub struct RecipientEncryptedKey<P: Profile = Rfc5280> {
+    pub rid: KeyAgreeRecipientIdentifier<P>,
     pub enc_key: EncryptedKey,
 }
 
@@ -297,8 +298,8 @@ pub struct RecipientEncryptedKey {
 /// [RFC 5652 Section 6.2.2]: https://www.rfc-editor.org/rfc/rfc5652#section-6.2.2
 #[derive(Clone, Debug, Eq, PartialEq, Choice)]
 #[allow(missing_docs)]
-pub enum KeyAgreeRecipientIdentifier {
-    IssuerAndSerialNumber(IssuerAndSerialNumber),
+pub enum KeyAgreeRecipientIdentifier<P: Profile = Rfc5280> {
+    IssuerAndSerialNumber(IssuerAndSerialNumber<P>),
     #[asn1(context_specific = "0", tag_mode = "IMPLICIT", constructed = "true")]
     RKeyId(RecipientKeyIdentifier),
 }

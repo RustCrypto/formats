@@ -213,7 +213,7 @@ mod tests {
         );
         let resp = TimeStampResp::from_der(&enc_resp).unwrap();
         let content = resp.time_stamp_token.unwrap().content;
-        let sd = SignedData::from_der(&content.to_der().unwrap()).unwrap();
+        let sd: SignedData = SignedData::from_der(&content.to_der().unwrap()).unwrap();
         let encap = sd.encap_content_info.econtent.unwrap();
         let tst = TstInfo::from_der(encap.value()).unwrap();
         assert_eq!(resp.status.status, PkiStatus::Accepted);

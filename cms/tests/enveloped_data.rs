@@ -197,7 +197,7 @@ fn reencode_enveloped_data_pwri_test() {
     let bytes = ci.content.to_der().unwrap();
 
     // parse as EnvelopedData then re-encode
-    let data = EnvelopedData::from_der(bytes.as_slice()).unwrap();
+    let data: EnvelopedData = EnvelopedData::from_der(bytes.as_slice()).unwrap();
     assert_eq!(CmsVersion::V3, data.version);
 
     assert_eq!(
@@ -284,7 +284,7 @@ fn reencode_enveloped_data_kek_test() {
     let bytes = ci.content.to_der().unwrap();
 
     // parse as EnvelopedData then re-encode
-    let data = EnvelopedData::from_der(bytes.as_slice()).unwrap();
+    let data: EnvelopedData = EnvelopedData::from_der(bytes.as_slice()).unwrap();
     assert_eq!(CmsVersion::V2, data.version);
 
     assert_eq!(
@@ -514,7 +514,7 @@ fn aws_kms_ciphertext_for_recipient() {
         assert_eq!(ci.content_type, const_oid::db::rfc5911::ID_ENVELOPED_DATA);
 
         let bytes = ci.content.to_der().unwrap();
-        let data = EnvelopedData::from_ber(bytes.as_slice()).unwrap();
+        let data: EnvelopedData = EnvelopedData::from_ber(bytes.as_slice()).unwrap();
         assert_eq!(CmsVersion::V2, data.version);
 
         let encrypted_content = data.encrypted_content.encrypted_content.unwrap();
