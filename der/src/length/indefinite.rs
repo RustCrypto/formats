@@ -131,6 +131,11 @@ pub(crate) fn read_constructed_vec<'r, R: Reader<'r>>(
             return Err(reader.error(ErrorKind::IndefiniteLength));
         }
 
+        // Copying a constructed fragment would retain its nested headers as data.
+        if h.is_constructed() {
+            return Err(reader.error(h.tag().non_canonical_error()));
+        }
+
         // Add enough zeroes into the `Vec` to store the chunk
         let l = usize::try_from(h.length())?;
         bytes.extend(core::iter::repeat_n(0, l));

@@ -154,13 +154,16 @@ pub(crate) mod allocating {
             })
         }
         /// Decodes [`BytesOwned`] as DER, or from parts, when using a BER reader.
+        ///
+        /// Constructed inner types retain their encoded contents. Primitive inner
+        /// types can assemble BER fragments even under an implicit outer tag.
         pub fn decode_value_parts<'a, R: Reader<'a>>(
             reader: &mut R,
             header: Header,
             inner_tag: Tag,
         ) -> Result<Self> {
             #[cfg(feature = "ber")]
-            if header.is_constructed() {
+            if header.is_constructed() && !inner_tag.is_constructed() {
                 if header.length().is_indefinite() && reader.encoding_rules().is_ber() {
                     // Reassemble indefinite length string types
                     return Self::new(read_constructed_vec(reader, header.length(), inner_tag)?);

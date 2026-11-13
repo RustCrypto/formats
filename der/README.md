@@ -47,6 +47,17 @@ encountered. There is currently no way to disable these checks.
   - `pem-rfc7468`: PKCS/PKIX-flavored PEM library with constant-time decoder/encoders
   - `time` crate: date/time library
 
+### BER decoding
+
+The `ber` feature enables `Decode::from_ber`. With `alloc`, `Any` and `OctetString`
+assemble indefinite-length constructed OCTET STRING values from primitive
+fragments. Borrowed `AnyRef` and `OctetStringRef` reject constructed OCTET STRING
+values because their contents are not contiguous in the input. Definite-length
+constructed strings and recursively constructed fragments remain unsupported.
+
+`Any` does not recursively convert nested BER values to DER. OCTET STRING payloads
+remain opaque, including payloads that contain ASN.1 encodings.
+
 ## Minimum Supported Rust Version (MSRV) Policy
 
 MSRV increases are not considered breaking changes and can happen in patch releases.
