@@ -504,16 +504,13 @@ impl TryFrom<ScryptParams> for scrypt::Params {
 impl TryFrom<&ScryptParams> for scrypt::Params {
     type Error = Error;
 
-    #[allow(clippy::unwrap_in_result, reason = "invariant should hold")]
     fn try_from(params: &ScryptParams) -> Result<scrypt::Params> {
-        // Compute log2 and verify its correctness
+        // RFC 7914 requires the cost parameter N to be a power of 2 greater than 1.
         let n = params.cost_parameter;
-        let log_n =
-            u8::try_from(ScryptCost::BITS - n.leading_zeros() - 1).expect("should always fit");
-
-        if 1 << log_n != n {
+        if n < 2 || !n.is_power_of_two() {
             return Err(ScryptParams::INVALID_ERR);
         }
+        let log_n = u8::try_from(n.ilog2()).map_err(|_| ScryptParams::INVALID_ERR)?;
 
         scrypt::Params::new(
             log_n,

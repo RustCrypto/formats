@@ -127,3 +127,20 @@ fn decrypt_pbes2_pbkdf2_sha256_descbc() {
     let plaintext = scheme.decrypt_in_place(PASSWORD, &mut buffer).unwrap();
     assert_eq!(plaintext, ED25519_PKCS8_KEY_PLAINTEXT);
 }
+
+/// PBES2 + scrypt + AES-256-CBC `AlgorithmIdentifier` whose scrypt cost parameter
+/// N is 0 (valid DER, invalid per RFC 7914).
+const PBES2_SCRYPT_COST_ZERO_ALG_ID: &[u8] = &hex!(
+    "304e06092a864886f70d01050d3041302006092b06010401da47040b30130408
+     0102030405060708020100020108020101301d060960864801650304012a0410
+     000102030405060708090a0b0c0d0e0f"
+);
+
+/// An scrypt cost parameter of 0 must be an error, not a panic.
+#[test]
+fn scrypt_cost_zero_is_error_not_panic() {
+    use der::Decode;
+    let scheme = pkcs5::EncryptionScheme::from_der(PBES2_SCRYPT_COST_ZERO_ALG_ID).unwrap();
+    let mut buf = [0u8; 16];
+    assert!(scheme.decrypt_in_place("password", &mut buf).is_err());
+}
