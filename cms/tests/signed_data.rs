@@ -1,13 +1,20 @@
 //! SignedData tests
 
 use cms::content_info::ContentInfo;
-use cms::signed_data::{SignedData, SignerInfos};
+use cms::revocation::{OtherRevocationInfoFormat, RevocationInfoChoice};
+use cms::signed_data::{SignedData, SignerIdentifier, SignerInfos};
 use const_oid::db::rfc5911;
+use core::cmp::Ordering;
 use core::str::FromStr;
-use der::{AnyRef, DateTime, Decode, DecodePem, Encode, ErrorKind, Tag, asn1::SetOfVec};
+use der::{
+    Any, AnyRef, DateTime, Decode, DecodePem, Encode, ErrorKind, Tag, ValueOrd,
+    asn1::{ObjectIdentifier, OctetString, SetOfVec},
+};
+use spki::AlgorithmIdentifierOwned;
 use x509_cert::{
     Certificate,
     attr::{Attribute, AttributeValue},
+    ext::pkix::SubjectKeyIdentifier,
     time::Time,
 };
 
@@ -168,4 +175,38 @@ fn encode_decode_signing_time() {
     // and deserialize
     let time_deserialized = signing_time_attribute_value.decode_as::<Time>().unwrap();
     assert_eq!(time, time_deserialized);
+}
+
+#[test]
+fn signer_identifier_value_cmp_matches_encoding_order() {
+    // DER (X.690 11.6) sorts SET OF elements by their encoded bytes. `lo` has the lower bytes
+    // but more bytes >= 0x80, which made comparing the encodings with `Vec<u8>::der_cmp`
+    // (SEQUENCE OF INTEGER rules) put it second.
+    let ski = |id: [u8; 2]| -> SignerIdentifier {
+        SignerIdentifier::SubjectKeyIdentifier(SubjectKeyIdentifier(OctetString::new(id).unwrap()))
+    };
+    let (lo, hi) = (ski([0x00, 0x80]), ski([0x01, 0x00]));
+    assert!(lo.to_der().unwrap() < hi.to_der().unwrap());
+
+    assert_eq!(lo.value_cmp(&hi).unwrap(), Ordering::Less);
+    assert_eq!(hi.value_cmp(&lo).unwrap(), Ordering::Greater);
+}
+
+#[test]
+fn revocation_info_choice_value_cmp_matches_encoding_order() {
+    // Same `lo`/`hi` payloads as `signer_identifier_value_cmp_matches_encoding_order`.
+    let other = |info: [u8; 2]| {
+        RevocationInfoChoice::Other(OtherRevocationInfoFormat {
+            other_format: AlgorithmIdentifierOwned {
+                oid: ObjectIdentifier::new_unwrap("1.2.3"),
+                parameters: None,
+            },
+            other: Any::new(Tag::OctetString, info).unwrap(),
+        })
+    };
+    let (lo, hi) = (other([0x00, 0x80]), other([0x01, 0x00]));
+    assert!(lo.to_der().unwrap() < hi.to_der().unwrap());
+
+    assert_eq!(lo.value_cmp(&hi).unwrap(), Ordering::Less);
+    assert_eq!(hi.value_cmp(&lo).unwrap(), Ordering::Greater);
 }

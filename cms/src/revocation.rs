@@ -42,9 +42,8 @@ pub enum RevocationInfoChoice {
 // TODO DEFER ValueOrd is not supported for CHOICE types (see new_enum in value_ord.rs)
 impl ValueOrd for RevocationInfoChoice {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
-        use der::DerOrd;
         use der::Encode;
-        self.to_der()?.der_cmp(&other.to_der()?)
+        Ok(self.to_der()?.cmp(&other.to_der()?))
     }
 }
 
