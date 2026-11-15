@@ -1,7 +1,7 @@
 use cms::authenveloped_data::AuthEnvelopedData;
 use cms::content_info::{CmsVersion, ContentInfo};
 use cms::enveloped_data::{EnvelopedData, RecipientIdentifier, RecipientInfo};
-use cms::kemri::ID_ORI_KEM;
+use cms::kemri::{ID_ORI_KEM, KemRecipientInfo};
 use const_oid::ObjectIdentifier;
 use der::{Decode, Encode};
 use hex_literal::hex;
@@ -10,12 +10,13 @@ use hex_literal::hex;
 fn kemri_auth_enveloped_data() {
     let data = include_bytes!("examples/1.3.6.1.4.1.22554.5.6.1_ML-KEM-512-ipd_kemri_auth.der");
     let ci = ContentInfo::from_der(data).unwrap();
-    let aed = AuthEnvelopedData::from_der(&ci.content.to_der().unwrap()).unwrap();
+    let aed: AuthEnvelopedData =
+        AuthEnvelopedData::from_der(&ci.content.to_der().unwrap()).unwrap();
     for ri in aed.recip_infos.0.iter() {
         if let RecipientInfo::Ori(ori) = ri {
             let ori_value = ori.ori_value.to_der().unwrap();
             assert_eq!(ori.ori_type, ID_ORI_KEM);
-            let kemri = cms::kemri::KemRecipientInfo::from_der(&ori_value).unwrap();
+            let kemri: KemRecipientInfo = KemRecipientInfo::from_der(&ori_value).unwrap();
             let reenc = kemri.to_der().unwrap();
             assert_eq!(reenc, ori_value);
         } else {
@@ -30,12 +31,12 @@ fn kemri_enveloped_data() {
         "examples/1.3.6.1.4.1.22554.5.6.1_ML-KEM-512-ipd_kemri_id-alg-hkdf-with-sha256.der"
     );
     let ci = ContentInfo::from_der(data).unwrap();
-    let ed = EnvelopedData::from_der(&ci.content.to_der().unwrap()).unwrap();
+    let ed: EnvelopedData = EnvelopedData::from_der(&ci.content.to_der().unwrap()).unwrap();
     for ri in ed.recip_infos.0.iter() {
         if let RecipientInfo::Ori(ori) = ri {
             let ori_value = ori.ori_value.to_der().unwrap();
             assert_eq!(ori.ori_type, ID_ORI_KEM);
-            let kemri = cms::kemri::KemRecipientInfo::from_der(&ori_value).unwrap();
+            let kemri: KemRecipientInfo = KemRecipientInfo::from_der(&ori_value).unwrap();
             let reenc = kemri.to_der().unwrap();
             assert_eq!(reenc, ori_value);
         } else {
@@ -48,12 +49,12 @@ fn kemri_enveloped_data() {
 fn kemri_enveloped_data_ukm() {
     let data = include_bytes!("examples/1.3.6.1.4.1.22554.5.6.1_ML-KEM-512-ipd_kemri_ukm.der");
     let ci = ContentInfo::from_der(data).unwrap();
-    let ed = EnvelopedData::from_der(&ci.content.to_der().unwrap()).unwrap();
+    let ed: EnvelopedData = EnvelopedData::from_der(&ci.content.to_der().unwrap()).unwrap();
     for ri in ed.recip_infos.0.iter() {
         if let RecipientInfo::Ori(ori) = ri {
             let ori_value = ori.ori_value.to_der().unwrap();
             assert_eq!(ori.ori_type, ID_ORI_KEM);
-            let kemri = cms::kemri::KemRecipientInfo::from_der(&ori_value).unwrap();
+            let kemri: KemRecipientInfo = KemRecipientInfo::from_der(&ori_value).unwrap();
 
             assert_eq!(kemri.version, CmsVersion::V0);
 

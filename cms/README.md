@@ -25,6 +25,32 @@ Mail (PEM) standard.
 It's used in many cryptographic standards, such as S/MIME, PKCS#12 and the
 RFC 3161 digital timestamping protocol.
 
+## Certificate profiles
+
+CMS certificate and issuer/serial types accept an `x509_cert::certificate::Profile`
+parameter. Containing messages and builders propagate the same profile. The
+default remains `Rfc5280`, including its certificate serial-number length check.
+
+```rust
+use cms::{content_info::ContentInfo, der::{self, Decode}, signed_data::SignedData};
+
+fn decode_signed_data(bytes: &[u8]) -> der::Result<SignedData> {
+    ContentInfo::from_der(bytes)?.content.decode_as()
+}
+```
+
+For nonconforming inputs, explicitly select a custom profile or
+`x509_cert::certificate::Raw`, available through the existing `x509-cert/hazmat`
+feature. For example, `content.decode_as::<SignedData<Raw>>()` accepts the
+oversized serial numbers used by some SCEP clients. Selecting `Raw` bypasses
+X.509 profile checks and time adjustments, but not ASN.1 structural validation.
+Decoding does not verify signatures or establish certificate trust.
+
+The generic types can require annotations at previously inferred call sites.
+Use `let value: SignedData = ...` or `content.decode_as::<SignedData>()` to select
+the default profile explicitly. This is a source-compatibility change; default
+validation is unchanged.
+
 ## Minimum Supported Rust Version (MSRV) Policy
 
 MSRV increases are not considered breaking changes and can happen in patch releases.

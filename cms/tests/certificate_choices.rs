@@ -9,7 +9,7 @@ use der::{Decode, Encode};
 fn other_certificate_format_is_implicit() {
     // [3] { otherCertFormat 1.2.3, otherCert NULL }
     let der = [0xa3, 0x06, 0x06, 0x02, 0x2a, 0x03, 0x05, 0x00];
-    let choice = CertificateChoices::from_der(&der).unwrap();
+    let choice: CertificateChoices = CertificateChoices::from_der(&der).unwrap();
     match &choice {
         CertificateChoices::Other(other) => {
             assert_eq!(

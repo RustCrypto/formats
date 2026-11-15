@@ -8,11 +8,12 @@
 /// - `FixedTag` mapping to the inner value's `FixedTag::TAG`
 ///
 /// The main case is simplifying newtypes which need an `AssociatedOid`
+/// Optional type parameters follow the inner type, for example `P: Profile`.
 #[macro_export]
 macro_rules! impl_newtype {
-    ($newtype:ty, $inner:ty) => {
+    ($newtype:ty, $inner:ty $(, $param:ident : $bound:path)*) => {
         #[allow(unused_lifetimes)]
-        impl<'a> From<$inner> for $newtype {
+        impl<'a $(, $param: $bound)*> From<$inner> for $newtype {
             #[inline]
             fn from(value: $inner) -> Self {
                 Self(value)
@@ -20,7 +21,7 @@ macro_rules! impl_newtype {
         }
 
         #[allow(unused_lifetimes)]
-        impl<'a> From<$newtype> for $inner {
+        impl<'a $(, $param: $bound)*> From<$newtype> for $inner {
             #[inline]
             fn from(value: $newtype) -> Self {
                 value.0
@@ -28,7 +29,7 @@ macro_rules! impl_newtype {
         }
 
         #[allow(unused_lifetimes)]
-        impl<'a> AsRef<$inner> for $newtype {
+        impl<'a $(, $param: $bound)*> AsRef<$inner> for $newtype {
             #[inline]
             fn as_ref(&self) -> &$inner {
                 &self.0
@@ -36,7 +37,7 @@ macro_rules! impl_newtype {
         }
 
         #[allow(unused_lifetimes)]
-        impl<'a> AsMut<$inner> for $newtype {
+        impl<'a $(, $param: $bound)*> AsMut<$inner> for $newtype {
             #[inline]
             fn as_mut(&mut self) -> &mut $inner {
                 &mut self.0
@@ -44,11 +45,11 @@ macro_rules! impl_newtype {
         }
 
         #[allow(unused_lifetimes)]
-        impl<'a> ::der::FixedTag for $newtype {
+        impl<'a $(, $param: $bound)*> ::der::FixedTag for $newtype {
             const TAG: ::der::Tag = <$inner as ::der::FixedTag>::TAG;
         }
 
-        impl<'a> ::der::DecodeValue<'a> for $newtype {
+        impl<'a $(, $param: $bound)*> ::der::DecodeValue<'a> for $newtype {
             type Error = ::der::Error;
 
             fn decode_value<R: ::der::Reader<'a>>(
@@ -62,7 +63,7 @@ macro_rules! impl_newtype {
         }
 
         #[allow(unused_lifetimes)]
-        impl<'a> ::der::EncodeValue for $newtype {
+        impl<'a $(, $param: $bound)*> ::der::EncodeValue for $newtype {
             fn encode_value(&self, encoder: &mut impl ::der::Writer) -> ::der::Result<()> {
                 self.0.encode_value(encoder)
             }
@@ -73,7 +74,7 @@ macro_rules! impl_newtype {
         }
 
         #[allow(unused_lifetimes)]
-        impl<'a> ::der::ValueOrd for $newtype {
+        impl<'a $(, $param: $bound)*> ::der::ValueOrd for $newtype {
             fn value_cmp(&self, other: &Self) -> ::der::Result<::core::cmp::Ordering> {
                 self.0.value_cmp(&other.0)
             }

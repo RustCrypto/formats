@@ -2,6 +2,7 @@
 
 use der::{Sequence, asn1::SetOfVec};
 use x509_cert::attr::Attribute;
+use x509_cert::certificate::{Profile, Rfc5280};
 
 use crate::{
     authenticated_data::MessageAuthenticationCode,
@@ -25,7 +26,7 @@ use crate::{
 /// [RFC 5083 Section 4]: https://www.rfc-editor.org/rfc/rfc5083#section-4
 #[derive(Clone, Debug, Sequence)]
 #[allow(missing_docs)]
-pub struct AuthEnvelopedData {
+pub struct AuthEnvelopedData<P: Profile = Rfc5280> {
     pub version: CmsVersion,
     #[asn1(
         context_specific = "0",
@@ -33,8 +34,8 @@ pub struct AuthEnvelopedData {
         constructed = "true",
         optional = "true"
     )]
-    pub originator_info: Option<OriginatorInfo>,
-    pub recip_infos: RecipientInfos,
+    pub originator_info: Option<OriginatorInfo<P>>,
+    pub recip_infos: RecipientInfos<P>,
     pub auth_encrypted_content_info: EncryptedContentInfo,
     #[asn1(
         context_specific = "1",

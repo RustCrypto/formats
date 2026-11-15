@@ -9,3 +9,20 @@ openssl asn1parse -i -inform DER -in example.pfx -strparse 26 \
     -noout -out >(openssl asn1parse -i -inform DER -strparse 4 -out keyEncryptedData.bin)
 openssl asn1parse -i -inform DER -in example.pfx -strparse 26 \
     -noout -out >(openssl asn1parse -i -inform DER -strparse 631 -out certData.bin)
+
+sscep_pkcsreq.der
+----------------
+PKCSReq POST body captured from sscep 0.10.0 against a disposable local SCEP
+responder. The request uses SHA-256, RSA PKCS#1 v1.5 key transport, and AES-128-CBC.
+The self-signed certificate and SignerInfo use the same 32-byte serial number:
+the ASCII transaction ID followed by a zero byte. This exceeds the default
+x509-cert Rfc5280 profile's decoding limit. profile.rs verifies strict rejection
+and byte-preserving decoding with an explicit Raw profile.
+
+SHA-256: d4988b9605fba06f4610418c6a7b10acdc02d35bf1c2c4234b1bdec8f531549f
+
+The capture contains test identities and encrypted test data, not production
+credentials. No private keys from the capture environment are included.
+The signature can be checked without trusting the disposable signer:
+
+openssl cms -verify -inform DER -in sscep_pkcsreq.der -noverify -binary -out /dev/null

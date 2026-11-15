@@ -5,6 +5,7 @@ use der::asn1::OctetString;
 
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::attr::Attributes;
+use x509_cert::certificate::{Profile, Rfc5280};
 
 use crate::content_info::CmsVersion;
 use crate::enveloped_data::{OriginatorInfo, RecipientInfos};
@@ -28,7 +29,7 @@ use crate::signed_data::EncapsulatedContentInfo;
 /// [RFC 5652 Section 9.1]: https://www.rfc-editor.org/rfc/rfc5652#section-9.1
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct AuthenticatedData {
+pub struct AuthenticatedData<P: Profile = Rfc5280> {
     pub version: CmsVersion,
     #[asn1(
         context_specific = "0",
@@ -36,8 +37,8 @@ pub struct AuthenticatedData {
         constructed = "true",
         optional = "true"
     )]
-    pub originator_info: Option<OriginatorInfo>,
-    pub recip_infos: RecipientInfos,
+    pub originator_info: Option<OriginatorInfo<P>>,
+    pub recip_infos: RecipientInfos<P>,
     pub mac_alg: AlgorithmIdentifierOwned,
     #[asn1(
         context_specific = "1",

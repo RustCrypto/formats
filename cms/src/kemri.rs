@@ -7,6 +7,7 @@ use crate::{
 use const_oid::ObjectIdentifier;
 use der::{Sequence, asn1::OctetString};
 use spki::AlgorithmIdentifierOwned;
+use x509_cert::certificate::{Profile, Rfc5280};
 
 /// From [RFC9629 Section 3]
 /// ```text
@@ -34,9 +35,9 @@ pub const ID_ORI_KEM: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.1
 /// [RFC9629 Section 3]: https://www.rfc-editor.org/info/rfc9629#section-3
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
-pub struct KemRecipientInfo {
+pub struct KemRecipientInfo<P: Profile = Rfc5280> {
     pub version: CmsVersion,
-    pub rid: RecipientIdentifier,
+    pub rid: RecipientIdentifier<P>,
     pub kem: AlgorithmIdentifierOwned,
     pub kem_ct: OctetString,
     pub kdf: AlgorithmIdentifierOwned,

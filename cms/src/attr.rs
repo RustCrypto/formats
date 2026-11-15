@@ -8,7 +8,7 @@ use der::{
     oid::db::rfc6268,
 };
 
-use x509_cert::{attr::Attribute, time::Time};
+use x509_cert::{attr::Attribute, certificate::Rfc5280, time::Time};
 
 use crate::signed_data::SignerInfo;
 
@@ -143,4 +143,4 @@ pub type SigningTime = Time;
 /// ```
 ///
 /// [RFC 5652 Section 11.4]: https://www.rfc-editor.org/rfc/rfc5652#section-11.4
-pub type Countersignature = SignerInfo;
+pub type Countersignature<P = Rfc5280> = SignerInfo<P>;
