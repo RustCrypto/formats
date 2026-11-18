@@ -25,7 +25,7 @@ pub enum Status {
 
 impl Status {
     pub fn is_successful(&self) -> bool {
-        *self != Status::Warn && *self != Status::Error
+        !matches!(self, Status::Warn | Status::Error | Status::Fatal)
     }
 }
 
@@ -203,4 +203,13 @@ fn parse_zlint_output() {
             details: None
         })
     );
+}
+
+#[test]
+fn fatal_lint_fails_unless_ignored() {
+    let output: LintResult =
+        serde_json::from_str(r#"{"example_lint":{"result":"fatal"}}"#).unwrap();
+
+    assert!(!output.check_lints(&[]));
+    assert!(output.check_lints(&["example_lint"]));
 }
