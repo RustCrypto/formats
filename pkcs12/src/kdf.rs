@@ -40,6 +40,10 @@ pub enum Pkcs12KeyType {
 /// `rounds` must be ≥ 1 (RFC 7292 Appendix C defines `iterations INTEGER (1..MAX)`).
 /// An error is returned if `rounds < 1`.
 ///
+/// Passwords are encoded as null-terminated UTF-16BE, matching OpenSSL's
+/// `PKCS12_key_gen_utf8`. Supplementary Unicode characters use surrogate pairs.
+/// Use [`derive_key_bmp`] when a strict ASN.1 [`BmpString`] is required.
+///
 /// ```rust
 /// let key = pkcs12::kdf::derive_key_utf8::<sha2::Sha256>("top-secret", &[0x1, 0x2, 0x3, 0x4],
 ///     pkcs12::kdf::Pkcs12KeyType::EncryptionKey, 1000, 32);
@@ -54,8 +58,12 @@ pub fn derive_key_utf8<D>(
 where
     D: Digest + FixedOutputReset + BlockSizeUser,
 {
-    let password_bmp = BmpString::from_utf8(password)?;
-    derive_key_bmp::<D>(password_bmp, salt, id, rounds, key_len)
+    let mut encoded_password = Zeroizing::new(Vec::new());
+    for code_unit in password.encode_utf16() {
+        encoded_password.extend_from_slice(&code_unit.to_be_bytes());
+    }
+    encoded_password.extend_from_slice(&[0, 0]);
+    derive_key::<D>(&encoded_password, salt, id, rounds, key_len)
 }
 
 /// Derives `key` of type `id` from `pass` (as a [`BmpString`]) and `salt` with length `key_len`
