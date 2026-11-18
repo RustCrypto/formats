@@ -37,9 +37,8 @@ pub enum CertificateChoices<P: Profile = Rfc5280> {
 // TODO DEFER ValueOrd is not supported for CHOICE types (see new_enum in value_ord.rs)
 impl<P: Profile> ValueOrd for CertificateChoices<P> {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
-        use der::DerOrd;
         use der::Encode;
-        self.to_der()?.der_cmp(&other.to_der()?)
+        Ok(self.to_der()?.cmp(&other.to_der()?))
     }
 }
 

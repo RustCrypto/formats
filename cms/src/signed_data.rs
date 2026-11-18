@@ -7,7 +7,7 @@ use crate::revocation::RevocationInfoChoices;
 use alloc::vec;
 use core::cmp::Ordering;
 use der::asn1::{ObjectIdentifier, OctetString, SetOfVec};
-use der::{Any, Choice, DerOrd, Sequence, ValueOrd};
+use der::{Any, Choice, Sequence, ValueOrd};
 use spki::AlgorithmIdentifierOwned;
 use x509_cert::{
     attr::Attributes,
@@ -179,7 +179,7 @@ pub enum SignerIdentifier<P: Profile = Rfc5280> {
 impl<P: Profile> ValueOrd for SignerIdentifier<P> {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
         use der::Encode;
-        self.to_der()?.der_cmp(&other.to_der()?)
+        Ok(self.to_der()?.cmp(&other.to_der()?))
     }
 }
 

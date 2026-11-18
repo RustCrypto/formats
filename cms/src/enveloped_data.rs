@@ -146,9 +146,8 @@ pub enum RecipientInfo<P: Profile = Rfc5280> {
 
 impl<P: Profile> ValueOrd for RecipientInfo<P> {
     fn value_cmp(&self, other: &Self) -> der::Result<Ordering> {
-        use der::DerOrd;
         use der::Encode;
-        self.to_der()?.der_cmp(&other.to_der()?)
+        Ok(self.to_der()?.cmp(&other.to_der()?))
     }
 }
 
