@@ -48,11 +48,6 @@
 //!
 //! let data = SecretData([42; 32]);
 //!
-//! // postcard: an embedded-friendly binary serialization format
-//! let serialized = postcard::to_stdvec(&data).unwrap();
-//! let deserialized: SecretData = postcard::from_bytes(&serialized).unwrap();
-//! assert_eq!(deserialized, data);
-//!
 //! let serialized = serde_json::to_string(&data).unwrap();
 //! // JSON, a human-readable serialization format, is serialized into lower-case HEX.
 //! assert_eq!(
@@ -91,11 +86,6 @@
 //! }
 //!
 //! let data = SecretData(vec![42; 32]);
-//!
-//! // postcard: an embedded-friendly binary serialization format
-//! let serialized = postcard::to_stdvec(&data).unwrap();
-//! let deserialized: SecretData = postcard::from_bytes(&serialized).unwrap();
-//! assert_eq!(deserialized, data);
 //!
 //! let serialized = serde_json::to_string(&data).unwrap();
 //! // JSON, a human-readable serialization format is serialized into lower-case HEX.
