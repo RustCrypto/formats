@@ -22,7 +22,7 @@ use x509_cert::{
     serial_number::SerialNumber,
     time::Validity,
 };
-use x509_cert_test_support::{openssl, zlint};
+use x509_cert_test_support::openssl;
 
 #[cfg(feature = "hazmat")]
 use x509_cert::builder::profile::cabf::tls::Tls12Options;
