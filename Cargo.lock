@@ -2088,8 +2088,9 @@ dependencies = [
 
 [[package]]
 name = "zlint"
-version = "0.0.0"
-source = "git+https://github.com/RustCrypto/utils#167a48b5f0c05557e6f6cda837677c239759da31"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "867f240e50fd774d2156e1fb3a5d8d3d2220086c9ef35cc601860a8aaaee7704"
 dependencies = [
  "serde",
  "serde_json",
