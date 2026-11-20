@@ -23,6 +23,9 @@ pub mod safe_bag;
 #[cfg(feature = "kdf")]
 pub mod kdf;
 
+#[cfg(feature = "builder")]
+pub mod builder;
+
 mod authenticated_safe;
 mod bag_type;
 mod cert_type;
@@ -103,9 +106,4 @@ pub const PKCS_12_X509_CERT_OID: ObjectIdentifier =
 pub const PKCS_12_SDSI_CERT_OID: ObjectIdentifier =
     ObjectIdentifier::new_unwrap("1.2.840.113549.1.9.22.2");
 
-// todo: return the friendly name if present? (minimally, defer until BMPString support is available)
 // todo: support separate mac and encryption passwords?
-// todo: add decryption support
-// todo: add more encryption tests
-// todo: add a builder
-// todo: add RC2 support
