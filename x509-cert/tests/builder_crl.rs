@@ -5,20 +5,22 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use der::{EncodePem, pem::LineEnding};
-use p256::{NistP256, ecdsa::DerSignature, pkcs8::DecodePrivateKey};
+use der::{DecodePem, EncodePem, pem::LineEnding};
+use p256::{NistP256, ecdsa::DerSignature, elliptic_curve::Generate, pkcs8::DecodePrivateKey};
 use rand::rng;
 use x509_cert::{
-    SubjectPublicKeyInfo,
+    Certificate, SubjectPublicKeyInfo,
     builder::{
         Builder, CertificateBuilder, CrlBuilder,
         profile::{self, cabf::tls::CertificateType},
     },
     certificate::Rfc5280,
-    crl::RevokedCert,
+    crl::{CertificateList, RevokedCert},
     ext::{
         ToExtension,
-        pkix::{CrlNumber, CrlReason, name::GeneralName},
+        pkix::{
+            AuthorityKeyIdentifier, CrlNumber, CrlReason, SubjectKeyIdentifier, name::GeneralName,
+        },
     },
     name::Name,
     serial_number::SerialNumber,
@@ -34,21 +36,49 @@ fn ecdsa_signer() -> ecdsa::SigningKey<NistP256> {
     ecdsa::SigningKey::from(secret_key)
 }
 
+fn assert_crl_uses_signer_ski(crl: &CertificateList, signer: &Certificate) {
+    let tbs = signer.tbs_certificate();
+    let (_, ski) = tbs
+        .get_extension::<SubjectKeyIdentifier>()
+        .unwrap()
+        .unwrap();
+    let expected = AuthorityKeyIdentifier {
+        key_identifier: Some(ski.0),
+        ..Default::default()
+    }
+    .to_extension(tbs.subject(), &[])
+    .unwrap();
+    let extensions = crl.tbs_cert_list.crl_extensions.as_ref().unwrap();
+    assert_eq!(
+        extensions
+            .iter()
+            .find(|ext| ext.extn_id == expected.extn_id),
+        Some(&expected)
+    );
+}
+
 #[test]
-fn crl_signer() {
+fn crl_signed_by_subordinate_ca() {
     let mut rng = rng();
     let serial_number = SerialNumber::generate(&mut rng);
     let validity = Validity::from_now(Duration::new(5, 0)).unwrap();
     let subject =
         Name::from_str("CN=World domination corporation,O=World domination Inc,C=US").unwrap();
-    let profile = profile::cabf::Root::new(false, subject).expect("create root profile");
+    let profile = profile::cabf::tls::Subordinate {
+        issuer: Name::from_str("CN=Root CA").unwrap(),
+        subject,
+        path_len_constraint: Some(0),
+        emits_ocsp_response: false,
+        client_auth: false,
+    };
     let pub_key = SubjectPublicKeyInfo::try_from(PKCS8_PUBLIC_KEY_DER).expect("get ecdsa pub key");
 
     let signer = ecdsa_signer();
     let builder = CertificateBuilder::new(profile, serial_number, validity, pub_key)
         .expect("Create certificate");
 
-    let ca_certificate = builder.build::<_, DerSignature>(&signer).unwrap();
+    let parent_key = ecdsa::SigningKey::<NistP256>::generate_from_rng(&mut rng);
+    let ca_certificate = builder.build::<_, DerSignature>(&parent_key).unwrap();
 
     let crl_number = CrlNumber::try_from(42u128).unwrap();
 
@@ -71,9 +101,21 @@ fn crl_signer() {
         );
 
     let crl = builder.build::<_, DerSignature>(&signer).unwrap();
+    assert_crl_uses_signer_ski(&crl, &ca_certificate);
 
     let pem = crl.to_pem(LineEnding::LF).expect("generate pem");
     println!("{}", openssl::check_crl(pem.as_bytes()));
+}
+
+#[test]
+fn crl_preserves_short_ski() {
+    // Self-signed with the fixture P-256 key, a method-2 SKI (RFC 5280 §4.2.1.2), and no AKI.
+    let ca = Certificate::from_pem(include_bytes!("examples/p256-ca-short-ski.pem")).unwrap();
+    let crl = CrlBuilder::<Rfc5280>::new(&ca, CrlNumber::try_from(1u128).unwrap())
+        .unwrap()
+        .build::<_, DerSignature>(&ecdsa_signer())
+        .unwrap();
+    assert_crl_uses_signer_ski(&crl, &ca);
 }
 
 /// Use `openssl verify` to run a mock certificate chain against a newly signed CRL.
