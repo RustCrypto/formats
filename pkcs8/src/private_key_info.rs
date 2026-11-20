@@ -3,9 +3,9 @@
 use crate::{Error, Result, Version};
 use core::fmt;
 use der::{
-    Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Sequence, TagMode,
-    TagNumber, Writer,
-    asn1::{AnyRef, AsBitStringRef, BitStringRef, ContextSpecific, OctetStringRef, SequenceRef},
+    Decode, DecodeValue, Encode, EncodeValue, FixedTag, Header, Length, Reader, Sequence, Tag,
+    TagMode, TagNumber, Writer,
+    asn1::{AnyRef, AsBitStringRef, BitStringRef, ContextSpecific, OctetStringRef},
 };
 use spki::AlgorithmIdentifier;
 
@@ -253,14 +253,13 @@ where
         let algorithm = reader.decode()?;
         let private_key = Key::decode(reader)?;
 
-        let _attributes =
-            reader.context_specific::<&SequenceRef>(ATTRIBUTES_TAG, TagMode::Implicit)?;
+        drain_attributes(reader)?;
 
         let public_key = reader.context_specific::<PubKey>(PUBLIC_KEY_TAG, TagMode::Implicit)?;
 
         if version.has_public_key() != public_key.is_some() {
             return Err(reader.error(
-                der::Tag::ContextSpecific {
+                Tag::ContextSpecific {
                     constructed: true,
                     number: PUBLIC_KEY_TAG,
                 }
@@ -270,7 +269,7 @@ where
 
         // Ignore any remaining extension fields
         while !reader.is_finished() {
-            reader.decode::<ContextSpecific<AnyRef<'_>>>()?;
+            drain_extension(reader)?;
         }
 
         Ok(Self {
@@ -279,6 +278,49 @@ where
             public_key,
         })
     }
+}
+
+/// Skip the optional `[0] IMPLICIT SET OF Attribute`.
+fn drain_attributes<'a>(reader: &mut impl Reader<'a>) -> der::Result<()> {
+    if reader.is_finished() {
+        return Ok(());
+    }
+
+    let tag = Tag::peek(reader)?;
+    if tag.is_context_specific() && tag.number() == ATTRIBUTES_TAG {
+        let header = Header::decode(reader)?;
+        if !tag.is_constructed() && reader.encoding_rules().is_der() {
+            return Err(reader.error(tag.non_canonical_error()));
+        }
+        reader.read_nested(header.length(), |r| r.drain(r.remaining_len()))?;
+    }
+    Ok(())
+}
+
+/// Skip exactly one TLV inside an explicitly tagged extension.
+fn drain_extension<'a>(reader: &mut impl Reader<'a>) -> der::Result<()> {
+    // An indefinite BER length includes the two end-of-contents octets.
+    let eoc_len = if reader.encoding_rules().is_der() {
+        Length::ZERO
+    } else {
+        let mut peek = reader.clone();
+        Tag::decode(&mut peek)?;
+        Length::new(if peek.peek_byte() == Some(0x80) { 2 } else { 0 })
+    };
+    let header = Header::decode(reader)?;
+    let tag = header.tag();
+    if !tag.is_constructed() {
+        return Err(reader.error(tag.non_canonical_error()));
+    }
+    if !tag.is_context_specific() {
+        return Err(reader.error(tag.unexpected_error(None)));
+    }
+
+    reader.read_nested((header.length() - eoc_len)?, |r| {
+        let inner = Header::decode(r)?;
+        r.drain(inner.length())
+    })?;
+    reader.drain(eoc_len)
 }
 
 #[allow(deprecated)]
