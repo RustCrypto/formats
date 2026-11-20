@@ -77,6 +77,12 @@ impl<'a> BitStringRef<'a> {
         *self.unused_bits != 0
     }
 
+    /// Are the unused bits in the final octet all zero, as DER requires (X.690 11.2.1)?
+    fn unused_bits_are_zero(&self) -> bool {
+        let mask = !(0xFF << *self.unused_bits);
+        self.raw_bytes().last().is_none_or(|last| last & mask == 0)
+    }
+
     /// Get the length of this `BIT STRING` in bits, or `None` if the value overflows.
     ///
     /// Ensured to be valid in the constructor.
@@ -168,7 +174,13 @@ impl<'a> DecodeValue<'a> for BitStringRef<'a> {
 
         let unused_bits = reader.read_byte()?;
         let inner = <&'a BytesRef>::decode_value(reader, header)?;
-        Self::new(unused_bits, inner.as_slice())
+        let value = Self::new(unused_bits, inner.as_slice())?;
+
+        if reader.encoding_rules().is_der() && !value.unused_bits_are_zero() {
+            return Err(reader.error(Self::TAG.non_canonical_error()));
+        }
+
+        Ok(value)
     }
 }
 
@@ -461,7 +473,15 @@ mod allocating {
             let inner_len = (header.length() - Length::ONE)?;
             let unused_bits = reader.read_byte()?;
             let inner = reader.read_vec(inner_len)?;
-            Self::new(unused_bits, inner)
+            let value = Self::new(unused_bits, inner)?;
+
+            if reader.encoding_rules().is_der()
+                && !BitStringRef::from(&value).unused_bits_are_zero()
+            {
+                return Err(reader.error(Self::TAG.non_canonical_error()));
+            }
+
+            Ok(value)
         }
     }
 
@@ -766,6 +786,46 @@ mod tests {
             parse_bitstring(&[0x03]).err().unwrap().kind(),
             Tag::BitString.value_error()
         );
+    }
+
+    /// X.690 11.2.1: in DER, each unused bit in the final octet is zero.
+    #[test]
+    fn reject_non_zero_unused_bits() {
+        for bytes in [&hex!("0101")[..], &hex!("07ff"), &hex!("066e5dc1")] {
+            assert_eq!(
+                parse_bitstring(bytes).err().unwrap().kind(),
+                Tag::BitString.non_canonical_error()
+            );
+        }
+
+        // The same values with the unused bits cleared
+        for bytes in [&hex!("0100")[..], &hex!("0780"), &hex!("066e5dc0")] {
+            assert!(parse_bitstring(bytes).is_ok());
+        }
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn reject_non_zero_unused_bits_owned() {
+        use super::BitString;
+        use crate::Decode;
+
+        assert_eq!(
+            BitString::from_der(&hex!("03020101")).err().unwrap().kind(),
+            Tag::BitString.non_canonical_error()
+        );
+        assert!(BitString::from_der(&hex!("03020100")).is_ok());
+    }
+
+    /// BER leaves the value of the unused bits to the sender.
+    #[cfg(feature = "ber")]
+    #[test]
+    fn accept_non_zero_unused_bits_in_ber() {
+        use crate::Decode;
+
+        let bs = BitStringRef::from_ber(&hex!("03020101")).unwrap();
+        assert_eq!(bs.bit_len(), 7);
+        assert_eq!(bs.raw_bytes(), &[0x01]);
     }
 
     #[test]

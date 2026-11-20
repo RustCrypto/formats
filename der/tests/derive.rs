@@ -1006,7 +1006,7 @@ mod bitstring {
     #[test]
     fn decode_bitstring_3_used_all_lit() {
         // 5 unused bits, so 3 used
-        let bits_3 = MyBitString3or4::from_der(&hex!("03 02 05 FF")).unwrap();
+        let bits_3 = MyBitString3or4::from_der(&hex!("03 02 05 E0")).unwrap();
 
         assert!(bits_3.bit_0);
         assert!(bits_3.bit_1);
@@ -1017,7 +1017,7 @@ mod bitstring {
     #[test]
     fn decode_bitstring_4_used_all_lit() {
         // 4 unused bits, so 4 used
-        let bits_3 = MyBitString3or4::from_der(&hex!("03 02 04 FF")).unwrap();
+        let bits_3 = MyBitString3or4::from_der(&hex!("03 02 04 F0")).unwrap();
 
         assert!(bits_3.bit_0);
         assert!(bits_3.bit_1);
@@ -1028,13 +1028,13 @@ mod bitstring {
     #[test]
     fn decode_invalid_bitstring_5_used() {
         // 3 unused bits, so 5 used
-        assert!(MyBitString3or4::from_der(&hex!("03 02 03 FF")).is_err());
+        assert!(MyBitString3or4::from_der(&hex!("03 02 03 F8")).is_err());
     }
 
     #[test]
     fn decode_invalid_bitstring_2_used() {
         // 6 unused bits, so 2 used
-        assert!(MyBitString3or4::from_der(&hex!("03 02 06 FF")).is_err());
+        assert!(MyBitString3or4::from_der(&hex!("03 02 06 C0")).is_err());
     }
 
     #[test]
@@ -1177,7 +1177,7 @@ mod bitstring {
         pub fake_bit_for_testing: bool,
     }
 
-    const PASS_FLAGS_EXAMPLE_IN: &[u8] = &hex!("03 03 04 FF FF");
+    const PASS_FLAGS_EXAMPLE_IN: &[u8] = &hex!("03 03 04 FF F0");
     const PASS_FLAGS_EXAMPLE_OUT: &[u8] = &hex!("03 04 07 FF F0 00");
 
     #[test]
