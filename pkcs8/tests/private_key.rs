@@ -8,7 +8,9 @@ use pkcs8::{PrivateKeyInfoRef, Version};
 use der::Encode;
 
 #[cfg(feature = "pem")]
-use der::{EncodePem, pem::LineEnding};
+use der::{DecodePem, EncodePem, pem::LineEnding};
+#[cfg(feature = "pem")]
+use pkcs8::{DecodePrivateKey, PrivateKeyInfoOwned};
 
 /// Elliptic Curve (P-256) PKCS#8 private key encoded as ASN.1 DER
 const EC_P256_DER_EXAMPLE: &[u8] = include_bytes!("examples/p256-priv.der");
@@ -136,6 +138,36 @@ fn decode_ed25519_der_v2() {
     assert_eq!(pk.algorithm.parameters, None);
     assert_eq!(pk.private_key.as_ref(), PRIV_KEY);
     assert_eq!(pk.public_key.and_then(|p| p.as_bytes()), Some(&PUB_KEY[..]));
+}
+
+#[test]
+#[cfg(feature = "pem")]
+fn decode_ed25519_pem_v2_with_attributes() {
+    let pem = include_str!("examples/ed25519-priv-pkcs8v2.pem");
+    let pk = PrivateKeyInfoOwned::from_pkcs8_pem(pem).unwrap();
+    let expected = PrivateKeyInfoRef::try_from(ED25519_DER_V2_EXAMPLE).unwrap();
+    assert_eq!(pk.to_der().unwrap(), expected.to_der().unwrap());
+}
+
+#[test]
+#[cfg(feature = "pem")]
+fn decode_pem_with_extensions() {
+    fn decode(extensions: &[u8]) -> der::Result<PrivateKeyInfoOwned> {
+        let mut der = ED25519_DER_V1_EXAMPLE.to_vec();
+        der[1] += u8::try_from(extensions.len()).unwrap();
+        der.extend_from_slice(extensions);
+
+        let pem = der::pem::encode_string("PRIVATE KEY", LineEnding::LF, &der).unwrap();
+        PrivateKeyInfoOwned::from_pem(pem)
+    }
+
+    // [2] EXPLICIT INTEGER followed by [3] EXPLICIT NULL.
+    let pk = decode(&hex!("A2 03 02 01 2A A3 02 05 00")).unwrap();
+    assert_eq!(pk.to_der().unwrap(), ED25519_DER_V1_EXAMPLE);
+
+    // The same two values inside a single explicit wrapper.
+    let err = decode(&hex!("A2 05 02 01 2A 05 00")).unwrap_err();
+    assert!(matches!(err.kind(), der::ErrorKind::TrailingData { .. }));
 }
 
 #[test]
