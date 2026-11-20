@@ -8,6 +8,7 @@ use der::{
     asn1::{BitString, ObjectIdentifier},
     pem::{LineEnding, PemLabel},
 };
+use hex_literal::hex;
 
 /// Example SPKI document encoded as DER.
 const SPKI_DER: &[u8] = include_bytes!("examples/spki.der");
@@ -74,6 +75,40 @@ fn from_pem_trailing_data() {
             ErrorKind::TrailingData {
                 decoded: SPKI_DER.len().try_into().unwrap(),
                 remaining: trailing.len().try_into().unwrap(),
+            }
+        );
+        assert_eq!(SpkiOwned::from_pem(&pem).unwrap_err(), err);
+    }
+}
+
+#[test]
+fn from_pem_nested_trailing_data() {
+    // AlgorithmIdentifier with trailing data after its parameters:
+    // SEQUENCE { OBJECT IDENTIFIER 1.3.101.112, NULL, BIT STRING aa..aa }
+    let algorithm = [&hex!("302a 06032b6570 0500 032100")[..], &[0xaa; 32]].concat();
+
+    // subjectPublicKey: BIT STRING bb..bb
+    let subject_public_key = [&hex!("032100")[..], &[0xbb; 32]].concat();
+
+    // SubjectPublicKeyInfo without and with a subjectPublicKey after the AlgorithmIdentifier.
+    // Ignoring the trailing data would decode the BIT STRING inside the AlgorithmIdentifier as
+    // the subjectPublicKey in both cases. Without one, the AlgorithmIdentifier ends where the
+    // SubjectPublicKeyInfo does, so the encoding would be accepted. With one, the real
+    // subjectPublicKey would be reported as trailing data, at the wrong position.
+    let spkis = [
+        [&hex!("302c")[..], &algorithm].concat(),
+        [&hex!("304f")[..], &algorithm, &subject_public_key].concat(),
+    ];
+
+    for der in spkis {
+        let pem = der::pem::encode_string(SpkiOwned::PEM_LABEL, LineEnding::LF, &der).unwrap();
+
+        let err = SpkiOwned::from_der(&der).unwrap_err();
+        assert_eq!(
+            err.kind(),
+            ErrorKind::TrailingData {
+                decoded: 11u8.into(),
+                remaining: 35u8.into(),
             }
         );
         assert_eq!(SpkiOwned::from_pem(&pem).unwrap_err(), err);
