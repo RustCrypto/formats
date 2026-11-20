@@ -135,14 +135,14 @@ jobs:
       - run: cargo hack test --feature-powerset
         working-directory: der_derive
 
-  # Test `heapless` feature (requires MSRV 1.87)
+  # Test `heapless` feature (requires MSRV 1.88)
   test-heapless:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.87
+          toolchain: 1.88
       - run: cargo test --features heapless
 
   # Test using `cargo miri`
