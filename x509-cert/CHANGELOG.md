@@ -4,9 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.3.1 (2026-11-20)
+### Security
+- Use the CRL signer's subject key identifier ([#2551])
+
+### Changed
+- Bump `ctutils` to v0.4.5; MSRV 1.87 ([#2494])
+- Bump `rsa` to v0.10 release ([#2520])
+
+[#2494]: https://github.com/RustCrypto/formats/pull/2494
+[#2520]: https://github.com/RustCrypto/formats/pull/2520
+[#2551]: https://github.com/RustCrypto/formats/pull/2551
+
 ## 0.3.0 (2026-07-08)
 ### Added
-
 - Serial number generator ([#1270])
 - `DecodeValue` for `x509_cert::time::Time` ([#1986])
 - `FromStr` for `x509_cert::time::Time` ([#1961])
@@ -21,7 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `x509_cert::builder::AsyncBuilder` using `AsyncSigner` ([#1280])
 
 ### Changed
-
 - Decompose `AsExtension` into `Criticality + AsExtension` ([#2109])
 - Improve extension API flexibility and ergonomics ([#2120])
 - Expose `Profile` in the `CrlBuilder` ([#1870])
@@ -45,15 +55,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump `signature` to `v3` ([#2326])
 
 ### Fixed
-
 - Converting from `SystemTime` should use `UtcTime` if date <= 2049 ([#1969])
 - Underflow on empty input in `Certificate::load_pem_chain` ([#1965])
 - Domain validated should accept CNs ([#1815])
 - Serialization of email addresses ([#1425])
 
 ### Removed
-
-- Std requirement for `x509_cert::builder` ([#1709])
+- `std` requirement for `x509_cert::builder` ([#1709])
 - `RelativeDistinguishedName::encode_from_string` ([#1509])
 
 [#1270]: https://github.com/RustCrypto/formats/pull/1270
