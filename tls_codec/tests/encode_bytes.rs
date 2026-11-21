@@ -95,3 +95,9 @@ fn serialize_vlbytes() {
         .expect("Error encoding byte vector");
     assert_eq!(actual_result, vec![3, 1, 2, 3]);
 }
+
+#[test]
+fn serialize_byte_vec_too_long_for_length_field() {
+    let res = TlsByteVecU8::new(vec![0u8; 256]).tls_serialize_bytes();
+    assert_eq!(res, Err(tls_codec::Error::InvalidVectorLength));
+}

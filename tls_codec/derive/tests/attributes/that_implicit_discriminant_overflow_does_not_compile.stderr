@@ -1,0 +1,5 @@
+error: The implicit discriminant of this variant is larger than `usize::MAX`. Assign it a discriminant explicitly, or lower the discriminant of a preceding variant.
+  --> tests/attributes/that_implicit_discriminant_overflow_does_not_compile.rs:11:5
+   |
+11 |     B(u8),
+   |     ^
