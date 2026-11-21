@@ -1,0 +1,64 @@
+# Axiom whitelist of the TlsCodec proofs (theorems of `TlsCodec.Verification.*`).
+# Gate: open scripts/AxiomGate.lean with lean_diagnostic_messages.
+# Adding a line here is a review decision: every non-Lean axiom must be an `Assumptions/`
+# item (ASSUMED spec, or a signature-only stub whose value no theorem depends on).
+
+# Lean's standard axioms
+propext
+Classical.choice
+Quot.sound
+
+# ASSUMED values / specs (Assumptions/)
+CoreModels.core.mem.size_of
+CoreModels.core.mem.size_of_U8
+CoreModels.core.mem.size_of_U16
+CoreModels.core.mem.size_of_U24
+CoreModels.core.mem.size_of_U32
+CoreModels.core.mem.size_of_U64
+CoreModels.core.mem.size_of_Usize
+numBits_eq_64
+append_bytes
+append_bytes_spec
+CoreModels.alloc.string.FromUtf8Error.Insts.CoreFmtDisplay.fmt.ok_spec
+
+# signature-only stubs (Assumptions/MissingCoreModels.lean, MissingThirdPartyModels.lean,
+# FunsExternal.lean): no spec, reached by statements or on paths no obligation needs
+CoreModels.alloc.string.FromUtf8Error.Insts.CoreFmtDisplay.fmt
+CoreModels.core.num.error.TryFromIntError.Insts.CoreFmtDebug.fmt
+CoreModels.core.convert.Infallible.Insts.CoreFmtDebug.fmt
+CoreModels.core.io.error.Error.Insts.CoreFmtDebug.fmt
+CoreModels.alloc.vec.Vec.Insts.CoreCmpOrd.cmp
+CoreModels.alloc.vec.Vec.Insts.CoreHashHash.hash
+CoreModels.core.Array.Insts.CoreHashHash.hash
+zeroize.alloc.vec.Vec.Insts.ZeroizeZeroize.zeroize
+Error.Insts.CoreFmtDebug.fmt
+Error.Insts.CoreFmtDisplay.fmt
+U24.Insts.CoreFmtDebug.fmt
+U24OverflowError.Insts.CoreFmtDebug.fmt
+U24OverflowError.Insts.CoreFmtDisplay.fmt
+varint.TlsVarInt.Insts.CoreFmtDebug.fmt
+quic_vec.VLBytes.Insts.CoreFmtDebug.fmt
+quic_vec.VLByteVec.Insts.CoreFmtDebug.fmt
+quic_vec.VLByteSlice.Insts.CoreFmtDebug.fmt
+quic_vec.secret_bytes.SecretVLBytes.Insts.CoreFmtDebug.fmt
+quic_vec.secret_byte_vec.SecretVLByteVec.Insts.CoreFmtDebug.fmt
+tls_vec.TlsVecU8.Insts.CoreFmtDebug.fmt
+tls_vec.TlsVecU16.Insts.CoreFmtDebug.fmt
+tls_vec.TlsVecU24.Insts.CoreFmtDebug.fmt
+tls_vec.TlsVecU32.Insts.CoreFmtDebug.fmt
+tls_vec.TlsByteVecU8.Insts.CoreFmtDebug.fmt
+tls_vec.TlsByteVecU16.Insts.CoreFmtDebug.fmt
+tls_vec.TlsByteVecU24.Insts.CoreFmtDebug.fmt
+tls_vec.TlsByteVecU32.Insts.CoreFmtDebug.fmt
+tls_vec.SecretTlsVecU8.Insts.CoreFmtDebug.fmt
+tls_vec.SecretTlsVecU16.Insts.CoreFmtDebug.fmt
+tls_vec.SecretTlsVecU24.Insts.CoreFmtDebug.fmt
+tls_vec.SecretTlsVecU32.Insts.CoreFmtDebug.fmt
+
+# `native_decide` (kernel-checked by evaluation; the compiler is trusted)
+tls_codec.alloc.vec.Vec.Insts.Tls_codecDeserializeBytes.tls_deserialize_bytes_loop.body._native.decide.ax_3
+
+# OPEN on purpose (false in Rust for `io::Error::Custom` with a failing
+# `Debug`); `sorryAx` allowed for these theorems only
+open tls_codec.Error.Insts.CoreConvertFromError.from_spec.panic_freedom
+open tls_codec.Error.Insts.CoreConvertFromError.Lawful

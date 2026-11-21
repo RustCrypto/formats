@@ -1,0 +1,5 @@
+error: raw identifiers are not supported in field names by the tls_codec derive macros
+ --> tests/attributes/that_raw_identifier_fields_do_not_compile.rs:5:5
+  |
+5 |     r#type: u8,
+  |     ^^^^^^

@@ -1,0 +1,5 @@
+error[E0080]: evaluation panicked: The discriminant `TOO_LARGE` does not fit into the enum representation `u8`.
+ --> tests/attributes/that_path_discriminant_out_of_repr_range_does_not_compile.rs:8:32
+  |
+8 |     #[tls_codec(discriminant = "TOO_LARGE")]
+  |                                ^^^^^^^^^^^ evaluation of `<PathTooLarge as tls_codec::SerializeBytes>::tls_serialize_bytes::__TLS_CODEC_A` failed here

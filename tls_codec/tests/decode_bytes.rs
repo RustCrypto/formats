@@ -219,14 +219,10 @@ fn truncated_vlbytevec_reports_decoding_error() {
     );
 }
 
-// The length-summing overflow/saturation branches only exist on non-64-bit
-// targets (on 64-bit, lengths are bounded by `isize::MAX` and can't overflow
-// `usize`). This test therefore only compiles and runs on 32-bit — e.g. the
-// i686 CI target. It uses a mock element whose reported serialized length is
-// `usize::MAX` so that summing two of them exercises the saturating/overflow
-// path.
-#[cfg(target_pointer_width = "32")]
-mod overflow_32bit {
+// The length sums saturate (`Size`) or are checked (serializers) on every
+// target. A mock element whose reported serialized length is `usize::MAX`
+// makes summing two of them exercise the saturating/overflow path.
+mod overflow {
     use tls_codec::{SerializeBytes, Size};
 
     struct HugeLen;

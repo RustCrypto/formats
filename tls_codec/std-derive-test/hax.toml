@@ -1,0 +1,14 @@
+# hax scenario of the std-derive test crate (test fixture of TlsCodec's std derive tactics).
+[tools]
+# As ../hax.toml (aeneas built by `sh ../proofs/setup.sh`).
+aeneas = { path = "../.hax-tools/aeneas/bin/aeneas" }
+charon = "nightly-2026.09.02"
+
+[scenario.std-derive-test]
+backend = "lean"
+no-default-features = true
+charon-args = ["--translate-all-methods"]
+aeneas-args = [
+  "-external-names", "../proofs/tls-codec/lean/translation.json",
+  "-extra-includes=TlsCodec.Extraction,TlsCodec.Assumptions.MissingCoreModels,TlsCodec.Assumptions.MissingThirdPartyModels",
+]

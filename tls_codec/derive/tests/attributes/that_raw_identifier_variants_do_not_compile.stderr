@@ -1,0 +1,5 @@
+error: raw identifiers are not supported in enum variant names by the tls_codec derive macros
+ --> tests/attributes/that_raw_identifier_variants_do_not_compile.rs:6:5
+  |
+6 |     r#Type(u8),
+  |     ^^^^^^

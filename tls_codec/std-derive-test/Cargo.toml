@@ -1,0 +1,17 @@
+[package]
+name = "std-derive-test"
+version = "0.1.0"
+description = "Derived std (Read/Write) codecs, to test the std derive tactics of TlsCodec"
+edition = "2024"
+rust-version = "1.85"
+publish = false
+
+[dependencies]
+tls_codec = { path = "..", default-features = false, features = ["derive", "mls", "std"] }
+
+[target."cfg(hax)".dependencies]
+hax-lib = "0.4.1"
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = ['cfg(hax)']
