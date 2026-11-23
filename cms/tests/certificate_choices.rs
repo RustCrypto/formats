@@ -1,6 +1,8 @@
 //! `CertificateChoices` tests.
 
 use cms::cert::CertificateChoices;
+use cms::content_info::ContentInfo;
+use cms::signed_data::SignedData;
 use der::{Decode, Encode};
 
 /// RFC 5652 10.2.2: `other [3] IMPLICIT OtherCertificateFormat`, so the `[3]` tag replaces the
@@ -20,4 +22,21 @@ fn other_certificate_format_is_implicit() {
         _ => panic!("expected CertificateChoices::Other"),
     }
     assert_eq!(choice.to_der().unwrap(), der);
+}
+
+/// RFC 7030 A.1 `/cacerts` bundle. Its certificates are not in DER order, so decoding must sort
+/// them. DER (X.690 11.6) sorts SET OF elements by their encoded bytes.
+#[test]
+fn decoded_certificate_set_is_in_der_order() {
+    let ci = ContentInfo::from_der(include_bytes!("examples/rfc7030_cacerts.ber")).unwrap();
+    let sd: SignedData = ci.content.decode_as().unwrap();
+    let encoded: Vec<Vec<u8>> = sd
+        .certificates
+        .unwrap()
+        .0
+        .iter()
+        .map(|c| c.to_der().unwrap())
+        .collect();
+    assert_eq!(encoded.len(), 4);
+    assert!(encoded.is_sorted());
 }

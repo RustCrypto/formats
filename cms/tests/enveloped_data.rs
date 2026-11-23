@@ -2,11 +2,12 @@ extern crate core;
 
 use cms::content_info::{CmsVersion, ContentInfo};
 use cms::enveloped_data::{
-    EnvelopedData, KeyAgreeRecipientIdentifier, OriginatorIdentifierOrKey, RecipientIdentifier,
-    RecipientInfo,
+    EnvelopedData, KeyAgreeRecipientIdentifier, OriginatorIdentifierOrKey, OtherRecipientInfo,
+    RecipientIdentifier, RecipientInfo,
 };
 use const_oid::ObjectIdentifier;
-use der::{AnyRef, Decode, Encode, Tag, Tagged};
+use core::cmp::Ordering;
+use der::{Any, AnyRef, Decode, Encode, Tag, Tagged, ValueOrd, asn1::SetOfVec};
 use hex_literal::hex;
 use pkcs5::pbes2::Pbkdf2Params;
 use spki::AlgorithmIdentifierOwned;
@@ -524,4 +525,25 @@ fn aws_kms_ciphertext_for_recipient() {
             assert_eq!(expected_encrypted_content, encrypted_content.as_bytes());
         }
     }
+}
+
+#[test]
+fn recipient_infos_are_sorted_by_encoding() {
+    // DER (X.690 11.6) sorts SET OF elements by their encoded bytes. `lo` has the lower bytes
+    // but more bytes >= 0x80, which made comparing the encodings with `Vec<u8>::der_cmp`
+    // (SEQUENCE OF INTEGER rules) put it second.
+    let ori = |value: [u8; 2]| -> RecipientInfo {
+        RecipientInfo::Ori(OtherRecipientInfo {
+            ori_type: ObjectIdentifier::new_unwrap("1.2.3"),
+            ori_value: Any::new(Tag::OctetString, value).unwrap(),
+        })
+    };
+    let (lo, hi) = (ori([0x00, 0x80]), ori([0x01, 0x00]));
+    assert!(lo.to_der().unwrap() < hi.to_der().unwrap());
+
+    assert_eq!(lo.value_cmp(&hi).unwrap(), Ordering::Less);
+    assert_eq!(hi.value_cmp(&lo).unwrap(), Ordering::Greater);
+
+    let set = SetOfVec::try_from(vec![hi.clone(), lo.clone()]).unwrap();
+    assert_eq!(set.as_slice(), [lo, hi]);
 }
