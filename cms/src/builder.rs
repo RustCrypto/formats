@@ -12,17 +12,13 @@ use crate::{
     },
     revocation::RevocationInfoChoice,
 };
-use aes::{Aes128, Aes192, Aes256};
 use alloc::{
     boxed::Box,
     string::{String, ToString},
     vec,
     vec::Vec,
 };
-use cipher::{
-    BlockModeEncrypt, Iv, Key, KeyIvInit, block_padding::Pkcs7, common::Generate,
-    rand_core::CryptoRng,
-};
+use cipher::rand_core::CryptoRng;
 use const_oid::ObjectIdentifier;
 use core::{fmt, marker::PhantomData};
 use der::{
@@ -39,11 +35,17 @@ use x509_cert::{
 use zeroize::Zeroize;
 
 // Modules
+mod content_encryption;
 mod kari;
 mod signed_data;
 mod utils;
 
 // Exports
+use content_encryption::encrypt_data;
+pub use content_encryption::{
+    AesCbcContentDecryptor, ContentDecryptor, ContentEncryptionAlgorithm, ContentEncryptionOutput,
+    ContentEncryptor,
+};
 pub use kari::{
     DhSinglePassStdDhKdf, EcKeyEncryptionInfo, KeyAgreeRecipientInfoBuilder, KeyAgreementAlgorithm,
 };
@@ -461,28 +463,6 @@ where
     }
 }
 
-/// Supported content encryption algorithms.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum ContentEncryptionAlgorithm {
-    /// AES-128 CBC
-    Aes128Cbc,
-    /// AES-192 CBC
-    Aes192Cbc,
-    /// AES-256 CBC
-    Aes256Cbc,
-}
-
-impl ContentEncryptionAlgorithm {
-    /// Return the OID of the algorithm.
-    pub fn oid(&self) -> ObjectIdentifier {
-        match self {
-            ContentEncryptionAlgorithm::Aes128Cbc => const_oid::db::rfc5911::ID_AES_128_CBC,
-            ContentEncryptionAlgorithm::Aes192Cbc => const_oid::db::rfc5911::ID_AES_192_CBC,
-            ContentEncryptionAlgorithm::Aes256Cbc => const_oid::db::rfc5911::ID_AES_256_CBC,
-        }
-    }
-}
-
 /// Builds CMS `EnvelopedData` according to RFC 5652 § 6.
 pub struct EnvelopedDataBuilder<'c, R: ?Sized, P: Profile = Rfc5280> {
     originator_info: Option<OriginatorInfo<P>>,
@@ -656,73 +636,6 @@ where
         } else {
             CmsVersion::V2
         }
-    }
-}
-
-/// Helps encrypting.
-macro_rules! encrypt_block_mode {
-    ($data:expr, $block_mode:ident::$typ:ident<$alg:ident>, $key:expr, $rng:expr, $oid:expr) => {{
-        let (key, iv) = match $key {
-            None => {
-                let key = Key::<$block_mode::$typ<$alg>>::generate_from_rng($rng);
-                let iv = Iv::<$block_mode::$typ<$alg>>::generate_from_rng($rng);
-                (key, iv)
-            }
-            Some(key) => {
-                let key = Key::<$block_mode::$typ<$alg>>::try_from(key)
-                    .map_err(|_| Error::Builder("invalid key size for chosen algorithm".into()))?;
-                let iv = Iv::<$block_mode::$typ<$alg>>::generate_from_rng($rng);
-                (key, iv)
-            }
-        };
-        let encryptor = $block_mode::$typ::<$alg>::new(&key.into(), &iv.into());
-        Ok((
-            encryptor.encrypt_padded_vec::<Pkcs7>($data),
-            key.to_vec(),
-            AlgorithmIdentifierOwned {
-                oid: $oid,
-                parameters: Some(Any::new(Tag::OctetString, iv.to_vec())?),
-            },
-        ))
-    }};
-}
-
-/// Symmetrically encrypt data.
-/// Returns encrypted content, content-encryption key and the used algorithm identifier (including
-/// the used algorithm parameters).
-///
-/// TODO Which encryption algorithms shall also be supported?
-fn encrypt_data<R>(
-    data: &[u8],
-    encryption_algorithm_identifier: &ContentEncryptionAlgorithm,
-    key: Option<&[u8]>,
-    rng: &mut R,
-) -> Result<(Vec<u8>, Vec<u8>, AlgorithmIdentifierOwned)>
-where
-    R: CryptoRng + ?Sized,
-{
-    match encryption_algorithm_identifier {
-        ContentEncryptionAlgorithm::Aes128Cbc => encrypt_block_mode!(
-            data,
-            cbc::Encryptor<Aes128>,
-            key,
-            rng,
-            encryption_algorithm_identifier.oid()
-        ),
-        ContentEncryptionAlgorithm::Aes192Cbc => encrypt_block_mode!(
-            data,
-            cbc::Encryptor<Aes192>,
-            key,
-            rng,
-            encryption_algorithm_identifier.oid()
-        ),
-        ContentEncryptionAlgorithm::Aes256Cbc => encrypt_block_mode!(
-            data,
-            cbc::Encryptor<Aes256>,
-            key,
-            rng,
-            encryption_algorithm_identifier.oid()
-        ),
     }
 }
 
