@@ -2,9 +2,8 @@
 use alloc::vec;
 use core::cmp::Ordering;
 
-use der::asn1::SetOfVec;
+use der::asn1::{ObjectIdentifier, SetOfVec};
 use der::{Any, Choice, Sequence, ValueOrd};
-use spki::AlgorithmIdentifierOwned;
 
 use x509_cert::crl::CertificateList;
 use x509_cert::impl_newtype;
@@ -56,7 +55,7 @@ impl TryFrom<vec::Vec<RevocationInfoChoice>> for RevocationInfoChoices {
     }
 }
 
-/// The `RevocationInfoChoices` type is defined in [RFC 5652 Section 10.2.1].
+/// The `OtherRevocationInfoFormat` type is defined in [RFC 5652 Section 10.2.1].
 ///
 /// ```text
 ///   OtherRevocationInfoFormat ::= SEQUENCE {
@@ -70,6 +69,6 @@ impl TryFrom<vec::Vec<RevocationInfoChoice>> for RevocationInfoChoices {
 #[derive(Clone, Debug, Eq, PartialEq, Sequence)]
 #[allow(missing_docs)]
 pub struct OtherRevocationInfoFormat {
-    pub other_format: AlgorithmIdentifierOwned,
+    pub other_format: ObjectIdentifier,
     pub other: Any,
 }
