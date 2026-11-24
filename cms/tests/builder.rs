@@ -6,8 +6,8 @@ use cipher::{BlockModeDecrypt, BlockModeEncrypt, BlockSizeUser, Iv, IvSizeUser, 
 use cms::builder::{
     AesCbcContentDecryptor, ContentDecryptor, ContentEncryptionAlgorithm, ContentEncryptionOutput,
     ContentEncryptor, EnvelopedDataBuilder, KeyEncryptionInfo, KeyTransRecipientInfoBuilder,
-    PasswordRecipientInfoBuilder, PwriEncryptor, SignedDataBuilder, SignerInfoBuilder,
-    create_signing_time_attribute,
+    PasswordRecipientInfoBuilder, PwriEncryptor, RsaOaepKeyEncryptor, SignedDataBuilder,
+    SignerInfoBuilder, create_signing_time_attribute,
 };
 use cms::cert::{CertificateChoices, IssuerAndSerialNumber};
 use cms::content_info::ContentInfo;
@@ -1073,4 +1073,144 @@ fn test_enveloped_data_refuses_a_content_encryptor_that_misreports_its_algorithm
         .unwrap()
         .build_with_rng(&mut rng);
     assert!(matches!(result, Err(cms::builder::Error::Builder(_))));
+}
+
+/// Transports the content-encryption key with RSAES-OAEP (SHA-1 and MGF1-SHA-1, the RFC 4055
+/// defaults, so the parameters are an empty SEQUENCE) and counts its calls in state it borrows
+/// from the caller, standing in for a key encryptor in a cryptographic module.
+struct OaepKeyEncryptor<'s> {
+    key: rsa::oaep::EncryptingKey<sha1::Sha1>,
+    calls: &'s Cell<u32>,
+}
+
+impl rsa::traits::RandomizedEncryptor for OaepKeyEncryptor<'_> {
+    fn encrypt_with_rng<R: rsa::rand_core::TryCryptoRng + ?Sized>(
+        &self,
+        rng: &mut R,
+        msg: &[u8],
+    ) -> rsa::Result<Vec<u8>> {
+        self.calls.set(self.calls.get() + 1);
+        self.key.encrypt_with_rng(rng, msg)
+    }
+}
+
+impl spki::DynAssociatedAlgorithmIdentifier for OaepKeyEncryptor<'_> {
+    fn algorithm_identifier(&self) -> spki::Result<AlgorithmIdentifierOwned> {
+        Ok(AlgorithmIdentifierOwned {
+            oid: const_oid::db::rfc5912::ID_RSAES_OAEP,
+            parameters: Some(Any::new(Tag::Sequence, Vec::<u8>::new())?),
+        })
+    }
+}
+
+#[test]
+fn test_enveloped_data_with_a_caller_supplied_key_transport_encryptor() {
+    let mut rng = rand::rng();
+    let recipient_private_key = rsa::PrivateKey::new(&mut rng, 2048).unwrap();
+    let calls = Cell::new(0);
+    let recipient_info_builder = KeyTransRecipientInfoBuilder::new(
+        recipient_identifier(1),
+        OaepKeyEncryptor {
+            key: rsa::oaep::EncryptingKey::new(rsa::PublicKey::from(&recipient_private_key)),
+            calls: &calls,
+        },
+    )
+    .unwrap();
+    let content = b"content whose key is transported with RSAES-OAEP";
+
+    let enveloped_data =
+        EnvelopedDataBuilder::new(None, content, ContentEncryptionAlgorithm::Aes128Cbc, None)
+            .unwrap()
+            .add_recipient_info(recipient_info_builder)
+            .unwrap()
+            .build_with_rng(&mut rng)
+            .unwrap();
+    assert_eq!(calls.get(), 1);
+
+    let Some(RecipientInfo::Ktri(ktri)) = enveloped_data.recip_infos.0.get(0) else {
+        panic!("expected one KeyTransRecipientInfo");
+    };
+    assert_eq!(ktri.key_enc_alg.oid, const_oid::db::rfc5912::ID_RSAES_OAEP);
+    assert_eq!(ktri.key_enc_alg.parameters.to_der().unwrap(), [0x30, 0x00]);
+    let content_encryption_key = recipient_private_key
+        .decrypt(rsa::Oaep::<sha1::Sha1>::new(), ktri.enc_key.as_bytes())
+        .unwrap();
+    let encrypted_content = &enveloped_data.encrypted_content;
+    let decrypted = AesCbcContentDecryptor
+        .decrypt_content(
+            &encrypted_content.content_enc_alg,
+            &content_encryption_key,
+            encrypted_content
+                .encrypted_content
+                .as_ref()
+                .unwrap()
+                .as_bytes(),
+            None,
+            None,
+        )
+        .unwrap();
+    assert_eq!(decrypted.as_slice(), content);
+}
+
+#[test]
+fn test_enveloped_data_with_rsaes_oaep_sha256_key_transport() {
+    let mut rng = rand::rng();
+    let recipient_private_key = rsa::PrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
+    let recipient_info_builder = KeyTransRecipientInfoBuilder::new(
+        recipient_identifier(1),
+        RsaOaepKeyEncryptor::<Sha256>::new(rsa::PublicKey::from(&recipient_private_key)),
+    )
+    .unwrap();
+    let content = b"content whose key is transported with RSAES-OAEP SHA-256";
+
+    let enveloped_data =
+        EnvelopedDataBuilder::new(None, content, ContentEncryptionAlgorithm::Aes256Cbc, None)
+            .unwrap()
+            .add_recipient_info(recipient_info_builder)
+            .unwrap()
+            .build_with_rng(&mut rng)
+            .unwrap();
+    let content_info = ContentInfo {
+        content_type: const_oid::db::rfc5911::ID_ENVELOPED_DATA,
+        content: AnyRef::try_from(enveloped_data.to_der().unwrap().as_slice())
+            .unwrap()
+            .into(),
+    };
+    println!(
+        "{}",
+        pem_rfc7468::encode_string("CMS", LineEnding::LF, &content_info.to_der().unwrap()).unwrap()
+    );
+
+    let Some(RecipientInfo::Ktri(ktri)) = enveloped_data.recip_infos.0.get(0) else {
+        panic!("expected one KeyTransRecipientInfo");
+    };
+    assert_eq!(ktri.key_enc_alg.oid, const_oid::db::rfc5912::ID_RSAES_OAEP);
+    let parameters =
+        pkcs1::RsaOaepParamsOwned::from_der(&ktri.key_enc_alg.parameters.to_der().unwrap())
+            .unwrap();
+    assert_eq!(parameters.hash.oid, const_oid::db::rfc5912::ID_SHA_256);
+    assert_eq!(parameters.mask_gen.oid, const_oid::db::rfc5912::ID_MGF_1);
+    assert_eq!(
+        parameters.mask_gen.parameters.unwrap().oid,
+        const_oid::db::rfc5912::ID_SHA_256
+    );
+
+    let content_encryption_key = recipient_private_key
+        .decrypt(rsa::Oaep::<Sha256>::new(), ktri.enc_key.as_bytes())
+        .unwrap();
+    let encrypted_content = &enveloped_data.encrypted_content;
+    let decrypted = AesCbcContentDecryptor
+        .decrypt_content(
+            &encrypted_content.content_enc_alg,
+            &content_encryption_key,
+            encrypted_content
+                .encrypted_content
+                .as_ref()
+                .unwrap()
+                .as_bytes(),
+            None,
+            None,
+        )
+        .unwrap();
+    assert_eq!(decrypted.as_slice(), content);
 }

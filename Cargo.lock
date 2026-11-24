@@ -309,6 +309,7 @@ dependencies = [
  "p256",
  "pbkdf2",
  "pem-rfc7468",
+ "pkcs1",
  "pkcs5",
  "rand 0.10.4",
  "rsa",

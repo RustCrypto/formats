@@ -18,15 +18,16 @@ use alloc::{
     vec,
     vec::Vec,
 };
-use cipher::rand_core::CryptoRng;
-use const_oid::ObjectIdentifier;
+use cipher::rand_core::{CryptoRng, TryCryptoRng};
+use const_oid::{AssociatedOid, ObjectIdentifier};
 use core::{fmt, marker::PhantomData};
 use der::{
     Any, Decode, Encode, Tag,
     asn1::{Null, OctetString, OctetStringRef, SetOfVec},
 };
-use rsa::Pkcs1v15Encrypt;
-use spki::AlgorithmIdentifierOwned;
+use digest::{Digest, FixedOutputReset};
+use rsa::{Pkcs1v15Encrypt, traits::RandomizedEncryptor};
+use spki::{AlgorithmIdentifierOwned, DynAssociatedAlgorithmIdentifier};
 use x509_cert::{
     attr::{Attribute, AttributeValue, Attributes},
     certificate::{Profile, Rfc5280},
@@ -149,22 +150,100 @@ pub enum KeyEncryptionInfo {
     // to be extended here with other asymmetric encryption algorithms
 }
 
+/// Encrypts with RSAES-PKCS1-v1_5 for [`KeyEncryptionInfo::Rsa`].
+impl RandomizedEncryptor for KeyEncryptionInfo {
+    fn encrypt_with_rng<R: TryCryptoRng + ?Sized>(
+        &self,
+        rng: &mut R,
+        msg: &[u8],
+    ) -> rsa::Result<Vec<u8>> {
+        match self {
+            KeyEncryptionInfo::Rsa(public_key) => public_key.encrypt(rng, Pkcs1v15Encrypt, msg),
+        }
+    }
+}
+
+/// Identifies RSAES-PKCS1-v1_5 (`rsaEncryption`, NULL parameters) for [`KeyEncryptionInfo::Rsa`].
+impl DynAssociatedAlgorithmIdentifier for KeyEncryptionInfo {
+    fn algorithm_identifier(&self) -> spki::Result<AlgorithmIdentifierOwned> {
+        match self {
+            KeyEncryptionInfo::Rsa(_) => Ok(AlgorithmIdentifierOwned {
+                oid: const_oid::db::rfc5912::RSA_ENCRYPTION,
+                parameters: Some(Any::from(Null)),
+            }),
+        }
+    }
+}
+
+/// Encrypts the content-encryption key with RSAES-OAEP (RFC 8017 § 7.1, identified as in
+/// RFC 4055 § 4.1), using the digest `D` for both the hash and MGF1, and an empty label.
+///
+/// The `id-RSAES-OAEP` parameters name `D`, except that SHA-1, the default, is omitted.
+#[derive(Clone, Debug)]
+pub struct RsaOaepKeyEncryptor<D>
+where
+    D: Digest + FixedOutputReset,
+{
+    key: rsa::oaep::EncryptingKey<D>,
+}
+
+impl<D> RsaOaepKeyEncryptor<D>
+where
+    D: Digest + FixedOutputReset,
+{
+    /// Creates an RSAES-OAEP key encryptor for the recipient's public key.
+    pub fn new(public_key: rsa::PublicKey) -> Self {
+        Self {
+            key: rsa::oaep::EncryptingKey::new(public_key),
+        }
+    }
+}
+
+impl<D> RandomizedEncryptor for RsaOaepKeyEncryptor<D>
+where
+    D: Digest + FixedOutputReset,
+{
+    fn encrypt_with_rng<R: TryCryptoRng + ?Sized>(
+        &self,
+        rng: &mut R,
+        msg: &[u8],
+    ) -> rsa::Result<Vec<u8>> {
+        self.key.encrypt_with_rng(rng, msg)
+    }
+}
+
+impl<D> DynAssociatedAlgorithmIdentifier for RsaOaepKeyEncryptor<D>
+where
+    D: Digest + FixedOutputReset + AssociatedOid,
+{
+    fn algorithm_identifier(&self) -> spki::Result<AlgorithmIdentifierOwned> {
+        let parameters = pkcs1::RsaOaepParamsRef::new::<D>().to_der()?;
+        Ok(AlgorithmIdentifierOwned {
+            oid: const_oid::db::rfc5912::ID_RSAES_OAEP,
+            parameters: Some(Any::from_der(&parameters)?),
+        })
+    }
+}
+
 /// Builds a `KeyTransRecipientInfo` according to RFC 5652 § 6.
 /// This type uses the recipient's public key to encrypt the content-encryption key.
-pub struct KeyTransRecipientInfoBuilder<R: ?Sized, P: Profile = Rfc5280> {
+///
+/// The key encryptor `E` encrypts the content-encryption key and identifies its algorithm, for
+/// the `KeyTransRecipientInfo`'s `keyEncryptionAlgorithm`. Implement both traits to perform key
+/// transport elsewhere than in process, e.g. in a FIPS 140-3 validated module.
+/// [`KeyEncryptionInfo`] implements them with RustCrypto RSAES-PKCS1-v1_5 and
+/// [`RsaOaepKeyEncryptor`] with RustCrypto RSAES-OAEP.
+pub struct KeyTransRecipientInfoBuilder<R: ?Sized, P: Profile = Rfc5280, E = KeyEncryptionInfo> {
     /// Identifies the recipient
     pub rid: RecipientIdentifier<P>,
     /// Info for key encryption
-    pub key_encryption_info: KeyEncryptionInfo,
+    pub key_encryption_info: E,
     _rng: PhantomData<R>,
 }
 
-impl<R, P: Profile> KeyTransRecipientInfoBuilder<R, P> {
+impl<R, P: Profile, E> KeyTransRecipientInfoBuilder<R, P, E> {
     /// Creates a `KeyTransRecipientInfoBuilder`
-    pub fn new(
-        rid: RecipientIdentifier<P>,
-        key_encryption_info: KeyEncryptionInfo,
-    ) -> Result<Self> {
+    pub fn new(rid: RecipientIdentifier<P>, key_encryption_info: E) -> Result<Self> {
         Ok(KeyTransRecipientInfoBuilder {
             rid,
             key_encryption_info,
@@ -173,9 +252,10 @@ impl<R, P: Profile> KeyTransRecipientInfoBuilder<R, P> {
     }
 }
 
-impl<R: ?Sized, P: Profile> RecipientInfoBuilder<P> for KeyTransRecipientInfoBuilder<R, P>
+impl<R: ?Sized, P: Profile, E> RecipientInfoBuilder<P> for KeyTransRecipientInfoBuilder<R, P, E>
 where
     R: CryptoRng,
+    E: RandomizedEncryptor + DynAssociatedAlgorithmIdentifier,
 {
     type Rng = R;
 
@@ -197,19 +277,11 @@ where
         content_encryption_key: &[u8],
         rng: &mut Self::Rng,
     ) -> Result<RecipientInfo<P>> {
-        // Encrypt key
-        let (encrypted_key, key_enc_alg) = match &self.key_encryption_info {
-            // RSA encryption
-            KeyEncryptionInfo::Rsa(recipient_public_key) => (
-                recipient_public_key
-                    .encrypt(rng, Pkcs1v15Encrypt, content_encryption_key)
-                    .map_err(|_| Error::Builder(String::from("Could not encrypt key")))?,
-                AlgorithmIdentifierOwned {
-                    oid: const_oid::db::rfc5912::RSA_ENCRYPTION,
-                    parameters: Some(Any::from(Null)),
-                },
-            ),
-        };
+        let key_enc_alg = self.key_encryption_info.algorithm_identifier()?;
+        let encrypted_key = self
+            .key_encryption_info
+            .encrypt_with_rng(rng, content_encryption_key)
+            .map_err(|_| Error::Builder(String::from("Could not encrypt key")))?;
         let enc_key = EncryptedKey::new(encrypted_key)?;
 
         Ok(RecipientInfo::Ktri(KeyTransRecipientInfo {
