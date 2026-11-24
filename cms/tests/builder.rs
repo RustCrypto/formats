@@ -5,8 +5,9 @@ use cipher::block_padding::Pkcs7;
 use cipher::{BlockModeDecrypt, BlockModeEncrypt, BlockSizeUser, Iv, IvSizeUser, KeyIvInit};
 use cms::builder::{
     AesCbcContentDecryptor, ContentDecryptor, ContentEncryptionAlgorithm, EnvelopedDataBuilder,
-    KeyEncryptionInfo, KeyTransRecipientInfoBuilder, PasswordRecipientInfoBuilder, PwriEncryptor,
-    RsaOaepKeyEncryptor, SignedDataBuilder, SignerInfoBuilder,
+    KeyEncryptionInfo, KeyTransRecipientInfoBuilder, OtherRecipientInfoBuilder,
+    PasswordRecipientInfoBuilder, PwriEncryptor, RsaOaepKeyEncryptor, SignedDataBuilder,
+    SignerInfoBuilder,
 };
 use cms::cert::{CertificateChoices, IssuerAndSerialNumber};
 use cms::content_info::ContentInfo;
@@ -1035,4 +1036,74 @@ fn test_enveloped_data_with_rsaes_oaep_sha256_key_transport() {
         )
         .unwrap();
     assert_eq!(decrypted.as_slice(), content);
+}
+
+#[test]
+fn test_enveloped_data_content_type() {
+    let mut rng = rand::rng();
+    let recipient_private_key = rsa::PrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
+    let recipient_info_builder = KeyTransRecipientInfoBuilder::new(
+        recipient_identifier(1),
+        RsaOaepKeyEncryptor::<Sha256>::new(rsa::PublicKey::from(&recipient_private_key)),
+    )
+    .unwrap();
+    let content = b"content that is itself a SignedData";
+
+    let mut builder =
+        EnvelopedDataBuilder::new(None, content, ContentEncryptionAlgorithm::Aes256Cbc, None)
+            .unwrap();
+    assert_eq!(
+        builder
+            .add_recipient_info(recipient_info_builder)
+            .unwrap()
+            .build_with_rng(&mut rng)
+            .unwrap()
+            .encrypted_content
+            .content_type,
+        const_oid::db::rfc5911::ID_DATA
+    );
+    let enveloped_data = builder
+        .content_type(const_oid::db::rfc5911::ID_SIGNED_DATA)
+        .unwrap()
+        .build_with_rng(&mut rng)
+        .unwrap();
+    assert_eq!(
+        enveloped_data.encrypted_content.content_type,
+        const_oid::db::rfc5911::ID_SIGNED_DATA
+    );
+}
+
+#[test]
+fn test_enveloped_data_without_recipients_is_refused() {
+    let mut rng = rand::rng();
+    let result: Result<EnvelopedData, _> = EnvelopedDataBuilder::new(
+        None,
+        b"content for no one",
+        ContentEncryptionAlgorithm::Aes256Cbc,
+        None,
+    )
+    .unwrap()
+    .build_with_rng(&mut rng);
+    assert!(matches!(result, Err(cms::builder::Error::Builder(_))));
+}
+
+#[test]
+fn test_other_recipient_info_build_is_refused() {
+    let mut rng = rand::rng();
+    let recipient_info_builder = OtherRecipientInfoBuilder::new(
+        ObjectIdentifier::new_unwrap("1.3.6.1.4.1.37623.1"),
+        Any::from(der::asn1::Null),
+    )
+    .unwrap();
+    let result: Result<EnvelopedData, _> = EnvelopedDataBuilder::new(
+        None,
+        b"content for an other recipient",
+        ContentEncryptionAlgorithm::Aes256Cbc,
+        None,
+    )
+    .unwrap()
+    .add_recipient_info(recipient_info_builder)
+    .unwrap()
+    .build_with_rng(&mut rng);
+    assert!(matches!(result, Err(cms::builder::Error::Builder(_))));
 }

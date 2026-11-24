@@ -529,7 +529,9 @@ where
         _content_encryption_key: &[u8],
         _rng: &mut Self::Rng,
     ) -> Result<RecipientInfo<P>> {
-        panic!("Ori has no common build method.")
+        Err(Error::Builder(
+            "OtherRecipientInfo has no common build method".to_string(),
+        ))
     }
 }
 
@@ -538,6 +540,7 @@ pub struct EnvelopedDataBuilder<'c, R: ?Sized, P: Profile = Rfc5280> {
     originator_info: Option<OriginatorInfo<P>>,
     recipient_infos: Vec<Box<dyn RecipientInfoBuilder<P, Rng = R> + 'c>>,
     unencrypted_content: &'c [u8],
+    content_type: ObjectIdentifier,
     content_encryptor: Box<dyn ContentEncryptor<R> + 'c>,
     unprotected_attributes: Option<Attributes>,
 }
@@ -558,6 +561,7 @@ impl<'c, R, P: Profile> EnvelopedDataBuilder<'c, R, P> {
             originator_info,
             recipient_infos: Vec::new(),
             unencrypted_content,
+            content_type: const_oid::db::rfc5911::ID_DATA,
             content_encryptor: Box::new(content_encryptor),
             unprotected_attributes,
         })
@@ -568,6 +572,13 @@ impl<'c, R, P: Profile> EnvelopedDataBuilder<'c, R, P>
 where
     R: CryptoRng + ?Sized,
 {
+    /// Set the type of the content being enveloped, `id-data` by default.
+    pub fn content_type(&mut self, content_type: ObjectIdentifier) -> Result<&mut Self> {
+        self.content_type = content_type;
+
+        Ok(self)
+    }
+
     /// Add recipient info. A builder is used, which generates a `RecipientInfo` according to
     /// RFC 5652 § 6.2, when `EnvelopedData` is built.
     pub fn add_recipient_info(
@@ -582,6 +593,12 @@ where
     /// Generate an `EnvelopedData` object according to RFC 5652 § 6 using a provided
     /// random number generator.
     pub fn build_with_rng(&mut self, rng: &mut R) -> Result<EnvelopedData<P>> {
+        // RFC 5652 § 6.1: recipientInfos is a SET SIZE (1..MAX).
+        if self.recipient_infos.is_empty() {
+            return Err(Error::Builder(
+                "EnvelopedData needs at least one recipient".to_string(),
+            ));
+        }
         // Generate content encryption key
         // Encrypt content
         // Build recipient infos
@@ -607,7 +624,7 @@ where
         }
         let encrypted_content_octetstring = OctetString::new(ciphertext)?;
         let encrypted_content_info = EncryptedContentInfo {
-            content_type: const_oid::db::rfc5911::ID_DATA, // TODO bk should this be configurable?
+            content_type: self.content_type,
             content_enc_alg,
             encrypted_content: Some(encrypted_content_octetstring), // TODO bk `None` (external content) should also be possible
         };
@@ -617,7 +634,7 @@ where
             .iter_mut()
             .map(|ri| ri.build_with_rng(&content_encryption_key, rng))
             .collect::<Result<Vec<RecipientInfo<P>>>>()?;
-        let recip_infos = RecipientInfos::try_from(recipient_infos_vec).unwrap();
+        let recip_infos = RecipientInfos::try_from(recipient_infos_vec)?;
 
         Ok(EnvelopedData {
             version: self.calculate_version(),
