@@ -6,7 +6,7 @@ use cipher::{BlockModeDecrypt, BlockModeEncrypt, BlockSizeUser, Iv, IvSizeUser, 
 use cms::builder::{
     AesCbcContentDecryptor, ContentDecryptor, ContentEncryptionAlgorithm, EnvelopedDataBuilder,
     KeyEncryptionInfo, KeyTransRecipientInfoBuilder, PasswordRecipientInfoBuilder, PwriEncryptor,
-    RsaOaepKeyEncryptor, SignedDataBuilder, SignerInfoBuilder, create_signing_time_attribute,
+    RsaOaepKeyEncryptor, SignedDataBuilder, SignerInfoBuilder,
 };
 use cms::cert::{CertificateChoices, IssuerAndSerialNumber};
 use cms::content_info::ContentInfo;
@@ -17,7 +17,7 @@ use cms::enveloped_data::{
 use cms::signed_data::{EncapsulatedContentInfo, SignedData, SignerIdentifier};
 use const_oid::ObjectIdentifier;
 use der::asn1::{OctetString, OctetStringRef, PrintableString, SetOfVec};
-use der::{Any, AnyRef, Decode, DecodePem, Encode, Tag, Tagged};
+use der::{Any, AnyRef, Decode, DecodePem, Encode, Tag};
 use p256::{NistP256, pkcs8::DecodePrivateKey};
 use pem_rfc7468::LineEnding;
 use pkcs5::pbes2::Pbkdf2Params;
@@ -536,10 +536,13 @@ fn test_degenerate_certificates_only_cms() {
     assert_eq!(original_cert.signature(), extracted_cert.signature())
 }
 
+#[cfg(feature = "std")]
 #[test]
 fn test_create_signing_attribute() {
-    let attribute: Attribute =
-        create_signing_time_attribute().expect("Creation of signing time attribute failed.");
+    use der::Tagged;
+
+    let attribute: Attribute = cms::builder::create_signing_time_attribute()
+        .expect("Creation of signing time attribute failed.");
     let mut arcs = attribute.oid.arcs();
     assert_eq!(
         arcs.next(),

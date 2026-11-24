@@ -30,7 +30,7 @@ digest = { version = "0.11", optional = true }
 elliptic-curve = { version = "0.14.1", optional = true }
 kdf = { version = "0.1", optional = true }
 pkcs1 = { version = "0.8", optional = true }
-rsa = { version = "0.10", optional = true, features = ["pkcs1v15"] }
+rsa = { version = "0.10", optional = true, default-features = false, features = ["pkcs1v15"] }
 sha1 = { version = "0.11", optional = true }
 sha2 = { version = "0.11", optional = true }
 sha3 = { version = "0.11", optional = true }
@@ -71,7 +71,6 @@ builder = [
     "dep:sha2",
     "dep:sha3",
     "dep:signature",
-    "std",
     "spki/alloc",
     "x509-cert/builder",
     "dep:zeroize"
