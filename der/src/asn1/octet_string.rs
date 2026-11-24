@@ -10,6 +10,7 @@ use crate::{
 /// Octet strings represent contiguous sequences of octets, a.k.a. bytes.
 ///
 /// This is a zero-copy reference type which borrows from the input data.
+/// Constructed BER encodings require the owned `OctetString` type.
 #[derive(Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 #[repr(transparent)]
 pub struct OctetStringRef {
@@ -78,6 +79,10 @@ impl<'a> DecodeValue<'a> for &'a OctetStringRef {
     type Error = Error;
 
     fn decode_value<R: Reader<'a>>(reader: &mut R, header: Header) -> Result<Self, Error> {
+        if header.is_constructed() {
+            return Err(reader.error(header.tag().non_canonical_error()));
+        }
+
         <&'a BytesRef>::decode_value(reader, header).map(OctetStringRef::from_bytes_ref)
     }
 }
