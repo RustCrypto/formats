@@ -136,7 +136,7 @@ macro_rules! encrypt_block_mode {
 /// the used algorithm parameters).
 ///
 /// TODO Which encryption algorithms shall also be supported?
-pub(super) fn encrypt_data<R>(
+fn encrypt_data<R>(
     data: &[u8],
     encryption_algorithm_identifier: &ContentEncryptionAlgorithm,
     key: Option<&[u8]>,

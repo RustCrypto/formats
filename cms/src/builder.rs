@@ -32,7 +32,6 @@ use x509_cert::{
     certificate::{Profile, Rfc5280},
     time::Time,
 };
-use zeroize::Zeroize;
 
 // Modules
 mod content_encryption;
@@ -41,7 +40,6 @@ mod signed_data;
 mod utils;
 
 // Exports
-use content_encryption::encrypt_data;
 pub use content_encryption::{
     AesCbcContentDecryptor, ContentDecryptor, ContentEncryptionAlgorithm, ContentEncryptionOutput,
     ContentEncryptor,
@@ -468,32 +466,27 @@ pub struct EnvelopedDataBuilder<'c, R: ?Sized, P: Profile = Rfc5280> {
     originator_info: Option<OriginatorInfo<P>>,
     recipient_infos: Vec<Box<dyn RecipientInfoBuilder<P, Rng = R> + 'c>>,
     unencrypted_content: &'c [u8],
-    // TODO bk Not good to offer both, `content_encryptor` and `content_encryption_algorithm`.
-    // We should
-    // (1) either derive `content_encryption_algorithm` from `content_encryptor` (but this is not
-    //            yet supported by RustCrypto),
-    // (2) or     pass `content_encryption_algorithm` and create an encryptor for it.
-    // In the first case, we might need a new trait here, e.g. `DynEncryptionAlgorithmIdentifier` in
-    // analogy to `DynSignatureAlgorithmIdentifier`.
-    // Going for (2)
-    //  content_encryptor: E,
-    content_encryption_algorithm: ContentEncryptionAlgorithm,
+    content_encryptor: Box<dyn ContentEncryptor<R> + 'c>,
     unprotected_attributes: Option<Attributes>,
 }
 
 impl<'c, R, P: Profile> EnvelopedDataBuilder<'c, R, P> {
-    /// Create a new builder for `EnvelopedData`
+    /// Create a new builder for `EnvelopedData`.
+    ///
+    /// `content_encryptor` encrypts the content with a newly generated content-encryption key,
+    /// which the recipient info builders then deliver; [`ContentEncryptionAlgorithm`] does so with
+    /// RustCrypto AES-CBC.
     pub fn new(
         originator_info: Option<OriginatorInfo<P>>,
         unencrypted_content: &'c [u8],
-        content_encryption_algorithm: ContentEncryptionAlgorithm,
+        content_encryptor: impl ContentEncryptor<R> + 'c,
         unprotected_attributes: Option<Attributes>,
     ) -> Result<Self> {
         Ok(EnvelopedDataBuilder {
             originator_info,
             recipient_infos: Vec::new(),
             unencrypted_content,
-            content_encryption_algorithm,
+            content_encryptor: Box::new(content_encryptor),
             unprotected_attributes,
         })
     }
@@ -521,13 +514,26 @@ where
         // Encrypt content
         // Build recipient infos
         // Make sure, content encryption key is securely destroyed
-        let (encrypted_content, mut content_encryption_key, content_enc_alg) = encrypt_data(
-            self.unencrypted_content,
-            &self.content_encryption_algorithm,
-            None,
-            rng,
-        )?;
-        let encrypted_content_octetstring = OctetString::new(encrypted_content)?;
+        let ContentEncryptionOutput {
+            ciphertext,
+            key: content_encryption_key,
+            algorithm: content_enc_alg,
+            tag,
+        } = self
+            .content_encryptor
+            .encrypt_content(None, self.unencrypted_content, None, rng)?;
+        if tag.is_some() {
+            return Err(Error::Builder(
+                "EnvelopedData has no place for an authentication tag; use AuthEnvelopedData"
+                    .to_string(),
+            ));
+        }
+        if content_enc_alg.oid != self.content_encryptor.oid() {
+            return Err(Error::Builder(
+                "content encryptor output an algorithm other than its own".to_string(),
+            ));
+        }
+        let encrypted_content_octetstring = OctetString::new(ciphertext)?;
         let encrypted_content_info = EncryptedContentInfo {
             content_type: const_oid::db::rfc5911::ID_DATA, // TODO bk should this be configurable?
             content_enc_alg,
@@ -539,7 +545,6 @@ where
             .iter_mut()
             .map(|ri| ri.build_with_rng(&content_encryption_key, rng))
             .collect::<Result<Vec<RecipientInfo<P>>>>()?;
-        content_encryption_key.zeroize();
         let recip_infos = RecipientInfos::try_from(recipient_infos_vec).unwrap();
 
         Ok(EnvelopedData {
