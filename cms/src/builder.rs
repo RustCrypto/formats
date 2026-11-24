@@ -103,7 +103,8 @@ impl From<signature::Error> for Error {
     }
 }
 
-type Result<T> = core::result::Result<T, Error>;
+/// Result type of the builders and of the traits they take.
+pub type Result<T> = core::result::Result<T, Error>;
 
 /// Trait for builders of a `RecipientInfo`. RFC 5652 § 6 defines 5 different `RecipientInfo`
 /// formats. All implementations must implement this trait.
@@ -124,6 +125,29 @@ pub trait RecipientInfoBuilder<P: Profile = Rfc5280> {
         content_encryption_key: &[u8],
         rng: &mut Self::Rng,
     ) -> Result<RecipientInfo<P>>;
+}
+
+impl<T, P: Profile> RecipientInfoBuilder<P> for Box<T>
+where
+    T: RecipientInfoBuilder<P> + ?Sized,
+{
+    type Rng = T::Rng;
+
+    fn recipient_info_type(&self) -> RecipientInfoType {
+        (**self).recipient_info_type()
+    }
+
+    fn recipient_info_version(&self) -> CmsVersion {
+        (**self).recipient_info_version()
+    }
+
+    fn build_with_rng(
+        &mut self,
+        content_encryption_key: &[u8],
+        rng: &mut Self::Rng,
+    ) -> Result<RecipientInfo<P>> {
+        (**self).build_with_rng(content_encryption_key, rng)
+    }
 }
 
 /// `RecipientInfoBuilder` must be implemented for these 5 recipient info types

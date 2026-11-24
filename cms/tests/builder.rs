@@ -6,8 +6,8 @@ use cipher::{BlockModeDecrypt, BlockModeEncrypt, BlockSizeUser, Iv, IvSizeUser, 
 use cms::builder::{
     AesCbcContentDecryptor, ContentDecryptor, ContentEncryptionAlgorithm, EnvelopedDataBuilder,
     KeyEncryptionInfo, KeyTransRecipientInfoBuilder, OtherRecipientInfoBuilder,
-    PasswordRecipientInfoBuilder, PwriEncryptor, RsaOaepKeyEncryptor, SignedDataBuilder,
-    SignerInfoBuilder,
+    PasswordRecipientInfoBuilder, PwriEncryptor, RecipientInfoBuilder, RsaOaepKeyEncryptor,
+    SignedDataBuilder, SignerInfoBuilder,
 };
 use cms::cert::{CertificateChoices, IssuerAndSerialNumber};
 use cms::content_info::ContentInfo;
@@ -1106,4 +1106,39 @@ fn test_other_recipient_info_build_is_refused() {
     .unwrap()
     .build_with_rng(&mut rng);
     assert!(matches!(result, Err(cms::builder::Error::Builder(_))));
+}
+
+#[test]
+fn test_enveloped_data_with_boxed_recipient_info_builders() {
+    let mut rng = rand::rng();
+    let recipient_private_key = rsa::PrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
+    let recipients: Vec<Box<dyn RecipientInfoBuilder<Rng = rand::rngs::ThreadRng>>> = vec![
+        Box::new(
+            KeyTransRecipientInfoBuilder::new(
+                recipient_identifier(1),
+                RsaOaepKeyEncryptor::<Sha256>::new(rsa::PublicKey::from(&recipient_private_key)),
+            )
+            .unwrap(),
+        ),
+        Box::new(
+            KeyTransRecipientInfoBuilder::new(
+                recipient_identifier(2),
+                KeyEncryptionInfo::Rsa(rsa::PublicKey::from(&recipient_private_key)),
+            )
+            .unwrap(),
+        ),
+    ];
+
+    let mut builder = EnvelopedDataBuilder::new(
+        None,
+        b"content for boxed recipients",
+        ContentEncryptionAlgorithm::Aes256Cbc,
+        None,
+    )
+    .unwrap();
+    for recipient in recipients {
+        builder.add_recipient_info(recipient).unwrap();
+    }
+    let enveloped_data = builder.build_with_rng(&mut rng).unwrap();
+    assert_eq!(enveloped_data.recip_infos.0.len(), 2);
 }
