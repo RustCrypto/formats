@@ -582,7 +582,7 @@ mod allocating {
     }
 }
 
-/// Iterator over the bits of a [`BitString`].
+/// Iterator over the bits of a [`BitString`]. Its length is the number of bits remaining.
 #[derive(Debug)]
 pub struct BitStringIter<'a> {
     /// [`BitString`] being iterated over.
@@ -613,11 +613,7 @@ impl Iterator for BitStringIter<'_> {
     }
 }
 
-impl ExactSizeIterator for BitStringIter<'_> {
-    fn len(&self) -> usize {
-        self.bit_string.bit_len()
-    }
-}
+impl ExactSizeIterator for BitStringIter<'_> {}
 
 impl FusedIterator for BitStringIter<'_> {}
 
@@ -751,9 +747,12 @@ mod tests {
         let mut bits = bs.bits();
         assert_eq!(bits.len(), 18);
 
-        for bit in [0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1] {
+        assert_eq!(bits.next(), Some(false));
+        assert_eq!(bits.len(), 17);
+        for bit in [1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1] {
             assert_eq!(u8::from(bits.next().unwrap()), bit);
         }
+        assert_eq!(bits.len(), 0);
 
         // Ensure `None` is returned on successive calls
         assert_eq!(bits.next(), None);
