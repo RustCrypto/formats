@@ -59,13 +59,17 @@ impl Tai64 {
     }
 
     /// Convert Unix timestamp to `TAI64`.
+    ///
+    /// Uses the current TAI offset in [`Self::UNIX_EPOCH`], not historical offsets.
     pub fn from_unix(secs: i64) -> Self {
-        Tai64((secs + 10 + (1 << 62)) as u64)
+        Tai64((secs + Self::UNIX_EPOCH.0 as i64) as u64)
     }
 
     /// Convert `TAI64` to unix timestamp.
+    ///
+    /// Uses the current TAI offset in [`Self::UNIX_EPOCH`], not historical offsets.
     pub fn to_unix(self) -> i64 {
-        (self.0 as i64) - (10 + (1 << 62))
+        (self.0 as i64) - Self::UNIX_EPOCH.0 as i64
     }
 }
 
@@ -335,10 +339,40 @@ impl fmt::Display for Error {
 
 impl core::error::Error for Error {}
 
-#[cfg(all(test, feature = "std"))]
+#[cfg(test)]
 mod tests {
     use super::*;
 
+    #[test]
+    fn unix_epoch() {
+        assert_eq!(Tai64::from_unix(0), Tai64::UNIX_EPOCH);
+        assert_eq!(Tai64::UNIX_EPOCH.to_unix(), 0);
+    }
+
+    #[test]
+    fn unix_roundtrip() {
+        for secs in [i64::MIN, -1, 0, 1, i64::MAX - Tai64::UNIX_EPOCH.0 as i64] {
+            assert_eq!(Tai64::from_unix(secs).to_unix(), secs);
+        }
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn unix_and_system_time_agree() {
+        for secs in [-1i64, 0, 1, 1_756_146_317] {
+            let duration = Duration::from_secs(secs.unsigned_abs());
+            let time = if secs < 0 {
+                UNIX_EPOCH - duration
+            } else {
+                UNIX_EPOCH + duration
+            };
+            let tai = Tai64::from(Tai64N::from_system_time(&time));
+            assert_eq!(Tai64::from_unix(secs), tai);
+            assert_eq!(tai.to_unix(), secs);
+        }
+    }
+
+    #[cfg(feature = "std")]
     #[test]
     fn before_epoch() {
         let t = UNIX_EPOCH - Duration::new(0, 1);
