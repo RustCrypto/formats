@@ -60,6 +60,9 @@ impl<'o, E: Encoding> Encoder<'o, E> {
     /// line ending. Use [`LineEnding::default()`] to use the conventional line
     /// ending for the target OS.
     ///
+    /// The output buffer must fit the encoded data and the line endings between
+    /// lines. No trailing line ending is added.
+    ///
     /// Minimum allowed line width is 4.
     pub fn new_wrapped(
         output: &'o mut [u8],
@@ -286,7 +289,7 @@ impl LineWrapper {
             .checked_add(self.ending.len())
             .ok_or(InvalidLength)?;
 
-        if buffer_end >= buffer.len() {
+        if buffer_end > buffer.len() {
             return Err(InvalidLength);
         }
 
@@ -339,6 +342,15 @@ mod tests {
             "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
             encoder.finish().unwrap()
         );
+    }
+
+    #[test]
+    fn wrapped_output_fits_exact_buffer() {
+        const EXPECTED: &str = "YWJj\r\nZGVm";
+        let mut buffer = [0u8; EXPECTED.len()];
+        let mut encoder = Encoder::<Base64>::new_wrapped(&mut buffer, 4, LineEnding::CRLF).unwrap();
+        encoder.encode(b"abcdef").unwrap();
+        assert_eq!(encoder.finish().unwrap(), EXPECTED);
     }
 
     /// Core functionality of an encoding test.
