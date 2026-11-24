@@ -69,6 +69,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a813d97aa3fa6fa23ad0f4ea5bf6c13bfe2404c02ce0552ed47cd9962ae9b159"
 dependencies = [
  "digest",
+ "kdf",
 ]
 
 [[package]]
@@ -306,6 +307,7 @@ dependencies = [
  "elliptic-curve",
  "getrandom 0.4.3",
  "hex-literal",
+ "kdf",
  "p256",
  "pbkdf2",
  "pem-rfc7468",
@@ -822,6 +824,12 @@ name = "itoa"
 version = "1.0.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3bd1574e617a9a6c1f8f8181bd7e841e1f20e4277607ef28945765188d6284d4"
+
+[[package]]
+name = "kdf"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fb9652713a34bd7a2f539adcab233163943bed9c685970db62eb3cb264d625a1"
 
 [[package]]
 name = "keccak"

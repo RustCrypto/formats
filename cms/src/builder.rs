@@ -46,10 +46,11 @@ pub use content_encryption::{
     ContentEncryptor,
 };
 pub use kari::{
-    DhSinglePassStdDhKdf, EcKeyEncryptionInfo, KeyAgreeRecipientInfoBuilder, KeyAgreementAlgorithm,
+    DhSinglePassStdDhKdf, EcKeyEncryptionInfo, EccCmsSharedInfo, EcdhKeyAgreement,
+    KeyAgreeRecipientInfoBuilder, KeyAgreement, KeyAgreementAlgorithm, KeyAgreementOutput,
 };
 pub use signed_data::{SignedDataBuilder, SignerInfoBuilder};
-pub use utils::kw::KeyWrapAlgorithm;
+pub use utils::kw::{AesKeyWrap, KeyWrapAlgorithm};
 
 /// Error type
 #[derive(Debug)]
