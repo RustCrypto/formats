@@ -8,9 +8,8 @@
 
 // Super imports
 use super::{
-    AlgorithmIdentifierOwned, CryptoRng, RecipientInfoBuilder, RecipientInfoType, Result,
-    UserKeyingMaterial,
-    utils::kw::{KeyWrapAlgorithm, WrappedKey},
+    AlgorithmIdentifierOwned, CryptoRng, Error, RecipientInfoBuilder, RecipientInfoType, Result,
+    UserKeyingMaterial, utils::kw::KeyWrapAlgorithm,
 };
 
 // Crate imports
@@ -25,32 +24,30 @@ use crate::{
 };
 
 // Internal imports
-use const_oid::{AssociatedOid, ObjectIdentifier, db::rfc5753};
+use const_oid::{AssociatedOid, DynAssociatedOid, ObjectIdentifier, db::rfc5753};
 use der::{
     Any, Decode, Encode, Sequence,
     asn1::{BitString, OctetString},
 };
 
 // Core imports
-use core::{marker::PhantomData, ops::Add};
+use core::{fmt, marker::PhantomData};
 
 // Alloc imports
 use alloc::{string::String, vec, vec::Vec};
 
 // RustCrypto imports
-use aes::cipher::{
-    KeySizeUser,
-    array::ArraySize,
-    typenum::{Sum, U8},
-};
+use ansi_x963_kdf::AnsiX963Kdf;
 use digest::{Digest, FixedOutputReset};
 use elliptic_curve::{
-    AffinePoint, Curve, CurveArithmetic, FieldBytesSize, Generate, PublicKey,
-    ecdh::{EphemeralSecret, SharedSecret},
+    AffinePoint, CurveArithmetic, FieldBytesSize, Generate, PublicKey,
+    ecdh::EphemeralSecret,
     point::PointCompression,
     sec1::{FromSec1Point, ModulusSize, ToSec1Point},
 };
+use kdf::Kdf;
 use x509_cert::certificate::{Profile, Rfc5280};
+use zeroize::Zeroizing;
 
 /// The `EccCmsSharedInfo` type is defined in [RFC 5753 Section 7.2].
 ///
@@ -104,52 +101,59 @@ pub struct EccCmsSharedInfo {
 /// - dhSinglePass-stdDH-sha384kdf-scheme
 /// - dhSinglePass-stdDH-sha512kdf-scheme
 ///
+/// For [`EcdhKeyAgreement`], a key agreement algorithm derives the key-encryption key from the
+/// ECDH shared secret, with the DER-encoded [`EccCmsSharedInfo`] ([RFC 5753 Section 7.2]) as the
+/// KDF's non-secret input, and its OID identifies the scheme in the `KeyAgreeRecipientInfo`'s
+/// `keyEncryptionAlgorithm`. Any [`Kdf`] with a [`DynAssociatedOid`] is one. The OID names the
+/// whole scheme, including the ECDH primitive; the standard and cofactor primitives agree for
+/// curves of cofactor 1, such as the NIST P-curves.
+///
 /// [RFC 5753 Section 7.1.4]: https://www.rfc-editor.org/info/rfc5753#section-7.1.4
+/// [RFC 5753 Section 7.2]: https://www.rfc-editor.org/info/rfc5753#section-7.2
 /// [RFC 5753 Section 8]: https://www.rfc-editor.org/info/rfc5753#section-8
-pub trait KeyAgreementAlgorithm {
-    /// Compute a shared key with the provided parameters
-    fn kdf<C, Enc>(
-        secret: &SharedSecret<C>,
-        shared_info: &EccCmsSharedInfo,
-        key_wrapper: &mut WrappedKey<Enc>,
-    ) -> Result<()>
-    where
-        C: Curve,
-        Enc: KeySizeUser,
-        Sum<Enc::KeySize, U8>: ArraySize,
-        <Enc as KeySizeUser>::KeySize: Add<U8>;
-}
+pub trait KeyAgreementAlgorithm: Kdf + DynAssociatedOid {}
 
-/// Support for EnvelopedData with the ephemeral-static ECDH cofactor primitive
+impl<T: Kdf + DynAssociatedOid> KeyAgreementAlgorithm for T {}
+
+/// Support for EnvelopedData with the ephemeral-static ECDH standard primitive, deriving the
+/// key-encryption key with the ANSI X9.63 KDF over the digest `D`.
 pub struct DhSinglePassStdDhKdf<D> {
     digest: PhantomData<D>,
 }
 
-impl<D> KeyAgreementAlgorithm for DhSinglePassStdDhKdf<D>
+impl<D> DhSinglePassStdDhKdf<D> {
+    /// Creates the key agreement algorithm.
+    pub fn new() -> Self {
+        Self {
+            digest: PhantomData,
+        }
+    }
+}
+
+impl<D> Default for DhSinglePassStdDhKdf<D> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<D> Clone for DhSinglePassStdDhKdf<D> {
+    fn clone(&self) -> Self {
+        Self::new()
+    }
+}
+
+impl<D> fmt::Debug for DhSinglePassStdDhKdf<D> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DhSinglePassStdDhKdf").finish()
+    }
+}
+
+impl<D> Kdf for DhSinglePassStdDhKdf<D>
 where
     D: Digest + FixedOutputReset,
 {
-    fn kdf<C, Enc>(
-        secret: &SharedSecret<C>,
-        shared_info: &EccCmsSharedInfo,
-        key_wrapper: &mut WrappedKey<Enc>,
-    ) -> Result<()>
-    where
-        C: Curve,
-        Enc: KeySizeUser,
-        Sum<Enc::KeySize, U8>: ArraySize,
-        <Enc as KeySizeUser>::KeySize: Add<U8>,
-    {
-        let shared_info_der = shared_info.to_der()?;
-        let secret_bytes = secret.raw_secret_bytes();
-
-        ansi_x963_kdf::derive_key_into::<D>(secret_bytes, &shared_info_der, key_wrapper.as_mut())
-            .map_err(|_| {
-            super::Error::Builder(String::from(
-                "Could not generate a shared secret via ansi-x9.63-kdf",
-            ))
-        })?;
-        Ok(())
+    fn derive_key(&self, secret: &[u8], non_secret: &[u8], out: &mut [u8]) -> kdf::Result<()> {
+        AnsiX963Kdf::<D>::default().derive_key(secret, non_secret, out)
     }
 }
 
@@ -200,69 +204,162 @@ where
     }
 }
 
+/// The result of a key agreement.
+pub struct KeyAgreementOutput {
+    /// The originator's ephemeral public key, for the `KeyAgreeRecipientInfo`'s `originator`.
+    pub originator_key: OriginatorPublicKey,
+    /// The key-encryption key, for the key wrap algorithm to wrap the content-encryption key with.
+    pub key_encryption_key: Zeroizing<Vec<u8>>,
+}
+
+impl fmt::Debug for KeyAgreementOutput {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("KeyAgreementOutput")
+            .field("originator_key", &self.originator_key)
+            .finish_non_exhaustive()
+    }
+}
+
+/// Performs a key agreement scheme with a recipient's public key, as in
+/// [RFC 5753 Section 3.1.2]: generates the originator's ephemeral key pair, computes the shared
+/// secret with the recipient's public key and derives the key-encryption key from it.
+///
+/// [`DynAssociatedOid::oid`] identifies the scheme (e.g. dhSinglePass-stdDH-sha256kdf-scheme) for
+/// the `KeyAgreeRecipientInfo`'s `keyEncryptionAlgorithm`. [`EcdhKeyAgreement`] implements it with
+/// RustCrypto ECDH and a [`KeyAgreementAlgorithm`]. Implement it to perform the key agreement
+/// elsewhere than in process, e.g. in a FIPS 140-3 validated module, where the shared secret need
+/// not leave the module.
+///
+/// [RFC 5753 Section 3.1.2]: https://www.rfc-editor.org/info/rfc5753#section-3.1.2
+pub trait KeyAgreement<R: ?Sized>: DynAssociatedOid {
+    /// Generates an ephemeral key pair, agrees on a shared secret with the recipient and derives a
+    /// key-encryption key of `kek_size` bytes from it, with `shared_info`, the DER-encoded
+    /// [`EccCmsSharedInfo`], as the KDF's non-secret input.
+    fn agree(&self, shared_info: &[u8], kek_size: usize, rng: &mut R)
+    -> Result<KeyAgreementOutput>;
+}
+
+/// Ephemeral-static ECDH with RustCrypto, deriving the key-encryption key with the key agreement
+/// algorithm `KA` (e.g. [`DhSinglePassStdDhKdf`]), which also identifies the scheme.
+#[derive(Clone, Debug)]
+pub struct EcdhKeyAgreement<C, KA>
+where
+    C: CurveArithmetic,
+{
+    recipient: EcKeyEncryptionInfo<C>,
+    key_agreement_algorithm: KA,
+}
+
+impl<C, KA> EcdhKeyAgreement<C, KA>
+where
+    C: CurveArithmetic,
+{
+    /// Creates an ECDH key agreement with the recipient's public key.
+    pub fn new(recipient: EcKeyEncryptionInfo<C>, key_agreement_algorithm: KA) -> Self {
+        Self {
+            recipient,
+            key_agreement_algorithm,
+        }
+    }
+}
+
+impl<C, KA> DynAssociatedOid for EcdhKeyAgreement<C, KA>
+where
+    C: CurveArithmetic,
+    KA: KeyAgreementAlgorithm,
+{
+    fn oid(&self) -> ObjectIdentifier {
+        self.key_agreement_algorithm.oid()
+    }
+}
+
+impl<C, KA, R> KeyAgreement<R> for EcdhKeyAgreement<C, KA>
+where
+    R: CryptoRng + ?Sized,
+    C: CurveArithmetic + AssociatedOid + PointCompression,
+    AffinePoint<C>: FromSec1Point<C> + ToSec1Point<C>,
+    FieldBytesSize<C>: ModulusSize,
+    KA: KeyAgreementAlgorithm,
+{
+    fn agree(
+        &self,
+        shared_info: &[u8],
+        kek_size: usize,
+        rng: &mut R,
+    ) -> Result<KeyAgreementOutput> {
+        match &self.recipient {
+            EcKeyEncryptionInfo::Ec(recipient_public_key) => {
+                let ephemeral_secret = EphemeralSecret::<C>::generate_from_rng(rng);
+                let ephemeral_public_key = ephemeral_secret.public_key().to_sec1_point(false);
+                // Non-uniformly random: the KDF takes it as input.
+                let shared_secret = ephemeral_secret.diffie_hellman(recipient_public_key);
+                let mut key_encryption_key = Zeroizing::new(vec![0u8; kek_size]);
+                self.key_agreement_algorithm
+                    .derive_key(
+                        shared_secret.raw_secret_bytes(),
+                        shared_info,
+                        &mut key_encryption_key,
+                    )
+                    .map_err(|_| {
+                        Error::Builder(String::from("could not derive the key-encryption key"))
+                    })?;
+                Ok(KeyAgreementOutput {
+                    originator_key: OriginatorPublicKey {
+                        algorithm: self.recipient.into(),
+                        public_key: BitString::from_bytes(ephemeral_public_key.as_bytes())?,
+                    },
+                    key_encryption_key,
+                })
+            }
+        }
+    }
+}
+
 /// Builds a `KeyAgreeRecipientInfo` according to RFC 5652 § 6.
 /// This type uses key agreement:  the recipient's public key and the sender's
 /// private key are used to generate a pairwise symmetric key, then
 /// the content-encryption key is encrypted in the pairwise symmetric key.
-pub struct KeyAgreeRecipientInfoBuilder<R: ?Sized, C, KA, KW, Enc, P: Profile = Rfc5280>
-where
-    C: CurveArithmetic,
-    KA: KeyAgreementAlgorithm,
-    KW: KeyWrapAlgorithm,
-    Enc: KeySizeUser,
-{
+///
+/// The caller supplies the key agreement `A` (e.g. [`EcdhKeyAgreement`]), which derives the
+/// key-encryption key, and the key wrap algorithm `KW` (e.g. [`AesKeyWrap`](super::AesKeyWrap)),
+/// which wraps the content-encryption key with it.
+pub struct KeyAgreeRecipientInfoBuilder<R: ?Sized, A, KW, P: Profile = Rfc5280> {
     /// Optional information which helps generating different keys every time.
     pub ukm: Option<UserKeyingMaterial>,
     /// Recipient identifier
     pub rid: KeyAgreeRecipientIdentifier<P>,
-    /// Recipient key info
-    pub eckey_encryption_info: EcKeyEncryptionInfo<C>,
-    /// Key agreement algorithm
-    key_agreement_algorithm: PhantomData<KA>,
+    /// Performs the key agreement with the recipient's public key
+    pub key_agreement: A,
     /// Key wrap algorithm
-    key_wrap_algorithm: PhantomData<KW>,
-    /// Content encryption cipher
-    enc_cipher: PhantomData<Enc>,
+    key_wrap_algorithm: KW,
     /// Rng
     _rng: PhantomData<R>,
 }
 
-impl<R: ?Sized, C, KA, KW, Enc, P: Profile> KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc, P>
-where
-    C: CurveArithmetic,
-    KA: KeyAgreementAlgorithm,
-    KW: KeyWrapAlgorithm,
-    Enc: KeySizeUser,
-{
+impl<R: ?Sized, A, KW, P: Profile> KeyAgreeRecipientInfoBuilder<R, A, KW, P> {
     /// Creates a `KeyAgreeRecipientInfoBuilder`
     pub fn new(
         ukm: Option<UserKeyingMaterial>,
         rid: KeyAgreeRecipientIdentifier<P>,
-        eckey_encryption_info: EcKeyEncryptionInfo<C>,
+        key_agreement: A,
+        key_wrap_algorithm: KW,
     ) -> Result<Self> {
         Ok(KeyAgreeRecipientInfoBuilder {
             ukm,
-            eckey_encryption_info,
             rid,
-            key_agreement_algorithm: PhantomData,
-            key_wrap_algorithm: PhantomData,
-            enc_cipher: PhantomData,
+            key_agreement,
+            key_wrap_algorithm,
             _rng: PhantomData,
         })
     }
 }
-impl<R: ?Sized, C, KA, KW, Enc, P: Profile> RecipientInfoBuilder<P>
-    for KeyAgreeRecipientInfoBuilder<R, C, KA, KW, Enc, P>
+
+impl<R: ?Sized, A, KW, P: Profile> RecipientInfoBuilder<P>
+    for KeyAgreeRecipientInfoBuilder<R, A, KW, P>
 where
     R: CryptoRng,
-    KA: KeyAgreementAlgorithm + AssociatedOid,
-    C: CurveArithmetic + AssociatedOid + PointCompression,
-    AffinePoint<C>: FromSec1Point<C> + ToSec1Point<C>,
-    FieldBytesSize<C>: ModulusSize,
+    A: KeyAgreement<R>,
     KW: KeyWrapAlgorithm,
-    Enc: KeySizeUser,
-    Sum<Enc::KeySize, U8>: ArraySize,
-    <Enc as KeySizeUser>::KeySize: Add<U8>,
 {
     /// Associated Rng type
     type Rng = R;
@@ -297,95 +394,73 @@ where
         content_encryption_key: &[u8],
         rng: &mut Self::Rng,
     ) -> Result<RecipientInfo<P>> {
-        // Encrypt key
-        let (
-            encrypted_key,
-            ephemeral_pubkey_encoded_point,
-            originator_algorithm_identifier,
-            key_encryption_algorithm_identifier,
-        ) = match self.eckey_encryption_info {
-            EcKeyEncryptionInfo::Ec(recipient_public_key) => {
-                // Generate ephemeral key using ecdh
-                let ephemeral_secret = EphemeralSecret::generate_from_rng(rng);
-                let ephemeral_public_key_encoded_point =
-                    ephemeral_secret.public_key().to_sec1_point(false);
+        // Generate shared info for KDF
+        // As per https://www.rfc-editor.org/info/rfc5753#section-7.2"
+        // ```
+        // keyInfo contains the object identifier of the key-encryption
+        // algorithm (used to wrap the CEK) and associated parameters.  In
+        // this specification, 3DES wrap has NULL parameters while the AES
+        // wraps have absent parameters.
+        // ```
+        let key_wrap_algorithm_identifier = self.key_wrap_algorithm.algorithm_identifier();
+        let key_wrap_algorithm_der = key_wrap_algorithm_identifier.to_der()?;
 
-                // Compute a shared secret with recipient public key. Non-uniformly random, but will be used as input for KDF later.
-                let non_uniformly_random_shared_secret =
-                    ephemeral_secret.diffie_hellman(&recipient_public_key);
+        // As per https://www.rfc-editor.org/info/rfc5753#section-7.2"
+        // ```
+        // entityUInfo optionally contains additional keying material
+        // supplied by the sending agent.  When used with ECDH and CMS, the
+        // entityUInfo field contains the octet string ukm.  When used with
+        // ECMQV and CMS, the entityUInfo contains the octet string addedukm
+        // (encoded in MQVuserKeyingMaterial).
+        // ```
+        let entity_u_info = self.ukm.clone();
 
-                // Generate shared info for KDF
-                // As per https://www.rfc-editor.org/info/rfc5753#section-7.2"
-                // ```
-                // keyInfo contains the object identifier of the key-encryption
-                // algorithm (used to wrap the CEK) and associated parameters.  In
-                // this specification, 3DES wrap has NULL parameters while the AES
-                // wraps have absent parameters.
-                // ```
-                let key_wrap_algorithm_identifier = KW::algorithm_identifier();
-                let key_wrap_algorithm_der = key_wrap_algorithm_identifier.to_der()?;
+        // As per https://www.rfc-editor.org/info/rfc5753#section-7.2"
+        // ```
+        // suppPubInfo contains the length of the generated KEK, in bits,
+        // represented as a 32-bit number, as in [CMS-DH] and [CMS-AES].
+        // (For example, for AES-256 it would be 00 00 01 00.)
+        // ```
+        let kek_size = self.key_wrap_algorithm.kek_size();
+        let kek_size_in_bits = u32::try_from(kek_size)
+            .ok()
+            .and_then(|size| size.checked_mul(8))
+            .ok_or_else(|| Error::Builder(String::from("key-encryption key too large")))?;
 
-                // As per https://www.rfc-editor.org/info/rfc5753#section-7.2"
-                // ```
-                // entityUInfo optionally contains additional keying material
-                // supplied by the sending agent.  When used with ECDH and CMS, the
-                // entityUInfo field contains the octet string ukm.  When used with
-                // ECMQV and CMS, the entityUInfo contains the octet string addedukm
-                // (encoded in MQVuserKeyingMaterial).
-                // ```
-                let entity_u_info = self.ukm.clone();
-
-                // As per https://www.rfc-editor.org/info/rfc5753#section-7.2"
-                // ```
-                // suppPubInfo contains the length of the generated KEK, in bits,
-                // represented as a 32-bit number, as in [CMS-DH] and [CMS-AES].
-                // (For example, for AES-256 it would be 00 00 01 00.)
-                // ```
-                let key_wrap_algo_keysize_bits_in_be_bytes: [u8; 4] =
-                    KW::key_size_in_bits().to_be_bytes();
-
-                let shared_info = EccCmsSharedInfo {
-                    key_info: key_wrap_algorithm_identifier,
-                    entity_u_info,
-                    supp_pub_info: OctetString::new(key_wrap_algo_keysize_bits_in_be_bytes)?,
-                };
-
-                // Init a wrapping key (KEK) based on KeyWrapAlgorithm and on CEK (i.e. key to wrap) size
-                let kek = KW::init_kek();
-                let mut wrapped: WrappedKey<Enc> = KW::init_wrapped();
-
-                // Derive the Key Encryption Key (KEK) from Shared Secret using ANSI X9.63 KDF
-                KA::kdf(
-                    &non_uniformly_random_shared_secret,
-                    &shared_info,
-                    &mut wrapped,
-                )?;
-
-                // Wrap the Content Encryption Key (CEK) with the KEK
-                KW::try_wrap(&kek, content_encryption_key, wrapped.as_mut())?;
-
-                // Return data
-                (
-                    Vec::from(wrapped),
-                    ephemeral_public_key_encoded_point,
-                    self.eckey_encryption_info.into(),
-                    AlgorithmIdentifierOwned {
-                        oid: KA::OID,
-                        parameters: Some(Any::from_der(&key_wrap_algorithm_der)?),
-                    },
-                )
-            }
+        let shared_info = EccCmsSharedInfo {
+            key_info: key_wrap_algorithm_identifier,
+            entity_u_info,
+            supp_pub_info: OctetString::new(kek_size_in_bits.to_be_bytes())?,
         };
+
+        // Generate the ephemeral key, compute the shared secret with the recipient's public key and
+        // derive the key-encryption key (KEK) from it
+        let key_agreement_output =
+            self.key_agreement
+                .agree(&shared_info.to_der()?, kek_size, rng)?;
+        if key_agreement_output.key_encryption_key.len() != kek_size {
+            return Err(Error::Builder(String::from(
+                "key agreement output a key-encryption key of the wrong size",
+            )));
+        }
+
+        // Wrap the content-encryption key (CEK) with the KEK
+        let encrypted_key = self.key_wrap_algorithm.try_wrap(
+            &key_agreement_output.key_encryption_key,
+            content_encryption_key,
+        )?;
 
         // Build RecipientInfo
         Ok(RecipientInfo::Kari(KeyAgreeRecipientInfo {
-            originator: OriginatorIdentifierOrKey::OriginatorKey(OriginatorPublicKey {
-                algorithm: originator_algorithm_identifier,
-                public_key: BitString::from_bytes(ephemeral_pubkey_encoded_point.as_bytes())?,
-            }),
+            originator: OriginatorIdentifierOrKey::OriginatorKey(
+                key_agreement_output.originator_key,
+            ),
             version: self.recipient_info_version(),
             ukm: self.ukm.clone(),
-            key_enc_alg: key_encryption_algorithm_identifier,
+            key_enc_alg: AlgorithmIdentifierOwned {
+                oid: self.key_agreement.oid(),
+                parameters: Some(Any::from_der(&key_wrap_algorithm_der)?),
+            },
             recipient_enc_keys: vec![RecipientEncryptedKey {
                 rid: self.rid.clone(),
                 enc_key: EncryptedKey::new(encrypted_key)?,

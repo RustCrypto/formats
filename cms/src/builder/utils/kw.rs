@@ -11,16 +11,15 @@ use const_oid::AssociatedOid;
 use spki::AlgorithmIdentifierOwned;
 
 // Alloc imports
-use alloc::{string::String, vec::Vec};
+use alloc::{string::String, vec, vec::Vec};
 
 // Core imports
-use core::ops::Add;
+use core::{fmt, marker::PhantomData};
 
 // Rust crypto imports
 use aes::cipher::{
-    BlockCipherDecrypt, BlockCipherEncrypt, BlockSizeUser, Key, KeyInit, KeySizeUser,
-    array::{Array, ArraySize},
-    typenum::{Sum, U8, U16, Unsigned},
+    BlockCipherDecrypt, BlockCipherEncrypt, BlockSizeUser, KeyInit,
+    typenum::{U16, Unsigned},
 };
 use aes_kw::AesKw;
 
@@ -43,19 +42,12 @@ use aes_kw::AesKw;
 ///    also be supported.
 /// ```
 ///
-/// As such the following algorithm are currently supported
-/// - id-aes128-wrap
-/// - id-aes192-wrap
-/// - id-aes256-wrap
+/// [`AesKeyWrap`] implements it for id-aes128-wrap, id-aes192-wrap and id-aes256-wrap.
+/// Implement it to wrap keys elsewhere than in process, e.g. in a FIPS 140-3 validated module.
 ///
 /// [RFC 5753 Section 8]: https://www.rfc-editor.org/info/rfc5753#section-8
 /// [RFC 5753 Section 7.1.5]: https://www.rfc-editor.org/info/rfc5753#section-7.1.5
-///
-/// Represents key wrap algorithms methods.
-pub trait KeyWrapAlgorithm: AssociatedOid + KeySizeUser {
-    /// Return key size of the key-wrap algorithm in bits
-    fn key_size_in_bits() -> u32;
-
+pub trait KeyWrapAlgorithm {
     /// Return algorithm identifier AlgorithmIdentifierOwned` associated with the key-wrap algorithm
     ///
     /// [RFC 3565 Section 2.3.2]:
@@ -72,95 +64,70 @@ pub trait KeyWrapAlgorithm: AssociatedOid + KeySizeUser {
     ///
     /// [RFC 3565 Section 2.3.2]: https://www.rfc-editor.org/info/rfc3565#section-2.3.2
     /// [RFC 5753 Section 7.2]: https://www.rfc-editor.org/info/rfc5753#section-7.2
-    fn algorithm_identifier() -> AlgorithmIdentifierOwned;
+    fn algorithm_identifier(&self) -> AlgorithmIdentifierOwned;
 
-    /// Return an empty wrapping key (KEK) with the adequate size to be used with aes-key-wrap
-    fn init_kek() -> Key<Self>;
+    /// Return the size of the key-encryption key (KEK), in bytes.
+    fn kek_size(&self) -> usize;
 
-    /// Return an empty wrapped key with the adequate size to be used with aes-key-wrap
-    fn init_wrapped<T>() -> WrappedKey<T>
-    where
-        T: KeySizeUser,
-        Sum<T::KeySize, U8>: ArraySize,
-        <T as KeySizeUser>::KeySize: Add<U8>;
-
-    /// Try to wrap some data using given wrapping key
-    fn try_wrap(key: &Key<Self>, data: &[u8], out: &mut [u8]) -> Result<()>;
+    /// Wrap `key` with the key-encryption key `kek`, which is [`Self::kek_size`] bytes long.
+    fn try_wrap(&self, kek: &[u8], key: &[u8]) -> Result<Vec<u8>>;
 }
 
-/// Struct representing a wrapped key
-///
-/// Can be used to abstract wrapped key over different incoming key sizes.
-pub struct WrappedKey<T>
-where
-    T: KeySizeUser,
-    Sum<T::KeySize, U8>: ArraySize,
-    <T as KeySizeUser>::KeySize: Add<U8>,
-{
-    inner: Array<u8, Sum<T::KeySize, U8>>,
+/// AES key wrap (RFC 3394) with RustCrypto `aes-kw`, for `A` one of `aes::Aes128`, `aes::Aes192`
+/// and `aes::Aes256`.
+pub struct AesKeyWrap<A> {
+    _cipher: PhantomData<A>,
 }
 
-impl<T> AsMut<[u8]> for WrappedKey<T>
-where
-    T: KeySizeUser,
-    Sum<T::KeySize, U8>: ArraySize,
-    <T as KeySizeUser>::KeySize: Add<U8>,
-{
-    fn as_mut(&mut self) -> &mut [u8] {
-        self.inner.as_mut()
+impl<A> AesKeyWrap<A> {
+    /// Creates an AES key wrap algorithm.
+    pub fn new() -> Self {
+        Self {
+            _cipher: PhantomData,
+        }
     }
 }
 
-impl<T> From<WrappedKey<T>> for Vec<u8>
-where
-    T: KeySizeUser,
-    Sum<T::KeySize, U8>: ArraySize,
-    <T as KeySizeUser>::KeySize: Add<U8>,
-{
-    fn from(wrapped_key: WrappedKey<T>) -> Self {
-        wrapped_key.inner.to_vec()
+impl<A> Default for AesKeyWrap<A> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
-impl<AesWrap> KeyWrapAlgorithm for AesKw<AesWrap>
-where
-    AesWrap: KeyInit + BlockSizeUser<BlockSize = U16> + BlockCipherEncrypt + BlockCipherDecrypt,
-    AesKw<AesWrap>: AssociatedOid + KeyInit,
-{
-    fn key_size_in_bits() -> u32 {
-        AesWrap::KeySize::U32 * 8u32
+impl<A> Clone for AesKeyWrap<A> {
+    fn clone(&self) -> Self {
+        Self::new()
     }
+}
 
-    fn algorithm_identifier() -> AlgorithmIdentifierOwned {
+impl<A> fmt::Debug for AesKeyWrap<A> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("AesKeyWrap").finish()
+    }
+}
+
+impl<A> KeyWrapAlgorithm for AesKeyWrap<A>
+where
+    A: KeyInit + BlockSizeUser<BlockSize = U16> + BlockCipherEncrypt + BlockCipherDecrypt,
+    AesKw<A>: AssociatedOid,
+{
+    fn algorithm_identifier(&self) -> AlgorithmIdentifierOwned {
         AlgorithmIdentifierOwned {
-            oid: Self::OID,
+            oid: AesKw::<A>::OID,
             parameters: None,
         }
     }
 
-    fn init_kek() -> Key<Self> {
-        Key::<Self>::default()
+    fn kek_size(&self) -> usize {
+        A::KeySize::USIZE
     }
 
-    fn init_wrapped<AesEnc>() -> WrappedKey<AesEnc>
-    where
-        AesEnc: KeySizeUser,
-        Sum<AesEnc::KeySize, aes_kw::IvLen>: ArraySize,
-        <AesEnc as KeySizeUser>::KeySize: Add<aes_kw::IvLen>,
-    {
-        WrappedKey::<AesEnc> {
-            inner: Array::<u8, Sum<AesEnc::KeySize, aes_kw::IvLen>>::default(),
-        }
-    }
-
-    fn try_wrap(key: &Key<Self>, data: &[u8], out: &mut [u8]) -> Result<()> {
-        let kek = AesKw::new(key);
-        let res = kek
-            .wrap_key(data, out)
+    fn try_wrap(&self, kek: &[u8], key: &[u8]) -> Result<Vec<u8>> {
+        let kek = AesKw::<A>::new_from_slice(kek)
+            .map_err(|_| Error::Builder(String::from("invalid key-encryption key size")))?;
+        let mut wrapped = vec![0u8; key.len() + aes_kw::IV_LEN];
+        kek.wrap_key(key, &mut wrapped)
             .map_err(|_| Error::Builder(String::from("could not wrap key")))?;
-        if res.len() != out.len() {
-            return Err(Error::Builder(String::from("output buffer invalid size")));
-        }
-        Ok(())
+        Ok(wrapped)
     }
 }

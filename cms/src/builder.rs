@@ -12,43 +12,44 @@ use crate::{
     },
     revocation::RevocationInfoChoice,
 };
-use aes::{Aes128, Aes192, Aes256};
 use alloc::{
     boxed::Box,
     string::{String, ToString},
     vec,
     vec::Vec,
 };
-use cipher::{
-    BlockModeEncrypt, Iv, Key, KeyIvInit, block_padding::Pkcs7, common::Generate,
-    rand_core::CryptoRng,
-};
-use const_oid::ObjectIdentifier;
+use cipher::rand_core::{CryptoRng, TryCryptoRng};
+use const_oid::{AssociatedOid, ObjectIdentifier};
 use core::{fmt, marker::PhantomData};
 use der::{
     Any, Decode, Encode, Tag,
     asn1::{Null, OctetString, OctetStringRef, SetOfVec},
 };
-use rsa::Pkcs1v15Encrypt;
-use spki::AlgorithmIdentifierOwned;
+use digest::{Digest, FixedOutputReset};
+use rsa::{Pkcs1v15Encrypt, traits::RandomizedEncryptor};
+use spki::{AlgorithmIdentifierOwned, DynAssociatedAlgorithmIdentifier};
 use x509_cert::{
     attr::{Attribute, AttributeValue, Attributes},
     certificate::{Profile, Rfc5280},
-    time::Time,
 };
-use zeroize::Zeroize;
 
 // Modules
+mod content_encryption;
 mod kari;
 mod signed_data;
 mod utils;
 
 // Exports
+pub use content_encryption::{
+    AesCbcContentDecryptor, ContentDecryptor, ContentEncryptionAlgorithm, ContentEncryptionOutput,
+    ContentEncryptor,
+};
 pub use kari::{
-    DhSinglePassStdDhKdf, EcKeyEncryptionInfo, KeyAgreeRecipientInfoBuilder, KeyAgreementAlgorithm,
+    DhSinglePassStdDhKdf, EcKeyEncryptionInfo, EccCmsSharedInfo, EcdhKeyAgreement,
+    KeyAgreeRecipientInfoBuilder, KeyAgreement, KeyAgreementAlgorithm, KeyAgreementOutput,
 };
 pub use signed_data::{SignedDataBuilder, SignerInfoBuilder};
-pub use utils::kw::KeyWrapAlgorithm;
+pub use utils::kw::{AesKeyWrap, KeyWrapAlgorithm};
 
 /// Error type
 #[derive(Debug)]
@@ -102,7 +103,8 @@ impl From<signature::Error> for Error {
     }
 }
 
-type Result<T> = core::result::Result<T, Error>;
+/// Result type of the builders and of the traits they take.
+pub type Result<T> = core::result::Result<T, Error>;
 
 /// Trait for builders of a `RecipientInfo`. RFC 5652 § 6 defines 5 different `RecipientInfo`
 /// formats. All implementations must implement this trait.
@@ -123,6 +125,29 @@ pub trait RecipientInfoBuilder<P: Profile = Rfc5280> {
         content_encryption_key: &[u8],
         rng: &mut Self::Rng,
     ) -> Result<RecipientInfo<P>>;
+}
+
+impl<T, P: Profile> RecipientInfoBuilder<P> for Box<T>
+where
+    T: RecipientInfoBuilder<P> + ?Sized,
+{
+    type Rng = T::Rng;
+
+    fn recipient_info_type(&self) -> RecipientInfoType {
+        (**self).recipient_info_type()
+    }
+
+    fn recipient_info_version(&self) -> CmsVersion {
+        (**self).recipient_info_version()
+    }
+
+    fn build_with_rng(
+        &mut self,
+        content_encryption_key: &[u8],
+        rng: &mut Self::Rng,
+    ) -> Result<RecipientInfo<P>> {
+        (**self).build_with_rng(content_encryption_key, rng)
+    }
 }
 
 /// `RecipientInfoBuilder` must be implemented for these 5 recipient info types
@@ -149,22 +174,100 @@ pub enum KeyEncryptionInfo {
     // to be extended here with other asymmetric encryption algorithms
 }
 
+/// Encrypts with RSAES-PKCS1-v1_5 for [`KeyEncryptionInfo::Rsa`].
+impl RandomizedEncryptor for KeyEncryptionInfo {
+    fn encrypt_with_rng<R: TryCryptoRng + ?Sized>(
+        &self,
+        rng: &mut R,
+        msg: &[u8],
+    ) -> rsa::Result<Vec<u8>> {
+        match self {
+            KeyEncryptionInfo::Rsa(public_key) => public_key.encrypt(rng, Pkcs1v15Encrypt, msg),
+        }
+    }
+}
+
+/// Identifies RSAES-PKCS1-v1_5 (`rsaEncryption`, NULL parameters) for [`KeyEncryptionInfo::Rsa`].
+impl DynAssociatedAlgorithmIdentifier for KeyEncryptionInfo {
+    fn algorithm_identifier(&self) -> spki::Result<AlgorithmIdentifierOwned> {
+        match self {
+            KeyEncryptionInfo::Rsa(_) => Ok(AlgorithmIdentifierOwned {
+                oid: const_oid::db::rfc5912::RSA_ENCRYPTION,
+                parameters: Some(Any::from(Null)),
+            }),
+        }
+    }
+}
+
+/// Encrypts the content-encryption key with RSAES-OAEP (RFC 8017 § 7.1, identified as in
+/// RFC 4055 § 4.1), using the digest `D` for both the hash and MGF1, and an empty label.
+///
+/// The `id-RSAES-OAEP` parameters name `D`, except that SHA-1, the default, is omitted.
+#[derive(Clone, Debug)]
+pub struct RsaOaepKeyEncryptor<D>
+where
+    D: Digest + FixedOutputReset,
+{
+    key: rsa::oaep::EncryptingKey<D>,
+}
+
+impl<D> RsaOaepKeyEncryptor<D>
+where
+    D: Digest + FixedOutputReset,
+{
+    /// Creates an RSAES-OAEP key encryptor for the recipient's public key.
+    pub fn new(public_key: rsa::PublicKey) -> Self {
+        Self {
+            key: rsa::oaep::EncryptingKey::new(public_key),
+        }
+    }
+}
+
+impl<D> RandomizedEncryptor for RsaOaepKeyEncryptor<D>
+where
+    D: Digest + FixedOutputReset,
+{
+    fn encrypt_with_rng<R: TryCryptoRng + ?Sized>(
+        &self,
+        rng: &mut R,
+        msg: &[u8],
+    ) -> rsa::Result<Vec<u8>> {
+        self.key.encrypt_with_rng(rng, msg)
+    }
+}
+
+impl<D> DynAssociatedAlgorithmIdentifier for RsaOaepKeyEncryptor<D>
+where
+    D: Digest + FixedOutputReset + AssociatedOid,
+{
+    fn algorithm_identifier(&self) -> spki::Result<AlgorithmIdentifierOwned> {
+        let parameters = pkcs1::RsaOaepParamsRef::new::<D>().to_der()?;
+        Ok(AlgorithmIdentifierOwned {
+            oid: const_oid::db::rfc5912::ID_RSAES_OAEP,
+            parameters: Some(Any::from_der(&parameters)?),
+        })
+    }
+}
+
 /// Builds a `KeyTransRecipientInfo` according to RFC 5652 § 6.
 /// This type uses the recipient's public key to encrypt the content-encryption key.
-pub struct KeyTransRecipientInfoBuilder<R: ?Sized, P: Profile = Rfc5280> {
+///
+/// The key encryptor `E` encrypts the content-encryption key and identifies its algorithm, for
+/// the `KeyTransRecipientInfo`'s `keyEncryptionAlgorithm`. Implement both traits to perform key
+/// transport elsewhere than in process, e.g. in a FIPS 140-3 validated module.
+/// [`KeyEncryptionInfo`] implements them with RustCrypto RSAES-PKCS1-v1_5 and
+/// [`RsaOaepKeyEncryptor`] with RustCrypto RSAES-OAEP.
+pub struct KeyTransRecipientInfoBuilder<R: ?Sized, P: Profile = Rfc5280, E = KeyEncryptionInfo> {
     /// Identifies the recipient
     pub rid: RecipientIdentifier<P>,
     /// Info for key encryption
-    pub key_encryption_info: KeyEncryptionInfo,
+    pub key_encryption_info: E,
     _rng: PhantomData<R>,
 }
 
-impl<R, P: Profile> KeyTransRecipientInfoBuilder<R, P> {
+impl<R, P: Profile, E> KeyTransRecipientInfoBuilder<R, P, E> {
     /// Creates a `KeyTransRecipientInfoBuilder`
-    pub fn new(
-        rid: RecipientIdentifier<P>,
-        key_encryption_info: KeyEncryptionInfo,
-    ) -> Result<Self> {
+    pub fn new(rid: RecipientIdentifier<P>, key_encryption_info: E) -> Result<Self> {
         Ok(KeyTransRecipientInfoBuilder {
             rid,
             key_encryption_info,
@@ -173,9 +276,10 @@ impl<R, P: Profile> KeyTransRecipientInfoBuilder<R, P> {
     }
 }
 
-impl<R: ?Sized, P: Profile> RecipientInfoBuilder<P> for KeyTransRecipientInfoBuilder<R, P>
+impl<R: ?Sized, P: Profile, E> RecipientInfoBuilder<P> for KeyTransRecipientInfoBuilder<R, P, E>
 where
     R: CryptoRng,
+    E: RandomizedEncryptor + DynAssociatedAlgorithmIdentifier,
 {
     type Rng = R;
 
@@ -197,19 +301,11 @@ where
         content_encryption_key: &[u8],
         rng: &mut Self::Rng,
     ) -> Result<RecipientInfo<P>> {
-        // Encrypt key
-        let (encrypted_key, key_enc_alg) = match &self.key_encryption_info {
-            // RSA encryption
-            KeyEncryptionInfo::Rsa(recipient_public_key) => (
-                recipient_public_key
-                    .encrypt(rng, Pkcs1v15Encrypt, content_encryption_key)
-                    .map_err(|_| Error::Builder(String::from("Could not encrypt key")))?,
-                AlgorithmIdentifierOwned {
-                    oid: const_oid::db::rfc5912::RSA_ENCRYPTION,
-                    parameters: Some(Any::from(Null)),
-                },
-            ),
-        };
+        let key_enc_alg = self.key_encryption_info.algorithm_identifier()?;
+        let encrypted_key = self
+            .key_encryption_info
+            .encrypt_with_rng(rng, content_encryption_key)
+            .map_err(|_| Error::Builder(String::from("Could not encrypt key")))?;
         let enc_key = EncryptedKey::new(encrypted_key)?;
 
         Ok(RecipientInfo::Ktri(KeyTransRecipientInfo {
@@ -457,29 +553,9 @@ where
         _content_encryption_key: &[u8],
         _rng: &mut Self::Rng,
     ) -> Result<RecipientInfo<P>> {
-        panic!("Ori has no common build method.")
-    }
-}
-
-/// Supported content encryption algorithms.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum ContentEncryptionAlgorithm {
-    /// AES-128 CBC
-    Aes128Cbc,
-    /// AES-192 CBC
-    Aes192Cbc,
-    /// AES-256 CBC
-    Aes256Cbc,
-}
-
-impl ContentEncryptionAlgorithm {
-    /// Return the OID of the algorithm.
-    pub fn oid(&self) -> ObjectIdentifier {
-        match self {
-            ContentEncryptionAlgorithm::Aes128Cbc => const_oid::db::rfc5911::ID_AES_128_CBC,
-            ContentEncryptionAlgorithm::Aes192Cbc => const_oid::db::rfc5911::ID_AES_192_CBC,
-            ContentEncryptionAlgorithm::Aes256Cbc => const_oid::db::rfc5911::ID_AES_256_CBC,
-        }
+        Err(Error::Builder(
+            "OtherRecipientInfo has no common build method".to_string(),
+        ))
     }
 }
 
@@ -488,32 +564,29 @@ pub struct EnvelopedDataBuilder<'c, R: ?Sized, P: Profile = Rfc5280> {
     originator_info: Option<OriginatorInfo<P>>,
     recipient_infos: Vec<Box<dyn RecipientInfoBuilder<P, Rng = R> + 'c>>,
     unencrypted_content: &'c [u8],
-    // TODO bk Not good to offer both, `content_encryptor` and `content_encryption_algorithm`.
-    // We should
-    // (1) either derive `content_encryption_algorithm` from `content_encryptor` (but this is not
-    //            yet supported by RustCrypto),
-    // (2) or     pass `content_encryption_algorithm` and create an encryptor for it.
-    // In the first case, we might need a new trait here, e.g. `DynEncryptionAlgorithmIdentifier` in
-    // analogy to `DynSignatureAlgorithmIdentifier`.
-    // Going for (2)
-    //  content_encryptor: E,
-    content_encryption_algorithm: ContentEncryptionAlgorithm,
+    content_type: ObjectIdentifier,
+    content_encryptor: Box<dyn ContentEncryptor<R> + 'c>,
     unprotected_attributes: Option<Attributes>,
 }
 
 impl<'c, R, P: Profile> EnvelopedDataBuilder<'c, R, P> {
-    /// Create a new builder for `EnvelopedData`
+    /// Create a new builder for `EnvelopedData`.
+    ///
+    /// `content_encryptor` encrypts the content with a newly generated content-encryption key,
+    /// which the recipient info builders then deliver; [`ContentEncryptionAlgorithm`] does so with
+    /// RustCrypto AES-CBC.
     pub fn new(
         originator_info: Option<OriginatorInfo<P>>,
         unencrypted_content: &'c [u8],
-        content_encryption_algorithm: ContentEncryptionAlgorithm,
+        content_encryptor: impl ContentEncryptor<R> + 'c,
         unprotected_attributes: Option<Attributes>,
     ) -> Result<Self> {
         Ok(EnvelopedDataBuilder {
             originator_info,
             recipient_infos: Vec::new(),
             unencrypted_content,
-            content_encryption_algorithm,
+            content_type: const_oid::db::rfc5911::ID_DATA,
+            content_encryptor: Box::new(content_encryptor),
             unprotected_attributes,
         })
     }
@@ -523,6 +596,13 @@ impl<'c, R, P: Profile> EnvelopedDataBuilder<'c, R, P>
 where
     R: CryptoRng + ?Sized,
 {
+    /// Set the type of the content being enveloped, `id-data` by default.
+    pub fn content_type(&mut self, content_type: ObjectIdentifier) -> Result<&mut Self> {
+        self.content_type = content_type;
+
+        Ok(self)
+    }
+
     /// Add recipient info. A builder is used, which generates a `RecipientInfo` according to
     /// RFC 5652 § 6.2, when `EnvelopedData` is built.
     pub fn add_recipient_info(
@@ -537,19 +617,38 @@ where
     /// Generate an `EnvelopedData` object according to RFC 5652 § 6 using a provided
     /// random number generator.
     pub fn build_with_rng(&mut self, rng: &mut R) -> Result<EnvelopedData<P>> {
+        // RFC 5652 § 6.1: recipientInfos is a SET SIZE (1..MAX).
+        if self.recipient_infos.is_empty() {
+            return Err(Error::Builder(
+                "EnvelopedData needs at least one recipient".to_string(),
+            ));
+        }
         // Generate content encryption key
         // Encrypt content
         // Build recipient infos
         // Make sure, content encryption key is securely destroyed
-        let (encrypted_content, mut content_encryption_key, content_enc_alg) = encrypt_data(
-            self.unencrypted_content,
-            &self.content_encryption_algorithm,
-            None,
-            rng,
-        )?;
-        let encrypted_content_octetstring = OctetString::new(encrypted_content)?;
+        let ContentEncryptionOutput {
+            ciphertext,
+            key: content_encryption_key,
+            algorithm: content_enc_alg,
+            tag,
+        } = self
+            .content_encryptor
+            .encrypt_content(None, self.unencrypted_content, None, rng)?;
+        if tag.is_some() {
+            return Err(Error::Builder(
+                "EnvelopedData has no place for an authentication tag; use AuthEnvelopedData"
+                    .to_string(),
+            ));
+        }
+        if content_enc_alg.oid != self.content_encryptor.oid() {
+            return Err(Error::Builder(
+                "content encryptor output an algorithm other than its own".to_string(),
+            ));
+        }
+        let encrypted_content_octetstring = OctetString::new(ciphertext)?;
         let encrypted_content_info = EncryptedContentInfo {
-            content_type: const_oid::db::rfc5911::ID_DATA, // TODO bk should this be configurable?
+            content_type: self.content_type,
             content_enc_alg,
             encrypted_content: Some(encrypted_content_octetstring), // TODO bk `None` (external content) should also be possible
         };
@@ -559,8 +658,7 @@ where
             .iter_mut()
             .map(|ri| ri.build_with_rng(&content_encryption_key, rng))
             .collect::<Result<Vec<RecipientInfo<P>>>>()?;
-        content_encryption_key.zeroize();
-        let recip_infos = RecipientInfos::try_from(recipient_infos_vec).unwrap();
+        let recip_infos = RecipientInfos::try_from(recipient_infos_vec)?;
 
         Ok(EnvelopedData {
             version: self.calculate_version(),
@@ -659,73 +757,6 @@ where
     }
 }
 
-/// Helps encrypting.
-macro_rules! encrypt_block_mode {
-    ($data:expr, $block_mode:ident::$typ:ident<$alg:ident>, $key:expr, $rng:expr, $oid:expr) => {{
-        let (key, iv) = match $key {
-            None => {
-                let key = Key::<$block_mode::$typ<$alg>>::generate_from_rng($rng);
-                let iv = Iv::<$block_mode::$typ<$alg>>::generate_from_rng($rng);
-                (key, iv)
-            }
-            Some(key) => {
-                let key = Key::<$block_mode::$typ<$alg>>::try_from(key)
-                    .map_err(|_| Error::Builder("invalid key size for chosen algorithm".into()))?;
-                let iv = Iv::<$block_mode::$typ<$alg>>::generate_from_rng($rng);
-                (key, iv)
-            }
-        };
-        let encryptor = $block_mode::$typ::<$alg>::new(&key.into(), &iv.into());
-        Ok((
-            encryptor.encrypt_padded_vec::<Pkcs7>($data),
-            key.to_vec(),
-            AlgorithmIdentifierOwned {
-                oid: $oid,
-                parameters: Some(Any::new(Tag::OctetString, iv.to_vec())?),
-            },
-        ))
-    }};
-}
-
-/// Symmetrically encrypt data.
-/// Returns encrypted content, content-encryption key and the used algorithm identifier (including
-/// the used algorithm parameters).
-///
-/// TODO Which encryption algorithms shall also be supported?
-fn encrypt_data<R>(
-    data: &[u8],
-    encryption_algorithm_identifier: &ContentEncryptionAlgorithm,
-    key: Option<&[u8]>,
-    rng: &mut R,
-) -> Result<(Vec<u8>, Vec<u8>, AlgorithmIdentifierOwned)>
-where
-    R: CryptoRng + ?Sized,
-{
-    match encryption_algorithm_identifier {
-        ContentEncryptionAlgorithm::Aes128Cbc => encrypt_block_mode!(
-            data,
-            cbc::Encryptor<Aes128>,
-            key,
-            rng,
-            encryption_algorithm_identifier.oid()
-        ),
-        ContentEncryptionAlgorithm::Aes192Cbc => encrypt_block_mode!(
-            data,
-            cbc::Encryptor<Aes192>,
-            key,
-            rng,
-            encryption_algorithm_identifier.oid()
-        ),
-        ContentEncryptionAlgorithm::Aes256Cbc => encrypt_block_mode!(
-            data,
-            cbc::Encryptor<Aes256>,
-            key,
-            rng,
-            encryption_algorithm_identifier.oid()
-        ),
-    }
-}
-
 /// Create a content-type attribute according to
 /// [RFC 5652 § 11.1](https://www.rfc-editor.org/info/rfc5652#section-11.1)
 pub fn create_content_type_attribute(content_type: ObjectIdentifier) -> Result<Attribute> {
@@ -760,8 +791,9 @@ pub fn create_message_digest_attribute(message_digest: &[u8]) -> Result<Attribut
 /// Dates between 1 January 1950 and 31 December 2049 (inclusive) MUST be
 /// encoded as UTCTime.  Any dates with year values before 1950 or after
 /// 2049 MUST be encoded as GeneralizedTime.
+#[cfg(feature = "std")]
 pub fn create_signing_time_attribute() -> Result<Attribute> {
-    let time_der = Time::now()?.to_der()?;
+    let time_der = x509_cert::time::Time::now()?.to_der()?;
     let signing_time_attribute_value = AttributeValue::from_der(&time_der)?;
     let mut values = SetOfVec::<AttributeValue>::new();
     values.insert(signing_time_attribute_value)?;

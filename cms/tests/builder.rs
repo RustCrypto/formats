@@ -4,9 +4,10 @@ use aes::Aes128;
 use cipher::block_padding::Pkcs7;
 use cipher::{BlockModeDecrypt, BlockModeEncrypt, BlockSizeUser, Iv, IvSizeUser, KeyIvInit};
 use cms::builder::{
-    ContentEncryptionAlgorithm, EnvelopedDataBuilder, KeyEncryptionInfo,
-    KeyTransRecipientInfoBuilder, PasswordRecipientInfoBuilder, PwriEncryptor, SignedDataBuilder,
-    SignerInfoBuilder, create_signing_time_attribute,
+    AesCbcContentDecryptor, ContentDecryptor, ContentEncryptionAlgorithm, EnvelopedDataBuilder,
+    KeyEncryptionInfo, KeyTransRecipientInfoBuilder, OtherRecipientInfoBuilder,
+    PasswordRecipientInfoBuilder, PwriEncryptor, RecipientInfoBuilder, RsaOaepKeyEncryptor,
+    SignedDataBuilder, SignerInfoBuilder,
 };
 use cms::cert::{CertificateChoices, IssuerAndSerialNumber};
 use cms::content_info::ContentInfo;
@@ -17,7 +18,7 @@ use cms::enveloped_data::{
 use cms::signed_data::{EncapsulatedContentInfo, SignedData, SignerIdentifier};
 use const_oid::ObjectIdentifier;
 use der::asn1::{OctetString, OctetStringRef, PrintableString, SetOfVec};
-use der::{Any, AnyRef, Decode, DecodePem, Encode, Tag, Tagged};
+use der::{Any, AnyRef, Decode, DecodePem, Encode, Tag};
 use p256::{NistP256, pkcs8::DecodePrivateKey};
 use pem_rfc7468::LineEnding;
 use pkcs5::pbes2::Pbkdf2Params;
@@ -536,10 +537,13 @@ fn test_degenerate_certificates_only_cms() {
     assert_eq!(original_cert.signature(), extracted_cert.signature())
 }
 
+#[cfg(feature = "std")]
 #[test]
 fn test_create_signing_attribute() {
-    let attribute: Attribute =
-        create_signing_time_attribute().expect("Creation of signing time attribute failed.");
+    use der::Tagged;
+
+    let attribute: Attribute = cms::builder::create_signing_time_attribute()
+        .expect("Creation of signing time attribute failed.");
     let mut arcs = attribute.oid.arcs();
     assert_eq!(
         arcs.next(),
@@ -969,4 +973,172 @@ fn test_create_password_recipient_info() {
             "Arbitrary unencrypted content".as_bytes()
         )
     };
+}
+
+#[test]
+fn test_enveloped_data_with_rsaes_oaep_sha256_key_transport() {
+    let mut rng = rand::rng();
+    let recipient_private_key = rsa::PrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
+    let recipient_info_builder = KeyTransRecipientInfoBuilder::new(
+        recipient_identifier(1),
+        RsaOaepKeyEncryptor::<Sha256>::new(rsa::PublicKey::from(&recipient_private_key)),
+    )
+    .unwrap();
+    let content = b"content whose key is transported with RSAES-OAEP SHA-256";
+
+    let enveloped_data =
+        EnvelopedDataBuilder::new(None, content, ContentEncryptionAlgorithm::Aes256Cbc, None)
+            .unwrap()
+            .add_recipient_info(recipient_info_builder)
+            .unwrap()
+            .build_with_rng(&mut rng)
+            .unwrap();
+    let content_info = ContentInfo {
+        content_type: const_oid::db::rfc5911::ID_ENVELOPED_DATA,
+        content: AnyRef::try_from(enveloped_data.to_der().unwrap().as_slice())
+            .unwrap()
+            .into(),
+    };
+    println!(
+        "{}",
+        pem_rfc7468::encode_string("CMS", LineEnding::LF, &content_info.to_der().unwrap()).unwrap()
+    );
+
+    let Some(RecipientInfo::Ktri(ktri)) = enveloped_data.recip_infos.0.get(0) else {
+        panic!("expected one KeyTransRecipientInfo");
+    };
+    assert_eq!(ktri.key_enc_alg.oid, const_oid::db::rfc5912::ID_RSAES_OAEP);
+    let parameters =
+        pkcs1::RsaOaepParamsOwned::from_der(&ktri.key_enc_alg.parameters.to_der().unwrap())
+            .unwrap();
+    assert_eq!(parameters.hash.oid, const_oid::db::rfc5912::ID_SHA_256);
+    assert_eq!(parameters.mask_gen.oid, const_oid::db::rfc5912::ID_MGF_1);
+    assert_eq!(
+        parameters.mask_gen.parameters.unwrap().oid,
+        const_oid::db::rfc5912::ID_SHA_256
+    );
+
+    let content_encryption_key = recipient_private_key
+        .decrypt(rsa::Oaep::<Sha256>::new(), ktri.enc_key.as_bytes())
+        .unwrap();
+    let encrypted_content = &enveloped_data.encrypted_content;
+    let decrypted = AesCbcContentDecryptor
+        .decrypt_content(
+            &encrypted_content.content_enc_alg,
+            &content_encryption_key,
+            encrypted_content
+                .encrypted_content
+                .as_ref()
+                .unwrap()
+                .as_bytes(),
+            None,
+            None,
+        )
+        .unwrap();
+    assert_eq!(decrypted.as_slice(), content);
+}
+
+#[test]
+fn test_enveloped_data_content_type() {
+    let mut rng = rand::rng();
+    let recipient_private_key = rsa::PrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
+    let recipient_info_builder = KeyTransRecipientInfoBuilder::new(
+        recipient_identifier(1),
+        RsaOaepKeyEncryptor::<Sha256>::new(rsa::PublicKey::from(&recipient_private_key)),
+    )
+    .unwrap();
+    let content = b"content that is itself a SignedData";
+
+    let mut builder =
+        EnvelopedDataBuilder::new(None, content, ContentEncryptionAlgorithm::Aes256Cbc, None)
+            .unwrap();
+    assert_eq!(
+        builder
+            .add_recipient_info(recipient_info_builder)
+            .unwrap()
+            .build_with_rng(&mut rng)
+            .unwrap()
+            .encrypted_content
+            .content_type,
+        const_oid::db::rfc5911::ID_DATA
+    );
+    let enveloped_data = builder
+        .content_type(const_oid::db::rfc5911::ID_SIGNED_DATA)
+        .unwrap()
+        .build_with_rng(&mut rng)
+        .unwrap();
+    assert_eq!(
+        enveloped_data.encrypted_content.content_type,
+        const_oid::db::rfc5911::ID_SIGNED_DATA
+    );
+}
+
+#[test]
+fn test_enveloped_data_without_recipients_is_refused() {
+    let mut rng = rand::rng();
+    let result: Result<EnvelopedData, _> = EnvelopedDataBuilder::new(
+        None,
+        b"content for no one",
+        ContentEncryptionAlgorithm::Aes256Cbc,
+        None,
+    )
+    .unwrap()
+    .build_with_rng(&mut rng);
+    assert!(matches!(result, Err(cms::builder::Error::Builder(_))));
+}
+
+#[test]
+fn test_other_recipient_info_build_is_refused() {
+    let mut rng = rand::rng();
+    let recipient_info_builder = OtherRecipientInfoBuilder::new(
+        ObjectIdentifier::new_unwrap("1.3.6.1.4.1.37623.1"),
+        Any::from(der::asn1::Null),
+    )
+    .unwrap();
+    let result: Result<EnvelopedData, _> = EnvelopedDataBuilder::new(
+        None,
+        b"content for an other recipient",
+        ContentEncryptionAlgorithm::Aes256Cbc,
+        None,
+    )
+    .unwrap()
+    .add_recipient_info(recipient_info_builder)
+    .unwrap()
+    .build_with_rng(&mut rng);
+    assert!(matches!(result, Err(cms::builder::Error::Builder(_))));
+}
+
+#[test]
+fn test_enveloped_data_with_boxed_recipient_info_builders() {
+    let mut rng = rand::rng();
+    let recipient_private_key = rsa::PrivateKey::from_pkcs1_der(RSA_2048_PRIV_DER_EXAMPLE).unwrap();
+    let recipients: Vec<Box<dyn RecipientInfoBuilder<Rng = rand::rngs::ThreadRng>>> = vec![
+        Box::new(
+            KeyTransRecipientInfoBuilder::new(
+                recipient_identifier(1),
+                RsaOaepKeyEncryptor::<Sha256>::new(rsa::PublicKey::from(&recipient_private_key)),
+            )
+            .unwrap(),
+        ),
+        Box::new(
+            KeyTransRecipientInfoBuilder::new(
+                recipient_identifier(2),
+                KeyEncryptionInfo::Rsa(rsa::PublicKey::from(&recipient_private_key)),
+            )
+            .unwrap(),
+        ),
+    ];
+
+    let mut builder = EnvelopedDataBuilder::new(
+        None,
+        b"content for boxed recipients",
+        ContentEncryptionAlgorithm::Aes256Cbc,
+        None,
+    )
+    .unwrap();
+    for recipient in recipients {
+        builder.add_recipient_info(recipient).unwrap();
+    }
+    let enveloped_data = builder.build_with_rng(&mut rng).unwrap();
+    assert_eq!(enveloped_data.recip_infos.0.len(), 2);
 }
