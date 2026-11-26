@@ -1,0 +1,83 @@
+# hax proof scenario for the `tls_codec` crate.
+#
+# Run from this directory:
+#   cargo hax tools show          # resolved charon/aeneas/Lean versions
+#   cargo hax extract --dry-run   # print the resolved invocation
+#   cargo hax extract             # run it; output in proofs/tls-codec/lean
+#
+# Anything not pinned below resolves to the defaults shipped with the
+# installed cargo-hax release, which are the tested combination. What is
+# pinned is only what the aeneas build drags along with it; see below.
+
+[tools]
+# aeneas built from cryspen/aeneas 4aefccc8 (the revision whose Lean library
+# `proofs/tls-codec/lean/lakefile.toml` requires) by `sh proofs/setup.sh`;
+# the path is relative to this file. charon: the version that aeneas expects.
+aeneas = { path = ".hax-tools/aeneas/bin/aeneas" }
+charon = "nightly-2026.09.02"
+
+[scenario.tls-codec]
+backend = "lean"
+no-default-features = true
+# The feature set OpenMLS builds tls_codec with, minus what adds nothing
+# extractable (`derive`: a proc-macro re-export; `serde`: implies `std`, plus
+# serde impls that are out of scope).
+features = ["mls", "std"]
+# Aeneas cannot translate the *signature* of `Iterator::try_fold`
+exclude = ["core::iter::traits::iterator::Iterator::try_fold"]
+# Bodies aeneas cannot translate. `opaque` (not `exclude`) keeps the signature,
+# so callers stay translatable; only the body is dropped.
+opaque = [
+  # `Unreachable` on the `write!` formatting machinery (quic_vec.rs:286)
+  "tls_codec::quic_vec::write_hex",
+  # Body calls the excluded `Iterator::try_fold` (quic_vec.rs:211). `&Slice<_>`
+  # is how charon's pattern language spells `&[T]`; a bare `&_` would also
+  # capture the `&VLBytes` and `&Vec<T>` impls next to it.
+  "tls_codec::quic_vec::{tls_codec::SerializeBytes<&Slice<_>>}::tls_serialize_bytes",
+  # Its `std` twin (`Write` path, quic_vec.rs `rw` module) has the same `try_fold`,
+  # moved into this helper so that the serializer itself is extracted.
+  "tls_codec::quic_vec::rw::checked_content_length",
+  # Bodies call the excluded `Iterator::try_fold` (tls_vec.rs:250). These live in
+  # *inherent* impls, which charon's matcher cannot name (`PatElem::Impl` vs
+  # `ImplElem::Ty` is an unimplemented `false`), so the impl block has to be a
+  # `_`. It is exact all the same: `TlsByteVecU{8,16,24,32}` are the only types
+  # in this module with a `get_content_lengths` under these features.
+  "tls_codec::tls_vec::_::get_content_lengths",
+  # aeneas bug: in the newtype `SecretVLBytes(VLBytes)`
+  # (and `SecretVLByteVec`), which aeneas represents as `def SecretVLBytes := VLBytes`,
+  # the field access `self.0.vec` is printed `self.vec` and Lean resolves it to the
+  # method `SecretVLBytes.vec` instead of the field `VLBytes.vec`. WORKAROUND: the 4
+  # accessors are opaque and hand-translated in `Assumptions/FunsExternal.lean`.
+  # Undo: drop these 4 lines and the 4 defs once aeneas qualifies the projection.
+  "tls_codec::quic_vec::secret_bytes::_::vec",
+  "tls_codec::quic_vec::secret_bytes::_::vec_mut",
+  "tls_codec::quic_vec::secret_byte_vec::_::vec",
+  "tls_codec::quic_vec::secret_byte_vec::_::vec_mut",
+  # `Can't end abstraction ... non-endable` on the `map` closure inside this
+  # method (primitives.rs:494); opaquing the enclosing method covers the closure.
+  # `Box` is left without generic arguments on purpose: `--treat-box-as-builtin`
+  # and `--hide-allocator` are on, and `Box<_>` fails to match under them.
+  "tls_codec::primitives::{tls_codec::DeserializeBytes<alloc::boxed::Box>}::tls_deserialize_bytes",
+  # Append helper of the derived serializers (lib.rs); its bound is
+  # the ASSUMED `append_bytes_spec` in `Assumptions/CrateAssumptions.lean`.
+  "tls_codec::append_bytes",
+  # Ghost observers of the `std` path contracts (spec.rs `io`): no Rust
+  # body to translate; defined in `Assumptions/FunsExternal.lean` from the laws
+  # of lawful writers / readers (`MissingCoreModels.lean`), `is_concat` as `++`.
+  "tls_codec::spec::io::sink",
+  "tls_codec::spec::io::stream",
+  "tls_codec::spec::io::advanced",
+  "tls_codec::spec::io::is_concat",
+]
+# The crate-independent missing core models and missing third-party models in
+# `Assumptions/` are imported into every generated file by aeneas'
+# `-extra-includes`. Their specs (`MissingCoreModelsSpecs`) are only for proofs
+# and are imported by `Verification/Helpers.lean` instead. `FunsExternal.lean`
+# holds only the template's crate-specific axioms.
+aeneas-args = [
+  "-extra-includes=TlsCodec.Assumptions.MissingCoreModels,TlsCodec.Assumptions.MissingThirdPartyModels",
+  # Writes `Extraction/translation.json` (the Lean names of this crate's
+  # definitions), read by downstream scenarios (e.g. `std-derive-test/hax.toml`)
+  # through `-external-names` so that their Lean output imports `TlsCodec`.
+  "-emit-json",
+]
