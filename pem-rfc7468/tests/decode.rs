@@ -125,3 +125,100 @@ fn line_width_detection() {
         70
     );
 }
+
+/// RFC 7468 Section 3: `eol = CRLF / CR / LF`. A preamble line ended by a
+/// lone CR must still find the pre-encapsulation boundary after it.
+#[test]
+fn preamble_ended_by_lone_cr() {
+    const PEM: &[u8] = include_bytes!("examples/pkcs1.pem");
+    const DER: &[u8] = include_bytes!("examples/pkcs1.der");
+    let mut input = [0u8; PEM.len() + 6];
+    input[..5].copy_from_slice(b"chain");
+    input[5] = 0x0D;
+    input[6..].copy_from_slice(PEM);
+    let mut buf = [0u8; 2048];
+    let (label, decoded) = pem_rfc7468::decode(&input, &mut buf).unwrap();
+    assert_eq!(label, "RSA PRIVATE KEY");
+    assert_eq!(decoded, DER);
+}
+
+/// The second message of a chain, as callers that split on the
+/// post-encapsulation boundary hand it over: the previous message's trailing
+/// lone CR in front, and every line end of the message itself a lone CR.
+#[test]
+fn lone_cr_line_endings_after_preceding_text() {
+    const PEM: &[u8] = include_bytes!("examples/pkcs1.pem");
+    const DER: &[u8] = include_bytes!("examples/pkcs1.der");
+    let mut input = [0u8; PEM.len() + 6];
+    input[..5].copy_from_slice(b"chain");
+    input[5] = 0x0D;
+    for (i, &byte) in PEM.iter().enumerate() {
+        input[6 + i] = if byte == 0x0A { 0x0D } else { byte };
+    }
+    let mut buf = [0u8; 2048];
+    let (label, decoded) = pem_rfc7468::decode(&input, &mut buf).unwrap();
+    assert_eq!(label, "RSA PRIVATE KEY");
+    assert_eq!(decoded, DER);
+}
+
+/// A bare eol in front of the boundary, with no preamble text at all.
+#[test]
+fn boundary_after_lone_cr() {
+    const PEM: &[u8] = include_bytes!("examples/pkcs1.pem");
+    let mut input = [0u8; PEM.len() + 1];
+    input[0] = 0x0D;
+    input[1..].copy_from_slice(PEM);
+    assert_eq!(
+        pem_rfc7468::decode_label(&input).unwrap(),
+        "RSA PRIVATE KEY"
+    );
+}
+
+/// The CRLF path is unchanged: the CR arm must not consume a CR that an LF
+/// follows, and the boundary after the LF is still found.
+#[test]
+fn preamble_ended_by_crlf() {
+    const PEM: &[u8] = include_bytes!("examples/pkcs1.pem");
+    const DER: &[u8] = include_bytes!("examples/pkcs1.der");
+    let mut input = [0u8; PEM.len() + 7];
+    input[..5].copy_from_slice(b"chain");
+    input[5] = 0x0D;
+    input[6] = 0x0A;
+    input[7..].copy_from_slice(PEM);
+    let mut buf = [0u8; 2048];
+    let (label, decoded) = pem_rfc7468::decode(&input, &mut buf).unwrap();
+    assert_eq!(label, "RSA PRIVATE KEY");
+    assert_eq!(decoded, DER);
+}
+
+/// The OpenSSL-inspired NUL refusal still applies to a preamble that never
+/// reaches the boundary.
+#[test]
+fn preamble_with_nul_byte_is_still_refused() {
+    const PEM: &[u8] = include_bytes!("examples/pkcs1.pem");
+    let mut input = [0u8; PEM.len() + 6];
+    input[..3].copy_from_slice(b"cha");
+    input[3] = 0x00;
+    input[4] = b'n';
+    input[5] = 0x0D;
+    input[6..].copy_from_slice(PEM);
+    let mut buf = [0u8; 2048];
+    let result = pem_rfc7468::decode(&input, &mut buf);
+    assert_eq!(result, Err(pem_rfc7468::Error::Preamble));
+}
+
+#[test]
+#[cfg(feature = "alloc")]
+fn lone_cr_chain_with_vec() {
+    const PEM: &[u8] = include_bytes!("examples/pkcs1.pem");
+    const DER: &[u8] = include_bytes!("examples/pkcs1.der");
+    let mut input = [0u8; PEM.len() + 6];
+    input[..5].copy_from_slice(b"chain");
+    input[5] = 0x0D;
+    for (i, &byte) in PEM.iter().enumerate() {
+        input[6 + i] = if byte == 0x0A { 0x0D } else { byte };
+    }
+    let (label, decoded) = pem_rfc7468::decode_vec(&input).unwrap();
+    assert_eq!(label, "RSA PRIVATE KEY");
+    assert_eq!(decoded, DER);
+}
