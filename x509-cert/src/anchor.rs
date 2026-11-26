@@ -19,7 +19,7 @@ use der::{
 pub enum Version {
     /// Version 1 (default)
     #[default]
-    V1 = 0,
+    V1 = 1,
 }
 
 /// ```text
