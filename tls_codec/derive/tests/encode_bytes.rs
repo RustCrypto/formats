@@ -230,6 +230,60 @@ fn enum_with_data_and_const_discriminant() {
     assert_eq!(vec![0, 12], serialized);
 }
 
+#[derive(Debug, PartialEq, TlsSerializeBytes, TlsSize)]
+#[repr(u16)]
+enum EnumWithImplicitDiscriminantAfterPath {
+    #[tls_codec(discriminant = "discriminant::test::constant::TEST_CONST")]
+    A(u8),
+    #[tls_codec(discriminant = 7)]
+    B,
+    // Implicit discriminants continue from the last literal, even after a path.
+    C,
+}
+
+#[test]
+fn implicit_discriminant_after_path_continues_from_literal() {
+    let serialized = EnumWithImplicitDiscriminantAfterPath::A(4)
+        .tls_serialize_bytes()
+        .unwrap();
+    assert_eq!(vec![0, 3, 4], serialized);
+    let serialized = EnumWithImplicitDiscriminantAfterPath::B
+        .tls_serialize_bytes()
+        .unwrap();
+    assert_eq!(vec![0, 7], serialized);
+    let serialized = EnumWithImplicitDiscriminantAfterPath::C
+        .tls_serialize_bytes()
+        .unwrap();
+    assert_eq!(vec![0, 8], serialized);
+}
+
+#[derive(Debug, PartialEq, TlsSerializeBytes, TlsSize)]
+#[repr(u8)]
+enum EnumWithExplicitDiscriminantAfterMax {
+    #[tls_codec(discriminant = 255)]
+    A(u8),
+    // There is no implicit discriminant after `u8::MAX`, but an explicit one is fine.
+    #[tls_codec(discriminant = 0)]
+    B,
+    C,
+}
+
+#[test]
+fn explicit_discriminant_after_repr_max() {
+    let serialized = EnumWithExplicitDiscriminantAfterMax::A(4)
+        .tls_serialize_bytes()
+        .unwrap();
+    assert_eq!(vec![255, 4], serialized);
+    let serialized = EnumWithExplicitDiscriminantAfterMax::B
+        .tls_serialize_bytes()
+        .unwrap();
+    assert_eq!(vec![0], serialized);
+    let serialized = EnumWithExplicitDiscriminantAfterMax::C
+        .tls_serialize_bytes()
+        .unwrap();
+    assert_eq!(vec![1], serialized);
+}
+
 #[derive(TlsSerializeBytes, TlsSize)]
 #[repr(u8)]
 enum EnumWithCustomSerializedField {

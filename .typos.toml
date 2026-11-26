@@ -13,10 +13,28 @@ extend-exclude = [
 [default.extend-identifiers]
 # typ stands for type, but it's a reversed identifier
 typ = "typ"
+# tls_codec proofs: a Lean module named in NOTES.md, a regex in gen_verification.py
+VecSer = "VecSer"
+THM = "THM"
 
 [default.extend-words]
 consts = "consts"
 # Certificate Ann
 "cann" = "cann"
-# encrypt-decrypt-encrypt 
+# encrypt-decrypt-encrypt
 "EDE" = "EDE"
+# the hax verification toolchain (tls_codec proofs)
+hax = "hax"
+
+# Lean proofs: hypotheses are named `h` + a short tag (`henc`, `hge`, `hpe`, ...).
+[type.lean]
+extend-glob = ["*.lean"]
+extend-ignore-identifiers-re = ["^h[A-Za-z0-9_]*$"]
+
+[type.lean.extend-words]
+# short for "serialize" (e.g. `serB`, `PrefixSer`)
+ser = "ser"
+# Lean's `thmInfo`
+thm = "thm"
+alls = "alls"
+byt = "byt"

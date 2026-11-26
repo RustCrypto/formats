@@ -123,11 +123,12 @@
 //! if the provided value fits within the bounds of the `enum_repr` to avoid
 //! misuse.
 //!
-//! Note: When using paths *once* in your enum discriminants, as we do not have
-//! enough information to deduce the next implicit discriminant (the constant
-//! expressions those paths resolve is only evaluated at a later compilation
-//! stage than macros), you will be forced to use explicit discriminants for all
-//! the other Variants of your enum.
+//! Note: The value a path resolves to is only known at a later compilation
+//! stage than macro expansion, so the macro can't deduce an implicit
+//! discriminant from it. A variant directly following one with a path
+//! discriminant must therefore have an explicit discriminant itself. Once a
+//! variant has an integer literal discriminant again, implicit discriminants
+//! continue from that literal.
 //!
 //! ```
 //! # #[cfg(feature = "std")]
@@ -266,17 +267,28 @@ extern crate proc_macro2;
 
 use proc_macro::TokenStream;
 use proc_macro2::{Span, TokenStream as TokenStream2};
-use quote::quote;
+use quote::{quote, quote_spanned};
+use std::collections::HashMap;
 use syn::{
     self, Attribute, Data, DeriveInput, Expr, ExprLit, ExprPath, Field, Generics, Ident, Lit,
-    Member, Meta, Result, Token, Type, parse_macro_input, punctuated::Punctuated, token::Comma,
+    Member, Meta, Result, Token, Type, parse_macro_input, punctuated::Punctuated, spanned::Spanned,
+    token::Comma,
 };
 
 #[cfg(feature = "conditional_deserialization")]
-use syn::{ConstParam, ImplGenerics, ItemStruct, TypeGenerics, parse_quote};
+use quote::ToTokens;
+#[cfg(feature = "conditional_deserialization")]
+use syn::{ConstParam, GenericParam, ItemStruct, parse_quote};
 
 /// Attribute name to identify attributes to be processed by derive-macros in this crate.
 const ATTR_IDENT: &str = "tls_codec";
+
+/// Name of the const generic parameter added by `#[conditionally_deserializable]`.
+///
+/// The derives recognize the parameter by this name, so it is chosen to be
+/// unlikely to clash with the struct's own generic parameters.
+#[cfg(feature = "conditional_deserialization")]
+const CONDITIONAL_PARAM: &str = "__TLS_CODEC_IS_DESERIALIZABLE";
 
 /// Prefix to add to `tls_codec` functions
 ///
@@ -576,7 +588,12 @@ fn parse_ast(ast: DeriveInput) -> Result<TlsStruct> {
             }
             let repr =
                 repr.ok_or_else(|| syn::Error::new(call_site, "missing #[repr(...)] attribute"))?;
-            let discriminant_constants = define_discriminant_constants(&ident, &repr, &variants)?;
+            for variant in &variants {
+                reject_raw_ident(&variant.ident, "enum variant names")?;
+            }
+            let repr_max = repr_max(&repr)?;
+            let discriminant_constants =
+                define_discriminant_constants(&ident, &repr, repr_max, &variants)?;
             let variants = variants
                 .into_iter()
                 .map(|variant| {
@@ -643,7 +660,10 @@ pub fn deserialize_bytes_macro_derive(input: TokenStream) -> TokenStream {
         Ok(ast) => ast,
         Err(err_ts) => return err_ts.into_compile_error().into(),
     };
-    impl_deserialize_bytes(parsed_ast).into()
+    match impl_deserialize_bytes(parsed_ast) {
+        Ok(ts) => ts.into(),
+        Err(err) => err.into_compile_error().into(),
+    }
 }
 
 #[proc_macro_derive(TlsSerializeBytes, attributes(tls_codec))]
@@ -663,15 +683,154 @@ fn make_n_ids(n: usize) -> Vec<Ident> {
         .collect()
 }
 
+/// Rejects raw identifiers with a proper error message.
+///
+/// The derive macros build helper identifiers (discriminant constants, binding
+/// names) by pasting a user identifier into a `format!`. `Ident::new` panics on
+/// the `r#` prefix of a raw identifier, so without this check the macro aborts
+/// with a message that points at neither the crate nor the offending
+/// identifier. `kind` names the identifiers being checked, e.g. `"field names"`.
+fn reject_raw_ident(ident: &Ident, kind: &str) -> Result<()> {
+    if ident.to_string().starts_with("r#") {
+        return Err(syn::Error::new(
+            ident.span(),
+            format!("raw identifiers are not supported in {kind} by the tls_codec derive macros"),
+        ));
+    }
+    Ok(())
+}
+
 /// Returns identifier to define a constant equal to the discriminant of a variant
+///
+/// The variant identifier must not be a raw identifier; `parse_ast` rejects
+/// those for every variant before any of this is reached.
 fn discriminant_id(variant: &Ident) -> Ident {
     Ident::new(&format!("__TLS_CODEC_{variant}"), Span::call_site())
+}
+
+/// Returns the identifier of the local binding holding a member's deserialized value
+fn value_binding(member: &Member) -> Result<Member> {
+    let ident = match member {
+        Member::Named(named) => {
+            reject_raw_ident(named, "field names")?;
+            Ident::new(&format!("value_{named}"), Span::call_site())
+        }
+        Member::Unnamed(unnamed) => {
+            Ident::new(&format!("value_{}", unnamed.index), Span::call_site())
+        }
+    };
+    Ok(Member::Named(ident))
+}
+
+/// Returns the largest value of `repr`, or an error if `repr` is not supported.
+///
+/// The discriminant is (de)serialized as a value of type `repr`, and `tls_codec`
+/// only implements its traits for `u8`, `u16`, `u32` and `u64` among the types
+/// `#[repr(...)]` accepts. Rejecting everything else here gives a clear error
+/// instead of a missing trait impl in the generated code, and makes the range of
+/// every supported repr known at expansion time.
+fn repr_max(repr: &Ident) -> Result<u64> {
+    Ok(match repr.to_string().as_str() {
+        "u8" => u8::MAX.into(),
+        "u16" => u16::MAX.into(),
+        "u32" => u32::MAX.into(),
+        "u64" => u64::MAX,
+        _ => {
+            return Err(syn::Error::new(
+                repr.span(),
+                "The tls_codec derive macros only support enums with \
+                #[repr(u8)], #[repr(u16)], #[repr(u32)] or #[repr(u64)].",
+            ));
+        }
+    })
+}
+
+/// Returns the literal discriminant `value`, or an error if it does not fit into
+/// `repr`, whose largest value is `max`.
+fn literal_discriminant(variant: &Ident, value: usize, repr: &Ident, max: u64) -> Result<u64> {
+    u64::try_from(value)
+        .ok()
+        .filter(|value| *value <= max)
+        .ok_or_else(|| {
+            syn::Error::new(
+                variant.span(),
+                format!(
+                    "The discriminant {value} of this variant does not fit into the enum \
+                    representation `{repr}`, whose largest value is {max}."
+                ),
+            )
+        })
+}
+
+/// What is known at expansion time about the implicit discriminant, i.e. the
+/// one the next variant gets if it has no explicit discriminant.
+enum DiscriminantState {
+    /// The implicit discriminant is this number, which fits into the repr.
+    Number(u64),
+    /// The previous discriminant was the largest value of the repr, so there
+    /// is no implicit discriminant.
+    Exhausted,
+    /// The previous discriminant was a path. Its value is only known after
+    /// macro expansion, so the implicit discriminant isn't known either.
+    Path,
+}
+
+impl DiscriminantState {
+    /// Returns the state after a variant with discriminant `value`, given the
+    /// largest value `max` of the repr.
+    fn after(value: u64, max: u64) -> Self {
+        if value < max {
+            DiscriminantState::Number(value + 1)
+        } else {
+            DiscriminantState::Exhausted
+        }
+    }
+}
+
+/// Errors if another variant in `used` already has the discriminant `value`,
+/// and records `variant` as having it otherwise.
+fn check_discriminant_unused<'a>(
+    used: &mut HashMap<u64, &'a Ident>,
+    variant: &'a Ident,
+    value: u64,
+) -> Result<()> {
+    if let Some(other) = used.insert(value, variant) {
+        return Err(syn::Error::new(
+            variant.span(),
+            format!(
+                "The discriminant {value} of this variant is already used by variant `{other}`."
+            ),
+        ));
+    }
+    Ok(())
+}
+
+/// Returns a check, evaluated together with the discriminant constants, that
+/// the variants `earlier` and `later` have different discriminants.
+///
+/// This is for variants with path discriminants, whose values are only known
+/// once the constants are evaluated. A failing check points at `span`, which
+/// should be the span of the path.
+fn duplicate_discriminant_check(earlier: &Ident, later: &Ident, span: Span) -> TokenStream2 {
+    let (earlier_const, later_const) = (discriminant_id(earlier), discriminant_id(later));
+    quote_spanned! { span =>
+        if #earlier_const == #later_const {
+            panic!(concat!(
+                "The variants `",
+                stringify!(#earlier),
+                "` and `",
+                stringify!(#later),
+                "` have the same discriminant.",
+            ));
+        }
+    }
 }
 
 /// Returns definitions of constants equal to the discriminants of each variant
 fn define_discriminant_constants(
     enum_ident: &Ident,
     repr: &Ident,
+    repr_max: u64,
     variants: &Punctuated<syn::Variant, Comma>,
 ) -> Result<TokenStream2> {
     let all_variants_are_unit = variants
@@ -700,91 +859,131 @@ fn define_discriminant_constants(
             .collect::<Result<Vec<_>>>()?
     } else {
         let mut spans = Vec::with_capacity(variants.len());
-        let mut implicit_discriminant = 0usize;
-        let mut discriminant_has_paths = false;
-        for variant in variants.iter() {
+        let mut state = DiscriminantState::Number(0);
+        // Discriminants known at expansion time, and the variant using each.
+        let mut used_discriminants = HashMap::new();
+        // Path discriminants are only known once the constants are evaluated,
+        // so variants with them are checked for duplicates there. The checks
+        // are collected into a separate constant: putting them into the
+        // variants' constants would make two path constants that are compared
+        // with each other depend on each other.
+        let mut duplicate_checks = Vec::new();
+        // Earlier variants with path discriminants, and the spans of their paths.
+        let mut earlier_paths: Vec<(&Ident, Span)> = Vec::new();
+        for (index, variant) in variants.iter().enumerate() {
             let constant_id = discriminant_id(&variant.ident);
-
-            let tokens = if let Some(value) = discriminant_value(&variant.attrs)? {
-                match value {
-                    DiscriminantValue::Literal(value) => {
-                        implicit_discriminant = value;
-                        quote! {
-                            #[allow(non_upper_case_globals)]
-                            const #constant_id: #repr = {
-                                if #value < #repr::MIN as usize || #value > #repr::MAX as usize {
-                                    panic!("The value corresponding to that expression is outside the bounds of the enum representation");
-                                }
-                                #value as #repr
-                            };
-                        }
-                    }
-                    DiscriminantValue::Path(pathexpr) => {
-                        discriminant_has_paths = true;
-                        quote! {
-                            #[allow(clippy::unnecessary_cast, non_upper_case_globals)]
-                            const #constant_id: #repr = {
-                                let pathexpr_usize = #pathexpr as usize;
-                                if pathexpr_usize < #repr::MIN as usize || pathexpr_usize > #repr::MAX as usize {
-                                    panic!("The value corresponding to that expression is outside the bounds of the enum representation");
-                                }
-                                #pathexpr as #repr
-                            };
-                        }
-                    }
+            let mut number_constant = |value: u64| {
+                check_discriminant_unused(&mut used_discriminants, &variant.ident, value)?;
+                for &(earlier, span) in &earlier_paths {
+                    duplicate_checks.push(duplicate_discriminant_check(
+                        earlier,
+                        &variant.ident,
+                        span,
+                    ));
                 }
-            } else if discriminant_has_paths {
-                return Err(syn::Error::new(
-                    Span::call_site(),
-                    "The tls_codec discriminant attribute is missing. \
-                    Once you start using paths in #[tls_codec(discriminant = \"path::to::const::or::enum::variant\"], \
-                    You **have** to provide the discriminant attribute on every single variant.",
-                ));
-            } else {
-                quote! {
+                Ok::<_, syn::Error>(quote! {
                     #[allow(non_upper_case_globals)]
-                    const #constant_id: #repr = {
-                        if #implicit_discriminant > #repr::MAX as usize {
-                            panic!("The value corresponding to that expression is outside the bounds of the enum representation");
-                        }
-                        #implicit_discriminant as #repr
-                    };
-                }
+                    const #constant_id: #repr = #value as #repr;
+                })
             };
 
-            implicit_discriminant += 1;
-
+            let tokens = match discriminant_value(&variant.attrs)? {
+                Some(DiscriminantValue::Literal(value)) => {
+                    let value = literal_discriminant(&variant.ident, value, repr, repr_max)?;
+                    state = DiscriminantState::after(value, repr_max);
+                    number_constant(value)?
+                }
+                Some(DiscriminantValue::Path(pathexpr)) => {
+                    state = DiscriminantState::Path;
+                    for earlier in variants.iter().take(index) {
+                        duplicate_checks.push(duplicate_discriminant_check(
+                            &earlier.ident,
+                            &variant.ident,
+                            pathexpr.span(),
+                        ));
+                    }
+                    earlier_paths.push((&variant.ident, pathexpr.span()));
+                    // The value behind the path is only known once the
+                    // constant is evaluated, after macro expansion, so the
+                    // range check has to happen there. Spanning it with the
+                    // path (i.e. the string literal in the attribute) makes
+                    // a failing check point at the offending discriminant
+                    // rather than at the derive.
+                    let range_check = quote_spanned! { pathexpr.span() =>
+                        if (#pathexpr as u64) > #repr::MAX as u64 {
+                            panic!(concat!(
+                                "The discriminant `",
+                                stringify!(#pathexpr),
+                                "` does not fit into the enum representation `",
+                                stringify!(#repr),
+                                "`.",
+                            ));
+                        }
+                    };
+                    quote! {
+                        #[allow(clippy::unnecessary_cast, non_upper_case_globals)]
+                        const #constant_id: #repr = {
+                            #range_check
+                            #pathexpr as #repr
+                        };
+                    }
+                }
+                None => match state {
+                    DiscriminantState::Number(value) => {
+                        state = DiscriminantState::after(value, repr_max);
+                        number_constant(value)?
+                    }
+                    DiscriminantState::Exhausted => {
+                        return Err(syn::Error::new(
+                            variant.ident.span(),
+                            format!(
+                                "This variant needs an explicit discriminant: the previous \
+                                variant's discriminant is {repr_max}, the largest value of the \
+                                enum representation `{repr}`, so there is no next implicit \
+                                discriminant."
+                            ),
+                        ));
+                    }
+                    DiscriminantState::Path => {
+                        return Err(syn::Error::new(
+                            variant.ident.span(),
+                            "This variant needs an explicit discriminant: the previous variant's \
+                            discriminant is a path, whose value is not known during macro \
+                            expansion. Add #[tls_codec(discriminant = ...)] to this variant.",
+                        ));
+                    }
+                },
+            };
             spans.push(tokens);
+        }
+
+        if !duplicate_checks.is_empty() {
+            spans.push(quote! {
+                const _: () = {
+                    #(#duplicate_checks)*
+                };
+            });
         }
         spans
     };
     Ok(quote! { #(#discriminant_constants)* })
 }
 
-/// Builds an expression that sums `base` and all `terms` into a `usize`,
-/// guarding against overflow only on targets where it can actually occur.
+/// Builds an expression that sums `base` and all `terms` into a `usize`
+/// through `tls_codec::len_add`.
 ///
-/// On 64-bit targets every length is bounded by addressable memory
-/// (`isize::MAX`), so the sum can't overflow `usize`; a plain, branch-free
-/// addition is emitted to keep the serialization hot path free of checks. On
-/// narrower targets the serialized form of a large structure can carry enough
-/// length-prefix / discriminant overhead to exceed `usize::MAX`, so we saturate
-/// rather than silently wrapping to a small value (a wrapped length would be
-/// written to the wire as a truncated, mismatched length prefix).
-///
-/// This mirrors `tls_codec::len_add` but is emitted inline so the helper does
-/// not need to be part of `tls_codec`'s public API.
+/// `len_add` saturates at `usize::MAX` on every target (a sum of serialized
+/// lengths can exceed `usize::MAX` even on 64-bit targets, since `Size` counts
+/// aliased data once per reference): an oversized length stays oversized and
+/// is rejected by the length-encoding bounds checks instead of being written to
+/// the wire as a truncated, mismatched length prefix. Calling the crate's
+/// helper keeps one place that defines the sum (the same helper
+/// as the crate's own sums).
 fn sum_lengths(terms: &[TokenStream2], base: TokenStream2) -> TokenStream2 {
     quote! {
         {
-            #[cfg(target_pointer_width = "64")]
-            let __tls_len: usize = #base #(+ #terms)*;
-            #[cfg(not(target_pointer_width = "64"))]
-            let __tls_len: usize = {
-                let mut __tls_len: usize = #base;
-                #(__tls_len = __tls_len.saturating_add(#terms);)*
-                __tls_len
-            };
+            let mut __tls_len: usize = #base;
+            #(__tls_len = tls_codec::len_add(__tls_len, #terms);)*
             __tls_len
         }
     }
@@ -986,8 +1185,9 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                                 }
                                 let mut out = Vec::with_capacity(expected_out);
 
+                                // `append_bytes` is `out.append(..)`, inlined; see its docs.
                                 #(
-                                    out.append(&mut #prefixes::tls_serialize_bytes(&self.#members)?);
+                                    tls_codec::append_bytes(&mut out, #prefixes::tls_serialize_bytes(&self.#members)?)?;
                                 )*
                                 if cfg!(debug_assertions) {
                                     debug_assert_eq!(out.len(), expected_out, "Expected to serialize {} bytes but only {} were generated.", expected_out, out.len());
@@ -1049,7 +1249,7 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
                             quote! {
                                 #ident::#variant_id { #(#members: #bindings,)* } => {
                                     let mut discriminant_out = tls_codec::SerializeBytes::tls_serialize_bytes(&#discriminant)?;
-                                    #(discriminant_out.append(&mut #prefixes::tls_serialize_bytes(#bindings)?);)*
+                                    #(tls_codec::append_bytes(&mut discriminant_out, #prefixes::tls_serialize_bytes(#bindings)?)?;)*
                                     Ok(discriminant_out)
                                 },
                             }
@@ -1110,26 +1310,41 @@ fn impl_serialize(parsed_ast: TlsStruct, svariant: SerializeVariant) -> TokenStr
     }
 }
 
+/// Returns the impl and type generics for an impl on the variant of a
+/// conditionally deserializable struct whose [`CONDITIONAL_PARAM`] parameter is
+/// `deserializable`.
+///
+/// The parameter is removed from the impl generics and replaced by
+/// `deserializable` in the type generics. It is identified by its exact name,
+/// so other generic parameters are left alone even if their names contain
+/// [`CONDITIONAL_PARAM`]. Generics without the parameter are returned unchanged.
 #[cfg(feature = "conditional_deserialization")]
 fn restrict_conditional_generic(
-    impl_generics: ImplGenerics,
-    ty_generics: TypeGenerics,
+    generics: &Generics,
     deserializable: bool,
 ) -> (TokenStream2, TokenStream2) {
-    let impl_generics = quote! { #impl_generics }
-        .to_string()
-        // Make string replacement easier by replacing newlines with spaces.
-        .replace('\n', " ")
-        .replace(" const IS_DESERIALIZABLE : bool ", "")
-        .replace("<>", "")
-        .parse()
-        .unwrap();
-    let deserializable_string = if deserializable { "true" } else { "false" };
-    let ty_generics = quote! { #ty_generics }
-        .to_string()
-        .replace("IS_DESERIALIZABLE", deserializable_string)
-        .parse()
-        .unwrap();
+    let is_conditional = |param: &GenericParam| matches!(param, GenericParam::Const(c) if c.ident == CONDITIONAL_PARAM);
+
+    let mut impl_generics = generics.clone();
+    impl_generics.params = generics
+        .params
+        .iter()
+        .filter(|param| !is_conditional(param))
+        .cloned()
+        .collect();
+    let impl_generics = impl_generics.split_for_impl().0.to_token_stream();
+
+    let ty_args = generics.params.iter().map(|param| match param {
+        _ if is_conditional(param) => quote! { #deserializable },
+        GenericParam::Lifetime(l) => l.lifetime.to_token_stream(),
+        GenericParam::Type(t) => t.ident.to_token_stream(),
+        GenericParam::Const(c) => c.ident.to_token_stream(),
+    });
+    let ty_generics = if generics.params.is_empty() {
+        quote! {}
+    } else {
+        quote! { <#(#ty_args),*> }
+    };
     (impl_generics, ty_generics)
 }
 
@@ -1153,8 +1368,7 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
                 .collect::<Vec<_>>();
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             #[cfg(feature = "conditional_deserialization")]
-            let (impl_generics, ty_generics) =
-                restrict_conditional_generic(impl_generics, ty_generics, true);
+            let (impl_generics, ty_generics) = restrict_conditional_generic(&generics, true);
             if cfg!(feature = "std") {
                 quote! {
                     impl #impl_generics tls_codec::Deserialize for #ident #ty_generics #where_clause {
@@ -1224,8 +1438,8 @@ fn impl_deserialize(parsed_ast: TlsStruct) -> TokenStream2 {
 }
 
 #[allow(unused_variables)]
-fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
-    match parsed_ast {
+fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> Result<TokenStream2> {
+    Ok(match parsed_ast {
         TlsStruct::Struct(Struct {
             call_site,
             ident,
@@ -1238,16 +1452,8 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
                 partition_skipped(members, member_prefixes, member_skips);
             let members_values = members
                 .iter()
-                .map(|m| match m {
-                    Member::Named(named) => {
-                        Member::Named(Ident::new(&format!("value_{named}"), Span::call_site()))
-                    }
-                    Member::Unnamed(unnamed) => Member::Named(Ident::new(
-                        &format!("value_{}", unnamed.index),
-                        Span::call_site(),
-                    )),
-                })
-                .collect::<Vec<_>>();
+                .map(value_binding)
+                .collect::<Result<Vec<_>>>()?;
 
             let prefixes = member_prefixes
                 .iter()
@@ -1255,8 +1461,7 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
                 .collect::<Vec<_>>();
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             #[cfg(feature = "conditional_deserialization")]
-            let (impl_generics, ty_generics) =
-                restrict_conditional_generic(impl_generics, ty_generics, true);
+            let (impl_generics, ty_generics) = restrict_conditional_generic(&generics, true);
             quote! {
                 impl #impl_generics tls_codec::DeserializeBytes for #ident #ty_generics #where_clause {
                     fn tls_deserialize_bytes(bytes: &[u8]) -> core::result::Result<(Self, &[u8]), tls_codec::Error> {
@@ -1285,31 +1490,22 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
                     let members = &variant.members;
                     let member_values = members
                         .iter()
-                        .map(|m| match m {
-                            Member::Named(named) => Member::Named(Ident::new(
-                                &format!("value_{named}"),
-                                Span::call_site(),
-                            )),
-                            Member::Unnamed(unnamed) => Member::Named(Ident::new(
-                                &format!("value_{}", unnamed.index),
-                                Span::call_site(),
-                            )),
-                        })
-                        .collect::<Vec<_>>();
+                        .map(value_binding)
+                        .collect::<Result<Vec<_>>>()?;
                     let prefixes = variant
                         .member_prefixes
                         .iter()
                         .map(|p| p.for_trait("DeserializeBytes"))
                         .collect::<Vec<_>>();
-                    quote! {
+                    Ok(quote! {
                         #discriminant => {
                             #(let (#member_values, remainder) = #prefixes::tls_deserialize_bytes(remainder)?;)*
                             let result = #ident::#variant_id { #(#members: #member_values,)* };
                             Ok((result, remainder))
                         },
-                    }
+                    })
                 })
-                .collect::<Vec<_>>();
+                .collect::<Result<Vec<_>>>()?;
             let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
             quote! {
                 impl #impl_generics tls_codec::DeserializeBytes for #ident #ty_generics #where_clause {
@@ -1326,7 +1522,7 @@ fn impl_deserialize_bytes(parsed_ast: TlsStruct) -> TokenStream2 {
                 }
             }
         }
-    }
+    })
 }
 
 #[allow(clippy::type_complexity)]
@@ -1446,7 +1642,29 @@ fn set_cd_fields_generic(
 
 #[cfg(feature = "conditional_deserialization")]
 fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStream2 {
-    let deserializable_const_generic: ConstParam = parse_quote! {const IS_DESERIALIZABLE: bool};
+    // The derives recognize the parameter added below by its name, so a
+    // parameter of the same name on the original struct would be mistaken for it.
+    for param in &annotated_item.generics.params {
+        let ident = match param {
+            GenericParam::Type(t) => &t.ident,
+            GenericParam::Const(c) => &c.ident,
+            GenericParam::Lifetime(_) => continue,
+        };
+        if ident == CONDITIONAL_PARAM {
+            return syn::Error::new(
+                ident.span(),
+                format!(
+                    "The generic parameter name `{CONDITIONAL_PARAM}` is reserved by \
+                    #[conditionally_deserializable], which adds a const generic parameter \
+                    of that name. Rename this parameter."
+                ),
+            )
+            .into_compile_error();
+        }
+    }
+
+    let conditional_param = Ident::new(CONDITIONAL_PARAM, Span::call_site());
+    let deserializable_const_generic: ConstParam = parse_quote! {const #conditional_param: bool};
     // Get all the original generics of the annotated item before we modify
     // them.
     let original_annotated_item = annotated_item.clone();
@@ -1457,25 +1675,28 @@ fn impl_conditionally_deserializable(mut annotated_item: ItemStruct) -> TokenStr
         .params
         .push(deserializable_const_generic.into());
     // Look through struct fields and if a field has an `cd_field` attribute,
-    // add the `IS_DESERIALIZABLE` const generic to the field type (set to true
+    // add the `CONDITIONAL_PARAM` const generic to the field type (set to true
     // for the deserialize implementation).
     let item_for_deserialize_impl = set_cd_fields_generic(annotated_item.clone(), quote!(true));
     // Look through struct fields and if a field has an `cd_field` attribute,
-    // add the `IS_DESERIALIZABLE` const generic to the field type (set to the
-    // value IS_DESERIALIZABLE from the struct definition).
-    let annotated_item = set_cd_fields_generic(annotated_item, quote!(IS_DESERIALIZABLE));
+    // add the `CONDITIONAL_PARAM` const generic to the field type (set to the
+    // value of that parameter from the struct definition).
+    let annotated_item = set_cd_fields_generic(annotated_item, quote!(#conditional_param));
 
     // Derive both TlsDeserialize and TlsDeserializeBytes
-    let deserialize_bytes_implementation =
-        impl_deserialize_bytes(parse_ast(item_for_deserialize_impl.clone().into()).unwrap());
+    let deserialize_bytes_implementation = match parse_ast(item_for_deserialize_impl.clone().into())
+        .and_then(impl_deserialize_bytes)
+    {
+        Ok(implementation) => implementation,
+        Err(err) => return err.into_compile_error(),
+    };
     let deserialize_implementation =
         impl_deserialize(parse_ast(item_for_deserialize_impl.clone().into()).unwrap());
-    let (impl_generics, ty_generics, _) = annotated_item.generics.split_for_impl();
     // Patch generics for use by the type aliases
-    let (_deserializable_impl_generics, deserializable_ty_generics) =
-        restrict_conditional_generic(impl_generics.clone(), ty_generics.clone(), true);
-    let (_undeserializable_impl_generics, undeserializable_ty_generics) =
-        restrict_conditional_generic(impl_generics.clone(), ty_generics.clone(), false);
+    let (_, deserializable_ty_generics) =
+        restrict_conditional_generic(&annotated_item.generics, true);
+    let (_, undeserializable_ty_generics) =
+        restrict_conditional_generic(&annotated_item.generics, false);
     let annotated_item_ident = annotated_item.ident.clone();
     // Create Alias Idents by adding prefixes
     let deserializable_ident = Ident::new(

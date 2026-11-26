@@ -1,0 +1,17 @@
+error: The tls_codec derive macros only support enums with #[repr(u8)], #[repr(u16)], #[repr(u32)] or #[repr(u64)].
+ --> tests/attributes/that_unsupported_repr_does_not_compile.rs:4:8
+  |
+4 | #[repr(i8)]
+  |        ^^
+
+error: The tls_codec derive macros only support enums with #[repr(u8)], #[repr(u16)], #[repr(u32)] or #[repr(u64)].
+  --> tests/attributes/that_unsupported_repr_does_not_compile.rs:10:8
+   |
+10 | #[repr(usize)]
+   |        ^^^^^
+
+error: The tls_codec derive macros only support enums with #[repr(u8)], #[repr(u16)], #[repr(u32)] or #[repr(u64)].
+  --> tests/attributes/that_unsupported_repr_does_not_compile.rs:16:8
+   |
+16 | #[repr(C)]
+   |        ^

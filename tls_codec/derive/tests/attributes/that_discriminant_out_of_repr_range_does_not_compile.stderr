@@ -1,0 +1,11 @@
+error: The discriminant 256 of this variant does not fit into the enum representation `u8`, whose largest value is 255.
+ --> tests/attributes/that_discriminant_out_of_repr_range_does_not_compile.rs:7:5
+  |
+7 |     A(u8),
+  |     ^
+
+error: This variant needs an explicit discriminant: the previous variant's discriminant is 255, the largest value of the enum representation `u8`, so there is no next implicit discriminant.
+  --> tests/attributes/that_discriminant_out_of_repr_range_does_not_compile.rs:15:5
+   |
+15 |     B(u8),
+   |     ^

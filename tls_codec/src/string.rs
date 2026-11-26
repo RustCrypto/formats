@@ -41,7 +41,16 @@ impl SerializeBytes for &str {
     }
 }
 
+#[cfg_attr(hax, hax_lib::attributes)]
 impl DeserializeBytes for String {
+    #[cfg_attr(hax, hax_lib::ensures(|res| res.is_err()
+        || res.is_ok_and(|(value, remainder)|
+            VLByteVec::tls_deserialize_bytes(bytes).is_ok_and(|(raw, raw_remainder)|
+                value.as_bytes() == raw.as_slice()
+                    && remainder.len() == raw_remainder.len())
+                && remainder.len() <= bytes.len()
+                && (!cfg!(feature = "mls")
+                    || remainder.len() + value.tls_serialized_len() == bytes.len()))))]
     fn tls_deserialize_bytes(bytes: &[u8]) -> Result<(Self, &[u8]), crate::Error>
     where
         Self: Sized,
